@@ -75,11 +75,15 @@ Validated: generation components sum to REE's published total at 0.00% gap
 every year, and annual output (~260 TWh) matches published figures. Wind +
 solar rose from 23.9% of generation in 2018 to 41.8% in 2024.
 
-### REE realtime — 5-minute generation, demand and flows
-`demanda.ree.es`, token-free, back to 2018. 288 records per day (300 on the
-autumn DST day), 33 fields: demand, generation by technology (PV and thermal
-solar separately), batteries, pumped storage, and **bilateral** flows with
-France, Portugal, Morocco and Andorra. Units are **MW**, not MWh.
+### REE realtime — 5-minute generation, demand and flows — complete
+`demanda.ree.es`, token-free. **885,085 rows, all 3,073 days present**, zero
+duplicate instants, monotonic in UTC. 33 fields: demand, generation by
+technology (PV and thermal solar separately), batteries, pumped storage, and
+**bilateral** flows with France, Portugal, Morocco and Andorra. Units are
+**MW** (instantaneous power), not MWh.
+
+Records per day: 288 normally, 276 on the 9 spring DST days, 300 on the 8
+autumn ones — matching the transitions in the window exactly.
 
 This is the primary sub-hourly source and is strictly better than the hourly
 series originally sought.
@@ -155,8 +159,22 @@ hour on the autumn DST day is written ``2A`` (first pass, CEST) and ``2B``
 (second pass, CET) — 25 distinct hour tokens, with no plain ``02``. The
 spring day omits ``02`` entirely, giving 23. `strptime` raises on ``2A``, so
 this fails loudly, but it must be handled; `parse_local_ts()` maps the
-suffixes onto `fold`. `curva` must be ``NACIONAL`` — other values are
-rejected with ``curva X no valida``.
+suffixes onto `fold`.
+
+### REE realtime changed its contract on 2025-12-12
+Until 2025-12-11 the request **requires** ``curva=NACIONAL``. From 2025-12-12
+that value is rejected with ``curva NACIONAL no valida`` and the parameter
+must be **omitted** instead. No single form works for both eras, so
+`fetch_day()` tries the named curve then falls back to the bare request.
+Missing this silently truncates the series at 2025-12-11 — a 171-day hole at
+the end of the window, which is exactly what happened on the first run.
+
+Three fields also change at that boundary: ``die``, ``gas`` and ``genAux``
+disappear; ``aut``, ``gf`` and ``icb`` appear. Both eras carry 33 fields.
+Coverage is therefore ~94% / ~6% split for the two sets, and **all six are
+null on the wrong side of the boundary** — do not treat them as continuous
+series. The three new names are carried through unrenamed; confirm their
+meaning against REE documentation before using them.
 
 ### REE timestamps are local, not UTC
 `apidatos` returns e.g. `2024-01-01T00:00:00.000+01:00`. Converting to UTC

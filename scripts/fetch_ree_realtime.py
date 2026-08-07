@@ -93,6 +93,13 @@ FIELDS = {
     "conb": "pumped_consumption",
 }
 
+# Three fields changed at the 2025-12-12 migration: `die`, `gas` and
+# `genAux` disappear, and `aut`, `gf` and `icb` appear. Both eras carry 33
+# fields. The new names are carried through unrenamed rather than guessed at
+# -- confirm their meaning against REE documentation before using them, and
+# expect nulls on either side of the boundary for all six.
+ERA_SPLIT = date(2025, 12, 12)
+
 
 def parse_local_ts(ts: str) -> datetime | None:
     """Convert a REE local timestamp to a UTC instant.
@@ -119,14 +126,26 @@ def parse_local_ts(ts: str) -> datetime | None:
 
 
 def fetch_day(sess, d: date) -> list[dict]:
+    """Fetch one day, handling REE's 2025-12-12 endpoint migration.
+
+    Until 2025-12-11 the endpoint requires ``curva=NACIONAL``. From
+    2025-12-12 that value is rejected with ``curva NACIONAL no valida`` and
+    the parameter must be **omitted** instead. Neither form works for both
+    eras, so try the named curve first and fall back to the bare request.
+    """
     cached = CACHE / f"{d:%Y%m%d}.json"
     if cached.exists() and cached.stat().st_size > 200:
         body = cached.read_text()
     else:
-        r = sess.get(URL, params={"curva": "NACIONAL", "fecha": f"{d:%Y-%m-%d}"}, timeout=90)
-        if r.status_code != 200 or "valoresHorarios" not in r.text:
+        body = None
+        for params in ({"curva": "NACIONAL", "fecha": f"{d:%Y-%m-%d}"},
+                       {"fecha": f"{d:%Y-%m-%d}"}):
+            r = sess.get(URL, params=params, timeout=90)
+            if r.status_code == 200 and "valoresHorarios" in r.text:
+                body = r.text
+                break
+        if body is None:
             return []
-        body = r.text
         cached.write_text(body)
     try:
         payload = json.loads(JSONP.sub("", body))

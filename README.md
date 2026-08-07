@@ -21,10 +21,11 @@ python3 -m venv .venv && ./.venv/bin/python -m pip install pandas pyarrow reques
 .venv/bin/python scripts/fetch_omie_prices.py     # day-ahead prices, no token
 .venv/bin/python scripts/fetch_omie_bids.py --verify   # unit-level bids, no token
 .venv/bin/python scripts/fetch_ree_daily.py       # daily generation/demand, no token
+.venv/bin/python scripts/fetch_ree_realtime.py    # 5-min generation/demand/flows, no token
 ```
 
-Hourly generation, hourly demand and installed capacity need free API
-tokens. Copy `.env.example` to `.env` and fill it in:
+Only **installed capacity** still needs a free API token. Copy
+`.env.example` to `.env` and fill it in:
 
 ```bash
 .venv/bin/python scripts/fetch_esios_spain.py --probe

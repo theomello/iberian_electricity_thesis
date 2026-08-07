@@ -42,6 +42,7 @@ directory" even though nothing was deleted. Keep `data/` off iCloud.
 | `fetch_omie_prices.py` | OMIE `marginalpdbc` | no | `data/omie/prices/omie_day_ahead_prices.parquet` |
 | `fetch_omie_bids.py` | OMIE `curva_pbc_uof` | no | `data/omie/bids/parquet/bids_YYYYMM.parquet` |
 | `fetch_ree_daily.py` | REE `apidatos` | no | `data/ree/ree_{generation,demand,balance}_daily.parquet` |
+| `fetch_ree_realtime.py` | REE `demanda.ree.es` | no | `data/ree/ree_realtime_5min.parquet` |
 | `fetch_esios_spain.py` | ESIOS | **yes** | `data/esios/esios_{id}.parquet` |
 | `fetch_entsoe_spain.py` | ENTSO-E | **yes** | `data/entsoe/entsoe_{series}_{zone}.parquet` |
 
@@ -74,10 +75,19 @@ Validated: generation components sum to REE's published total at 0.00% gap
 every year, and annual output (~260 TWh) matches published figures. Wind +
 solar rose from 23.9% of generation in 2018 to 41.8% in 2024.
 
-### ESIOS / ENTSO-E — pending tokens
-Hourly generation, hourly demand and installed capacity are **not yet
-acquired**. They require tokens that must be requested by a human; see
-`config.py`. Both scripts are written but have never been executed.
+### REE realtime — 5-minute generation, demand and flows
+`demanda.ree.es`, token-free, back to 2018. 288 records per day (300 on the
+autumn DST day), 33 fields: demand, generation by technology (PV and thermal
+solar separately), batteries, pumped storage, and **bilateral** flows with
+France, Portugal, Morocco and Andorra. Units are **MW**, not MWh.
+
+This is the primary sub-hourly source and is strictly better than the hourly
+series originally sought.
+
+### ESIOS / ENTSO-E — installed capacity only
+Only **installed capacity** still lacks a source: REE's `potencia-instalada`
+returns HTTP 500 under every parameter combination tried. Tokens are needed
+for that alone; see `config.py`. Both scripts are written but never executed.
 
 ---
 
@@ -124,11 +134,29 @@ Prices for 2018–2022 exist **only as yearly zips**; 2023+ are daily files.
 Assuming the daily pattern throughout silently loses every pre-2023 day.
 A few days also carry `.2`/`.3` revision suffixes instead of `.1`.
 
-### REE `apidatos` hourly and capacity endpoints are broken
-`time_trunc=hour` returns HTTP 400 "data currently unavailable" on every
-endpoint, for windows from one day to one month, in both 2014 and 2024.
-`potencia-instalada` returns HTTP 500 regardless. `time_trunc=day` works
-back to at least 2014. Hourly and capacity must come from ESIOS/ENTSO-E.
+### REE `apidatos` hourly needs `geo_trunc`; generation is broken regardless
+`demanda/evolucion` at `time_trunc=hour` returns HTTP 400 **unless** the full
+geo triplet is supplied — `geo_trunc=electric_system&geo_limit=peninsular&
+geo_ids=8741`. With it, hourly demand works.
+
+Generation is a different matter: `estructura-generacion`,
+`balance-electrico`, `estructura-renovables` and
+`evolucion-renovable-no-renovable` all return HTTP 400 at `time_trunc=hour`
+with or without geo parameters, while working at `time_trunc=day`. Use
+`fetch_ree_realtime.py` instead — it is finer-grained anyway.
+
+`potencia-instalada` returns HTTP 500 under every combination tried. That is
+the one series with no token-free source.
+
+### REE realtime is JSONP with a letter-coded DST hour
+The body is wrapped as ``null({...});`` and must have the wrapper stripped
+before JSON parsing. Timestamps are **local Madrid time**, and the repeated
+hour on the autumn DST day is written ``2A`` (first pass, CEST) and ``2B``
+(second pass, CET) — 25 distinct hour tokens, with no plain ``02``. The
+spring day omits ``02`` entirely, giving 23. `strptime` raises on ``2A``, so
+this fails loudly, but it must be handled; `parse_local_ts()` maps the
+suffixes onto `fold`. `curva` must be ``NACIONAL`` — other values are
+rejected with ``curva X no valida``.
 
 ### REE timestamps are local, not UTC
 `apidatos` returns e.g. `2024-01-01T00:00:00.000+01:00`. Converting to UTC

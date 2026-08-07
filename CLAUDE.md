@@ -43,6 +43,7 @@ directory" even though nothing was deleted. Keep `data/` off iCloud.
 | `fetch_omie_bids.py` | OMIE `curva_pbc_uof` | no | `data/omie/bids/parquet/bids_YYYYMM.parquet` |
 | `fetch_ree_daily.py` | REE `apidatos` | no | `data/ree/ree_{generation,demand,balance}_daily.parquet` |
 | `fetch_ree_realtime.py` | REE `demanda.ree.es` | no | `data/ree/ree_realtime_5min.parquet` |
+| `fetch_ren_portugal.py` | REN `servicebus.ren.pt` | no | `data/ren/ren_{production_15min,installed_power_monthly,market_prices,consumption_supply_daily}.parquet` |
 | `fetch_esios_spain.py` | ESIOS | **yes** | `data/esios/esios_{id}.parquet` |
 | `fetch_entsoe_spain.py` | ENTSO-E | **yes** | `data/entsoe/entsoe_{series}_{zone}.parquet` |
 
@@ -61,9 +62,20 @@ Spain mean 73.31 €/MWh, range −15.00 to 700.00. ES and PT differ in 6.7% of
 periods (market splitting).
 
 ### OMIE bid curves — the reason this setting is interesting
-Unit-level day-ahead offers, ~2.3–2.8 M rows per month, ~2,000 units/day.
-Columns: `date`, `hour`, `country`, `unit`, `side`, `energy_mwh`,
-`price_eur_mwh`, `status`. Both accepted and rejected offers are present.
+Unit-level day-ahead offers for **both** Spanish and Portuguese units, since
+MIBEL clears jointly. ~2.3–3.6 M rows/month in the hourly era, ~14 M/month
+from 2025-10 when the 15-minute MTU quadrupled the period count.
+
+Columns: `date`, `period`, `hour`, `quarter`, `resolution_min`, `country`,
+`unit`, `side`, `power_mw`, `price_eur_mwh`, `status`, `offer_type`.
+
+Both accepted and rejected offers are present — that is the point. In a
+single hour (2024-01-01 h12) 63,599 MWh was offered against 24,872 MWh
+cleared; the gap is the unaccepted supply.
+
+`power_mw` unifies the two eras: hourly files publish MWh over one hour,
+numerically identical to average MW. Derive energy as
+`power_mw * resolution_min / 60`.
 
 ### REE daily generation / demand / balance — complete
 Daily only (see the hourly limitation below), 2018-01-01 → 2026-05-31, no
@@ -87,6 +99,19 @@ autumn ones — matching the transitions in the window exactly.
 
 This is the primary sub-hourly source and is strictly better than the hourly
 series originally sought.
+
+### REN Portugal — generation, demand, capacity, prices
+`servicebus.ren.pt/datahubapi/electricity`, token-free, documented at
+https://datahub.ren.pt/pt/instrucoes-api/. Portugal is **inside** MIBEL, not
+a neighbour: it clears jointly with Spain against one merged bid stack, so
+the Portuguese series belong to the same market object as the Spanish ones.
+
+15 production series at **15-minute** resolution back to 2018 (hydro, wind,
+solar, gas, coal, biomass, wave, batteries, pumping, import/export), plus
+monthly installed capacity, hourly prices, and a daily energy balance.
+
+`ElectricityInstalledPowerMonthly` matters disproportionately: installed
+capacity has **no token-free Spanish source**, but Portugal publishes it.
 
 ### ESIOS / ENTSO-E — installed capacity only
 Only **installed capacity** still lacks a source: REE's `potencia-instalada`
@@ -196,6 +221,40 @@ Unlike the other endpoints, balance returns four groups (Renewable,
 Non-renewable, Almacenamiento, Demand) whose real series sit one level down
 under `attributes.content`. Reading `attributes.values` at the top level
 yields zero rows.
+
+### Portugal runs one hour behind Spain — and REN mixes two clocks
+Portugal is WET/WEST (UTC+0/+1); Spain is CET/CEST (UTC+1/+2). They share a
+market but not a clock, so any PT↔ES join must go through UTC.
+
+Worse, **REN uses different clocks for different endpoints**:
+
+- `ElectricityProductionBreakdownDaily` → **Lisbon** local time
+- `ElectricityMarketPricesDaily` → **Madrid** (MIBEL/CET), because the price
+  is a market object shared with Spain rather than a Portuguese measurement
+
+Both were established empirically, not assumed. Production: under the Lisbon
+reading PT and ES solar noon coincide at 12:22 UTC on 2024-06-15, whereas a
+Madrid reading puts Portugal 60 minutes *earlier* than Spain — impossible for
+a country lying further west. Prices: mapping them as Lisbon reproduced
+OMIE's value one hour late; under Madrid, REN and OMIE agree to **0.0000**
+on both `PT` and `ES`.
+
+That price agreement is also the independent confirmation that
+`marginalpdbc` is PT-then-ES — REN labels its two series explicitly.
+
+### REN point counts encode DST, but the labels do not
+92 points on the spring day, 100 in autumn, 96 otherwise. The x-axis labels
+still read `00:00`..`23:45` in every case, so the labels alone are useless
+for DST; the **count** carries the information. `day_periods_utc(d, n, tz)`
+derives the step from the local-day span, which handles it.
+
+### `country` in the bid files does NOT identify a unit's country
+Only ~4.7% of matched rows carry `ES` or `PT`; the rest are tagged `MI` for
+the joint MIBEL market. That share tracks the ~6.7% market-splitting rate, so
+the tag appears mainly **when the market splits**, not as a unit attribute.
+Do not use it to select Portuguese units — a unit-level registry is needed
+for that, and OMIE does not expose one under the obvious dataset names
+(`unidades`, `agentes`, `unidades_fisicas` all 404).
 
 ## Known source-data anomaly: whole-day unit dropouts
 

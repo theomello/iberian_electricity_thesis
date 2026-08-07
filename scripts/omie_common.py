@@ -22,6 +22,14 @@ OMIE_LIST = "https://www.omie.es/es/file-access-list"
 
 MADRID = ZoneInfo("Europe/Madrid")
 
+# Portugal runs one hour behind Spain (WET/WEST vs CET/CEST) despite sharing
+# a single electricity market. REN publishes in Lisbon local time, OMIE and
+# REE in Madrid local time. Confirmed empirically on 2026-08-07 by solar-noon
+# geometry: under the Lisbon reading, PT and ES solar noon coincide at 12:22
+# UTC on 2024-06-15; under a Madrid reading PT would fall 60 minutes *earlier*
+# than Spain, which is impossible for a country lying further west.
+LISBON = ZoneInfo("Europe/Lisbon")
+
 # Study window. Start is set by the bid archive, which begins 2018-01.
 START = date(2018, 1, 1)
 END = date(2026, 5, 31)
@@ -45,19 +53,19 @@ def omie_url(dataset: str, filename: str) -> str:
     return f"{OMIE_DOWNLOAD}?parents%5B0%5D={dataset}&filename={filename}"
 
 
-def day_span_utc(d: date) -> tuple[datetime, datetime]:
+def day_span_utc(d: date, tz: ZoneInfo = MADRID) -> tuple[datetime, datetime]:
     """UTC bounds of local (Europe/Madrid) day `d`.
 
     The Madrid DST transition happens at 02:00/03:00 local, so local midnight
     is never ambiguous and can be constructed directly.
     """
-    start = datetime(d.year, d.month, d.day, tzinfo=MADRID).astimezone(timezone.utc)
+    start = datetime(d.year, d.month, d.day, tzinfo=tz).astimezone(timezone.utc)
     nxt = d + timedelta(days=1)
-    end = datetime(nxt.year, nxt.month, nxt.day, tzinfo=MADRID).astimezone(timezone.utc)
+    end = datetime(nxt.year, nxt.month, nxt.day, tzinfo=tz).astimezone(timezone.utc)
     return start, end
 
 
-def day_periods_utc(d: date, n_periods: int) -> list[datetime]:
+def day_periods_utc(d: date, n_periods: int, tz: ZoneInfo = MADRID) -> list[datetime]:
     """UTC instants for each OMIE period index of local day `d`.
 
     OMIE indexes market periods 1..N within the *local* day. N encodes both
@@ -76,7 +84,7 @@ def day_periods_utc(d: date, n_periods: int) -> list[datetime]:
     step breaks on the two DST days a year. Deriving the step from the actual
     local-day span handles all six cases without special-casing.
     """
-    start, end = day_span_utc(d)
+    start, end = day_span_utc(d, tz)
     step = (end - start) / n_periods
     return [start + step * i for i in range(n_periods)]
 

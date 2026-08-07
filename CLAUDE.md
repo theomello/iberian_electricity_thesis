@@ -75,7 +75,6 @@ So the bid window is 2018-01-01 → 2026-05-08 while prices, REE and REN run to
 2026-05-31. Re-running the fetcher later extends the frontier; the last ~3
 months of any other series will never have matching bids.
 
-
 Unit-level day-ahead offers for **both** Spanish and Portuguese units, since
 MIBEL clears jointly. ~2.3–3.6 M rows/month in the hourly era, ~14 M/month
 from 2025-10 when the 15-minute MTU quadrupled the period count.

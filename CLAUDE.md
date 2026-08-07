@@ -64,9 +64,15 @@ Unit-level day-ahead offers, ~2.3–2.8 M rows per month, ~2,000 units/day.
 Columns: `date`, `hour`, `country`, `unit`, `side`, `energy_mwh`,
 `price_eur_mwh`, `status`. Both accepted and rejected offers are present.
 
-### REE daily generation / demand / balance
-Daily only (see the hourly limitation below). Generation resolves to 16–17
-technologies; balance to 24 series nested under four groups.
+### REE daily generation / demand / balance — complete
+Daily only (see the hourly limitation below), 2018-01-01 → 2026-05-31, no
+empty months. Generation 49,201 rows / 17 series (one being the aggregate);
+demand 3,073 rows, exactly one per day, matching the price day count;
+balance 70,060 rows / 25 series nested under four groups.
+
+Validated: generation components sum to REE's published total at 0.00% gap
+every year, and annual output (~260 TWh) matches published figures. Wind +
+solar rose from 23.9% of generation in 2018 to 41.8% in 2024.
 
 ### ESIOS / ENTSO-E — pending tokens
 Hourly generation, hourly demand and installed capacity are **not yet
@@ -128,6 +134,16 @@ back to at least 2014. Hourly and capacity must come from ESIOS/ENTSO-E.
 `apidatos` returns e.g. `2024-01-01T00:00:00.000+01:00`. Converting to UTC
 before taking the date relabels 1 January as 31 December. Use the
 `local_date` column for calendar-day work.
+
+### REE generation includes `Total generation` as a *series*
+`estructura-generacion` returns 17 series, one of which is the aggregate
+`Total generation`. Summing all series double-counts, roughly halving any
+share computed from it. Exclude it, then verify: the components sum to the
+published total at 0.00% gap in every year 2018–2026, which is a good check
+that a filter has not dropped something.
+
+Values are in **MWh**, not GWh. Spain runs ~260 TWh/year of generation and
+~700 GWh/day of demand; a "700,000" daily figure is MWh.
 
 ### REE `balance-electrico` nests its series
 Unlike the other endpoints, balance returns four groups (Renewable,

@@ -1,0 +1,12 @@
+# Environment
+.venv/
+__pycache__/
+*.pyc
+.env
+
+# Data: large and re-fetchable via scripts/fetch_*.py
+data/**
+!data/**/.gitkeep
+
+# macOS
+.DS_Store

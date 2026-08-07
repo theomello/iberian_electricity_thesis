@@ -179,14 +179,29 @@ Non-renewable, Almacenamiento, Demand) whose real series sit one level down
 under `attributes.content`. Reading `attributes.values` at the top level
 yields zero rows.
 
-## Known source-data anomaly
+## Known source-data anomaly: whole-day unit dropouts
 
-**2018-06-14** violates the clearing identity in all 24 hours, with buy
-exceeding sell by a constant ~2,900 MWh. Thirteen sell units present on both
-06-13 and 06-15 — including the `MIEU` interconnection pseudo-unit — are
-absent that day. The source file is 99% of median size and parses cleanly,
-so this is a gap in OMIE's publication, not a parsing artifact. It is one
-day in 3,073 (0.03%) and has been left as-is rather than patched.
+A recurring class of gap in OMIE's publication — **not** a parsing artifact.
+On an affected day, a block of units is simply absent from the file for all
+24 hours, so matched buy no longer equals matched sell and the imbalance is a
+near-constant MW offset across the day. Affected files are normal size and
+parse cleanly.
+
+Confirmed so far (~0.1% of days):
+
+| date | direction | offset | missing units |
+|---|---|---|---|
+| 2018-06-14 | buy > sell | ~2,900 MWh/h | 13 sell units, incl. the `MIEU` interconnection pseudo-unit |
+| 2022-10-12 | sell > buy | ~3,098 MWh/h | 16 buy + 24 sell units |
+
+The direction varies with which side loses more. Left as-is rather than
+patched — imputing bids would be inventing data.
+
+**Always run `fetch_omie_bids.py --verify`**, which re-checks the
+market-clearing identity per month and prints the maximum gap; a non-zero
+value flags exactly this. Filter these days out of any design that relies on
+market-wide aggregates. Analyses of individual units' bidding are unaffected
+except for the units actually missing.
 
 ## Conventions
 

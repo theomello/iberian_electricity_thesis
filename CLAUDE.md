@@ -100,18 +100,32 @@ autumn ones — matching the transitions in the window exactly.
 This is the primary sub-hourly source and is strictly better than the hourly
 series originally sought.
 
-### REN Portugal — generation, demand, capacity, prices
+### REN Portugal — complete
 `servicebus.ren.pt/datahubapi/electricity`, token-free, documented at
 https://datahub.ren.pt/pt/instrucoes-api/. Portugal is **inside** MIBEL, not
 a neighbour: it clears jointly with Spain against one merged bid stack, so
 the Portuguese series belong to the same market object as the Spanish ones.
 
-15 production series at **15-minute** resolution back to 2018 (hydro, wind,
-solar, gas, coal, biomass, wave, batteries, pumping, import/export), plus
-monthly installed capacity, hourly prices, and a daily energy balance.
+| file | rows | content |
+|---|---|---|
+| `ren_production_15min.parquet` | 3,801,736 | 15 series, **15-min**, all 3,073 days |
+| `ren_market_prices.parquet` | 147,502 | hourly ES and PT |
+| `ren_consumption_supply_daily.parquet` | 77,834 | 28 balance types |
+| `ren_installed_power_monthly.parquet` | 887 | capacity by technology |
+
+Points per day 92/96/100 — the 9 spring and 8 autumn DST days match Spain's
+counts exactly, which cross-validates both timezone implementations.
+
+Validated: annual generation 44–55 TWh matches published figures; coal runs
+11.2 TWh (2018) → **0.0 from 2022**, matching the closure of Pego, the last
+Portuguese coal plant, in late 2021. Solar capacity 577 → 5,028 MW and solar
+generation 0.8 → 6.1 TWh over the window; VRE share 23.8% → 41.6%.
 
 `ElectricityInstalledPowerMonthly` matters disproportionately: installed
 capacity has **no token-free Spanish source**, but Portugal publishes it.
+
+The price series is also the independent check on the OMIE parse — see the
+trap below.
 
 ### ESIOS / ENTSO-E — installed capacity only
 Only **installed capacity** still lacks a source: REE's `potencia-instalada`
@@ -152,6 +166,13 @@ which handles all six cases. Never assume a fixed step.
 Fields are `year;month;day;period;price_pt;price_es` — **Portugal first**.
 Verified on 2024-01-01 h12, a splitting hour reading `29.8;3.9`: Spanish
 units' highest matched sell bid was 3.90 and Portuguese units' 29.80.
+
+Confirmed independently against REN, which labels its two price series
+explicitly: over **67,919 hourly instants the match is 100.0000% exact** for
+both. The decisive part is the 3,568 splitting instants where the two prices
+genuinely differ — REN's `PT` still matches `price_pt` at 0.0000, while the
+crossed comparison is off by up to 122 €/MWh. Getting this backwards would
+silently swap the two countries in every price-based result.
 
 ### The two OMIE files use different decimal separators
 `marginalpdbc` uses a **dot** (`77.7`). `curva_pbc_uof` uses a **comma**

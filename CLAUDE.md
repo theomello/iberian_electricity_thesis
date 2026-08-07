@@ -53,6 +53,7 @@ directory" even though nothing was deleted. Keep `data/` off iCloud.
 ## Data inventory
 
 Window: **2018-01-01 → 2026-05-31**, set by the bid archive's start.
+Bids alone stop at **2026-05-08** (a ~3-month publication lag — see below).
 All of `data/` is gitignored — it is large and fully re-fetchable.
 
 ### OMIE day-ahead prices — complete
@@ -61,7 +62,20 @@ All of `data/` is gitignored — it is large and fully re-fetchable.
 Spain mean 73.31 €/MWh, range −15.00 to 700.00. ES and PT differ in 6.7% of
 periods (market splitting).
 
-### OMIE bid curves — the reason this setting is interesting
+### OMIE bid curves — complete to the publication frontier
+**101/101 months, 354,247,072 rows, uniform schema.**
+
+The bid archive ends **2026-05-08**, not 2026-05-31 like every other dataset.
+This is not a fetch failure: OMIE's May 2026 zip contains only 8 days, no
+daily bid files exist (the listing has none, and direct fetches 404), and the
+frontier sits 91 days before the fetch date of 2026-08-07 — a **~3-month
+publication lag**, as expected for commercially sensitive unit-level offers.
+
+So the bid window is 2018-01-01 → 2026-05-08 while prices, REE and REN run to
+2026-05-31. Re-running the fetcher later extends the frontier; the last ~3
+months of any other series will never have matching bids.
+
+
 Unit-level day-ahead offers for **both** Spanish and Portuguese units, since
 MIBEL clears jointly. ~2.3–3.6 M rows/month in the hourly era, ~14 M/month
 from 2025-10 when the 15-minute MTU quadrupled the period count.

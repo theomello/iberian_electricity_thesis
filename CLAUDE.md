@@ -41,6 +41,8 @@ directory" even though nothing was deleted. Keep `data/` off iCloud.
 |---|---|---|---|
 | `fetch_omie_prices.py` | OMIE `marginalpdbc` | no | `data/omie/prices/omie_day_ahead_prices.parquet` |
 | `fetch_omie_bids.py` | OMIE `curva_pbc_uof` | no | `data/omie/bids/parquet/bids_YYYYMM.parquet` |
+| `fetch_omie_intraday.py` | OMIE `curva_pibc_uof` | no | `data/omie/intraday/parquet/intraday_YYYYMM.parquet` |
+| `build_unit_registry.py` | OMIE `pdbc`,`pdbcpt`,`pdbce` | no | `data/omie/registry/unit_registry.parquet` |
 | `fetch_ree_daily.py` | REE `apidatos` | no | `data/ree/ree_{generation,demand,balance}_daily.parquet` |
 | `fetch_ree_realtime.py` | REE `demanda.ree.es` | no | `data/ree/ree_realtime_5min.parquet` |
 | `fetch_ren_portugal.py` | REN `servicebus.ren.pt` | no | `data/ren/ren_{production_15min,installed_power_monthly,market_prices,consumption_supply_daily}.parquet` |
@@ -89,6 +91,43 @@ cleared; the gap is the unaccepted supply.
 `power_mw` unifies the two eras: hourly files publish MWh over one hour,
 numerically identical to average MW. Derive energy as
 `power_mw * resolution_min / 60`.
+
+### OMIE unit registry — the key to the bid data
+`data/omie/registry/unit_registry.parquet`, built by
+`build_unit_registry.py` from `pdbc` + `pdbcpt` + `pdbce`. **5,049 units**
+over the window, columns `unit, country, role_code, role, group_tag,
+first_seen, last_seen, days_observed, net_cleared_mwh`.
+
+- **country** — ES 4,883 / PT 146 / 20 unknown. The ES and PT unit sets are
+  **disjoint** (zero overlap), so membership is a clean assignment. This is
+  the only reliable way to select Portuguese units.
+- **role** — generation 3,673, purchase_retail 749, purchase_other 347,
+  generation_large 208, storage_mixed 37, pumping 22. Decoded from cleared
+  quantity sign/volume, constant within a unit. Separating **generators from
+  retailers** is what any supply-curve or bidding work needs.
+- **group_tag** — corporate tags (`IB`, `REP`, `GE`, …), 9 distinct,
+  populated for only some units.
+
+Validated against Jan-2024 bids: **99.2% of units and 95.1% of cleared volume
+match**, `purchase_retail` units never appear on the sell side, and
+`storage_mixed` sells a small volume — all consistent with the decoding,
+which was derived without reference to those tests.
+
+**No fuel or technology, and no nameplate capacity.** The role code separates
+generation from demand and isolates storage but will not distinguish a CCGT
+from a wind farm; that needs ESIOS/ENTSO-E or name-matching, and is
+deliberately absent rather than guessed.
+
+Built from a **2-day-per-month sample** (1st and 16th) — parsing every day is
+~1 billion rows for a slowly-changing attribute table. That sampling is why
+~5% of cleared volume sits with unmatched units; `--full` closes the gap.
+
+### OMIE intraday bid curves
+`curva_pibc_uof`, unit-level offers for each intraday **session** — the
+sessions where wind and solar forecast errors get corrected after the
+day-ahead auction. Same row format as the day-ahead files, so `parse_member`
+is shared; the session index exists **only in the filename**
+(`curva_pibc_uof_YYYYMMDD<SS>.1`) and is added as a `session` column.
 
 ### REE daily generation / demand / balance — complete
 Daily only (see the hourly limitation below), 2018-01-01 → 2026-05-31, no
@@ -286,9 +325,22 @@ derives the step from the local-day span, which handles it.
 Only ~4.7% of matched rows carry `ES` or `PT`; the rest are tagged `MI` for
 the joint MIBEL market. That share tracks the ~6.7% market-splitting rate, so
 the tag appears mainly **when the market splits**, not as a unit attribute.
-Do not use it to select Portuguese units — a unit-level registry is needed
-for that, and OMIE does not expose one under the obvious dataset names
-(`unidades`, `agentes`, `unidades_fisicas` all 404).
+Use `data/omie/registry/unit_registry.parquet` instead — see below.
+
+### OMIE's file catalogue is larger than the guessable dataset names
+Guessing dataset codes (`unidades`, `agentes`, `unidades_fisicas`) returns a
+200-status HTML 404 page, which looks like success. The real catalogue is
+AJAX-loaded and holds **59 datasets**; every directory page embeds the full
+label→code map in its sidebar, reachable as::
+
+    /es/file-access-list?parents=<path>&dir=<label>     -> page carries realdir=<code>
+    /es/file-access-list?parents%5B0%5D=<code>&realdir=<code>   -> file listing
+
+Codes worth knowing beyond the ones already fetched: `pdbc`/`pdbcpt`/`pdbce`
+(cleared schedule: Spanish / Portuguese / by company), `indisp`/`indisppt`
+(unit unavailability), `capacidad_inter_*` (interconnection capacity and
+occupation), `trades`/`orders`/`precios_pibcic` (continuous intraday),
+`cab`/`det` (offer header and detail).
 
 ## Known source-data anomaly: whole-day unit dropouts
 

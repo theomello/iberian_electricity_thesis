@@ -222,13 +222,15 @@ def convert_month(zpath: Path, ym: str, force: bool = False) -> Path | None:
             "hour": pa.array(cols[2], pa.int8()),
             "quarter": pa.array(cols[3], pa.int8()),
             "resolution_min": pa.array(cols[4], pa.int8()),
-            "country": pa.array(cols[5]).dictionary_encode(),
-            "unit": pa.array(cols[6]).dictionary_encode(),
-            "side": pa.array(cols[7]).dictionary_encode(),
+            "country": pa.array(cols[5], pa.string()).dictionary_encode(),
+            "unit": pa.array(cols[6], pa.string()).dictionary_encode(),
+            "side": pa.array(cols[7], pa.string()).dictionary_encode(),
             "power_mw": pa.array(cols[8], pa.float32()),
             "price_eur_mwh": pa.array(cols[9], pa.float32()),
-            "status": pa.array(cols[10]).dictionary_encode(),
-            "offer_type": pa.array(cols[11]).dictionary_encode(),
+            "status": pa.array(cols[10], pa.string()).dictionary_encode(),
+            # explicit string type: offer_type is entirely null before
+            # 2025-10, and an inferred null dictionary cannot be written.
+            "offer_type": pa.array(cols[11], pa.string()).dictionary_encode(),
         }
     )
     out.parent.mkdir(parents=True, exist_ok=True)

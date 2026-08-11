@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 # Descriptive statistics and exhibits for the Spain / MIBEL datasets.
 #
-#   Rscript scripts/descriptives.R
+#   Rscript scripts/analysis/descriptives.R
 #
 # Writes tables to outputs/tables/ and figures to outputs/figures/.
 #
@@ -22,7 +22,7 @@ suppressPackageStartupMessages({
 })
 
 ROOT    <- normalizePath(file.path(dirname(sub("--file=", "",
-             grep("--file=", commandArgs(FALSE), value = TRUE)[1])), ".."))
+             grep("--file=", commandArgs(FALSE), value = TRUE)[1])), "..", ".."))
 if (is.na(ROOT) || !dir.exists(ROOT)) ROOT <- normalizePath(".")
 DATA    <- file.path(ROOT, "data")
 FIGS    <- file.path(ROOT, "outputs", "figures")

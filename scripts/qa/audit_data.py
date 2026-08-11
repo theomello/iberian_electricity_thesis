@@ -19,7 +19,7 @@ import pandas as pd
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 from omie_common import DATA, END, START, month_range  # noqa: E402
 
 WINDOW = {START + timedelta(d) for d in range((END - START).days + 1)}

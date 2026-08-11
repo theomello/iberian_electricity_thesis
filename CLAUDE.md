@@ -24,11 +24,13 @@ Python lives in `.venv` (Python 3.14, pandas 3.0, pyarrow 25). Always use
 `.venv/bin/python`, never bare `python3`.
 
 ```bash
-.venv/bin/python scripts/fetch_omie_prices.py
+.venv/bin/python scripts/fetch/fetch_omie_prices.py
 ```
 
-Scripts resolve the repo root via `Path(__file__).resolve().parent.parent`.
-Never hardcode paths.
+Scripts resolve the repo root from their own location — `lib/` modules use
+`Path(__file__).resolve().parent.parent.parent`, since they sit two levels
+below it. Never hardcode paths. See `scripts/README.md` for the layout and
+`data/README.md` for what each output folder holds.
 
 **This repo is at `~/projects/`, deliberately NOT on the Desktop.** The
 Desktop is iCloud-synced, which silently evicts large data files to 182-byte
@@ -37,20 +39,32 @@ directory" even though nothing was deleted. Keep `data/` off iCloud.
 
 ## Scripts
 
+`scripts/` is grouped by what a script *does*, and every path below is
+relative to it:
+
+```
+scripts/
+  lib/       shared modules — omie_common (parsing, DST, resolution), config (tokens)
+  fetch/     one script per source; each writes raw + parquet under data/
+  build/     derived artefacts assembled from fetched data
+  qa/        integrity checks that re-derive facts from the files
+  analysis/  descriptive statistics and figures (R)
+```
+
 | Script | Source | Token | Output |
 |---|---|---|---|
-| `fetch_omie_prices.py` | OMIE `marginalpdbc` | no | `data/omie/prices/omie_day_ahead_prices.parquet` |
-| `fetch_omie_bids.py` | OMIE `curva_pbc_uof` | no | `data/omie/bids/parquet/bids_YYYYMM.parquet` |
-| `fetch_omie_intraday.py` | OMIE `curva_pibc_uof` | no | `data/omie/intraday/parquet/intraday_YYYYMM.parquet` |
-| `build_unit_registry.py` | OMIE `pdbc`,`pdbcpt`,`pdbce` | no | `data/omie/registry/unit_registry.parquet` |
-| `fetch_ree_daily.py` | REE `apidatos` | no | `data/ree/ree_{generation,demand,balance}_daily.parquet` |
-| `fetch_ree_realtime.py` | REE `demanda.ree.es` | no | `data/ree/ree_realtime_5min.parquet` |
-| `fetch_ren_portugal.py` | REN `servicebus.ren.pt` | no | `data/ren/ren_{production_15min,installed_power_monthly,market_prices,consumption_supply_daily}.parquet` |
-| `fetch_esios_spain.py` | ESIOS | **yes** | `data/esios/esios_{id}.parquet` |
-| `fetch_entsoe_spain.py` | ENTSO-E | **yes** | `data/entsoe/entsoe_{series}_{zone}.parquet` |
+| `fetch/fetch_omie_prices.py` | OMIE `marginalpdbc` | no | `data/omie/prices/omie_day_ahead_prices.parquet` |
+| `fetch/fetch_omie_bids.py` | OMIE `curva_pbc_uof` | no | `data/omie/bids/parquet/bids_YYYYMM.parquet` |
+| `fetch/fetch_omie_intraday.py` | OMIE `curva_pibc_uof` | no | `data/omie/intraday/parquet/intraday_YYYYMM.parquet` |
+| `build/build_unit_registry.py` | OMIE `pdbc`,`pdbcpt`,`pdbce` | no | `data/omie/registry/unit_registry.parquet` |
+| `fetch/fetch_ree_daily.py` | REE `apidatos` | no | `data/ree/ree_{generation,demand,balance}_daily.parquet` |
+| `fetch/fetch_ree_realtime.py` | REE `demanda.ree.es` | no | `data/ree/ree_realtime_5min.parquet` |
+| `fetch/fetch_ren_portugal.py` | REN `servicebus.ren.pt` | no | `data/ren/ren_{production_15min,installed_power_monthly,market_prices,consumption_supply_daily}.parquet` |
+| `fetch/fetch_esios_spain.py` | ESIOS | **yes** | `data/esios/esios_{id}.parquet` |
+| `fetch/fetch_entsoe_spain.py` | ENTSO-E | **yes** | `data/entsoe/entsoe_{series}_{zone}.parquet` |
 
-`omie_common.py` holds shared parsing and DST/resolution logic;
-`config.py` loads tokens from a gitignored `.env`.
+`lib/omie_common.py` holds shared parsing and DST/resolution logic;
+`lib/config.py` loads tokens from a gitignored `.env`.
 
 ## Data inventory
 
@@ -94,7 +108,7 @@ numerically identical to average MW. Derive energy as
 
 ### OMIE unit registry — the key to the bid data
 `data/omie/registry/unit_registry.parquet`, built by
-`build_unit_registry.py` from `pdbc` + `pdbcpt` + `pdbce`. **5,049 units**
+`build/build_unit_registry.py` from `pdbc` + `pdbcpt` + `pdbce`. **5,049 units**
 over the window, columns `unit, country, role_code, role, group_tag,
 first_seen, last_seen, days_observed, net_cleared_mwh`.
 
@@ -277,7 +291,7 @@ Generation is a different matter: `estructura-generacion`,
 `balance-electrico`, `estructura-renovables` and
 `evolucion-renovable-no-renovable` all return HTTP 400 at `time_trunc=hour`
 with or without geo parameters, while working at `time_trunc=day`. Use
-`fetch_ree_realtime.py` instead — it is finer-grained anyway.
+`fetch/fetch_ree_realtime.py` instead — it is finer-grained anyway.
 
 `potencia-instalada` returns HTTP 500 under every combination tried. That is
 the one series with no token-free source.
@@ -405,7 +419,7 @@ ranges **from the files themselves** rather than trusting fetch logs. Run it
 after any re-fetch:
 
 ```bash
-.venv/bin/python scripts/audit_data.py
+.venv/bin/python scripts/qa/audit_data.py
 ```
 
 It exits non-zero on any problem. As of 2026-08-11 it reports **no problems**,

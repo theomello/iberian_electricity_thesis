@@ -37,7 +37,7 @@ from pathlib import Path
 
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 from config import require_token  # noqa: E402
 from omie_common import DATA, END, START, session  # noqa: E402
 

@@ -47,7 +47,7 @@ from pathlib import Path
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 from fetch_omie_bids import parse_member  # noqa: E402
 from omie_common import (  # noqa: E402
     DATA,

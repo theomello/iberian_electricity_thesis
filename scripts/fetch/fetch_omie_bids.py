@@ -66,7 +66,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import requests
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 from omie_common import (  # noqa: E402
     DATA,
     END,

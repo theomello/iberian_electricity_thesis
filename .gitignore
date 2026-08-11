@@ -7,6 +7,7 @@ __pycache__/
 # Data: large and re-fetchable via scripts/fetch_*.py
 data/**
 !data/**/.gitkeep
+!data/README.md
 
 # macOS
 .DS_Store

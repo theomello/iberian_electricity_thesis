@@ -53,6 +53,7 @@ parser and re-run.
 | `fetch_omie_bids.py` | OMIE `curva_pbc_uof` | no | day-ahead unit-level offer curves |
 | `fetch_omie_intraday.py` | OMIE `curva_pibc_uof` | no | intraday offer curves, per session |
 | `fetch_omie_cab.py` | OMIE `cab` | no | offer headers: plant name, max MW, minimum-income condition |
+| `fetch_esios_units.py` | ESIOS archive 82 | no | programming-unit registry: agent, technology, EIC |
 | `fetch_ree_daily.py` | REE `apidatos` | no | daily generation / demand / balance (ES) |
 | `fetch_ree_realtime.py` | REE `demanda.ree.es` | no | 5-minute generation, demand, cross-border flows (ES) |
 | `fetch_ren_portugal.py` | REN DataHub | no | 15-minute production, prices, balance, **installed capacity** (PT) |

@@ -58,6 +58,8 @@ scripts/
 | `fetch/fetch_omie_intraday.py` | OMIE `curva_pibc_uof` | no | `data/omie/intraday/parquet/intraday_YYYYMM.parquet` |
 | `build/build_unit_registry.py` | OMIE `pdbc`,`pdbcpt`,`pdbce` | no | `data/omie/registry/unit_registry.parquet` |
 | `fetch/fetch_omie_cab.py` | OMIE `cab` | no | `data/omie/cab/parquet/cab_YYYYMM.parquet` |
+| `fetch/fetch_esios_units.py` | ESIOS archive 82 | **no** | `data/esios/esios_programming_units.parquet` |
+| `build/build_unit_agents.py` | ESIOS + `cab` + prefixes | no | `data/omie/registry/unit_agents.parquet` |
 | `fetch/fetch_ree_daily.py` | REE `apidatos` | no | `data/ree/ree_{generation,demand,balance}_daily.parquet` |
 | `fetch/fetch_ree_realtime.py` | REE `demanda.ree.es` | no | `data/ree/ree_realtime_5min.parquet` |
 | `fetch/fetch_ren_portugal.py` | REN `servicebus.ren.pt` | no | `data/ren/ren_{production_15min,installed_power_monthly,market_prices,consumption_supply_daily}.parquet` |
@@ -187,6 +189,43 @@ assets** — `EGV` is Axpo, 394 units and 6.7% of volume — and unit names like
 `IBEVD11` "EÓLICA HABILITADA" at 5,906 MW. For market power that is arguably
 the right object — the agent controlling the bid — but it is *not* plant
 ownership, and the two must not be conflated.
+
+### Who controls a unit's bid — partially solved, 45% of the near margin
+`data/esios/esios_programming_units.parquet` — **3,872 units, 738 agents, 41
+technologies, EIC at 100%**, from ESIOS archive 82. **Token-free**, unlike the
+ESIOS indicator API; the web page is JS-rendered with no export, the JSON is at
+`api.esios.ree.es/archives/82/download_json?locale=es`. It is a **snapshot**
+with no entry/exit dates — record the fetch date with anything derived from it.
+
+`Sujeto del Mercado` is the market agent, the entity that *decides the bid*.
+Nothing in the OMIE files publishes it, and it is the grouping every
+market-power measure needs: residual demand facing firm *i* requires knowing
+which units are *i*'s.
+
+**Four entities, do not conflate them.** A *plant* is physical. A *unit* (UP)
+is a market registration — sometimes one plant (`ASC1`), sometimes a whole
+cascade (`ADOURO`), sometimes a 6,500 MW portfolio (`EDPSVD1`). An *agent* is
+who submits the offer. A *firm* is the group above the agent (`IBEG`, `IGNU`,
+`IBGT` are all Iberdrola); ESIOS gives agents, not groups.
+
+ESIOS is REE's **dispatch** registry, so it omits the commercial aggregation
+vehicles that exist only to bid — 592 of our codes match. `build_unit_agents.py`
+layers three sources (ESIOS exact match; ESIOS agent code appearing inside a
+`cab` plant name, e.g. `GREPSC1` = "REPSB GENERICA VENTA"; then a hand-checked
+prefix dictionary) to reach **45.3% of near-marginal offered volume**.
+
+**Measure coverage on the near-marginal band, never on total volume.** Price is
+set at the margin: a 5 GW unit offering at 0 €/MWh is inframarginal almost
+always and contributes nothing to the slope of residual demand, so
+total-volume coverage flatters the mapping for the units that matter least.
+
+Prefixes whose owner could not be established *from the data* are left
+unmapped on purpose — `EDP`, `GED`, `GGN`, `CEV`, `ADO`, `NXV`, `IBE`, `IGV`
+are ~28% of generation volume. Several are guessable by a domain expert; a
+guess would silently corrupt every market-share and markup figure downstream.
+
+`det` (offer detail) was checked and carries **no** agent field — it is
+price/quantity steps keyed by the same 7-digit unit id as `cab`.
 
 ### The intraday session regimes overlap — they did not switch cleanly
 MIBEL's own 6-7 intraday sessions and the European IDA auctions **ran in

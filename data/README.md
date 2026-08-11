@@ -63,6 +63,7 @@ overlap.
 | path | what |
 |---|---|
 | `unit_registry.parquet` | 5,049 units — `country`, `role`, `group_tag`, first/last seen |
+| `unit_agents.parquet` | 5,049 units — `agent`, `source` (esios/name/prefix), `tech_esios`, `max_power_mw` |
 
 **Derived, not fetched.** Built by `scripts/build/build_unit_registry.py` from
 OMIE's `pdbc`/`pdbcpt`/`pdbce` schedules, whose source zips are streamed and
@@ -119,12 +120,29 @@ parquet — do not re-derive them from `local_date`.
 
 ---
 
-## `esios/` and `entsoe/` — empty
+## `esios/` — programming-unit registry
 
-Both are **token-gated** and nothing has been fetched. They exist so the
-fetchers have somewhere to write. The only series still missing anywhere in
+| path | what |
+|---|---|
+| `esios_programming_units.parquet` | 3,872 units — `agent`, `tech`, `eic`, `max_power_mw` |
+
+REE's registry of *unidades de programación*, from archive 82. **Token-free**,
+unlike the ESIOS indicator API. `agent` (Sujeto del Mercado) is the entity that
+submits offers — the grouping any market-power measure needs, published nowhere
+in the OMIE files.
+
+A **snapshot**: no entry/exit dates, so re-fetching silently changes it. Record
+the fetch date with anything derived from it. It covers the physical fleet REE
+dispatches, so the commercial aggregation vehicles in OMIE's bid files
+(`EDPSVD1`, `IBEVD11`) are absent — 592 of our unit codes match. See
+`omie/registry/unit_agents.parquet` for how the remainder is handled.
+
+## `entsoe/` — empty
+
+**Token-gated** and nothing fetched. The only series still missing anywhere in
 this project is **Spanish installed capacity**; Portugal's is covered by REN
-above. See `.env.example`.
+above. Note ESIOS above no longer needs a token for the unit registry, though
+`fetch_esios_spain.py` still does for indicator series. See `.env.example`.
 
 ---
 

@@ -122,6 +122,26 @@ Built from a **2-day-per-month sample** (1st and 16th) — parsing every day is
 ~1 billion rows for a slowly-changing attribute table. That sampling is why
 ~5% of cleared volume sits with unmatched units; `--full` closes the gap.
 
+### The intraday session regimes overlap — they did not switch cleanly
+MIBEL's own 6-7 intraday sessions and the European IDA auctions **ran in
+parallel from 2025-03 to 2025-06**, and the two are distinguished only by the
+width of the session digits in the filename: two digits (`01`..`07`) for the
+old sessions, one (`1`..`3`) for IDA1-IDA3. Full changeover is 2025-07.
+
+This bites twice. A regex requiring two digits returns **zero rows** for
+2025-07 onward — which fails loudly — but during the overlap it silently
+parses *part* of a month and reports success: 2025-06 yielded only 22 of 90
+files that way, 2025-03 90 of 101, 2025-05 91 of 96. Audit member counts
+against the zip rather than trusting a clean exit.
+
+`session` is therefore **not comparable across the boundary**: 1-7 before,
+1-3 after, with different meanings and an overlap period where both appear.
+
+**Intraday also adopted the 15-minute MTU in June 2025, four months before
+the day-ahead market did (2025-10-01).** The two markets run at different
+resolutions in between, so read `resolution_min` per file rather than
+inferring it from the date.
+
 ### OMIE intraday bid curves
 `curva_pibc_uof`, unit-level offers for each intraday **session** — the
 sessions where wind and solar forecast errors get corrected after the

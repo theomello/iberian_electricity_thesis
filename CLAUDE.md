@@ -398,6 +398,32 @@ value flags exactly this. Filter these days out of any design that relies on
 market-wide aggregates. Analyses of individual units' bidding are unaffected
 except for the units actually missing.
 
+## Auditing
+
+`audit_data.py` re-derives coverage, duplicates, schema uniformity and value
+ranges **from the files themselves** rather than trusting fetch logs. Run it
+after any re-fetch:
+
+```bash
+.venv/bin/python scripts/audit_data.py
+```
+
+It exits non-zero on any problem. As of 2026-08-11 it reports **no problems**,
+with four documented notes (see below). Two things it exists to catch, both of
+which actually happened here: a fetcher exiting 0 after parsing a fraction of
+a month, and a timestamp column silently full of NaT.
+
+### Known, verified exceptions
+
+- **Intraday: 2021-07-30, 2025-04-29, 2026-02-28 are absent at source.** The
+  monthly zips contain *zero* members named for those dates. Listed explicitly
+  in `KNOWN_ABSENT` so a genuinely new gap still fails the audit.
+- **One row dated 2017-12-31** sits in the January 2018 intraday zip: session
+  files carry their own delivery date, which can precede the filename date.
+- **20 registry units have no country and 13 no role** — they appear in
+  `pdbce` but not in the sampled `pdbc`/`pdbcpt` days. A `--full` registry
+  build resolves them.
+
 ## Conventions
 
 - Raw downloads are never modified; re-fetch instead.

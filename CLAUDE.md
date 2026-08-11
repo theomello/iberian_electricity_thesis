@@ -142,12 +142,24 @@ the day-ahead market did (2025-10-01).** The two markets run at different
 resolutions in between, so read `resolution_min` per file rather than
 inferring it from the date.
 
-### OMIE intraday bid curves
-`curva_pibc_uof`, unit-level offers for each intraday **session** — the
-sessions where wind and solar forecast errors get corrected after the
-day-ahead auction. Same row format as the day-ahead files, so `parse_member`
-is shared; the session index exists **only in the filename**
-(`curva_pibc_uof_YYYYMMDD<SS>.1`) and is added as a `session` column.
+### OMIE intraday bid curves — complete
+**101/101 months, 558,797,498 rows**, uniform schema — larger than the
+day-ahead archive. Unit-level offers for each intraday **session**, where
+wind and solar forecast errors get corrected after the day-ahead auction.
+
+Same row format as the day-ahead files, so `parse_member` is shared; the
+session index exists **only in the filename**
+(`curva_pibc_uof_YYYYMMDD<SS>.1`) and is added as a `session` column. Rows
+carry their own delivery date, which can differ from the filename date — the
+row date is authoritative.
+
+Cleared intraday sell volume is ~18% of day-ahead (Jan 2024), as expected for
+an adjustment market. The frontier is 2026-05-11, three days past the
+day-ahead bid frontier. A few session files are published **empty** (e.g.
+session 4 on 2020-04-01) and correctly yield no rows.
+
+Parsing is streamed one row-group per source file: the IDA-era months are
+~17 M rows each and buffering a month in memory exhausts it.
 
 ### REE daily generation / demand / balance — complete
 Daily only (see the hourly limitation below), 2018-01-01 → 2026-05-31, no

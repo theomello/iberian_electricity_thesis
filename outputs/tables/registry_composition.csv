@@ -1,0 +1,16 @@
+"country","role","units"
+"ES","generation",3620
+"ES","purchase_retail",694
+"ES","purchase_other",345
+"ES","generation_large",184
+"PT","purchase_retail",55
+"PT","generation",53
+"PT","generation_large",24
+NA,"storage_mixed",20
+"ES","pumping",15
+"ES","storage_mixed",14
+"ES",NA,11
+"PT","pumping",7
+"PT","storage_mixed",3
+"PT","purchase_other",2
+"PT",NA,2

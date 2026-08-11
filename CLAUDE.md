@@ -57,6 +57,7 @@ scripts/
 | `fetch/fetch_omie_bids.py` | OMIE `curva_pbc_uof` | no | `data/omie/bids/parquet/bids_YYYYMM.parquet` |
 | `fetch/fetch_omie_intraday.py` | OMIE `curva_pibc_uof` | no | `data/omie/intraday/parquet/intraday_YYYYMM.parquet` |
 | `build/build_unit_registry.py` | OMIE `pdbc`,`pdbcpt`,`pdbce` | no | `data/omie/registry/unit_registry.parquet` |
+| `fetch/fetch_omie_cab.py` | OMIE `cab` | no | `data/omie/cab/parquet/cab_YYYYMM.parquet` |
 | `fetch/fetch_ree_daily.py` | REE `apidatos` | no | `data/ree/ree_{generation,demand,balance}_daily.parquet` |
 | `fetch/fetch_ree_realtime.py` | REE `demanda.ree.es` | no | `data/ree/ree_realtime_5min.parquet` |
 | `fetch/fetch_ren_portugal.py` | REN `servicebus.ren.pt` | no | `data/ren/ren_{production_15min,installed_power_monthly,market_prices,consumption_supply_daily}.parquet` |
@@ -127,14 +128,65 @@ match**, `purchase_retail` units never appear on the sell side, and
 `storage_mixed` sells a small volume — all consistent with the decoding,
 which was derived without reference to those tests.
 
-**No fuel or technology, and no nameplate capacity.** The role code separates
-generation from demand and isolates storage but will not distinguish a CCGT
-from a wind farm; that needs ESIOS/ENTSO-E or name-matching, and is
-deliberately absent rather than guessed.
+**No fuel or technology, and no nameplate capacity — in the registry.** The
+role code separates generation from demand and isolates storage but will not
+distinguish a CCGT from a wind farm.
+
+**Both are now available from `cab` instead** (2026-08-11), token-free — see
+the OMIE offer-header section below. `cab` publishes a descriptive plant name
+whose prefix encodes technology (`C.C.` ciclo combinado, `C.N.` central
+nuclear, `C.T.` térmica, `UOF HIDRO`/`C.H.` hydro, `PS`/`FV` solar, `PE` wind)
+and a max-power column validated against published figures. ESIOS/ENTSO-E
+tokens are **not** needed for this. The registry itself has not yet been
+rebuilt on `cab`.
 
 Built from a **2-day-per-month sample** (1st and 16th) — parsing every day is
 ~1 billion rows for a slowly-changing attribute table. That sampling is why
 ~5% of cleared volume sits with unmatched units; `--full` closes the gap.
+
+### OMIE `cab` — the offer header, and what unlocks unit attributes
+`data/omie/cab/parquet/`, **113 months 2017-01 → 2026-05, 5,954,579 rows**,
+fetched 2026-08-11. One record per unit per day. Token-free.
+
+This is the header accompanying the day-ahead offers in `curva_pbc_uof`, and
+it carries three things nothing else token-free publishes:
+
+- **Descriptive plant name** — `ESCCC1` → "C.C. ESCOMBRERAS 1". Technology is
+  in the prefix (see the registry note above).
+- **Max power in MW** — validated: Ascó 1 reads 1028.0 (published ~1032),
+  Escombreras 1 reads 408.6 (~400).
+- **The minimum income condition**, as a fixed term (€/day) and a variable
+  term (€/MWh). This is the complex condition behind the whole-day withdrawals,
+  and the primitive Reguant (2014) uses to identify startup costs.
+
+Fixed-width, **169 chars, latin-1, dot decimal** — unlike `curva_pbc_uof`,
+which uses a comma. Do not share a number parser between them.
+
+Validated on January 2024: units declaring no minimum-income condition
+withdraw for a whole day **4.1%** of the time; units declaring one, **81.1%**;
+and units whose variable term exceeds the day's *highest* clearing price,
+**94.2%**. The condition does what the market rule says it does.
+
+Only three of the nine numeric fields are labelled in the parser. The other
+six are carried through unnamed rather than guessed at.
+
+### `cab` names identify the bidding **agent**, not the plant owner
+Unit codes carry a 3-character alphabetic mnemonic (`EDP`, `IBE`, `GGN`,
+`GRE`, `EGE`) that identifies the market agent. **344 distinct prefixes across
+3,940 generation units; 54 prefixes cover 80% of generation volume, 100 cover
+94%** — so a hand-built mnemonic→firm dictionary is bounded work.
+
+It cannot be learned from OMIE's own labels: `group_tag` covers 121 units
+(18.8% of volume), and propagating it along prefixes reaches only **22.4%**,
+because the labelled set excludes the largest players.
+
+Two cautions. Several large prefixes are **traders representing third-party
+assets** — `EGV` is Axpo, 394 units and 6.7% of volume — and unit names like
+"UOF REPRESENTADA DE ARRUBAL 1" say so explicitly. And the largest units are
+**owner-level portfolios**, not plants: `EDPSVD1` "VENTA RE" at 6,500 MW,
+`IBEVD11` "EÓLICA HABILITADA" at 5,906 MW. For market power that is arguably
+the right object — the agent controlling the bid — but it is *not* plant
+ownership, and the two must not be conflated.
 
 ### The intraday session regimes overlap — they did not switch cleanly
 MIBEL's own 6-7 intraday sessions and the European IDA auctions **ran in
@@ -396,15 +448,34 @@ On an affected day, a block of units is simply absent from the file for all
 near-constant MW offset across the day. Affected files are normal size and
 parse cleanly.
 
-Confirmed so far (~0.1% of days):
+A full scan of the archive on 2026-08-11 — re-deriving the market-clearing
+identity for every one of the 89,039 day-ahead periods rather than spot-checking
+— found **63 affected days (0.70% of periods), not the 2 previously recorded.**
+They are two distinct phenomena:
+
+**Whole-day dropouts** — all 24 periods affected, a block of units simply
+absent. These are the originally documented cases:
 
 | date | direction | offset | missing units |
 |---|---|---|---|
 | 2018-06-14 | buy > sell | ~2,900 MWh/h | 13 sell units, incl. the `MIEU` interconnection pseudo-unit |
 | 2022-10-12 | sell > buy | ~3,098 MWh/h | 16 buy + 24 sell units |
 
+**A 2025 cluster** — 61 days from **2025-03-19 to 2025-06-09**, *partial*-day
+(1–23 periods, not all 24). Sporadic through late March and April, then every
+single day of May at 10–23 periods each, decaying through early June. The
+ramp-up follows the **28 April 2025 Iberian blackout** and the weeks of
+reinforced grid operation after it, but the onset predates the blackout by five
+weeks, so the March start is unexplained. Do not assume one cause.
+
 The direction varies with which side loses more. Left as-is rather than
 patched — imputing bids would be inventing data.
+
+**Detect these from the clearing identity, never from a hardcoded date list.**
+That is how the 61 new days surfaced; a date list would have silently passed
+them. Note the practical consequence: they are **not randomly distributed**,
+so dropping them thins 2025 in a correlated way — any 2025 result computed on
+the surviving periods carries that selection.
 
 **Always run `fetch_omie_bids.py --verify`**, which re-checks the
 market-clearing identity per month and prints the maximum gap; a non-zero

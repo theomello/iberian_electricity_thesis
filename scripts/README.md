@@ -52,6 +52,7 @@ parser and re-run.
 | `fetch_omie_prices.py` | OMIE `marginalpdbc` | no | day-ahead price, ES + PT |
 | `fetch_omie_bids.py` | OMIE `curva_pbc_uof` | no | day-ahead unit-level offer curves |
 | `fetch_omie_intraday.py` | OMIE `curva_pibc_uof` | no | intraday offer curves, per session |
+| `fetch_omie_cab.py` | OMIE `cab` | no | offer headers: plant name, max MW, minimum-income condition |
 | `fetch_ree_daily.py` | REE `apidatos` | no | daily generation / demand / balance (ES) |
 | `fetch_ree_realtime.py` | REE `demanda.ree.es` | no | 5-minute generation, demand, cross-border flows (ES) |
 | `fetch_ren_portugal.py` | REN DataHub | no | 15-minute production, prices, balance, **installed capacity** (PT) |
@@ -112,10 +113,23 @@ source are listed explicitly in `KNOWN_ABSENT`, so a *new* gap still fails.
 
 | script | produces |
 |---|---|
-| `descriptives.R` | 7 figures in `outputs/figures/`, 5 tables in `outputs/tables/` |
+| `descriptives.R` | 13 exhibits, **displayed not saved** — needs a live R session |
+| `residual_demand_slope.py` | per-period residual-demand slope and elasticity |
+
+`descriptives.R` writes nothing to disk; it prints to the active graphics
+device, so `Rscript` and `R -e` are both rejected (they are non-interactive and
+would silently emit an `Rplots.pdf`). Start R, then:
+
+```r
+source("scripts/analysis/descriptives.R")
+```
+
+Controls at the top of the file: `SECTIONS` to run a subset, `PAUSE` between
+exhibits, `HEAVY` for the full-archive bid sweep.
 
 ```bash
-Rscript scripts/analysis/descriptives.R
+.venv/bin/python scripts/analysis/residual_demand_slope.py            # one day per month
+.venv/bin/python scripts/analysis/residual_demand_slope.py --full --save
 ```
 
 Needs R with `arrow`, `dplyr`, `ggplot2`, `tidyr`, `scales`. The bid archives

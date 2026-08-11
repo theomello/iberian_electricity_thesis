@@ -70,6 +70,19 @@ discarded. This is the only reliable way to (a) tell Spanish from Portuguese
 units and (b) separate generators from retailers — the `country` column
 *inside* the bid files does neither.
 
+### `omie/cab/` — day-ahead offer headers
+| path | what |
+|---|---|
+| `zips/cab_YYYYMM.zip` | raw monthly archives, never modified |
+| `parquet/cab_YYYYMM.parquet` | 113 months, 5,954,579 rows, one per unit per day |
+
+Fetched by `scripts/fetch/fetch_omie_cab.py`. Carries the unit's **plant name**
+(technology is in the prefix), **max power in MW**, and the **minimum income
+condition** (fixed €/day + variable €/MWh). Together these supply the
+technology and capacity the registry lacks, and the complex-bid condition that
+drives whole-day unit withdrawals. Covers 2017-01, a year before the rest of
+the window.
+
 ---
 
 ## `ree/` — Red Eléctrica, the Spanish TSO

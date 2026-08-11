@@ -9,6 +9,14 @@ data/**
 !data/**/.gitkeep
 !data/README.md
 
+# Papers: the PDFs are third-party copyrighted material and the Markdown is
+# regenerable with scripts/build/convert_papers.py. Keep the README only.
+papers/**
+!papers/README.md
+
+# Large derived analysis tables (re-derivable from scripts/analysis/)
+outputs/tables/*.parquet
+
 # macOS
 .DS_Store
 

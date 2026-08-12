@@ -238,6 +238,28 @@ guess would silently corrupt every market-share and markup figure downstream.
 `det` (offer detail) was checked and carries **no** agent field — it is
 price/quantity steps keyed by the same 7-digit unit id as `cab`.
 
+Full documentation of the mapping — layers, fields, coverage, glossary and the
+five ways it can mislead — is in [`docs/unit-agent-mapping.md`](docs/unit-agent-mapping.md).
+
+### CNMC publishes shares on PDBF, not on the day-ahead auction
+**PDBF** = *Programa Diario Base de Funcionamiento*, the daily operating
+schedule: the day-ahead auction result (**PDBC**, *Programa Diario Base de
+Casación*) **plus bilateral physical contracts and self-scheduling**. On
+January 2024 the PDBF sell total is **1.73×** day-ahead cleared volume.
+
+Comparing CNMC's shares to day-ahead cleared shares therefore makes firms look
+under-mapped when they are not. Measured on PDBF our mapping gives Iberdrola
+22.2% against CNMC's 20%, Naturgy 5.2% against 6%, Acciona 4.3% against 4%.
+
+This is economically substantive, not bookkeeping. For market power **in the
+day-ahead auction** the relevant share is day-ahead exposure: volume sold
+forward at a fixed price earns nothing extra when the day-ahead price rises —
+the contract-position term in Wolak (2000) and Hortaçsu & Puller (2008). Using
+PDBF-based shares **overstates** the day-ahead markup incentive.
+
+OMIE publishes `pdbf` as its own dataset, same schema as `pdbce`, so a
+like-for-like comparison needs no new parsing.
+
 ### The intraday session regimes overlap — they did not switch cleanly
 MIBEL's own 6-7 intraday sessions and the European IDA auctions **ran in
 parallel from 2025-03 to 2025-06**, and the two are distinguished only by the

@@ -41,18 +41,24 @@ WHAT I HAVE ALREADY CHECKED, so as not to ask for something already public
     the aggregated commercial units, which are precisely the ones carrying the
     most volume.
 
-IF THE FULL CORRESPONDENCE IS NOT SOMETHING YOU CAN SHARE
+THE SMALLEST VERSION OF THIS REQUEST
 
-Any of the following would help, in descending order of usefulness:
+If sharing the correspondence is not possible, there is a single yes-or-no
+question that would resolve most of the difficulty on its own:
+
+    Is the alphabetic prefix of the offer unit code assigned per market agent?
+
+For example, do all unit codes beginning EDP..., IBE... or GGN... belong to one
+agent each? I ask because answering it discloses no agent identity, no
+commercially sensitive information, and no data at all - yet it would let me
+group units belonging to the same participant with confidence rather than
+inference. I would be grateful for an answer to this question even if nothing
+else is possible.
+
+Failing that, either of these would also help:
 
   1. The unit-to-agent correspondence for generation units, 2018-2026.
   2. The same for a single representative year.
-  3. Simply confirming whether the alphabetic prefix of the unit code is
-     assigned per agent. A yes or no would let me group the units belonging to
-     the same participant without your disclosing any agent identity at all.
-
-Point 3 alone would resolve most of the difficulty, and I would be grateful for
-an answer to it even if the first two are not possible.
 
 This is academic, non-commercial work for a master's thesis. I am happy to cite
 OMIE as the source, to share the analysis before publication, and to sign any
@@ -111,21 +117,26 @@ LO QUE YA HE COMPROBADO, para no solicitarles algo que ya sea público
     sistema. Esto excluye las unidades comerciales agregadas, que son
     precisamente las que concentran mayor volumen.
 
-SI NO FUERA POSIBLE FACILITAR LA CORRESPONDENCIA COMPLETA
+LA VERSIÓN MÍNIMA DE ESTA SOLICITUD
 
-Cualquiera de las siguientes opciones me sería de gran ayuda, por orden de
-utilidad:
+Si no fuera posible facilitar la correspondencia, hay una única pregunta de sí
+o no que resolvería por sí sola la mayor parte de la dificultad:
+
+    ¿El prefijo alfabético del código de unidad de oferta se asigna por sujeto
+    de mercado?
+
+Es decir, ¿pertenecen todos los códigos que empiezan por EDP..., IBE... o
+GGN... a un mismo sujeto en cada caso? Lo pregunto porque responderla no revela
+la identidad de ningún agente, ninguna información comercialmente sensible ni
+dato alguno, y sin embargo me permitiría agrupar con certeza las unidades de un
+mismo participante en lugar de inferirlas. Les agradecería una respuesta a esta
+pregunta aunque no fuera posible nada más.
+
+En su defecto, cualquiera de estas opciones también me ayudaría:
 
   1. La correspondencia unidad-sujeto de mercado para unidades de generación,
      2018-2026.
   2. La misma información para un único año representativo.
-  3. Simplemente confirmar si el prefijo alfabético del código de unidad se
-     asigna por agente. Un sí o un no me permitiría agrupar las unidades de un
-     mismo participante sin que ustedes revelen la identidad de ningún agente.
-
-El punto 3 por sí solo resolvería la mayor parte de la dificultad, y les
-agradecería una respuesta a esa pregunta aunque los dos primeros puntos no sean
-posibles.
 
 Se trata de un trabajo académico y sin fines comerciales, correspondiente a un
 trabajo de fin de máster. Puedo citar a OMIE como fuente, compartir el análisis

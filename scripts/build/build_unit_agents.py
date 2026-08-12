@@ -82,7 +82,12 @@ PREFIX_AGENTS: dict[str, tuple[str, str, str]] = {
     # run with and without them; see --tier in this script.
     "EDP": ("EDP", "inferred", "mnemonic; CNMC shows EDP 13pp short with 0% attributed"),
     "IBE": ("IBERDROLA", "inferred", "mnemonic; CNMC 15.9pp gap; id-neighbours 56% Iberdrola"),
-    "IGN": ("IBERDROLA", "inferred", "mnemonic (Iberdrola Generación); same CNMC gap"),
+    # "IGN" was assigned to Iberdrola on the mnemonic "Iberdrola Generación"
+    # and WITHDRAWN on inspection: across its 55 units the cab names are
+    # "UOF XALLAS I", "SOLAR MULA", "GALICIA VENTO", "PE CABEZA MESÁ" and
+    # similar -- a mixed wind and small-hydro portfolio. "IBERDROLA" appears
+    # nowhere in them and "IGNIS" appears twice, so the prefix is far more
+    # likely Ignis Energía. Worth 2.5% of cleared sell volume; left unmapped.
     "GGN": ("NATURGY", "inferred", "mnemonic (Gas Natural); CNMC 4.9pp gap"),
     "NXV": ("NEXUS", "inferred", "CNMC lists Nexus at 4% with 0% attributed; NXV is 3.3%"),
     "ADO": ("EDP", "inferred", "Douro cascade, PT hydro; feeds the EDP gap"),

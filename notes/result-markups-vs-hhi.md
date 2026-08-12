@@ -158,6 +158,40 @@ and units that exited early are absent, so measured shares climb mechanically.
 Within-year comparisons hold coverage fixed and are sound; across-year trends
 must come from the CNMC-based estimates above, which do not use this mapping.
 
+## CNMC measures PDBF, not the day-ahead auction — and it matters
+
+CNMC's *Cuadro 10* is computed on the **PDBF** (programa diario base de
+funcionamiento), which includes bilateral contracts and self-scheduling, not
+only day-ahead cleared volume. On January 2024 the PDBF sell total is **1.73×**
+day-ahead cleared volume.
+
+Measured on PDBF, our mapping matches CNMC closely:
+
+| firm | our day-ahead share | our PDBF share | CNMC |
+|---|---|---|---|
+| Iberdrola | 7.3% | **22.2%** | 20% |
+| Endesa | 4.9% | 11.5% | 16% |
+| EDP | 23.6% | 15.4% | 13% |
+| Naturgy | 1.0% | 5.2% | 6% |
+| Acciona | 6.5% | 4.3% | 4% |
+
+So the "missing half of Iberdrola" was a **definitional mismatch, not missing
+units**. Iberdrola sells a large share bilaterally and through its retail arm,
+so its day-ahead cleared volume is far below its total generation programme.
+
+**This has a direct consequence for the headline result.** `L = s/eta` for the
+*day-ahead auction* should use the firm's day-ahead exposure, not its total
+programme: volume already sold forward at a fixed price earns nothing extra
+when the day-ahead price rises. That is the contract-position term `theta` in
+Wolak (2000) and Hortaçsu & Puller (2008). Using CNMC's PDBF-based shares
+therefore **overstates** the day-ahead markup incentive, in the same way that
+ignoring forward contracts overstates market power in Bushnell, Mansur &
+Saravia (2008).
+
+The Lerner figures above should be read as an upper bound *on this dimension*
+even while they remain a lower bound on the elasticity dimension. Recomputing
+them on day-ahead shares is the obvious next step.
+
 ## Data
 
 All from public, token-free sources. 354 M unit-level day-ahead offers

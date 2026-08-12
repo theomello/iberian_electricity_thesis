@@ -1,15 +1,29 @@
 #!/usr/bin/env python3
-"""Fetch the ESIOS registry of programming units (unidades de programación).
+"""Fetch REE's three market-registry archives from ESIOS.
 
     .venv/bin/python scripts/fetch/fetch_esios_units.py
 
-Writes data/esios/esios_programming_units.parquet (~3,900 rows).
+Writes to data/esios/:
+    esios_programming_units.parquet   archive 82, ~3,900 bidding units
+    esios_physical_units.parquet      archive 81, ~6,600 physical units
+    esios_market_subjects.parquet     archive 83, ~740 agents with legal names
 
-**No token.** Unlike the ESIOS indicator API, archive 82 is public. The web
-page at https://www.esios.ree.es/es/unidades-de-programacion is JS-rendered
-and has no export button; the JSON behind it is:
+**No token.** Unlike the ESIOS indicator API these archives are public:
 
-    https://api.esios.ree.es/archives/82/download_json?locale=es
+    https://api.esios.ree.es/archives/{82,81,83}/download_json?locale=es
+
+Only 82 is reachable from the website. 81 and 83 were found by probing archive
+ids -- `https://api.esios.ree.es/archives` itself returns 403, so there is no
+index to read. Archive 81 links each physical unit to both its agent
+(`Vinculación con SM`) and its bidding unit (`Vinculación con UP`); every UP's
+physical units agree on the agent, which is a useful internal check. Archive 83
+gives the agent's legal name and, importantly, its **type** -- `Productor`,
+`Comercializador`, or `Representante`. The last of those is how you tell a
+firm bidding its own plant from a trader bidding somebody else's.
+
+Note archive 81 adds **no** unit coverage beyond 82: it links to the same UP
+namespace. It is worth fetching for the physical-level technology and capacity,
+and for the agent consistency check, not for reach.
 
 This is REE's **system-operator** registry, and that scope is the whole point
 of reading it carefully:
@@ -54,10 +68,24 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 from omie_common import DATA, session  # noqa: E402
 
-URL = "https://api.esios.ree.es/archives/82/download_json?locale=es"
+# Three public archives, none needing a token. 82 is the one the web page
+# shows; 81 and 83 are not linked from it and were found by probing ids.
+ARCHIVES = {
+    82: ("UnidadesProgramacion", "esios_programming_units.parquet"),
+    81: ("UnidadesFisicas", "esios_physical_units.parquet"),
+    83: ("SujetosMercado", "esios_market_subjects.parquet"),
+}
+URL = "https://api.esios.ree.es/archives/{id}/download_json?locale=es"
 OUT = DATA / "esios" / "esios_programming_units.parquet"
 
-COLUMNS = {
+SPANISH = {
+    "Código de UF": "uf",
+    "Vinculación con SM": "agent",
+    "Vinculación con UP": "up",
+    "Código de sujeto": "agent",
+    "Nombre": "name",
+    "Tipo de SM": "type",
+
     "Código de UP": "unit",
     "Descripción corta": "descr_short",
     "Descripción larga": "descr_long",
@@ -79,34 +107,41 @@ def parse_mw(s: pd.Series) -> pd.Series:
         errors="coerce")
 
 
-def main() -> int:
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    sess = session()
-    r = sess.get(URL, timeout=180, headers={"Accept": "application/json"})
+def fetch_archive(sess, aid: int, key: str, fname: str) -> int:
+    r = sess.get(URL.format(id=aid), timeout=180, headers={"Accept": "application/json"})
     r.raise_for_status()
     payload = json.loads(r.content.decode("utf-8-sig"))
-    records = payload.get("UnidadesProgramacion")
+    records = payload.get(key)
     if not records:
-        print(f"unexpected payload keys: {list(payload)[:6]}", file=sys.stderr)
-        return 1
-
+        print(f"  ! archive {aid}: expected key {key!r}, got {list(payload)[:4]}",
+              file=sys.stderr)
+        return 0
     df = pd.DataFrame(records)
-    missing = set(COLUMNS) - set(df.columns)
-    if missing:
-        print(f"schema drift -- missing columns: {sorted(missing)}", file=sys.stderr)
-        return 1
-    df = df[list(COLUMNS)].rename(columns=COLUMNS)
-    df["max_power_mw"] = parse_mw(df.max_power_mw)
-    for c in ("unit", "agent", "tech", "eic", "up_type", "business"):
-        df[c] = df[c].astype(str).str.strip()
+    df.columns = [SPANISH.get(c, c) for c in df.columns]
+    for c in df.columns:
+        if c.endswith("_mw"):
+            df[c] = parse_mw(df[c])
+        elif df[c].dtype == object:
+            df[c] = df[c].astype(str).str.strip()
     df["fetched"] = date.today()
+    out = DATA / "esios" / fname
+    df.to_parquet(out, index=False)
+    print(f"  {out.name:36s} {len(df):>6,} rows  {list(df.columns)[:5]}")
+    return len(df)
 
-    df.to_parquet(OUT, index=False)
-    print(f"wrote {OUT.relative_to(DATA.parent)}  {len(df):,} units")
-    print(f"  agents      : {df.agent.nunique()}")
-    print(f"  technologies: {df.tech.nunique()}")
-    print(f"  EIC present : {(df.eic.str.len() > 0).mean():.0%}")
-    print(f"  up_type     : {df.up_type.value_counts().head(5).to_dict()}")
+
+def main() -> int:
+    (DATA / "esios").mkdir(parents=True, exist_ok=True)
+    sess = session()
+    for aid, (key, fname) in ARCHIVES.items():
+        fetch_archive(sess, aid, key, fname)
+
+    up = pd.read_parquet(DATA / "esios" / ARCHIVES[82][1])
+    print(f"\n  programming units {len(up):,} | agents {up.agent.nunique()} "
+          f"| technologies {up.tech.nunique()} | EIC {(up.eic.str.len()>0).mean():.0%}")
+    sm = pd.read_parquet(DATA / "esios" / ARCHIVES[83][1])
+    if "type" in sm.columns:
+        print(f"  market subjects by type: {sm.type.value_counts().head(5).to_dict()}")
     return 0
 
 

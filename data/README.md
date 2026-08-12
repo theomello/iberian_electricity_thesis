@@ -124,7 +124,9 @@ parquet — do not re-derive them from `local_date`.
 
 | path | what |
 |---|---|
-| `esios_programming_units.parquet` | 3,872 units — `agent`, `tech`, `eic`, `max_power_mw` |
+| `esios_programming_units.parquet` | archive 82 — 3,873 bidding units: `agent`, `tech`, `eic`, `max_power_mw` |
+| `esios_physical_units.parquet` | archive 81 — 6,627 physical units, linked to both agent and bidding unit |
+| `esios_market_subjects.parquet` | archive 83 — 739 agents: legal `name` and `type` (Productor / Comercializador / **Representante**) |
 
 REE's registry of *unidades de programación*, from archive 82. **Token-free**,
 unlike the ESIOS indicator API. `agent` (Sujeto del Mercado) is the entity that

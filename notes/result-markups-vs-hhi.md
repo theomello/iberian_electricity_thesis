@@ -106,6 +106,37 @@ been collected yet and is the next step.
 Until then the descriptive claim stands — the elasticity fell, and it fell most
 in high-VRE hours — but the causal claim does not.
 
+## Firm shares at market-period resolution
+
+`scripts/analysis/firm_shares_hourly.py` replaces CNMC's annual shares with
+shares computed per market period from cleared volume — 1,101,980 firm-period
+observations over 79,036 periods. Within-year share dispersion runs from a
+coefficient of variation of 0.24 to 1.55, so treating a share as constant
+across a year was never innocuous.
+
+**The within-year VRE gradient at firm level** (median Lerner in the top VRE
+tercile divided by the bottom, mean over 2023–2026):
+
+| firm | all tiers | confirmed only |
+|---|---|---|
+| Iberdrola | 3.89 | 1.46 |
+| Endesa | 2.64 | 2.64 |
+| EDP | 3.19 | 6.29 |
+| Acciona | 6.16 | 6.13 |
+| Axpo | 6.94 | 6.98 |
+
+Every firm, under both mappings, faces a markedly higher implied markup in
+high-VRE hours, and the gradient grows over the window. Firms mapped entirely
+from confirmed evidence (Acciona, Axpo, Endesa) are identical across tiers.
+Iberdrola and EDP move substantially, so **their magnitudes depend on the
+inferred prefix assignments while the sign and the trend do not.**
+
+**Do not read time trends off these shares.** Mapped coverage rises from 49.0%
+of cleared sell volume in 2018 to 70.1% in 2026, because ESIOS is a snapshot
+and units that exited early are absent, so measured shares climb mechanically.
+Within-year comparisons hold coverage fixed and are sound; across-year trends
+must come from the CNMC-based estimates above, which do not use this mapping.
+
 ## Data
 
 All from public, token-free sources. 354 M unit-level day-ahead offers

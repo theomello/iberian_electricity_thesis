@@ -192,6 +192,38 @@ The Lerner figures above should be read as an upper bound *on this dimension*
 even while they remain a lower bound on the elasticity dimension. Recomputing
 them on day-ahead shares is the obvious next step.
 
+## The contract position is directly observable
+
+Only **7.0%** of Spanish nuclear output passes through the day-ahead auction.
+The rest is nominated bilaterally straight into the operating schedule:
+
+| unit | day-ahead cleared | PDBF | % via auction |
+|---|---|---|---|
+| Ascó 1 | 540 MWh | 739,959 MWh | **0.1%** |
+| Ascó 2 | 10,624 | 737,057 | 1.4% |
+| Vandellós II | 201,447 | 775,957 | 26.0% |
+| Cofrentes | 29,467 | 753,591 | 3.9% |
+| Trillo | 21,589 | 733,865 | 2.9% |
+
+Nuclear is 12.4% of PDBF sell volume and 1.5% of day-ahead cleared volume.
+
+This explains why Endesa's day-ahead share (4.9%) sits so far below CNMC's 16%:
+Endesa is the most nuclear-heavy and most vertically integrated of the majors,
+so the largest share of its output is pre-contracted and never reaches the
+auction. Nothing is wrong with the mapping of its plants.
+
+**And it hands us something the literature has to infer.** The markup condition
+is `p = C' − (RD_i − θ_i)/RD'_i`, where `θ_i` is the firm's forward position;
+a firm short of its position bids *below* marginal cost. Hortaçsu and Puller
+(2008) identify `θ` indirectly, from the quantity at which a firm's supply
+curve crosses its marginal cost curve. Here **`θ` is observable directly** as
+PDBF minus day-ahead cleared volume, per unit per period, because OMIE
+publishes both schedules.
+
+That is worth pursuing: it would let the contract position be measured rather
+than inferred, and it is the single largest correction still missing from the
+Lerner estimates.
+
 ## Data
 
 All from public, token-free sources. 354 M unit-level day-ahead offers

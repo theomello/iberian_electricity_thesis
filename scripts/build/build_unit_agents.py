@@ -90,11 +90,23 @@ PREFIX_AGENTS: dict[str, tuple[str, str, str]] = {
     # likely Ignis Energía. Worth 2.5% of cleared sell volume; left unmapped.
     "GGN": ("NATURGY", "inferred", "mnemonic (Gas Natural); CNMC 4.9pp gap"),
     "NXV": ("NEXUS", "inferred", "CNMC lists Nexus at 4% with 0% attributed; NXV is 3.3%"),
-    "ADO": ("EDP", "inferred", "Douro cascade, PT hydro; feeds the EDP gap"),
-    "DOU": ("EDP", "inferred", "Douro Internacional; PT hydro"),
-    "ACA": ("EDP", "inferred", "Cávado cascade; PT hydro"),
-    "ALI": ("EDP", "inferred", "Lima cascade; PT hydro"),
-    "TAM": ("EDP", "inferred", "Tâmega cascade; PT hydro"),
+    # The Portuguese river-basin block. In `cab` these carry consecutive
+    # registration ids 8600221-8600226 -- ADOURO, ACAVADO, ALIMA, TEMON,
+    # GUADIA, MONDEGO -- all first seen 2018-01-01/02 and all named as river
+    # systems. One registration batch, so they share a registrant.
+    "ADO": ("EDP", "inferred", "PT river-basin block, cab id 8600221"),
+    "ACA": ("EDP", "inferred", "PT river-basin block, cab id 8600222"),
+    "ALI": ("EDP", "inferred", "PT river-basin block, cab id 8600223"),
+    "TEM": ("EDP", "inferred", "PT river-basin block, cab id 8600224 (Tejo-Mondego)"),
+    "GUA": ("EDP", "inferred", "PT river-basin block, cab id 8600225 (Guadiana)"),
+    "MON": ("EDP", "inferred", "PT river-basin block, cab id 8600226 (Mondego)"),
+    # TAM (Tâmega) and DOU (Douro Internacional) were assigned to EDP with the
+    # rest of the Portuguese hydro and are now WITHDRAWN. Both sit outside the
+    # 8600221-226 batch and appear years later: TAMEGA is cab id 8600323 at
+    # 1,158.1 MW first seen 2022-01-26, and DOUSUP is id 8601821 first seen
+    # 2021-09-09. Those capacities and dates point to ownership changes rather
+    # than to the original EDP block, and identifying the new owner needs a
+    # source outside this repo. See notes/unmapped-prefixes-to-confirm.md.
     "GED": ("ENDESA", "inferred", "WEAKEST: only the CNMC 11.8pp gap, no name evidence"),
 }
 

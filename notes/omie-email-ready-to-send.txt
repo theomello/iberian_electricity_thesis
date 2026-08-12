@@ -1,4 +1,18 @@
 ================================================================================
+HOW TO SEND IT
+
+OMIE publishes no general email address. Use the assistance portal, which
+explicitly serves "Agentes del Mercado y a otros usuarios sin la condición de
+Agentes" and has a public-information section:
+
+    https://www.omie.es/es/portal-de-asistencia-de-omie
+
+Fallbacks: mercado@omie.es is real but is the desk for technical system-access
+problems, so expect it to be the wrong department. Phone +34 91 659 89 00.
+The text below works unchanged as a portal submission.
+================================================================================
+
+================================================================================
 ENGLISH VERSION — paste into your mail client
 ================================================================================
 
@@ -59,6 +73,20 @@ Failing that, either of these would also help:
 
   1. The unit-to-agent correspondence for generation units, 2018-2026.
   2. The same for a single representative year.
+
+
+IF EVEN THAT IS TOO MUCH — 21 UNIT CODES
+
+Should a general answer not be possible, the correspondence for just these 21
+offer units would resolve close to half of my remaining difficulty. They are
+large, individually identifiable plants rather than a broad extract:
+
+  DOUSUP   DOURO INTERNACIONAL          LARES1/2   C.C. LARES 1 and 2
+  RIBATE1/2/3  C.C. RIBATEJO            RTG01/02/03  C.C. TURBOGAS
+  SINES1/2/3/4                          RPG01/02
+  AMBIETA  C.C. AMOREBIETA              BAHIAB   C.C. BAHIA DE BIZKAIA
+  EGLEV2   UNIDAD DE OFERTA PORTUGAL    EGLEVD1  VENTA EXCED. AUTOPROD. EGLE
+  ARRU1R / ARRU2R  UOF REPRESENTADA DE ARRUBAL 1 and 2
 
 This is academic, non-commercial work for a master's thesis. I am happy to cite
 OMIE as the source, to share the analysis before publication, and to sign any
@@ -137,6 +165,20 @@ En su defecto, cualquiera de estas opciones también me ayudaría:
   1. La correspondencia unidad-sujeto de mercado para unidades de generación,
      2018-2026.
   2. La misma información para un único año representativo.
+
+
+SI INCLUSO ESO FUERA DEMASIADO — 21 CÓDIGOS DE UNIDAD
+
+Si no fuera posible una respuesta general, la correspondencia para estas 21
+unidades de oferta resolvería cerca de la mitad de la dificultad que me queda.
+Son centrales grandes e identificables individualmente, no un extracto amplio:
+
+  DOUSUP   DOURO INTERNACIONAL          LARES1/2   C.C. LARES 1 y 2
+  RIBATE1/2/3  C.C. RIBATEJO            RTG01/02/03  C.C. TURBOGAS
+  SINES1/2/3/4                          RPG01/02
+  AMBIETA  C.C. AMOREBIETA              BAHIAB   C.C. BAHIA DE BIZKAIA
+  EGLEV2   UNIDAD DE OFERTA PORTUGAL    EGLEVD1  VENTA EXCED. AUTOPROD. EGLE
+  ARRU1R / ARRU2R  UOF REPRESENTADA DE ARRUBAL 1 y 2
 
 Se trata de un trabajo académico y sin fines comerciales, correspondiente a un
 trabajo de fin de máster. Puedo citar a OMIE como fuente, compartir el análisis

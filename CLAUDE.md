@@ -219,6 +219,17 @@ set at the margin: a 5 GW unit offering at 0 €/MWh is inframarginal almost
 always and contributes nothing to the slope of residual demand, so
 total-volume coverage flatters the mapping for the units that matter least.
 
+`build_unit_agents.py` also rolls agents up to a **parent firm** using the
+legal names in ESIOS archive 83 (`IBEG`, `IGNU`, `IBGT` are three agents and
+one Iberdrola). 17 firms, 39.1% of generation volume.
+
+**These firm shares are not market shares.** They are the share of volume that
+could be *attributed*; 56% is unattributed, so every firm share here is a lower
+bound. Do not substitute them for s_i in Lerner = s/eta without saying so. Note
+also that the largest attributed firm is AXPO, a **representative** trading
+third-party assets rather than a producer -- see `agent_type` in archive 83,
+which flags 11 of 739 agents as `Representante`.
+
 Prefixes whose owner could not be established *from the data* are left
 unmapped on purpose — `EDP`, `GED`, `GGN`, `CEV`, `ADO`, `NXV`, `IBE`, `IGV`
 are ~28% of generation volume. Several are guessable by a domain expert; a

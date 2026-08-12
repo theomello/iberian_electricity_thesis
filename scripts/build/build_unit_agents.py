@@ -68,6 +68,9 @@ PREFIX_AGENTS: dict[str, tuple[str, str]] = {
     "ECY": ("ECYR", 'cab name "ECYR VENTA REG. ESP. 1"'),
     "GRE": ("REPSB", 'cab name "REPSB GENERICA VENTA" -- REPSB is an ESIOS agent'),
     "EBL": ("EBLCO", 'cab name "GENÉRICA VENTA EBLCO" on sibling unit GEBLCC1'),
+    "EDR": ("ACCIONA", 'cab name "ACCIONA VENTA nnn"'),
+    "ACC": ("ACCIONA", 'cab name "AC.GREEN EN. DEV. VENTA RO n"'),
+    "ENR": ("ENCE", 'cab name "ENCE ENERGIA HUELVA"'),
 }
 # Deliberately NOT mapped despite carrying volume, because the data does not
 # establish the owner and the mnemonic alone is ambiguous. Listed so the gap is
@@ -75,6 +78,44 @@ PREFIX_AGENTS: dict[str, tuple[str, str]] = {
 # ADO, DOU, NEX, GAS, GSH, HCG, DET. Several are guessable by a domain expert
 # (IBE almost certainly Iberdrola, EDP almost certainly EDP) -- confirm against
 # an external source before encoding them.
+
+
+# Agent -> parent firm. ESIOS publishes the agent, not the group above it:
+# IBEG "IBERDROLA GENERACION", IGNU "IBERDROLA GENERACION NUCLEAR" and IBGT are
+# three agents and one firm. Market power is a property of the firm, so the
+# agents have to be rolled up. Matched on the **legal name** in archive 83, not
+# on the code, so each assignment is evidenced by the name itself.
+FIRM_TOKENS: list[tuple[str, str]] = [
+    ("IBERDROLA", "IBERDROLA"), ("CURENERG", "IBERDROLA"),
+    ("ENDESA", "ENDESA"),
+    ("NATURGY", "NATURGY"), ("GAS NATURAL", "NATURGY"),
+    ("EDP", "EDP"), ("HIDROCANTABRICO", "EDP"), ("HIDROELECTRICA DEL CANT", "EDP"),
+    ("REPSOL", "REPSOL"),
+    ("ACCIONA", "ACCIONA"), ("EHN GREEN", "ACCIONA"),
+    ("AXPO", "AXPO"),
+    ("ENGIE", "ENGIE"),
+    ("RWE", "RWE"),
+    ("ENEL", "ENEL"),
+    ("GALP", "GALP"),
+    ("VIESGO", "VIESGO"),
+    ("TOTAL", "TOTALENERGIES"), ("TOTALENERGIES", "TOTALENERGIES"),
+    ("SHELL", "SHELL"),
+    ("BP ", "BP"),
+    ("ENCE", "ENCE"),
+    ("WIND TO MARKET", "WIND_TO_MARKET"),
+    ("NEXUS", "NEXUS"),
+    ("CEPSA", "CEPSA"), ("MOEVE", "CEPSA"),
+]
+
+
+def firm_of(name: str) -> str | None:
+    if not isinstance(name, str):
+        return None
+    u = name.upper()
+    for token, firm in FIRM_TOKENS:
+        if token in u:
+            return firm
+    return None
 
 
 def alpha_prefix(unit: str, n: int = 3) -> str:
@@ -104,16 +145,27 @@ def build(month: str) -> pd.DataFrame:
         return None
 
     df["agent_esios"] = df.unit.map(by_code)
-    df["agent_name"] = df.descr.map(from_name)
+    df["_agent_name_src"] = df.descr.map(from_name)
     df["agent_prefix"] = df.prefix.map(lambda p: PREFIX_AGENTS.get(p, (None, None))[0])
 
-    df["agent"] = df.agent_esios.fillna(df.agent_name).fillna(df.agent_prefix)
+    df["agent"] = df.agent_esios.fillna(df._agent_name_src).fillna(df.agent_prefix)
     df["source"] = (
         df.agent_esios.notna().map({True: "esios", False: None})
-        .fillna(df.agent_name.notna().map({True: "name", False: None}))
+        .fillna(df._agent_name_src.notna().map({True: "name", False: None}))
         .fillna(df.agent_prefix.notna().map({True: "prefix", False: None})))
     df["tech_esios"] = df.unit.map(tech_by_code)
-    return df.drop(columns=["agent_esios", "agent_name", "agent_prefix"])
+
+    # Roll agents up to the firm, using archive 83's legal names as evidence.
+    sm_path = DATA / "esios" / "esios_market_subjects.parquet"
+    if sm_path.exists():
+        sm = pq.read_table(sm_path).to_pandas()
+        name_by_agent = dict(zip(sm.agent, sm.name))
+        type_by_agent = dict(zip(sm.agent, sm.type))
+        df["agent_name"] = df.agent.map(name_by_agent)
+        df["agent_type"] = df.agent.map(type_by_agent)
+        # Layer-3 labels are already firm names, so fall back to the label.
+        df["firm"] = df.agent_name.map(firm_of).fillna(df.agent.map(firm_of))
+    return df.drop(columns=["agent_esios", "agent_prefix", "_agent_name_src"], errors="ignore")
 
 
 def near_marginal_coverage(month: str, mapped: set[str]) -> None:
@@ -154,6 +206,15 @@ def main() -> int:
     print(f"\n  generation-side volume covered: "
           f"{vol[gen.agent.notna()].sum() / tot:.1%}")
     print(f"  distinct agents on the generation side: {gen.agent.nunique()}")
+
+    if "firm" in df.columns:
+        g2 = df[df.role.isin(["generation", "generation_large", "storage_mixed", "pumping"])]
+        v2 = g2.net_cleared_mwh.abs().fillna(0)
+        print(f"\n  rolled up to {g2.firm.nunique()} parent firms; "
+              f"{v2[g2.firm.notna()].sum() / tot:.1%} of generation volume has one")
+        top = (g2.assign(v=v2).groupby("firm").v.sum() / tot).sort_values(ascending=False).head(8)
+        for f, s_ in top.items():
+            print(f"    {f:16s} {s_:6.2%}")
 
     near_marginal_coverage(args.month, set(df.loc[df.agent.notna(), "unit"]))
 

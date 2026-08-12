@@ -132,6 +132,20 @@ FIRM_TOKENS: list[tuple[str, str]] = [
 ]
 
 
+# OMIE's own corporate tag in pdbce. Sparse (121 units) but *dated* and
+# independent of ESIOS, and 38 of those units are covered by nothing else.
+# Each mapping below is corroborated rather than guessed:
+GROUP_TAG_FIRMS: dict[str, tuple[str, str]] = {
+    "IB":  ("IBERDROLA", "mnemonic"),
+    "GN":  ("NATURGY", "mnemonic (Gas Natural)"),
+    "REP": ("REPSOL", "mnemonic"),
+    "GE":  ("ENDESA", "carried by Ascó/Vandellós, which are Endesa units"),
+    "HC":  ("EDP", 'ESIOS archive 83: agent "HC G" = "EDP ESPAÑA, S.A."'),
+    "EHN": ("ACCIONA", 'archive 83 lists "EHN GREEN ENERGY DEVELOPMENT"'),
+    # EV, EGL and DET are left out: no corroboration in any source here.
+}
+
+
 def firm_of(name: str) -> str | None:
     if not isinstance(name, str):
         return None
@@ -203,13 +217,18 @@ def build(month: str, tier: str = "all") -> pd.DataFrame:
         drop = df.prefix_tier.eq("inferred")
         df.loc[drop, "agent_prefix"] = None
 
+    df["firm_tag"] = df.unit.map(
+        dict(zip(reg.unit, reg.group_tag))).map(
+        lambda t: GROUP_TAG_FIRMS.get(t, (None, None))[0] if pd.notna(t) else None)
+
     df["agent"] = df.agent_esios.fillna(df._agent_name_src).fillna(df.agent_prefix)
     df["source"] = (
         df.agent_esios.notna().map({True: "esios", False: None})
         .fillna(df._agent_name_src.notna().map({True: "name", False: None}))
         .fillna(df.agent_prefix.notna().map({True: "prefix", False: None})))
-    df["confidence"] = df.source.map({"esios": "authoritative", "name": "confirmed"}).fillna(
-        df.prefix_tier)
+    df["confidence"] = (df.source.map({"esios": "authoritative", "name": "confirmed"})
+                        .fillna(df.prefix_tier)
+                        .fillna(df.firm_tag.notna().map({True: "group_tag", False: None})))
     df["tech_esios"] = df.unit.map(tech_by_code)
     df["tech_cab"] = df.descr.map(tech_from_name)
 
@@ -222,7 +241,9 @@ def build(month: str, tier: str = "all") -> pd.DataFrame:
         df["agent_name"] = df.agent.map(name_by_agent)
         df["agent_type"] = df.agent.map(type_by_agent)
         # Layer-3 labels are already firm names, so fall back to the label.
-        df["firm"] = df.agent_name.map(firm_of).fillna(df.agent.map(firm_of))
+        df["firm"] = (df.agent_name.map(firm_of)
+                        .fillna(df.agent.map(firm_of))
+                        .fillna(df.firm_tag))
     return df.drop(columns=["agent_esios", "agent_prefix", "_agent_name_src"], errors="ignore")
 
 

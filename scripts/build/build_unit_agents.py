@@ -72,12 +72,15 @@ PREFIX_AGENTS: dict[str, tuple[str, str]] = {
     "ACC": ("ACCIONA", 'cab name "AC.GREEN EN. DEV. VENTA RO n"'),
     "ENR": ("ENCE", 'cab name "ENCE ENERGIA HUELVA"'),
 }
-# Deliberately NOT mapped despite carrying volume, because the data does not
-# establish the owner and the mnemonic alone is ambiguous. Listed so the gap is
-# explicit rather than silent: GED, GGN, GGA, CEV, NXV, IGV, IGN, IBE, EDP,
-# ADO, DOU, NEX, GAS, GSH, HCG, DET. Several are guessable by a domain expert
-# (IBE almost certainly Iberdrola, EDP almost certainly EDP) -- confirm against
-# an external source before encoding them.
+# Deliberately NOT mapped. Each hypothesis, the evidence for it, and the thing
+# that would settle it are written up in notes/unmapped-prefixes-to-confirm.md.
+# Do not promote one to an entry here without a source outside this repo.
+#
+# CNMC's published generation shares (data/cnmc/cnmc_generation_shares.parquet)
+# corroborate the dictionary -- AXPO lands at 7.1% against CNMC's 7.0% -- and
+# they show which firms the unmapped prefixes must belong to. Resist the
+# temptation to assign prefixes so the volumes match: that is curve-fitting,
+# and the result could not then be used as evidence about concentration.
 
 
 # Agent -> parent firm. ESIOS publishes the agent, not the group above it:

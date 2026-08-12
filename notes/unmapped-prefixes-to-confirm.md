@@ -1,0 +1,71 @@
+# What still needs confirming, and why
+
+Every unmapped prefix carrying ≥1.5% of cleared sell volume, with the
+hypothesis, the evidence for it, and the specific thing that would settle it.
+
+**None of these are encoded in `build_unit_agents.py`.** They are written down
+so the reasoning is auditable and so nobody quietly promotes a hypothesis to a
+fact. Volume shares are cleared sell volume, January 2024.
+
+## The corroborating evidence: CNMC vs our mapping
+
+`data/cnmc/cnmc_generation_shares.parquet` (CNMC *Cuadro 10*, generation share
+by business group in the PDBF across MIBEL, 2008–2023) gives an independent
+target. Comparing 2023 shares against what we attribute:
+
+| firm | CNMC | ours | gap |
+|---|---|---|---|
+| IBERDROLA | 20% | 4.1% | **+15.9** |
+| EDP | 13% | 0.0% | **+13.0** |
+| ENDESA | 16% | 4.2% | **+11.8** |
+| NATURGY | 6% | 1.1% | +4.9 |
+| NEXUS | 4% | 0.0% | +4.0 |
+| REPSOL | 4% | 2.9% | +1.1 |
+| **AXPO** | **7%** | **7.1%** | **−0.1** |
+| WIND_TO_MARKET | 2% | 2.9% | −0.9 |
+| ACCIONA | 4% | 6.8% | −2.8 |
+
+Two things follow. **AXPO matches almost exactly**, which is real validation of
+the layer-3 dictionary — that entry was inferred purely from a plant name and
+it lands within 0.1pp of the regulator's figure. And **ACCIONA is over by
+2.8pp**, which says the three Acciona prefixes (`EGE`, `EDR`, `ACC`) may be
+over-assigned; worth re-checking before relying on it.
+
+The large positive gaps are the budget the unmapped prefixes have to fill.
+That is corroboration, **not proof** — matching a prefix to a firm because the
+volumes happen to fit is curve-fitting, and it would be circular to then use
+the result as evidence about concentration. Use it to prioritise which
+hypotheses to verify, never as the verification itself.
+
+## The list
+
+| prefix | vol | example name | hypothesis | evidence for | what would confirm it |
+|---|---|---|---|---|---|
+| `EDP` | 9.9% | "VENTA RE" | **EDP** | mnemonic is the company name; EDP has a 13pp gap and 0% attributed | OMIE reply, or an EDP report listing its Iberian bidding units |
+| `ADO` | 3.9% | "HIDRO DOURO TOTAL" | EDP hydro (PT) | Douro cascade is Portuguese hydro; EDP is the main PT generator | Portuguese concession records; REN/ERSE plant lists |
+| `DOU` | 3.6% | "DOURO INTERNACIONAL" | EDP hydro (PT) | same cascade, adjacent code | as above |
+| `ACA` | 2.5% | "CAVADO" | EDP hydro (PT) | Cávado cascade | as above |
+| `IBE` | 3.4% | "EÓLICA HABILITADA" | **Iberdrola** | mnemonic; Iberdrola has a 15.9pp gap | OMIE reply, or Iberdrola's registered-unit list |
+| `IGN` | 2.6% | "SOLAR MULA" | Iberdrola renewables | `IGN` ≈ Iberdrola Generación; sits in the same gap | as above |
+| `GED` | 6.3% | *(no cab name)* | Endesa? | Endesa has an 11.8pp gap; `GED` could be Generación EnDesa | **weakest hypothesis here** — no name evidence at all |
+| `GGN` | 5.0% | "UNIDAD GENERICA ESPAÑA" | Naturgy (Gas Natural) | `GGN` ≈ Gas Natural; 4.9pp gap | OMIE reply |
+| `NXV` | 3.3% | "UOF BIOMASA CUBILLOS DEL SIL" | **Nexus** | CNMC lists NEXUS at 4%, we attribute 0%, and `NXV` is 3.3% | Nexus Energía asset list |
+| `HCG` | 2.7% | "U.O. PARQUES HABILITADOS S.A." | **EDP** (via HC) | ESIOS archive 83 has agent `HC G` = "EDP ESPAÑA, S.A." — the prefix matches an existing agent code | strongest of the unmapped set; verify the prefix↔agent link with OMIE |
+| `CEV` | 2.4% | "TARIFA FOTOVOLTAICA <10" | unknown | none | — |
+| `CLI` | 1.9% | "FV OURIKA" | unknown | none | — |
+| `IGV` | 1.5% | "MOLINOS DEL EBRO, S.A." | unknown | name is a plant, not a group | Spanish commercial registry |
+
+## How to close it, in order of cost
+
+1. **`HCG` is nearly free.** `HC G` already exists as an ESIOS agent resolving
+   to EDP España. If OMIE confirms that the code prefix is agent-assigned, this
+   one follows immediately — and so do several others.
+2. **The single question to OMIE** (option 3 in the email draft): *is the
+   alphabetic prefix of the unit code assigned per agent?* A yes converts
+   `EDP`, `IBE`, `GGN`, `IGN` from hypotheses into derivations, without OMIE
+   releasing anything commercially sensitive.
+3. **`GED` needs its own answer.** It is 6.3% of volume with no name and no
+   mnemonic logic — the one entry where nothing but a direct source will do.
+4. **Portuguese hydro** (`ADO`, `DOU`, `ACA`, plus `ALI`, `TAM`) is 10%+ of
+   volume and turns on Portuguese concession ownership, which ERSE and REN
+   document. A separate, tractable piece of work.

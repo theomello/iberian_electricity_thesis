@@ -139,6 +139,23 @@ dispatches, so the commercial aggregation vehicles in OMIE's bid files
 (`EDPSVD1`, `IBEVD11`) are absent — 592 of our unit codes match. See
 `omie/registry/unit_agents.parquet` for how the remainder is handled.
 
+## `weather/` — ERA5 reanalysis, the instrument
+
+| path | what |
+|---|---|
+| `weather_spain_hourly.parquet` | 737,520 rows — 10 points x hourly, wind speed 100 m/10 m, temperature, radiation |
+| `weather_spain_aggregate.parquet` | 73,752 hours — wind-site mean speed, solar-site mean radiation, mean temperature |
+| `raw_<point>.parquet` | per-point cache, so a re-run costs nothing |
+
+Open-Meteo ERA5 archive, free and keyless, **UTC throughout**. Fetched to
+instrument renewable output, which is not randomly assigned. First stage:
+wind speed correlates +0.83 with REE wind output and radiation +0.87 with
+solar. Temperature is a **control, not an instrument** — it moves demand
+directly (+0.16) and so violates the exclusion restriction.
+
+Representative sites, not capacity-weighted; a capacity-weighted index needs
+installed capacity by province, which this project still lacks.
+
 ## `entsoe/` — empty
 
 **Token-gated** and nothing fetched. The only series still missing anywhere in

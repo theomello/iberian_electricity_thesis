@@ -121,6 +121,33 @@ def firm_of(name: str) -> str | None:
     return None
 
 
+# Technology from the cab plant name, for the ~86% of units ESIOS never
+# registers. Ordered: the first pattern that matches wins, so the specific
+# prefixes come before the loose keyword fallbacks.
+TECH_PATTERNS: list[tuple[str, str]] = [
+    (r"^C\.?N\.?\b|CENTRAL NUCLEAR", "nuclear"),
+    (r"^C\.?C\.?\b|CICLO COMBINADO", "combined_cycle"),
+    (r"^C\.?T\.?\b|T[EÉ]RMICA|CARB[OÓ]N|HULLA", "thermal"),
+    (r"\bC\.?H\.?B\.?\b|BOMBEO", "pumped_storage"),
+    (r"UOF HIDRO|\bC\.?H\.?\b|HIDRO|HIDR[AÁ]ULIC", "hydro"),
+    (r"\bP\.?S\.?\b|\bFV\b|FOTOVOLT|SOLAR", "solar"),
+    (r"\bP\.?E\.?\b|E[OÓ]LIC", "wind"),
+    (r"BIOMASA|BIOG[AÁ]S", "biomass"),
+    (r"COGENERA", "cogeneration"),
+    (r"BATER[IÍ]A|ALMACENAM", "storage"),
+]
+
+
+def tech_from_name(descr: str) -> str | None:
+    if not isinstance(descr, str) or not descr.strip():
+        return None
+    u = descr.upper()
+    for pat, tech in TECH_PATTERNS:
+        if re.search(pat, u):
+            return tech
+    return None
+
+
 def alpha_prefix(unit: str, n: int = 3) -> str:
     return re.sub(r"[0-9]", "", str(unit))[:n]
 
@@ -157,6 +184,7 @@ def build(month: str) -> pd.DataFrame:
         .fillna(df._agent_name_src.notna().map({True: "name", False: None}))
         .fillna(df.agent_prefix.notna().map({True: "prefix", False: None})))
     df["tech_esios"] = df.unit.map(tech_by_code)
+    df["tech_cab"] = df.descr.map(tech_from_name)
 
     # Roll agents up to the firm, using archive 83's legal names as evidence.
     sm_path = DATA / "esios" / "esios_market_subjects.parquet"
@@ -218,6 +246,13 @@ def main() -> int:
         top = (g2.assign(v=v2).groupby("firm").v.sum() / tot).sort_values(ascending=False).head(8)
         for f, s_ in top.items():
             print(f"    {f:16s} {s_:6.2%}")
+
+    gg = df[df.role.isin(["generation", "generation_large", "storage_mixed", "pumping"])]
+    vv = gg.net_cleared_mwh.abs().fillna(0)
+    print(f"\n  technology from cab names: {gg.tech_cab.notna().sum():,} of {len(gg):,} "
+          f"generation units ({vv[gg.tech_cab.notna()].sum() / tot:.1%} of volume)")
+    print("   " + "  ".join(f"{k}:{v}" for k, v in
+                            gg.tech_cab.value_counts().head(8).items()))
 
     near_marginal_coverage(args.month, set(df.loc[df.agent.notna(), "unit"]))
 

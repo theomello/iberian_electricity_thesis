@@ -111,15 +111,16 @@ numerically identical to average MW. Derive energy as
 
 ### OMIE unit registry — the key to the bid data
 `data/omie/registry/unit_registry.parquet`, built by
-`build/build_unit_registry.py` from `pdbc` + `pdbcpt` + `pdbce`. **5,049 units**
-over the window, columns `unit, country, role_code, role, group_tag,
+`build/build_unit_registry.py` from `pdbc` + `pdbcpt` + `pdbce`. **5,137 units**
+over the window (rebuilt with `--full` on 2026-08-12; the earlier 2-day-per-month
+sample gave 5,049), columns `unit, country, role_code, role, group_tag,
 first_seen, last_seen, days_observed, net_cleared_mwh`.
 
-- **country** — ES 4,883 / PT 146 / 20 unknown. The ES and PT unit sets are
+- **country** — ES 4,960 / PT 150 / 27 unknown. The ES and PT unit sets are
   **disjoint** (zero overlap), so membership is a clean assignment. This is
   the only reliable way to select Portuguese units.
-- **role** — generation 3,673, purchase_retail 749, purchase_other 347,
-  generation_large 208, storage_mixed 37, pumping 22. Decoded from cleared
+- **role** — generation 3,719, purchase_retail 770, purchase_other 354,
+  generation_large 211, storage_mixed 45, pumping 22. Decoded from cleared
   quantity sign/volume, constant within a unit. Separating **generators from
   retailers** is what any supply-curve or bidding work needs.
 - **group_tag** — corporate tags (`IB`, `REP`, `GE`, …), 9 distinct,
@@ -142,9 +143,11 @@ and a max-power column validated against published figures. ESIOS/ENTSO-E
 tokens are **not** needed for this. The registry itself has not yet been
 rebuilt on `cab`.
 
-Built from a **2-day-per-month sample** (1st and 16th) — parsing every day is
-~1 billion rows for a slowly-changing attribute table. That sampling is why
-~5% of cleared volume sits with unmatched units; `--full` closes the gap.
+Now built with `--full` (every day). The earlier default was a
+**2-day-per-month sample** (1st and 16th), which left ~5% of cleared volume
+with unmatched units. The full parse added 88 units and better first/last-seen
+dates, but **not** more `group_tag` coverage — still 9 distinct tags. The tag
+is sparse at source, not sparse from sampling.
 
 ### OMIE `cab` — the offer header, and what unlocks unit attributes
 `data/omie/cab/parquet/`, **113 months 2017-01 → 2026-05, 5,954,579 rows**,

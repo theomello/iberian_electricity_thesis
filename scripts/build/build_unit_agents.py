@@ -53,25 +53,46 @@ import pyarrow.parquet as pq
 ROOT = Path(__file__).resolve().parent.parent.parent
 DATA = ROOT / "data"
 OUT = DATA / "omie" / "registry" / "unit_agents.parquet"
+OUT_CONF = DATA / "omie" / "registry" / "unit_agents_confirmed.parquet"
 BAND = 5.0
 
 # Layer 3. Each entry records the evidence that justifies it; anything that
 # would have been a guess is absent by design and shows up as unmapped.
-PREFIX_AGENTS: dict[str, tuple[str, str]] = {
-    "EGV": ("AXPO", 'cab name "AXPO VENTA R. ESPECIAL nnn"'),
-    "EGE": ("ACCIONA", 'cab name "AC. GREEN EN. DEV. VENTA RE n"'),
-    "WMV": ("WMARK", 'cab name "VENTA EXCED AUTOPROD WMARK nnn"'),
-    "EGP": ("ENEL_GREEN_POWER", 'cab name "EOLICA EEGPEM"; EGP mnemonic'),
-    "HIS": ("RWE", 'cab name "PE RWE"'),
-    "GNV": ("GNERA", 'cab name "UOF GNERA MAYOR DE 1MW"'),
-    "GAL": ("GALP", 'cab name "UNIDADE DE VENDA"; GALPWV2 code, PT'),
-    "ECY": ("ECYR", 'cab name "ECYR VENTA REG. ESP. 1"'),
-    "GRE": ("REPSB", 'cab name "REPSB GENERICA VENTA" -- REPSB is an ESIOS agent'),
-    "EBL": ("EBLCO", 'cab name "GENÉRICA VENTA EBLCO" on sibling unit GEBLCC1'),
-    "EDR": ("ACCIONA", 'cab name "ACCIONA VENTA nnn"'),
-    "ACC": ("ACCIONA", 'cab name "AC.GREEN EN. DEV. VENTA RO n"'),
-    "ENR": ("ENCE", 'cab name "ENCE ENERGIA HUELVA"'),
+PREFIX_AGENTS: dict[str, tuple[str, str, str]] = {
+    # ---- confirmed: the evidence is inside the data itself ------------------
+    "EGV": ("AXPO", "confirmed", 'cab name "AXPO VENTA R. ESPECIAL nnn"'),
+    "EGE": ("ACCIONA", "confirmed", 'cab name "AC. GREEN EN. DEV. VENTA RE n"'),
+    "EDR": ("ACCIONA", "confirmed", 'cab name "ACCIONA VENTA nnn"'),
+    "ACC": ("ACCIONA", "confirmed", 'cab name "AC.GREEN EN. DEV. VENTA RO n"'),
+    "WMV": ("WMARK", "confirmed", 'cab name "VENTA EXCED AUTOPROD WMARK nnn"'),
+    "HIS": ("RWE", "confirmed", 'cab name "PE RWE"'),
+    "GNV": ("GNERA", "confirmed", 'cab name "UOF GNERA MAYOR DE 1MW"'),
+    "ECY": ("ECYR", "confirmed", 'cab name "ECYR VENTA REG. ESP. 1"'),
+    "GRE": ("REPSB", "confirmed", 'cab name "REPSB GENERICA VENTA"; REPSB is an ESIOS agent'),
+    "EBL": ("EBLCO", "confirmed", 'cab name "GENÉRICA VENTA EBLCO" on sibling GEBLCC1'),
+    "ENR": ("ENCE", "confirmed", 'cab name "ENCE ENERGIA HUELVA"'),
+    "EGP": ("ENEL_GREEN_POWER", "confirmed", 'cab name "EOLICA EEGPEM"'),
+    "GAL": ("GALP", "confirmed", 'GALPWV2, "UNIDADE DE VENDA", PT'),
+    "HCG": ("EDP", "confirmed", 'ESIOS agent "HC G" resolves to "EDP ESPAÑA, S.A."'),
+
+    # ---- inferred: mnemonic plus independent corroboration ------------------
+    # None of these is established by the data alone. Each is the mnemonic
+    # agreeing with at least one other signal -- the CNMC share gap, or the
+    # registration-id clustering. Reported separately so every result can be
+    # run with and without them; see --tier in this script.
+    "EDP": ("EDP", "inferred", "mnemonic; CNMC shows EDP 13pp short with 0% attributed"),
+    "IBE": ("IBERDROLA", "inferred", "mnemonic; CNMC 15.9pp gap; id-neighbours 56% Iberdrola"),
+    "IGN": ("IBERDROLA", "inferred", "mnemonic (Iberdrola Generación); same CNMC gap"),
+    "GGN": ("NATURGY", "inferred", "mnemonic (Gas Natural); CNMC 4.9pp gap"),
+    "NXV": ("NEXUS", "inferred", "CNMC lists Nexus at 4% with 0% attributed; NXV is 3.3%"),
+    "ADO": ("EDP", "inferred", "Douro cascade, PT hydro; feeds the EDP gap"),
+    "DOU": ("EDP", "inferred", "Douro Internacional; PT hydro"),
+    "ACA": ("EDP", "inferred", "Cávado cascade; PT hydro"),
+    "ALI": ("EDP", "inferred", "Lima cascade; PT hydro"),
+    "TAM": ("EDP", "inferred", "Tâmega cascade; PT hydro"),
+    "GED": ("ENDESA", "inferred", "WEAKEST: only the CNMC 11.8pp gap, no name evidence"),
 }
+
 # Deliberately NOT mapped. Each hypothesis, the evidence for it, and the thing
 # that would settle it are written up in notes/unmapped-prefixes-to-confirm.md.
 # Do not promote one to an entry here without a source outside this repo.
@@ -152,7 +173,7 @@ def alpha_prefix(unit: str, n: int = 3) -> str:
     return re.sub(r"[0-9]", "", str(unit))[:n]
 
 
-def build(month: str) -> pd.DataFrame:
+def build(month: str, tier: str = "all") -> pd.DataFrame:
     esios = pq.read_table(DATA / "esios" / "esios_programming_units.parquet").to_pandas()
     agents = {a.upper() for a in esios.agent.dropna().unique() if len(a.strip()) >= 3}
     by_code = dict(zip(esios.unit, esios.agent))
@@ -176,13 +197,19 @@ def build(month: str) -> pd.DataFrame:
 
     df["agent_esios"] = df.unit.map(by_code)
     df["_agent_name_src"] = df.descr.map(from_name)
-    df["agent_prefix"] = df.prefix.map(lambda p: PREFIX_AGENTS.get(p, (None, None))[0])
+    df["agent_prefix"] = df.prefix.map(lambda p: PREFIX_AGENTS.get(p, (None, None, None))[0])
+    df["prefix_tier"] = df.prefix.map(lambda p: PREFIX_AGENTS.get(p, (None, None, None))[1])
+    if tier == "confirmed":
+        drop = df.prefix_tier.eq("inferred")
+        df.loc[drop, "agent_prefix"] = None
 
     df["agent"] = df.agent_esios.fillna(df._agent_name_src).fillna(df.agent_prefix)
     df["source"] = (
         df.agent_esios.notna().map({True: "esios", False: None})
         .fillna(df._agent_name_src.notna().map({True: "name", False: None}))
         .fillna(df.agent_prefix.notna().map({True: "prefix", False: None})))
+    df["confidence"] = df.source.map({"esios": "authoritative", "name": "confirmed"}).fillna(
+        df.prefix_tier)
     df["tech_esios"] = df.unit.map(tech_by_code)
     df["tech_cab"] = df.descr.map(tech_from_name)
 
@@ -222,11 +249,13 @@ def near_marginal_coverage(month: str, mapped: set[str]) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--month", default="202401", help="YYYYMM used for cab names and coverage")
+    ap.add_argument("--tier", choices=["all", "confirmed"], default="all",
+                    help="'confirmed' drops the inferred prefix assignments")
     args = ap.parse_args()
 
-    df = build(args.month)
+    df = build(args.month, args.tier)
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    df.to_parquet(OUT, index=False)
+    df.to_parquet(OUT if args.tier == 'all' else OUT_CONF, index=False)
 
     gen = df[df.role.isin(["generation", "generation_large", "storage_mixed", "pumping"])]
     vol = gen.net_cleared_mwh.abs().fillna(0)

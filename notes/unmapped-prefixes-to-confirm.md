@@ -37,6 +37,40 @@ volumes happen to fit is curve-fitting, and it would be circular to then use
 the result as evidence about concentration. Use it to prioritise which
 hypotheses to verify, never as the verification itself.
 
+## Priority, measured over the WHOLE archive
+
+Earlier versions of this list were computed on January 2024 alone. Recomputed
+across all 101 months (`outputs/tables/unmapped_near_marginal_full.csv`), the
+total near-marginal gap is **20.2%**, and it splits into two very different
+kinds of target.
+
+**A handful of large named plants — 21 units for 7.6pp of coverage:**
+
+| prefix | units | gap | what it is |
+|---|---|---|---|
+| `RIB` | 3 | 1.73% | C.C. Ribatejo (PT) |
+| `LAR` | 2 | 1.45% | C.C. Lares (PT) |
+| `DOU` | 1 | 1.41% | Douro Internacional (PT) |
+| `SIN` | 4 | 1.04% | — |
+| `RPG` | 2 | 0.75% | — |
+| `AMB` | 1 | 0.59% | C.C. Amorebieta (ES) |
+| `RTG` | 3 | 0.58% | C.C. Turbogás (PT) |
+| `ARR` | 2 | 0.37% | UOF Representada de Arrubal |
+| `EGL` | 2 | 0.36% | Unidad de Oferta Portugal |
+| `BAH` | 1 | 0.28% | C.C. Bahía de Bizkaia (ES) |
+
+Named, large, individually identifiable thermal and hydro assets — the kind
+covered by company reports and plant databases. Mostly Portuguese CCGTs.
+
+**Versus the long tail — about 1,000 units for 6.6pp:**
+
+`IGV` (177 units, 1.52%), `GNV` (164, 1.12%), `CEV` (250, 0.97%), `IGN` (91,
+0.83%), `GES` (78, 0.79%), `VGE` (60, 0.61%), `GSV` (106, 0.43%), `CLI` (73,
+0.35%). Aggregator portfolios with uninformative names. Poor return per unit,
+and the natural target for the OMIE prefix question rather than manual work.
+
+Top 10 prefixes are 11.7pp of the 20.2pp gap; top 20 are 16.4pp.
+
 ## The list
 
 | prefix | vol | example name | hypothesis | evidence for | what would confirm it |

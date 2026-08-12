@@ -137,16 +137,28 @@ price rises. That is the contract-position term in Wolak (2000) and Hortaçsu &
 Puller (2008). Using PDBF-based shares **overstates** the day-ahead markup
 incentive.
 
-### 2. Coverage drifts upward over time
+### 2. Coverage drifts — in opposite directions depending on the weighting
 
-Mapped share of cleared sell volume rises from **49.0% in 2018 to 70.1% in
-2026**, because ESIOS is a *snapshot* of today's registry and units that traded
-early and exited are simply absent. Unmapped volume stays in the denominator,
-so a firm's measured share climbs mechanically.
+This one is easy to get backwards, and I did.
+
+**On total cleared sell volume, coverage rises**: 49.0% in 2018 to 70.1% in
+2026. ESIOS is a snapshot of today's registry, so units that traded early and
+exited are absent, and a firm's measured share climbs mechanically.
+
+**On the near-marginal band, coverage falls**: 88.4% in 2018 to 69.8% in 2026,
+whole-archive average 79.8%. Early-window marginal offers came from thermal
+plants REE registers; recent marginal offers increasingly come from commercial
+renewable vehicles nobody registers.
+
+The near-marginal figure is the one that governs eta, so **the worst-covered
+years are 2024–2026 — exactly where the renewable effect is strongest**.
 
 - Within-year comparisons hold coverage fixed and are **valid**.
-- Across-year trends in these shares are **contaminated**. Use the CNMC-based
-  estimates, which do not depend on this mapping.
+- Across-year trends in these shares are **contaminated** either way. Use the
+  CNMC-based estimates, which do not depend on this mapping.
+- Always state which weighting a coverage number uses. A single-month figure
+  happens to be representative of the archive average (January 2024 reads 80.5%
+  against 79.8%) but says nothing about the trend.
 
 ### 3. An inferred assignment was wrong, and will not be the last
 

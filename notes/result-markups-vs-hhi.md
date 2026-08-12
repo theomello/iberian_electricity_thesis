@@ -97,14 +97,35 @@ low-demand, often weekend hours. The correlation above does not by itself
 establish that renewables *cause* the thinning rather than merely coinciding
 with hours that are thin anyway.
 
-Resolving this needs an instrument. The established approach in this literature
-(Cullen 2013; Kaffine et al. 2013; Novan 2015) uses **weather** — wind speed and
-installed capacity — as an instrument for renewable output, on the argument that
-weather shifts supply without otherwise affecting the market. That data has not
-been collected yet and is the next step.
+**This has now been tested.** ERA5 weather was fetched (10 sites, hourly, full
+window) and used to instrument the renewable share, following Novan (2015) and
+Fabra, Rapson, Reguant and Wang (2021).
 
-Until then the descriptive claim stands — the elasticity fell, and it fell most
-in high-VRE hours — but the causal claim does not.
+```
+log(eta_t) = b · vre_share_t + log demand + temp + temp²
+             + hour + month + year + day-of-week FE
+```
+
+instrumented with wind speed at the wind sites, its cube, and irradiance at the
+solar sites. Standard errors clustered by day.
+
+| | coefficient | per +1pp VRE share |
+|---|---|---|
+| OLS | −0.0291 (0.0007) | −2.87% |
+| **2SLS** | **−0.0280 (0.0002)** | **−2.76%** |
+
+First stage is strong — partial F on the excluded instruments is 29,240, R² 0.71.
+
+**OLS and IV agree to within 4%.** Conditional on demand, temperature and the
+fixed effects, the endogeneity of renewable output was not driving the
+association. A one-standard-deviation rise in the renewable share (18.1 pp)
+implies a **39.7% fall in eta**.
+
+The remaining caveat is the exclusion restriction, which is an assumption
+rather than a result: wind is correlated across Iberia and France, so windy
+periods may shift interconnector flows directly, and extreme weather affects
+thermal availability as well as renewable output. Temperature is treated as a
+control throughout, never an instrument, because it moves demand directly.
 
 ## Firm shares at market-period resolution
 

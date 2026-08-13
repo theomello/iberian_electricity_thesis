@@ -175,6 +175,40 @@ and units whose variable term exceeds the day's *highest* clearing price,
 Only three of the nine numeric fields are labelled in the parser. The other
 six are carried through unnamed rather than guessed at.
 
+#### The minimum income condition is a *declared* start-up cost
+
+Worth stating plainly, because it is the single most unusual thing in this
+dataset. `cab` publishes, **per unit per day**, a firm's own statement of what
+it needs to earn to run: a fixed term in €/day and a variable term in €/MWh.
+
+The empirical literature treats that quantity as something to be *recovered*:
+
+- Reguant (2014) models the optimal declaration of the condition in order to
+  identify start-up costs structurally.
+- Jha & Leslie, *Start-up Costs and Market Power: Lessons from the Renewable
+  Energy Transition* (SSRN 3603627), build a dynamic competitive benchmark that
+  estimates start-up costs from production data, and show that **static markups
+  overstate the rents attributable to market power** when start-up costs are
+  ignored. Their headline correction depends on a primitive they must estimate.
+
+Here it is published daily. That is a genuine data advantage and it cuts both
+ways for our own results: any static Lerner index computed in this repo is
+**biased upward** for the same reason Jha & Leslie identify, and this file is
+what would let the correction be made with a declared rather than an estimated
+number.
+
+**It is not marginal cost, and must not be used as one.** The declaration is a
+strategic choice — that is precisely why Reguant models it. What it supports is
+a *bound*: a firm that says it needs `fixed + variable × q` will not accept less,
+so its avoidable cost is at most that, and `price − (variable + fixed/q)` is a
+lower bound on realised markup, revealed by the firm itself.
+
+Three limits on the selection. Only units that *declare* a condition give this
+(53 of them on 2024-01-15, 48 of which are combined cycle — the marginal
+technology, but a narrow and non-random slice). The condition binds on **daily**
+revenue, not per period. And the declaring units are precisely those with
+binding start-up costs, so the sample is selected on the variable of interest.
+
 ### `cab` names identify the bidding **agent**, not the plant owner
 Unit codes carry a 3-character alphabetic mnemonic (`EDP`, `IBE`, `GGN`,
 `GRE`, `EGE`) that identifies the market agent. **344 distinct prefixes across

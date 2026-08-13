@@ -108,6 +108,27 @@ PREFIX_AGENTS: dict[str, tuple[str, str, str]] = {
     # than to the original EDP block, and identifying the new owner needs a
     # source outside this repo. See notes/unmapped-prefixes-to-confirm.md.
     "GED": ("ENDESA", "inferred", "WEAKEST: only the CNMC 11.8pp gap, no name evidence"),
+
+    # ---- Portuguese thermal and hydro, named in cab and documented publicly --
+    # cab supplies the plant name; ownership is documented in the trade press
+    # and company filings. Each is checked against capacity as well as name.
+    "RIB": ("EDP", "inferred", "C.C. Ribatejo; EDP-owned CCGT"),
+    "LAR": ("EDP", "inferred", "C.C. Lares; EDP-owned CCGT"),
+    "SIN": ("EDP", "inferred", "C.T. Sines coal; EDP. 4 x 295 MW = 1,180 MW vs 1,256 published"),
+    "RPG": ("TEJO_ENERGIA", "inferred",
+            "C.T. Pego; Tejo Energia = TrustEnergy 56.25% + Endesa Generacion 43.75%. "
+            "2 x 292 MW = 584 MW vs 628 published. NOT folded into Endesa: the "
+            "bidding entity is the joint venture, and Endesa holds a minority"),
+    "RTG": ("TURBOGAS", "inferred", "C.C. Turbogas, Tapada do Outeiro; Turbogas"),
+    "DOU": ("MOVHERA", "inferred",
+            "Douro Internacional. EDP sold six Douro dams to an Engie-led "
+            "consortium (Engie 40 / Credit Agricole 35 / Mirova 25), completed "
+            "Dec-2020, vehicle Movhera. Dams total 1.2 GW run-of-river + 0.5 GW "
+            "pumped = 1.7 GW; DOUSUP reads 1,709.4 MW and is first seen "
+            "2021-09-09, after completion. Capacity and date both match"),
+    "TAM": ("IBERDROLA", "inferred",
+            "Tamega complex; 1,158.1 MW first seen 2022-01-26 matches "
+            "Iberdrola's Tamega gigabattery, commissioned 2022"),
 }
 
 # Deliberately NOT mapped. Each hypothesis, the evidence for it, and the thing
@@ -231,9 +252,27 @@ def build(month: str, tier: str = "all") -> pd.DataFrame:
     df["prefix"] = df.unit.map(alpha_prefix)
 
     def from_name(d: str) -> str | None:
+        """An ESIOS agent code appearing inside the cab plant name."""
         for tok in re.findall(r"[A-Z0-9]{3,}", d.upper()):
             if tok in agents:
                 return tok
+        return None
+
+    def firm_from_name(d: str) -> str | None:
+        """A firm's own name written into the plant name.
+
+        `BRR1R` is called "AXPO VENTA R. ORD. (LOS BARRIOS)" -- the firm is
+        stated outright, but the agent-code matcher missed it because AXPO is
+        not itself an ESIOS agent code (AXPOP is). Only multi-word or
+        distinctive company names are used; generic words like HIDRO or SOLAR
+        would match plant descriptions rather than owners.
+        """
+        if not isinstance(d, str):
+            return None
+        u = d.upper()
+        for token, firm in FIRM_TOKENS:
+            if len(token) >= 4 and token in u:
+                return firm
         return None
 
     df["agent_esios"] = df.unit.map(by_code)
@@ -276,8 +315,10 @@ def build(month: str, tier: str = "all") -> pd.DataFrame:
         df["firm_group"] = (df.agent_name.map(firm_of)
                               .fillna(df.agent.map(firm_of))
                               .fillna(df.firm_tag))
-        df["firm"] = df.firm_group.fillna(df.agent)
-        df["is_major"] = df.firm_group.notna()
+        # Firm stated in the plant name; used only where nothing stronger applies.
+        df["firm_named"] = df.descr.map(firm_from_name)
+        df["firm"] = df.firm_group.fillna(df.firm_named).fillna(df.agent)
+        df["is_major"] = df.firm_group.notna() | df.firm_named.notna()
     return df.drop(columns=["agent_esios", "agent_prefix", "_agent_name_src"], errors="ignore")
 
 

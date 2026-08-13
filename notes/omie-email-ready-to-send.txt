@@ -1,15 +1,31 @@
 ================================================================================
 HOW TO SEND IT
 
-OMIE publishes no general email address. Use the assistance portal, which
-explicitly serves "Agentes del Mercado y a otros usuarios sin la condición de
-Agentes" and has a public-information section:
+OMIE publishes no general email address, and that is deliberate. Its assistance
+portal splits enquiries by whether you hold an OMIE digital certificate:
 
-    https://www.omie.es/es/portal-de-asistencia-de-omie
+    "Publico general, sin certificado digital de OMIE: Puede utilizar el icono
+     de sobre situado en la esquina inferior derecha de este Portal"
 
-Fallbacks: mercado@omie.es is real but is the desk for technical system-access
-problems, so expect it to be the wrong department. Phone +34 91 659 89 00.
-The text below works unchanged as a portal submission.
+    "Agentes del mercado, con certificado digital de OMIE: Pueden abrir una
+     consulta aqui o desde la seccion del portal que corresponda"
+
+You are the first case. So:
+
+  1. Open  https://www.portal-asistencia.omie.es/questions_sections
+  2. Click the ENVELOPE icon in the BOTTOM-RIGHT corner of the page
+  3. Paste the text below
+
+The relevant portal section is "00. Informacion publica de OMIE", which is
+where published-market-data questions belong.
+
+Fallbacks, both weaker: mercado@omie.es is real but is the desk for technical
+system-access problems, so it is the wrong department and may simply bounce.
+Phone +34 91 659 89 00. Postal address Calle de Fray Luis de Leon 13, 28012
+Madrid.
+
+Source: OMIE, "Como puedo abrir una consulta", portal-asistencia.omie.es,
+checked 2026-08-13.
 ================================================================================
 
 ================================================================================

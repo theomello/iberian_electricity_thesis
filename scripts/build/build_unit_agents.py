@@ -210,9 +210,19 @@ def build(month: str, tier: str = "all") -> pd.DataFrame:
     by_code = dict(zip(esios.unit, esios.agent))
     tech_by_code = dict(zip(esios.unit, esios.tech))
 
-    cab = pq.read_table(DATA / "omie" / "cab" / "parquet" / f"cab_{month}.parquet",
-                        columns=["unit", "descr", "max_power_mw"]).to_pandas()
-    cab = cab.groupby("unit").last()
+    # Read EVERY cab month, not one. A single month names only the units active
+    # in it: January 2024 covers 2,241 units, the full archive 7,357. Units that
+    # entered or left outside the sample month were invisible to the name layer,
+    # which is why coverage was weakest in 2025-2026 -- those units simply had no
+    # name to match against. Names like "ENDG GENERICA COMPRA" and "IBERDROLA
+    # CLIENTES COMPRA" sit in other months and resolve immediately.
+    cab_files = sorted((DATA / "omie" / "cab" / "parquet").glob("cab_*.parquet"))
+    parts = [pq.read_table(f, columns=["unit", "descr", "max_power_mw"]).to_pandas()
+             for f in cab_files]
+    cab_all = pd.concat(parts, ignore_index=True)
+    cab_all = cab_all[cab_all.descr.astype(str).str.strip().ne("")]
+    cab = cab_all.groupby("unit").agg(descr=("descr", "last"),
+                                      max_power_mw=("max_power_mw", "max"))
 
     reg = pq.read_table(DATA / "omie" / "registry" / "unit_registry.parquet").to_pandas()
     df = reg[["unit", "country", "role", "net_cleared_mwh"]].copy()
@@ -258,9 +268,16 @@ def build(month: str, tier: str = "all") -> pd.DataFrame:
         df["agent_name"] = df.agent.map(name_by_agent)
         df["agent_type"] = df.agent.map(type_by_agent)
         # Layer-3 labels are already firm names, so fall back to the label.
-        df["firm"] = (df.agent_name.map(firm_of)
-                        .fillna(df.agent.map(firm_of))
-                        .fillna(df.firm_tag))
+        # An agent that belongs to no major group is not unmapped -- it is a
+        # small independent firm, and for residual demand that is exactly what
+        # it is. Requiring membership of one of the 17 majors would discard the
+        # decision-maker we actually need. So: roll up to the group where one
+        # exists, otherwise the agent stands as its own firm.
+        df["firm_group"] = (df.agent_name.map(firm_of)
+                              .fillna(df.agent.map(firm_of))
+                              .fillna(df.firm_tag))
+        df["firm"] = df.firm_group.fillna(df.agent)
+        df["is_major"] = df.firm_group.notna()
     return df.drop(columns=["agent_esios", "agent_prefix", "_agent_name_src"], errors="ignore")
 
 

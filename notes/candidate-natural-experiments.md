@@ -12,7 +12,17 @@ each covers what the other excludes.
 
 ### A. RDL 17/2021 — clawback on non-emitting generation
 
-- **In force 16 September 2021 → 31 March 2022.**
+- **In force 16 September 2021 → 31 December 2023.** Verified against the BOE
+  consolidated text on 2026-08-13, correcting an earlier "→ 31 March 2022" in
+  this note. 31 March 2022 was only the *original* sunset; the mechanism was
+  extended four times and never lapsed:
+
+  | decree | extends to |
+  |---|---|
+  | RDL 17/2021 (original) | 31 March 2022 |
+  | RDL 6/2022 | 30 June 2022 |
+  | RDL 11/2022 | 31 December 2022 |
+  | RDL 18/2022 | 31 December 2023 |
 - **Treated:** peninsular non-emitting generation **above 10 MW** that has no
   specific remuneration framework and won no renewable auction — in practice
   **nuclear, hydro, and merchant renewables**.
@@ -40,11 +50,29 @@ adjacent in time and almost disjoint in coverage, so each provides a
 placebo-like mirror for the other, and a firm's response to both is observable
 in the same units.
 
-**They do not overlap.** A ends 31 March 2022; B begins 15 June 2022. That is a
-genuine convenience — earlier concern about contamination was unfounded for
-these two, though the **EU inframarginal revenue cap** (Council Regulation
-2022/1854, roughly December 2022 to June 2023) does sit inside B's window and
-targets B's control group. That one still needs dating precisely.
+**They overlap, and heavily — this was recorded backwards.** A runs to 31
+December 2023 and B begins 15 June 2022, so the two coincide for **18.5
+months**, from 15 June 2022 to 31 December 2023. Every earlier statement in
+this repo that they are adjacent and disjoint is wrong.
+
+That is a real problem for the mirrored-episodes design, not a footnote. In the
+overlap, A's treated group (hydro, nuclear, merchant renewables) is under
+clawback *while* B's treated group (gas, coal) is being subsidised, so neither
+serves as a clean control for the other. What survives:
+
+- **A alone, 16 Sep 2021 → 14 Jun 2022** — clawback in force, gas cap not yet.
+  Nine months, and it contains the March 2022 gas spike.
+- **B alone — does not exist.** B never runs without A.
+- **The 15 June 2022 discontinuity** is still sharp: A is already in force on
+  both sides of it, so it differences out, and B switches on. This is arguably
+  the cleanest single date available.
+
+**The EU inframarginal revenue cap does not add a date.** Council Regulation
+2022/1854 set a €180/MWh cap, but **Spain did not implement it separately** —
+it relied on the existing RDL 17/2021 mechanism, which was already a revenue
+clawback and binds much tighter (~€67/MWh). Verified 2026-08-13. So the
+earlier worry that an unlisted EU measure contaminates B's control group is
+unfounded; the contamination is A itself.
 
 ### Why A may be the better thesis
 

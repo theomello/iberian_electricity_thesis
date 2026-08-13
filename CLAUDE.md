@@ -164,8 +164,15 @@ it carries three things nothing else token-free publishes:
   term (€/MWh). This is the complex condition behind the whole-day withdrawals,
   and the primitive Reguant (2014) uses to identify startup costs.
 
-Fixed-width, **169 chars, latin-1, dot decimal** — unlike `curva_pbc_uof`,
-which uses a comma. Do not share a number parser between them.
+Fixed-width, latin-1, **dot decimal** — unlike `curva_pbc_uof`, which uses a
+comma. Do not share a number parser between them. **Two layouts: 169 chars
+until 2025-03-18, 94 chars from 2025-03-19** — see the trap below.
+
+**The minimum income variable term is only available to 2025-03-18.** The
+narrow layout publishes two numerics where the wide one published nine: max
+power (confirmed) and one unidentified field that is neither the old fixed nor
+the old variable term. Anything needing declared start-up costs runs
+2017-01-01 → 2025-03-18. OMIE ticket #12541 is open; ask there.
 
 Validated on January 2024: units declaring no minimum-income condition
 withdraw for a whole day **4.1%** of the time; units declaring one, **81.1%**;
@@ -277,6 +284,34 @@ price/quantity steps keyed by the same 7-digit unit id as `cab`.
 
 Full documentation of the mapping — layers, fields, coverage, glossary and the
 five ways it can mislead — is in [`docs/unit-agent-mapping.md`](docs/unit-agent-mapping.md).
+
+### Technology coverage is a separate, weaker mapping than ownership
+Ownership reaches 89.1% of near-marginal offered volume. **Technology reaches
+41.2%** — a different problem with different sources, and the binding
+constraint on anything that asks *which technology sets the price*.
+
+ESIOS is close to exhausted for this: only **128 of our 3,930 generation units**
+appear in its programming-unit registry, because REE registers dispatchable
+plant and the registry is dominated by retailers (933 of 6,627 physical units
+are `Comercializadores mercado libre`). Archive 81 carries a `up` field linking
+physical units to programming units, but it inherits the same 128.
+
+So technology comes from `cab` names, in two tiers:
+
+- **`tech`** — a specific technology, from an explicit marker in the name.
+  1,474 units, 41.2% of generation volume.
+- **`regime`** — *Régimen Especial* (renewables, cogeneration, waste) versus
+  *Régimen Ordinario* (conventional thermal, hydro, nuclear), read off names
+  like "AXPO VENTA R. ESPECIAL 042". 1,984 units, **59.9% of volume**. A
+  weaker claim than a technology, kept in its own column rather than folded
+  into `tech`, but it still rules out half the stack for a marginal unit.
+
+**Hydro is named after rivers, not after technology.** `ALIMA` is "LIMA",
+`ACAVADO` is "CAVADO", `TEMON` is "SISTEMA TEJO-MONDEGO", `GUADIA` is "BACIA
+HID. DO GUADIANA". Matching only `HIDRO`/`C.H.` left the seven largest
+Portuguese cascades unclassified — together ~41% of all unidentified marginal
+periods — and made hydro look like a declining marginal technology when it is
+not. River and basin names are now matched explicitly.
 
 ### CNMC publishes shares on PDBF, not on the day-ahead auction
 **PDBF** = *Programa Diario Base de Funcionamiento*, the daily operating
@@ -408,6 +443,43 @@ also exactly 24,872 MWh — the market-clearing identity.
 Filter to `status == 'O'` for supply/demand functions and `status == 'C'`
 for cleared quantities. **Summing across both double-counts every accepted
 bid.** `fetch_omie_bids.py --verify` re-checks the identity per month.
+
+### `cab` changed its fixed-width layout on 2025-03-19, mid-month
+Found 2026-08-13, after 14 months of silently corrupt output. The file went
+from **169 characters to 94**, and every field moved:
+
+| field | wide (to 2025-03-18) | narrow (from 2025-03-19) |
+|---|---|---|
+| unit_id | `[0:7]` | `[0:10]`, now 8 digits |
+| unit | `[10:17]` | `[15:22]` |
+| descr | `[17:47]` | `[22:52]` |
+| offer_type | `[47:50]`, `VNO`/`CNO` | `[52:54]`, `VO`/`CO` |
+| numerics | nine | **two** |
+
+The old parser did not fail. Its guard tested that `line[:7]` was all digits,
+and in the narrow layout `[0:7]` is leading spaces plus digits, so it passed
+and emitted unit codes `0AB`, `0AC`, `0AD` — plausible-looking, joining to
+nothing. Every `cab`-derived attribute was therefore missing for 2025-03-19
+onward, which is why marginal-technology coverage looked as if it collapsed in
+2026: 100% of 2026 marginal units appeared to have no `cab` name.
+
+**Dispatch on the observed line width, never on the date** — the change lands
+mid-month, so a date rule mis-slices 18 days of March 2025. The parser now
+raises on any unrecognised width.
+
+`max_power_mw` is **confirmed** across the boundary: of the 2,390 units present
+on both 2025-03-18 and 2025-03-19, 100% reproduce the same capacity. The other
+narrow numeric is **not** identified and is carried as `narrow_numeric_0`.
+ABO1 declares 24,000 €/day fixed and 127.50 €/MWh variable on 18 March and a
+single 601,620 on 19 March; the declaration is chosen per unit per day, so a
+day-over-day comparison cannot identify the field.
+
+**This is the same date the 61-day clearing-identity anomaly cluster begins**
+(2025-03-19 → 2025-06-09), which was recorded as unexplained because it
+predates the April blackout by five weeks. A publication-system change on that
+exact date is now the leading explanation for the March onset. It is a lead,
+not a demonstration — a header-format change does not mechanically break the
+market-clearing identity in the bid files.
 
 ### The 15-minute switch on 2025-10-01
 OMIE moved from hourly to **15-minute market time units** on 2025-10-01 (the
@@ -575,7 +647,14 @@ absent. These are the originally documented cases:
 single day of May at 10–23 periods each, decaying through early June. The
 ramp-up follows the **28 April 2025 Iberian blackout** and the weeks of
 reinforced grid operation after it, but the onset predates the blackout by five
-weeks, so the March start is unexplained. Do not assume one cause.
+weeks. Do not assume one cause.
+
+The March start is no longer wholly unexplained: **`cab` changed its
+fixed-width layout on exactly 2025-03-19** (see the trap below), so OMIE
+altered something in its publication chain that day. That does not
+mechanically explain a clearing-identity gap in a different dataset, but a
+coincidence of exact dates across two files is worth pursuing before
+attributing the cluster to the blackout.
 
 The direction varies with which side loses more. Left as-is rather than
 patched — imputing bids would be inventing data.

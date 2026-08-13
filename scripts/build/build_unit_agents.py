@@ -231,13 +231,44 @@ TECH_PATTERNS: list[tuple[str, str]] = [
     (r"^C\.?C\.?\b|CICLO COMBINADO", "combined_cycle"),
     (r"^C\.?T\.?\b|T[EÉ]RMICA|CARB[OÓ]N|HULLA", "thermal"),
     (r"\bC\.?H\.?B\.?\b|BOMBEO", "pumped_storage"),
-    (r"UOF HIDRO|\bC\.?H\.?\b|HIDRO|HIDR[AÁ]ULIC", "hydro"),
+    # Hydro is named after rivers and basins as often as by technology, and
+    # missing those understated hydro badly in the marginal-technology counts:
+    # ALIMA "LIMA", ACAVADO "CAVADO", TEMON "SISTEMA TEJO-MONDEGO",
+    # GUADIA "BACIA HID. DO GUADIANA", DOUSUP "DOURO INTERNACIONAL" all read as
+    # unknown before these patterns were added.
+    (r"UOF HIDRO|\bC\.?H\.?\b|HIDRO|HIDR[AÁ]ULIC|\bHIDRA\b|BACIA\s+HID|"
+     r"\bMINI\s*HID|SALTO|EMBALSE|AZUD|\bPRESA\b", "hydro"),
+    (r"\bDOURO\b|\bTAMEGA\b|\bT[AÂ]MEGA\b|\bCAVADO\b|\bC[AÁ]VADO\b|\bLIMA\b|"
+     r"\bMONDEGO\b|\bGUADIANA\b|\bTEJO\b|\bZEZERE\b|\bZ[EÊ]ZERE\b|"
+     r"\bSABOR\b|\bTUA\b|\bALQUEVA\b", "hydro"),
     (r"\bP\.?S\.?\b|\bFV\b|FOTOVOLT|SOLAR", "solar"),
     (r"\bP\.?E\.?\b|E[OÓ]LIC", "wind"),
     (r"BIOMASA|BIOG[AÁ]S", "biomass"),
-    (r"COGENERA", "cogeneration"),
+    (r"COGENERA|\bCOG\b", "cogeneration"),
+    (r"RESIDUOS|\bR\.?S\.?U\.?\b|VALORIZA", "waste"),
     (r"BATER[IÍ]A|ALMACENAM", "storage"),
 ]
+
+# The regime is a coarser partition than technology, and a far better covered
+# one. Regimen Especial is the Spanish special regime -- renewables,
+# cogeneration and waste; Regimen Ordinario is conventional thermal, hydro and
+# nuclear. Hundreds of aggregation vehicles name their regime without naming a
+# technology ("AXPO VENTA R. ESPECIAL 042"), and for the marginal-technology
+# question that still rules out half the stack. Kept in its own column rather
+# than folded into tech_cab: it is a different, weaker claim.
+REGIME_PATTERNS: list[tuple[str, str]] = [
+    (r"R[EÉ]G(IMEN|\.)?\s*ESP|R\.\s*ESPECIAL|\bREG\.?\s*ESP|"
+     r"VENTA\s+R\.?E\b|VENDA\s+R\.?E\b|\bR\.?E\.?\s*\d|VGERE|"
+     r"EXCED.*AUTOPROD|AUTOPROD", "special"),
+    (r"R[EÉ]G(IMEN|\.)?\s*ORD|\bREG\.?\s*ORD|VENTA\s+R\.?O\b|\bR\.?O\.?\s*\d",
+     "ordinary"),
+]
+
+# Technologies that sit inside the special regime, used to derive the regime
+# from a known technology without re-reading the name.
+SPECIAL_REGIME_TECH = {"solar", "wind", "biomass", "cogeneration", "waste"}
+ORDINARY_REGIME_TECH = {"nuclear", "combined_cycle", "thermal", "hydro",
+                        "pumped_storage"}
 
 
 def tech_from_name(descr: str) -> str | None:
@@ -247,6 +278,16 @@ def tech_from_name(descr: str) -> str | None:
     for pat, tech in TECH_PATTERNS:
         if re.search(pat, u):
             return tech
+    return None
+
+
+def regime_from_name(descr: str) -> str | None:
+    if not isinstance(descr, str) or not descr.strip():
+        return None
+    u = descr.upper()
+    for pat, regime in REGIME_PATTERNS:
+        if re.search(pat, u):
+            return regime
     return None
 
 
@@ -344,6 +385,13 @@ def build(month: str, tier: str = "all") -> pd.DataFrame:
                         .fillna(df.firm_tag.notna().map({True: "group_tag", False: None})))
     df["tech_esios"] = df.unit.map(tech_by_code)
     df["tech_cab"] = df.descr.map(tech_from_name)
+    df["tech"] = df.tech_cab.fillna(df.tech_esios)
+    # A known technology implies its regime; otherwise read the regime off the
+    # name. Technology first, so the stronger evidence wins.
+    df["regime"] = (
+        df.tech.map(lambda t: "special" if t in SPECIAL_REGIME_TECH
+                    else ("ordinary" if t in ORDINARY_REGIME_TECH else None))
+        .fillna(df.descr.map(regime_from_name)))
 
     # Roll agents up to the firm, using archive 83's legal names as evidence.
     sm_path = DATA / "esios" / "esios_market_subjects.parquet"
@@ -423,6 +471,11 @@ def main() -> int:
     vv = gg.net_cleared_mwh.abs().fillna(0)
     print(f"\n  technology from cab names: {gg.tech_cab.notna().sum():,} of {len(gg):,} "
           f"generation units ({vv[gg.tech_cab.notna()].sum() / tot:.1%} of volume)")
+    print(f"  technology, cab + esios:   {gg.tech.notna().sum():,} of {len(gg):,} "
+          f"({vv[gg.tech.notna()].sum() / tot:.1%} of volume)")
+    print(f"  regime (special/ordinary): {gg.regime.notna().sum():,} of {len(gg):,} "
+          f"({vv[gg.regime.notna()].sum() / tot:.1%} of volume)   "
+          + "  ".join(f"{k}:{v}" for k, v in gg.regime.value_counts().items()))
     print("   " + "  ".join(f"{k}:{v}" for k, v in
                             gg.tech_cab.value_counts().head(8).items()))
 

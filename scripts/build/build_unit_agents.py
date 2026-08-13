@@ -266,9 +266,65 @@ REGIME_PATTERNS: list[tuple[str, str]] = [
 
 # Technologies that sit inside the special regime, used to derive the regime
 # from a known technology without re-reading the name.
-SPECIAL_REGIME_TECH = {"solar", "wind", "biomass", "cogeneration", "waste"}
+SPECIAL_REGIME_TECH = {"solar", "solar_thermal", "wind", "biomass",
+                       "cogeneration", "waste"}
 ORDINARY_REGIME_TECH = {"nuclear", "combined_cycle", "thermal", "hydro",
-                        "pumped_storage"}
+                        "hydro_ugh", "hydro_ror", "pumped_storage"}
+
+# ESIOS publishes its own Spanish technology vocabulary, which is NOT the one
+# tech_from_name produces. Mixing the two silently counted 350 retailer units
+# as having a "technology" and left 41 UGH hydro units without a regime, so
+# normalise ESIOS onto the cab vocabulary before combining them.
+ESIOS_TECH_MAP = {
+    "Solar fotovoltaica": "solar",
+    "Solar térmica": "solar_thermal",
+    "Eólica terrestre": "wind",
+    "Eólica marina": "wind",
+    # ESIOS distinguishes the three hydro classes that matter for a water-value
+    # design: UGH is a managed storage group, Fluyente is run-of-river.
+    "Hidráulica UGH": "hydro_ugh",
+    "Embalse": "hydro_ugh",
+    "Fluyente": "hydro_ror",
+    "Hidráulica - No UGH": "hydro_ror",
+    "Turbinación bombeo": "pumped_storage",
+    "Consumo bombeo": "pumped_storage",
+    "Ciclo combinado": "combined_cycle",
+    "Nuclear": "nuclear",
+    "Carbón": "thermal",
+    "Derivados del petróleo ó carbón": "thermal",
+    "Derivados del petróleo o carbón": "thermal",
+    "Gas Natural": "thermal",
+    "Gas natural cogeneración": "cogeneration",
+    "Gas Natural Cogeneración": "cogeneration",
+    "Cogeneración": "cogeneration",
+    "Biogás": "biomass",
+    "Biomasa": "biomass",
+    "Residuos": "waste",
+    "Batería electroquímica": "storage",
+    "Almacenamiento": "storage",
+}
+
+# ESIOS categories that are not a generation technology at all. Counting these
+# as covered inflates technology coverage with demand and interconnection.
+ESIOS_NON_GENERATION = {
+    "Comercializadores mercado libre", "Comercializadores último recurso",
+    "Consumos directos en mercado", "Consumo de Servicios Auxiliares",
+    # Generic and portfolio labels are ESIOS declining to state a technology.
+    "Genéricas", "Porfolio", "Portfolio",
+}
+
+
+def normalise_esios_tech(t: str | None) -> str | None:
+    """Map an ESIOS technology onto the cab vocabulary, or None if it is not a
+    generation technology (demand, interconnection, or an explicit non-answer)."""
+    if not isinstance(t, str) or not t.strip():
+        return None
+    t = t.strip()
+    if t in ESIOS_NON_GENERATION:
+        return None
+    if t.startswith(("Importación", "Exportación", "Enlace")):
+        return None
+    return ESIOS_TECH_MAP.get(t)
 
 
 def tech_from_name(descr: str) -> str | None:
@@ -385,7 +441,9 @@ def build(month: str, tier: str = "all") -> pd.DataFrame:
                         .fillna(df.firm_tag.notna().map({True: "group_tag", False: None})))
     df["tech_esios"] = df.unit.map(tech_by_code)
     df["tech_cab"] = df.descr.map(tech_from_name)
-    df["tech"] = df.tech_cab.fillna(df.tech_esios)
+    # ESIOS raw label kept in tech_esios for traceability; tech is the single
+    # normalised vocabulary and is the column analysis should use.
+    df["tech"] = df.tech_cab.fillna(df.tech_esios.map(normalise_esios_tech))
     # A known technology implies its regime; otherwise read the regime off the
     # name. Technology first, so the stronger evidence wins.
     df["regime"] = (

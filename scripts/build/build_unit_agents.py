@@ -56,6 +56,16 @@ OUT = DATA / "omie" / "registry" / "unit_agents.parquet"
 OUT_CONF = DATA / "omie" / "registry" / "unit_agents_confirmed.parquet"
 BAND = 5.0
 
+# Agent codes that are also ordinary words. Matching these inside a plant name
+# produces false positives, so the name layer skips them.
+GENERIC_TOKENS = {
+    "HYDRO", "ENERG", "SERV", "POWER", "COMER", "SOLAR", "EOLIC", "GAS",
+    "CENTRAL", "PLANTA", "UNIDAD", "VENTA", "COMPRA", "GENER", "ELECT",
+    "TOTAL", "GRUPO", "IBER", "NORTE", "SUR", "ESTE", "OESTE", "COGEN",
+    "DUERO", "EBRO", "TAJO", "JUCAR", "SEGURA", "MINO", "COMPA", "ALUZ",
+    "CUENCA", "FABRICA", "FABRICAS", "PENINSULAR",
+}
+
 # Layer 3. Each entry records the evidence that justifies it; anything that
 # would have been a guess is absent by design and shows up as unmapped.
 PREFIX_AGENTS: dict[str, tuple[str, str, str]] = {
@@ -65,14 +75,14 @@ PREFIX_AGENTS: dict[str, tuple[str, str, str]] = {
     "EDR": ("ACCIONA", "confirmed", 'cab name "ACCIONA VENTA nnn"'),
     "ACC": ("ACCIONA", "confirmed", 'cab name "AC.GREEN EN. DEV. VENTA RO n"'),
     "WMV": ("WMARK", "confirmed", 'cab name "VENTA EXCED AUTOPROD WMARK nnn"'),
-    "HIS": ("RWE", "confirmed", 'cab name "PE RWE"'),
+
     "GNV": ("GNERA", "confirmed", 'cab name "UOF GNERA MAYOR DE 1MW"'),
     "ECY": ("ECYR", "confirmed", 'cab name "ECYR VENTA REG. ESP. 1"'),
     "GRE": ("REPSB", "confirmed", 'cab name "REPSB GENERICA VENTA"; REPSB is an ESIOS agent'),
     "EBL": ("EBLCO", "confirmed", 'cab name "GENÉRICA VENTA EBLCO" on sibling GEBLCC1'),
     "ENR": ("ENCE", "confirmed", 'cab name "ENCE ENERGIA HUELVA"'),
     "EGP": ("ENEL_GREEN_POWER", "confirmed", 'cab name "EOLICA EEGPEM"'),
-    "GAL": ("GALP", "confirmed", 'GALPWV2, "UNIDADE DE VENDA", PT'),
+
     "HCG": ("EDP", "confirmed", 'ESIOS agent "HC G" resolves to "EDP ESPAÑA, S.A."'),
 
     # ---- inferred: mnemonic plus independent corroboration ------------------
@@ -94,12 +104,8 @@ PREFIX_AGENTS: dict[str, tuple[str, str, str]] = {
     # registration ids 8600221-8600226 -- ADOURO, ACAVADO, ALIMA, TEMON,
     # GUADIA, MONDEGO -- all first seen 2018-01-01/02 and all named as river
     # systems. One registration batch, so they share a registrant.
-    "ADO": ("EDP", "inferred", "PT river-basin block, cab id 8600221"),
-    "ACA": ("EDP", "inferred", "PT river-basin block, cab id 8600222"),
-    "ALI": ("EDP", "inferred", "PT river-basin block, cab id 8600223"),
-    "TEM": ("EDP", "inferred", "PT river-basin block, cab id 8600224 (Tejo-Mondego)"),
-    "GUA": ("EDP", "inferred", "PT river-basin block, cab id 8600225 (Guadiana)"),
-    "MON": ("EDP", "inferred", "PT river-basin block, cab id 8600226 (Mondego)"),
+    # (the Portuguese river-basin block moved to UNIT_AGENTS -- see below:
+    #  a 3-letter prefix caught unrelated units such as ACAPC01 and ALIOC01)
     # TAM (Tâmega) and DOU (Douro Internacional) were assigned to EDP with the
     # rest of the Portuguese hydro and are now WITHDRAWN. Both sit outside the
     # 8600221-226 batch and appear years later: TAMEGA is cab id 8600323 at
@@ -129,6 +135,29 @@ PREFIX_AGENTS: dict[str, tuple[str, str, str]] = {
     "TAM": ("IBERDROLA", "inferred",
             "Tamega complex; 1,158.1 MW first seen 2022-01-26 matches "
             "Iberdrola's Tamega gigabattery, commissioned 2022"),
+}
+
+# Exact unit codes. Evidence that identifies ONE unit belongs here, not in the
+# prefix table: validating the prefix layer against units where ESIOS knows the
+# answer showed 3-letter rules catching unrelated codes -- "ACA" was justified
+# by ACAVADO but also matched ACAPC01, "ALI" by ALIMA but also ALIOC01.
+# Regex rules for evidence that justifies a family of units but not a whole
+# 3-letter prefix. "HIS" -> RWE came from a unit named "PE RWE", but the prefix
+# also catches HISPE units belonging to a different agent; "GAL" -> GALP
+# likewise catches GALAC01. Narrowing to the family the evidence covers took
+# the prefix layer from 50% to 79% against ESIOS-known units.
+UNIT_PATTERNS: list[tuple[str, str, str, str]] = [
+    (r"^HISVD", "RWE", "confirmed", 'cab name "PE RWE" on HISVD units'),
+    (r"^GALPW", "GALP", "confirmed", 'GALPWV2 "UNIDADE DE VENDA", PT'),
+]
+
+UNIT_AGENTS: dict[str, tuple[str, str, str]] = {
+    "ADOURO":  ("EDP", "inferred", "PT river-basin block, cab id 8600221"),
+    "ACAVADO": ("EDP", "inferred", "PT river-basin block, cab id 8600222"),
+    "ALIMA":   ("EDP", "inferred", "PT river-basin block, cab id 8600223"),
+    "TEMON":   ("EDP", "inferred", "PT river-basin block, cab id 8600224"),
+    "GUADIA":  ("EDP", "inferred", "PT river-basin block, cab id 8600225"),
+    "MONDEGO": ("EDP", "inferred", "PT river-basin block, cab id 8600226"),
 }
 
 # Deliberately NOT mapped. Each hypothesis, the evidence for it, and the thing
@@ -252,9 +281,16 @@ def build(month: str, tier: str = "all") -> pd.DataFrame:
     df["prefix"] = df.unit.map(alpha_prefix)
 
     def from_name(d: str) -> str | None:
-        """An ESIOS agent code appearing inside the cab plant name."""
+        """An ESIOS agent code appearing inside the cab plant name.
+
+        Some agent codes are ordinary Spanish words and match plant
+        descriptions rather than owners: HYDRO is a real agent code, so
+        "HYDRO CUENCA EBRO" resolved to HYDRO when the unit belongs to ASIE.
+        Validation against ESIOS-known units put this layer at 74% before the
+        blocklist. Tokens below are excluded outright.
+        """
         for tok in re.findall(r"[A-Z0-9]{3,}", d.upper()):
-            if tok in agents:
+            if tok in agents and tok not in GENERIC_TOKENS:
                 return tok
         return None
 
@@ -277,8 +313,19 @@ def build(month: str, tier: str = "all") -> pd.DataFrame:
 
     df["agent_esios"] = df.unit.map(by_code)
     df["_agent_name_src"] = df.descr.map(from_name)
-    df["agent_prefix"] = df.prefix.map(lambda p: PREFIX_AGENTS.get(p, (None, None, None))[0])
-    df["prefix_tier"] = df.prefix.map(lambda p: PREFIX_AGENTS.get(p, (None, None, None))[1])
+    def by_pattern(unit: str, idx: int):
+        for pat, firm, tier, _ in UNIT_PATTERNS:
+            if re.match(pat, str(unit)):
+                return (firm, tier)[idx]
+        return None
+
+    df["agent_unit"] = df.unit.map(lambda u: UNIT_AGENTS.get(u, (None, None, None))[0])
+    df["agent_prefix"] = (df.unit.map(lambda u: UNIT_AGENTS.get(u, (None, None, None))[0])
+        .fillna(df.unit.map(lambda u: by_pattern(u, 0)))
+        .fillna(df.prefix.map(lambda p: PREFIX_AGENTS.get(p, (None, None, None))[0])))
+    df["prefix_tier"] = (df.unit.map(lambda u: UNIT_AGENTS.get(u, (None, None, None))[1])
+        .fillna(df.unit.map(lambda u: by_pattern(u, 1)))
+        .fillna(df.prefix.map(lambda p: PREFIX_AGENTS.get(p, (None, None, None))[1])))
     if tier == "confirmed":
         drop = df.prefix_tier.eq("inferred")
         df.loc[drop, "agent_prefix"] = None

@@ -26,6 +26,23 @@ Madrid.
 
 Source: OMIE, "Como puedo abrir una consulta", portal-asistencia.omie.es,
 checked 2026-08-13.
+
+--------------------------------------------------------------------------
+STATUS: SUBMITTED 2026-08-13 -- ticket #12541
+
+Acknowledged the same day by Ayuda.InfoPublica@omie.es ("We are currently
+checking your enquiry"), routed to section "00 - Informacion publica". No
+substantive answer yet.
+
+Note the correction: OMIE's public-information desk DOES have a direct email
+address, Ayuda.InfoPublica@omie.es. It is not published on the contact page --
+it only becomes visible when they reply. The portal widget remains the correct
+way to open a case; this address is the way to follow up on one.
+
+If nothing substantive arrives in ~2 weeks, follow up on ticket #12541 rather
+than opening a new case, and lead with the prefix question alone -- it is the
+part they can answer without releasing anything.
+--------------------------------------------------------------------------
 ================================================================================
 
 ================================================================================

@@ -58,6 +58,7 @@ scripts/
 | `fetch/fetch_omie_intraday.py` | OMIE `curva_pibc_uof` | no | `data/omie/intraday/parquet/intraday_YYYYMM.parquet` |
 | `build/build_unit_registry.py` | OMIE `pdbc`,`pdbcpt`,`pdbce` | no | `data/omie/registry/unit_registry.parquet` |
 | `fetch/fetch_omie_cab.py` | OMIE `cab` | no | `data/omie/cab/parquet/cab_YYYYMM.parquet` |
+| `fetch/fetch_omie_pdbf.py` | OMIE `pdbf` | no | `data/omie/pdbf/parquet/pdbf_YYYYMM.parquet` |
 | `fetch/fetch_esios_units.py` | ESIOS archive 82 | **no** | `data/esios/esios_programming_units.parquet` |
 | `build/build_unit_agents.py` | ESIOS + `cab` + prefixes | no | `data/omie/registry/unit_agents.parquet` |
 | `fetch/fetch_ree_daily.py` | REE `apidatos` | no | `data/ree/ree_{generation,demand,balance}_daily.parquet` |
@@ -313,6 +314,52 @@ Portuguese cascades unclassified — together ~41% of all unidentified marginal
 periods — and made hydro look like a declining marginal technology when it is
 not. River and basin names are now matched explicitly.
 
+### OMIE `pdbf` — the operating schedule, and the contract position
+`data/omie/pdbf/parquet/`, fetched 2026-08-13, token-free. Same field layout as
+`pdbce`, so no new parsing was needed. One row per unit per period.
+
+Columns: `date`, `period`, `resolution_min`, `unit`, `unit_id`, `schedule_mw`,
+`role_code`, `group_tag`.
+
+**Why it is here.** It publishes the **physical contract position** — energy
+committed at a price fixed outside the auction. That is the `theta` term in
+Wolak (2000) and Hortaçsu & Puller (2008): volume already sold forward earns
+nothing extra when the day-ahead price rises, so a heavily contracted firm has
+a weaker incentive to withhold whatever its share. Jha & Leslie spend an
+appendix inferring it because Australian contracts are not public.
+
+**`role_code == "4"` is the bilateral contract — read it directly, do not
+compute PDBF minus PDBC.** Its sell and buy legs are exactly equal (0.0000 gap
+in every month tested 2018–2026), which is the matching identity a bilateral
+contract must satisfy and the subtraction cannot check.
+
+| year | scheduled sell | under bilateral contract |
+|---|---|---|
+| 2018 | 413.6 TWh | **46.5%** |
+| 2022 | 416.3 TWh | **48.5%** |
+| 2024 | 346.7 TWh | **38.9%** |
+
+**PDBF has several rows per unit-period, one per role code**, so
+`(date, period, unit)` is *not* a key — joining cleared volume onto it without
+aggregating first fans the auction volume across those rows. That produced a
+spurious "36% → 5% collapse" in an early cut; the measured decline is 8pp.
+Only role 4 carries a `group_tag`, and on those rows `unit_id` is the contract
+id rather than the registration id.
+
+**Still a proxy for theta, not theta.** It captures *physical* bilateral
+contracts only and misses **financial** hedges entirely — an OMIP future or a
+financially settled PPA fixes revenue while the energy still clears in the
+auction. Since what matters is whether *revenue* is fixed rather than whether
+electrons flow bilaterally, that omission is the more serious one. Bound it; do
+not claim to measure it.
+
+`--verify` re-derives PDBF against the auction per month and flags any month
+where PDBF sell falls below cleared sell, which would be a parse failure rather
+than a market fact. January 2024 gives **1.73×**, independently reproducing the
+figure below.
+
+**`schedule_mw` is average MW, not MWh** — see the trap below.
+
 ### CNMC publishes shares on PDBF, not on the day-ahead auction
 **PDBF** = *Programa Diario Base de Funcionamiento*, the daily operating
 schedule: the day-ahead auction result (**PDBC**, *Programa Diario Base de
@@ -443,6 +490,29 @@ also exactly 24,872 MWh — the market-clearing identity.
 Filter to `status == 'O'` for supply/demand functions and `status == 'C'`
 for cleared quantities. **Summing across both double-counts every accepted
 bid.** `fetch_omie_bids.py --verify` re-checks the identity per month.
+
+### Three OMIE datasets change on 2025-03-19 — treat it as a platform migration
+Established 2026-08-13. Each was found separately; together they are hard to
+read as coincidence:
+
+- **`cab`** switches fixed-width layout, 169 chars to 94 (trap below).
+- **`pdbf`** adopts the **15-minute MTU** — 24 periods a day through
+  2025-03-18, 96 from 2025-03-19. This is *six months before the day-ahead
+  auction* (2025-10-01) and three before intraday (June 2025).
+- **The 61-day bid clearing-identity anomaly cluster** begins on this exact
+  day and runs to 2025-06-09.
+
+**Every dataset has its own resolution date.** Intraday June 2025, PDBF
+2025-03-19, day-ahead 2025-10-01. Read `resolution_min` per file; never infer
+one dataset's resolution from another's.
+
+### PDBF `schedule_mw` is average MW, not MWh per period
+Confirmed on Ascó 1 (1,028 MW nameplate): it reads 995.8 in the hourly era and
+1,003.0 at 15 minutes. Had the field been MWh per quarter it would read ~250.
+Summing the raw column across the 15-minute era therefore overstates energy
+**fourfold** — April 2025 sums to 119.29 "TWh" against ~27 TWh in neighbouring
+years, which is how this was caught. Derive energy exactly as for the bid
+files: `schedule_mw * resolution_min / 60`.
 
 ### `cab` changed its fixed-width layout on 2025-03-19, mid-month
 Found 2026-08-13, after 14 months of silently corrupt output. The file went

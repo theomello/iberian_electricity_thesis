@@ -28,6 +28,16 @@ company. That has taken coverage to around **97%** for both, and it also
 confirmed several ownership attributions I had inferred indirectly and wasn't
 confident in.
 
+On the question itself I've deliberately held off, so that it could be chosen
+against what the data can actually identify rather than the other way round.
+Two candidates now look feasible: whether the growth of renewables changes the
+market power of individual firms — answerable descriptively, but with no natural
+treatment and control group; and whether the 2021 clawback on non-emitting
+generation changed hydro's opportunity cost of storing water rather than
+generating — which does have a control group, since Portuguese plant sits in the
+same market but outside the Spanish measure, though it would need a structural
+model. I'd rather settle this with you than commit on my own.
+
 I have a short deck with what this shows — happy to send it ahead or walk
 through it whenever suits you.
 

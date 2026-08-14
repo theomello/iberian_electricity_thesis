@@ -10,8 +10,11 @@ Dear [Professor],
 
 A short update on where things stand.
 
-I've assembled the data for the Iberian day-ahead market, 2018 to 2026 —
-unit-level offers, prices, generation and demand for both countries.
+I've assembled the data for the Iberian market, 2018 to 2026. The core of it is
+every bid and offer submitted to the day-ahead auction at unit level — both
+sides, accepted and rejected, so the full supply and demand curves rather than
+just the outcome. Alongside that, the intraday sessions, prices, generation and
+demand for both countries.
 
 The one thing blocking any analysis was that the market operator publishes every
 offer but identifies each unit only by a code: no technology, no owner. Without

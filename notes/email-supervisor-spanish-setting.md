@@ -31,7 +31,8 @@ confident in.
 On the question itself I've held off deliberately, so that it could be chosen
 against what the data can actually identify. Two candidates look feasible, both
 built on Spain's emergency measures: how firms' bidding responded to the 2022
-gas price cap, and how the 2021 clawback affected hydro's value of stored water.
+gas price cap, and how the 2021 levy on non-emitting generation affected hydro's
+value of stored water.
 I'd rather talk them through with you than commit on my own.
 
 I have a short deck with what this shows — happy to send it ahead or walk

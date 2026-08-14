@@ -285,6 +285,9 @@ ESIOS_TECH_MAP = {
     "Hidráulica UGH": "hydro_ugh",
     "Embalse": "hydro_ugh",
     "Fluyente": "hydro_ror",
+    # ESIOS writes this with a lowercase "no" and no dash. An earlier spelling
+    # here matched nothing and silently produced zero run-of-river units.
+    "Hidráulica no UGH": "hydro_ror",
     "Hidráulica - No UGH": "hydro_ror",
     "Turbinación bombeo": "pumped_storage",
     "Consumo bombeo": "pumped_storage",
@@ -443,7 +446,14 @@ def build(month: str, tier: str = "all") -> pd.DataFrame:
     df["tech_cab"] = df.descr.map(tech_from_name)
     # ESIOS raw label kept in tech_esios for traceability; tech is the single
     # normalised vocabulary and is the column analysis should use.
-    df["tech"] = df.tech_cab.fillna(df.tech_esios.map(normalise_esios_tech))
+    _esios = df.tech_esios.map(normalise_esios_tech)
+    # cab names win in general -- they cover far more units -- but for hydro the
+    # ranking inverts: cab yields a generic "hydro" read off a river name, while
+    # ESIOS distinguishes UGH (managed storage) from run-of-river, which is the
+    # distinction any water-value design turns on. Let the subclass through.
+    _cab = df.tech_cab.where(
+        ~(df.tech_cab.eq("hydro") & _esios.isin(["hydro_ugh", "hydro_ror"])))
+    df["tech"] = _cab.fillna(_esios)
     # A known technology implies its regime; otherwise read the regime off the
     # name. Technology first, so the stronger evidence wins.
     df["regime"] = (

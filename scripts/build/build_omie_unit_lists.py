@@ -131,6 +131,22 @@ def header_columns(pages) -> list[str]:
     return []
 
 
+def pct_column_x(pages) -> float:
+    """x-position of the PORCENTAJE header, used to find the percentage cell.
+
+    The percentage cannot be located as "the first numeric token": plant names
+    routinely end in a unit number -- "C.N. ASCO 1", "C.C. ESCOMBRERAS 1" -- and
+    that digit matches any percentage pattern. Pivoting on it truncated the
+    description and threw away the owner for every such unit, silently, for
+    21-42% of rows depending on the snapshot. Anchor on the column instead.
+    """
+    for page in pages:
+        for w in page.extract_words():
+            if w["top"] < 135 and w["text"].startswith("PORCENTAJE"):
+                return w["x0"]
+    return 0.0
+
+
 def descr_agent_split(pages) -> float:
     """x-coordinate separating DESCRIPCIÓN from AGENTE PROPIETARIO.
 
@@ -191,6 +207,10 @@ def parse_pdf(path: Path, snap: date) -> list[dict]:
         if split_x <= 0:
             raise ValueError(f"{path.name}: could not locate the "
                              "DESCRIPCION/AGENTE boundary")
+        pct_x = pct_column_x(pdf.pages)
+        if pct_x <= 0:
+            raise ValueError(f"{path.name}: could not locate the "
+                             "PORCENTAJE column")
 
         for page in pdf.pages:
             words = page.extract_words()
@@ -210,11 +230,14 @@ def parse_pdf(path: Path, snap: date) -> list[dict]:
                 if not toks or not UNIT_RE.match(toks[0]):
                     continue
                 # The percentage is the pivot: free text to its left, controlled
-                # vocabulary to its right.
-                pi = next((i for i, t in enumerate(toks[1:], 1)
-                           if PCT_RE.match(t)), None)
-                if pi is None:
+                # vocabulary to its right. Pick it by proximity to its column,
+                # never by "first numeric token" -- see pct_column_x.
+                cands = [i for i, w in enumerate(ws)
+                         if i and PCT_RE.match(w["text"])
+                         and abs(w["x0"] - pct_x) < 70]
+                if not cands:
                     continue
+                pi = min(cands, key=lambda i: abs(ws[i]["x0"] - pct_x))
                 mid = [(w["text"], w["x0"]) for w in ws[1:pi]]
                 rec: dict = {
                     "snapshot": snap,

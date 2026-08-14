@@ -187,6 +187,68 @@ def gas_intensity() -> pd.Series:
     return inten.fillna(0.0)
 
 
+def relative_intensity() -> pd.Series:
+    """Levy intensity now MINUS expected intensity later.
+
+    This, not the level, is what should move a storage plant. A per-MWh levy
+    applying uniformly across the whole storage horizon scales water value down
+    proportionally and leaves the *timing* of generation unchanged -- so a
+    regression on the contemporaneous level can return zero even when the policy
+    binds hard. What shifts water between periods is the levy on generating now
+    relative to the levy expected on generating later.
+
+    The rate is a deterministic function of the gas price, so the market's
+    expectation of future gas *is* its expectation of future intensity. MIBGAS
+    publishes the forward gas curve, so:
+
+        rel_t = (PGN_t - PGN^{Q+1}_t) * alpha
+
+    Positive means now is taxed more heavily than later, which should push
+    generation later -- higher offers now. Over the levy window this ran -55.8
+    to +8.8 EUR/MWh (sd 15.4), in contango for 20 of 28 months.
+
+    The 20 EUR floor is deliberately NOT applied here: it is a floor on the
+    level, and differencing two levels that both sit above it leaves the spread
+    unaffected. Clipping the spread would invent a kink that is not in the law.
+
+    One channel this misses: the levy had a statutory end date, so as it
+    approached, expected future intensity fell towards zero regardless of gas.
+    It was extended four times, so what firms believed about the end date is not
+    observable, and modelling it would be guessing. Treated as an omission.
+    """
+    mg = pq.read_table(DATA / "mibgas/mibgas_prices.parquet").to_pandas()
+    mg["month"] = pd.to_datetime(mg.trading_day).dt.to_period("M")
+    mg = mg[mg.area.eq("ES")]
+    spot = mg[mg["product"].eq("GDAES_D+1")].groupby("month").price_eur_mwh.mean()
+    fwd = mg[mg["product"].eq("GQES_Q+1")].groupby("month").price_eur_mwh.mean()
+    rel = (spot - fwd) * ALPHA
+    full = pd.period_range("2018-01", "2026-05", freq="M")
+    rel = rel.reindex(full)
+    live = pd.Series([(m >= LEVY_START.to_period("M")) and
+                      (m <= LEVY_END.to_period("M")) for m in full], index=full)
+    return rel.where(live, 0.0).fillna(0.0)
+
+
+def partial_out_seasonality(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
+    """Residualise on country x calendar-month dummies.
+
+    The gas spot-forward spread has a seasonal shape, and Spanish and
+    Portuguese hydro have different seasonal cycles -- different latitudes,
+    different basins, different snowmelt timing. That alone makes a
+    spread-shaped regressor correlate with the ES-PT offer gap with no policy
+    present, which is exactly what the relative-intensity placebo detected
+    (t = -2.11 without this). Absorbing country x month-of-year removes the
+    channel without touching year-to-year variation, which is what identifies.
+    """
+    d = df.copy()
+    key = d.grp.astype(str) + "_" + d.month.dt.month.astype(str)
+    D = pd.get_dummies(key, drop_first=True).to_numpy(float)
+    D = np.column_stack([np.ones(len(d)), D])
+    P, *_ = np.linalg.lstsq(D, d[cols].to_numpy(float), rcond=None)
+    d[cols] = d[cols].to_numpy(float) - D @ P
+    return d
+
+
 def twfe(df: pd.DataFrame, y: str, x: str, unit: str, time: str):
     """Two-way fixed effects by alternating projection, SEs clustered on unit."""
     d = df[[y, x, unit, time]].dropna().copy()
@@ -258,7 +320,25 @@ def main() -> int:
           "SE clustered on unit\n")
     print(f"{'specification':<34}{'beta':>10}{'se':>9}{'t':>7}{'obs':>8}{'units':>7}")
     b, se, t, n, k = twfe(panel, "y", "treat", "unit", "month")
-    print(f"{'ES x intensity (headline)':<34}{b:>10.5f}{se:>9.5f}{t:>7.2f}{n:>8,}{k:>7}")
+    print(f"{'ES x intensity (level)':<34}{b:>10.5f}{se:>9.5f}{t:>7.2f}{n:>8,}{k:>7}")
+
+    # The intertemporal test: intensity now relative to intensity expected later.
+    rel = relative_intensity()
+    panel["rel"] = panel.month.map(rel)
+    panel["treat_rel"] = panel.ES * panel.rel
+    br, ser, tr, nr, kr = twfe(panel, "y", "treat_rel", "unit", "month")
+    print(f"{'ES x RELATIVE intensity':<34}{br:>10.5f}{ser:>9.5f}"
+          f"{tr:>7.2f}{nr:>8,}{kr:>7}")
+
+    # Both together: does the timing margin survive conditioning on the level?
+    d2 = panel[["y", "treat", "treat_rel", "unit", "month"]].dropna()
+    if len(d2) > 100:
+        resid = d2.copy()
+        b_aux, *_ = twfe(d2, "treat_rel", "treat", "unit", "month")
+        resid["orth"] = d2.treat_rel - b_aux * d2.treat
+        bo, seo, to, no, ko = twfe(resid, "y", "orth", "unit", "month")
+        print(f"{'  ...orthogonal to the level':<34}{bo:>10.5f}{seo:>9.5f}"
+              f"{to:>7.2f}{no:>8,}{ko:>7}")
 
     # Placebo: run the real intensity path 36 months EARLIER, on the pre-levy
     # sample only. Shifting forward would land the fake treatment inside the
@@ -271,8 +351,31 @@ def main() -> int:
     pre_only["treat"] = pre_only.ES * pre_only.month.map(fake).fillna(0.0)
     if pre_only.treat.abs().sum() > 0:
         b2, se2, t2, n2, k2 = twfe(pre_only, "y", "treat", "unit", "month")
-        print(f"{'placebo: intensity path -36m, pre':<34}{b2:>10.5f}{se2:>9.5f}"
+        print(f"{'placebo: level path -36m, pre':<34}{b2:>10.5f}{se2:>9.5f}"
               f"{t2:>7.2f}{n2:>8,}{k2:>7}")
+    fake_r = rel[(rel.index >= pd.Period("2021-09")) &
+                 (rel.index <= pd.Period("2023-12"))].copy()
+    fake_r.index = fake_r.index - 36
+    pre_only["treat_rel"] = pre_only.ES * pre_only.month.map(fake_r).fillna(0.0)
+    if pre_only.treat_rel.abs().sum() > 0:
+        b3, se3, t3, n3, k3 = twfe(pre_only, "y", "treat_rel", "unit", "month")
+        print(f"{'placebo: RELATIVE path -36m, pre':<34}{b3:>10.5f}{se3:>9.5f}"
+              f"{t3:>7.2f}{n3:>8,}{k3:>7}")
+
+    print("\n  + country x calendar-month absorbed "
+          "(the relative placebo fails without it)")
+    ps = partial_out_seasonality(panel, ["y", "treat", "treat_rel"])
+    for lbl, col in (("ES x intensity (level)", "treat"),
+                     ("ES x RELATIVE intensity", "treat_rel")):
+        b4, se4, t4, n4, k4 = twfe(ps, "y", col, "unit", "month")
+        print(f"{lbl:<34}{b4:>10.5f}{se4:>9.5f}{t4:>7.2f}{n4:>8,}{k4:>7}")
+    pp = partial_out_seasonality(pre_only, ["y", "treat", "treat_rel"])
+    for lbl, col in (("placebo: level, pre", "treat"),
+                     ("placebo: RELATIVE, pre", "treat_rel")):
+        if pp[col].abs().sum() == 0:
+            continue
+        b5, se5, t5, n5, k5 = twfe(pp, "y", col, "unit", "month")
+        print(f"{lbl:<34}{b5:>10.5f}{se5:>9.5f}{t5:>7.2f}{n5:>8,}{k5:>7}")
 
     # Same design on days when the market splits is not like-for-like; report
     # the treated-window means so the reader can see the raw movement.

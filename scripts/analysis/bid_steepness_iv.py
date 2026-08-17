@@ -98,7 +98,7 @@ def steepness(g: pd.DataFrame) -> float:
     return float(b)
 
 
-def build() -> pd.DataFrame:
+def build(band: float | None = None) -> pd.DataFrame:
     eta = pq.read_table(ETA, columns=["date", "period", "utc_timestamp",
                                       "vre_share", "demand", "p_star"]).to_pandas()
     eta["date"] = pd.to_datetime(eta.date)
@@ -115,6 +115,14 @@ def build() -> pd.DataFrame:
         if t.empty:
             continue
         t["date"] = pd.to_datetime(t.date)
+        if band is not None:
+            # Restrict to the economically relevant region. Offers far above the
+            # clearing price are withholding bids that express an intention not to
+            # run, not a cost -- pooling them with cost-revealing offers is what
+            # made the levy estimates swing with the trimming rule.
+            t = t.merge(eta[["date", "period", "p_star"]], on=["date", "period"],
+                        how="inner")
+            t = t[(t.price_eur_mwh - t.p_star).abs() <= band].drop(columns=["p_star"])
         # Only units that actually bid a curve; single-step price takers have no
         # bidding margin and would enter as structural zeros.
         n = t.groupby(["date", "period", "unit"]).price_eur_mwh.transform("size")
@@ -158,9 +166,12 @@ def demean(v: np.ndarray, *codes) -> np.ndarray:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--save", action="store_true")
+    ap.add_argument("--band", type=float, default=None,
+                    help="keep only offers within this many EUR/MWh of the "
+                         "clearing price")
     args = ap.parse_args()
 
-    d = build()
+    d = build(args.band)
     ui = pd.factorize(d.unit)[0]
     mi = pd.factorize(d.month)[0]
     hi = pd.factorize(d.hour)[0]

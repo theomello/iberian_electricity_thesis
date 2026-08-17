@@ -162,6 +162,37 @@ def main() -> int:
               f"{x.mc_no_theta.median():>12.1f}"
               f"{(x.mc_with_theta < 0).mean():>8.0%}")
 
+    # ---- validation: does implied MC order by the technology at the firm's
+    # margin? This is the sharpest test of the cost model. The FOC is a firm-level
+    # condition, so implied MC is the cost of the firm's MARGINAL unit -- which is
+    # identifiable as its highest-priced accepted offer that period.
+    marg = (cleared[cleared.price_eur_mwh > 0]
+            .sort_values("price_eur_mwh")
+            .groupby(["date", "period", "firm"]).tail(1)
+            [["date", "period", "firm", "unit"]])
+    import re as _re
+    def band(t):
+        t = str(t)
+        if "Nuclear" in t: return "nuclear"
+        if _re.search(r"Hidr[aá]ulica|Bombeo", t): return "hydro"
+        if _re.search(r"E[oó]lica", t): return "wind"
+        if "Solar" in t: return "solar"
+        if "Ciclo Combinado" in t: return "gas CCGT"
+        if _re.search(r"Hulla|Antracita|Carb[oó]n|Lignito", t): return "coal"
+        if _re.search(r"T[eé]rmica no", t): return "cogeneration"
+        return None
+    marg["margtech"] = marg.unit.map(tech).map(band)
+    mm = m.merge(marg.drop(columns=["unit"]), on=["date", "period", "firm"], how="left")
+    mm = mm.dropna(subset=["margtech"])
+    if len(mm) > 50:
+        print("\n  IMPLIED MC BY THE TECHNOLOGY AT THE FIRM'S MARGIN")
+        print(f"    {'technology':<16}{'n':>7}{'implied MC':>12}{'if theta=0':>12}")
+        for tname, x in mm.groupby("margtech"):
+            if len(x) < 20:
+                continue
+            print(f"    {tname:<16}{len(x):>7,}{x.mc_with_theta.median():>12.1f}"
+                  f"{x.mc_no_theta.median():>12.1f}")
+
     print(f"\n  median clearing price {m.p.median():.1f} EUR/MWh")
     print(f"  share of firm-periods with implied MC below zero: "
           f"with theta {(m.mc_with_theta < 0).mean():.0%}, "

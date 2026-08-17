@@ -235,7 +235,7 @@ assets** — `EGV` is Axpo, 394 units and 6.7% of volume — and unit names like
 the right object — the agent controlling the bid — but it is *not* plant
 ownership, and the two must not be conflated.
 
-### Who controls a unit's bid — partially solved, 45% of the near margin
+### Who controls a unit's bid — 88% of the near margin, rebuilt 2026-08-17
 `data/esios/esios_programming_units.parquet` — **3,872 units, 738 agents, 41
 technologies, EIC at 100%**, from ESIOS archive 82. **Token-free**, unlike the
 ESIOS indicator API; the web page is JS-rendered with no export, the JSON is at
@@ -257,7 +257,10 @@ ESIOS is REE's **dispatch** registry, so it omits the commercial aggregation
 vehicles that exist only to bid — 592 of our codes match. `build_unit_agents.py`
 layers three sources (ESIOS exact match; ESIOS agent code appearing inside a
 `cab` plant name, e.g. `GREPSC1` = "REPSB GENERICA VENTA"; then a hand-checked
-prefix dictionary) to reach **45.3% of near-marginal offered volume**.
+prefix dictionary) to reach **88.3% of near-marginal offered volume** (rerun
+2026-08-17 on Jan-2024; the prefix dictionary grew substantially during the
+gas-cap and levy work, and an earlier **45.3%** figure recorded here was stale
+— left as a dated note below rather than silently deleted).
 
 **Measure coverage on the near-marginal band, never on total volume.** Price is
 set at the margin: a 5 GW unit offering at 0 €/MWh is inframarginal almost
@@ -266,19 +269,28 @@ total-volume coverage flatters the mapping for the units that matter least.
 
 `build_unit_agents.py` also rolls agents up to a **parent firm** using the
 legal names in ESIOS archive 83 (`IBEG`, `IGNU`, `IBGT` are three agents and
-one Iberdrola). 17 firms, 39.1% of generation volume.
+one Iberdrola). **68 parent firms, 78.2% of generation volume** (rerun
+2026-08-17; an earlier "17 firms, 39.1%" recorded here was stale for the same
+reason as above). Top eight: EDP 15.5%, Endesa 13.9%, Iberdrola 9.0%, Naturgy
+7.1%, Axpo 6.8%, Acciona 5.2%, Repsol 3.2%, Wind to Market 2.4%. **EDP is now
+the largest attributed firm, not Axpo** — an earlier note here naming Axpo as
+largest predates the prefix-dictionary expansion.
 
-**These firm shares are not market shares.** They are the share of volume that
-could be *attributed*; 56% is unattributed, so every firm share here is a lower
-bound. Do not substitute them for s_i in Lerner = s/eta without saying so. Note
-also that the largest attributed firm is AXPO, a **representative** trading
+**These firm shares are not market shares.** They are the share of *generation*
+volume that could be attributed; **21.8% is unattributed** at the firm level
+(more once retailers/purchasers are counted). Do not substitute them for s_i
+in Lerner = s/eta without saying so. Axpo remains a **representative** trading
 third-party assets rather than a producer -- see `agent_type` in archive 83,
 which flags 11 of 739 agents as `Representante`.
 
 Prefixes whose owner could not be established *from the data* are left
-unmapped on purpose — `EDP`, `GED`, `GGN`, `CEV`, `ADO`, `NXV`, `IBE`, `IGV`
-are ~28% of generation volume. Several are guessable by a domain expert; a
-guess would silently corrupt every market-share and markup figure downstream.
+unmapped on purpose. As of the 2026-08-17 rebuild the largest are `CEV`
+(2.4% of generation volume), `IGV` (1.5%), `NEX` (1.4%), `GGA` (1.4%), `IGN`
+(1.4%), `GAS` (1.1%), `VGE` (0.9%), `GAL` (0.9%) — together well under half
+what the earlier `EDP`/`GED`/`GGN`/`ADO`/`IBE`/`IGV` list summed to, because
+`EDP` and `IBE` are now resolved. Several remaining ones are guessable by a
+domain expert; a guess would silently corrupt every market-share and markup
+figure downstream.
 
 `det` (offer detail) was checked and carries **no** agent field — it is
 price/quantity steps keyed by the same 7-digit unit id as `cab`.
@@ -287,9 +299,11 @@ Full documentation of the mapping — layers, fields, coverage, glossary and the
 five ways it can mislead — is in [`docs/unit-agent-mapping.md`](docs/unit-agent-mapping.md).
 
 ### Technology coverage is a separate, weaker mapping than ownership
-Ownership reaches 89.1% of near-marginal offered volume. **Technology reaches
+Ownership reaches 88.3% of near-marginal offered volume. **Technology reaches
 41.2%** — a different problem with different sources, and the binding
-constraint on anything that asks *which technology sets the price*.
+constraint on anything that asks *which technology sets the price*. This gap
+did not close when ownership coverage did — the two are genuinely different
+problems, not the same 12% of volume.
 
 ESIOS is close to exhausted for this: only **128 of our 3,930 generation units**
 appear in its programming-unit registry, because REE registers dispatchable
@@ -303,9 +317,10 @@ So technology comes from `cab` names, in two tiers:
   1,474 units, 41.2% of generation volume.
 - **`regime`** — *Régimen Especial* (renewables, cogeneration, waste) versus
   *Régimen Ordinario* (conventional thermal, hydro, nuclear), read off names
-  like "AXPO VENTA R. ESPECIAL 042". 1,984 units, **59.9% of volume**. A
-  weaker claim than a technology, kept in its own column rather than folded
-  into `tech`, but it still rules out half the stack for a marginal unit.
+  like "AXPO VENTA R. ESPECIAL 042". 2,037 units, **63.3% of volume**
+  (2026-08-17 rebuild; was 59.9%). A weaker claim than a technology, kept in
+  its own column rather than folded into `tech`, but it still rules out half
+  the stack for a marginal unit.
 
 **Hydro is named after rivers, not after technology.** `ALIMA` is "LIMA",
 `ACAVADO` is "CAVADO", `TEMON` is "SISTEMA TEJO-MONDEGO", `GUADIA` is "BACIA

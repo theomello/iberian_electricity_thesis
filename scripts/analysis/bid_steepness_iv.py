@@ -82,8 +82,21 @@ ETA = ROOT / "outputs" / "tables" / "residual_demand_slope_full.parquet"
 MONTHS = [f"{y}{m}" for y in range(2018, 2027) for m in ("04", "10")]
 
 
-def steepness(g: pd.DataFrame) -> float:
-    """Euro spread across a unit's own offer curve, per unit of its own volume."""
+def steepness(g: pd.DataFrame, trim: float = 0.0) -> float:
+    """Euro spread across a unit's own offer curve, per unit of its own volume.
+
+    `trim` drops the top and bottom `trim` share of the unit's OWN offered
+    volume before fitting. That removes the extreme steps -- must-run capacity
+    parked at zero, and withholding bids parked far above any plausible price --
+    without touching the market outcome.
+
+    The distinction matters. Restricting to offers near the *clearing price*
+    conditions on a variable the treatment determines, since renewable output is
+    what sets that price; it made OLS and 2SLS diverge by a factor of four. A
+    unit's own cumulative volume share is its own submission and carries no
+    information about where the market happened to clear, so trimming on it is
+    exogenous to the price.
+    """
     if len(g) < 2:
         return np.nan
     g = g.sort_values("price_eur_mwh")
@@ -92,13 +105,18 @@ def steepness(g: pd.DataFrame) -> float:
         return np.nan
     share = np.cumsum(w) / w.sum()
     p = g.price_eur_mwh.to_numpy(float)
+    if trim > 0:
+        keep = (share >= trim) & (share <= 1.0 - trim)
+        if keep.sum() < 2:
+            return np.nan
+        share, p = share[keep], p[keep]
     if np.ptp(share) == 0:
         return np.nan
     b, _ = np.polyfit(share, p, 1)
     return float(b)
 
 
-def build(band: float | None = None) -> pd.DataFrame:
+def build(band: float | None = None, trim: float = 0.0) -> pd.DataFrame:
     eta = pq.read_table(ETA, columns=["date", "period", "utc_timestamp",
                                       "vre_share", "demand", "p_star"]).to_pandas()
     eta["date"] = pd.to_datetime(eta.date)
@@ -130,7 +148,7 @@ def build(band: float | None = None) -> pd.DataFrame:
         if t.empty:
             continue
         s = (t.groupby(["date", "period", "unit"])
-               .apply(steepness, include_groups=False)
+               .apply(steepness, trim=trim, include_groups=False)
                .rename("steep").reset_index())
         rows.append(s.dropna(subset=["steep"]))
     d = pd.concat(rows, ignore_index=True)
@@ -166,12 +184,15 @@ def demean(v: np.ndarray, *codes) -> np.ndarray:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--save", action="store_true")
+    ap.add_argument("--trim", type=float, default=0.0,
+                    help="drop this share of the unit's own volume from each "
+                         "end of its curve (exogenous to the clearing price)")
     ap.add_argument("--band", type=float, default=None,
                     help="keep only offers within this many EUR/MWh of the "
                          "clearing price")
     args = ap.parse_args()
 
-    d = build(args.band)
+    d = build(args.band, args.trim)
     ui = pd.factorize(d.unit)[0]
     mi = pd.factorize(d.month)[0]
     hi = pd.factorize(d.hour)[0]

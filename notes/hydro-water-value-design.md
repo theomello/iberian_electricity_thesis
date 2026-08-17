@@ -110,3 +110,36 @@ carry river names that the technology patterns did not match, and the `cab`
 parser was silently broken from 2025-03-19. Hydro is not declining as a
 marginal technology — the apparent decline was the seven largest Portuguese
 cascades dropping out of the classification.
+
+## 2026-08-17: the cheap version was tried, and doesn't work
+
+Before committing to the structural model above, a much cheaper probe was
+run: does basin-level rainfall move a storage unit's own offers at all?
+(`scripts/fetch/fetch_hydro_precipitation.py`,
+`scripts/analysis/hydro_water_value_precip.py`.) 25 of the 44 `hydro_ugh`
+units have their river basin identifiable from the `cab` name; a 90-day
+trailing rainfall anomaly in each unit's own basin was regressed against its
+monthly offer, unit + month FE, with a wrong-basin placebo as the check.
+
+| outcome | regressor | β | t |
+|---|---|---|---|
+| median submitted offer | own-basin rain | +0.142 | 1.61 |
+| median submitted offer | placebo-basin rain | +0.049 | 0.44 |
+| marginal accepted offer | own-basin rain | +0.020 | 0.60 |
+| marginal accepted offer | placebo-basin rain | −0.010 | −0.24 |
+
+Nothing clears significance. Where there's a hint of own-basin beating
+placebo (median offer), the sign is **wrong** — more rain should lower the
+opportunity cost of water and lower the offer, and it comes out positive. On
+the marginal accepted offer (the outcome this design actually needs), own-
+and placebo-basin are indistinguishable.
+
+**Consistent with, not contradicting, the point above about the March 2022
+price spike.** Hydro's offer swung roughly 4–6x with the gas-price cycle in
+2021–2024; a 90-day rainfall anomaly is a second-order input against that,
+and rainfall is only one input into reservoir *volume* — the actual state
+variable, which a large reservoir can buffer through a wet or dry quarter
+without its marginal value moving much. This closes off the cheap shortcut
+rather than opening one: the structural model (reservoir levels, snowpack,
+forward price, jointly estimated) is still the only route in, not an
+alternative to it.

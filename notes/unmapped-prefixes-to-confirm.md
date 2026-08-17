@@ -7,6 +7,42 @@ hypothesis, the evidence for it, and the specific thing that would settle it.
 so the reasoning is auditable and so nobody quietly promotes a hypothesis to a
 fact. Volume shares are cleared sell volume, January 2024.
 
+## 2026-08-17: five resolved, checked against OMIE's own agent list
+
+`REP`→Repsol, `GAS`/`GGA`→Naturgy, `IBG`→Iberdrola and `GTG`→TotalEnergies
+are now in `PREFIX_AGENTS`, each checked against OMIE's published agent list
+(`www.omie.es/informes_mercado/listados/LISTA_AGENTES.PDF`) rather than
+asserted from the mnemonic alone. **`GTG` is the cautionary case**: the
+mnemonic and the plant name ("TGPL") both suggested Tarragona Power, which is
+50%+ Iberdrola-owned — a plausible-looking wrong answer. The official list
+shows Tarragona Power's real code is `TAPOW`, and `TGPL` is instead the exact
+code for TotalEnergies Gas and Power Limited. Worth remembering before trusting
+any mnemonic match here, including the ones already in the "inferred" tier.
+
+Three more were tried by hand this session and **explicitly withdrawn**, not
+merely left unstudied:
+
+- **`IGN`** (hypothesised Iberdrola, "Iberdrola Generación") — its cab names
+  never mention Iberdrola, and Ignis Energía's real codes per the official
+  list (`IGNIS`, `IGNS1`, `MORTE`, `CYDDP`) don't include `IGN` either. This
+  matches a withdrawal already on record in `PREFIX_AGENTS`'s comments from an
+  earlier pass — independently re-derived, same answer.
+- **`GAL`** — Extresol I/II/III (a named plant inside this prefix) is
+  ACS/Cobra Energía per public reporting, but `GAL` is not itself an OMIE
+  agent code and the rest of the prefix (Montegordo, Tesosanto, Carbas) is
+  unverified. A competing hypothesis already in `UNIT_PATTERNS`'s comments
+  (`GAL`→GALP, the Portuguese oil major) suggests this prefix is genuinely
+  mixed ownership, not a guess worth resolving either way.
+- **`CLI`** — SEAT's Martorell cogeneration plant, named inside this prefix,
+  is run by Cofely España (part of ENGIE) per Cofely's own filings — but
+  Cofely's actual OMIE code is `ELYM`, not `CLI`, and the rest of the prefix
+  (solar and wind assets) is unverified.
+- **`IGV`** — "MOLINOS DEL EBRO, S.A." traces to Grupo Samca, but a second
+  unit in the same prefix ("Renovables del Cierzo") was sold to Statkraft in
+  2023–24 (from Enerfín). Genuinely mixed and time-varying ownership within
+  one prefix; not a single-firm answer even if each unit is individually
+  identifiable.
+
 ## The corroborating evidence: CNMC vs our mapping
 
 `data/cnmc/cnmc_generation_shares.parquet` (CNMC *Cuadro 10*, generation share

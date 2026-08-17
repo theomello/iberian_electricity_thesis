@@ -85,6 +85,26 @@ PREFIX_AGENTS: dict[str, tuple[str, str, str]] = {
 
     "HCG": ("EDP", "confirmed", 'ESIOS agent "HC G" resolves to "EDP ESPAÑA, S.A."'),
 
+    # ---- confirmed 2026-08-17, against OMIE's own published agent list ------
+    # (www.omie.es/informes_mercado/listados/LISTA_AGENTES.PDF) -- fetched to
+    # check hypotheses before adding them, after GTG below caught one that
+    # would otherwise have been a wrong guess.
+    "REP": ("REPSOL", "confirmed",
+            'cab names "PETRONOR VENTA A TARIFA" and "UD A TARIFA REPSOL"; '
+            "Petronor is Repsol's Bilbao refining subsidiary"),
+    "GAS": ("NATURGY", "confirmed",
+            'cab name "GAS NATURAL SDG VENTA TARIFA" -- Gas Natural SDG, S.A. '
+            "is Naturgy's pre-rebrand legal name"),
+    "GGA": ("NATURGY", "confirmed",
+            'single unit GGASNC1 "GASN GENERICA COMPRA" (a 7,500 MW generic '
+            "purchase pseudo-unit); GASN = Gas Natural"),
+    "GTG": ("TOTALENERGIES", "confirmed",
+            'cab names "TGPL GENERICA COMPRA/VENTA"; TGPL is the exact agent '
+            'code "TOTALENERGIES GAS AND POWER LIMITED" in the official OMIE '
+            "list. NOT Tarragona Power/Iberdrola -- an earlier guess from the "
+            'abbreviation alone, corrected on checking the source: OMIE\'s own '
+            'code for the actual Tarragona Power plant is "TAPOW", unrelated'),
+
     # ---- inferred: mnemonic plus independent corroboration ------------------
     # None of these is established by the data alone. Each is the mnemonic
     # agreeing with at least one other signal -- the CNMC share gap, or the
@@ -114,6 +134,11 @@ PREFIX_AGENTS: dict[str, tuple[str, str, str]] = {
     # than to the original EDP block, and identifying the new owner needs a
     # source outside this repo. See notes/unmapped-prefixes-to-confirm.md.
     "GED": ("ENDESA", "inferred", "WEAKEST: only the CNMC 11.8pp gap, no name evidence"),
+    "IBG": ("IBERDROLA", "inferred",
+            'matches the confirmed IB-family agent codes (IBEG, IGNU, IBGT); '
+            'cab names "EÓLICA" (2,949 MW), "COGENERACIÓN", "MINI HIDRAULICA", '
+            '"TERMOSOLAR" -- a diversified portfolio consistent with '
+            "Iberdrola's scale, but no single name is decisive on its own"),
 
     # ---- Portuguese thermal and hydro, named in cab and documented publicly --
     # cab supplies the plant name; ownership is documented in the trade press

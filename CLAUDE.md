@@ -257,10 +257,13 @@ ESIOS is REE's **dispatch** registry, so it omits the commercial aggregation
 vehicles that exist only to bid — 592 of our codes match. `build_unit_agents.py`
 layers three sources (ESIOS exact match; ESIOS agent code appearing inside a
 `cab` plant name, e.g. `GREPSC1` = "REPSB GENERICA VENTA"; then a hand-checked
-prefix dictionary) to reach **88.3% of near-marginal offered volume** (rerun
-2026-08-17 on Jan-2024; the prefix dictionary grew substantially during the
-gas-cap and levy work, and an earlier **45.3%** figure recorded here was stale
-— left as a dated note below rather than silently deleted).
+prefix dictionary) to reach **89.1% of near-marginal offered volume** (rerun
+2026-08-17 on Jan-2024, after hand-verifying five more prefixes against OMIE's
+own published agent list — `REP`→Repsol, `GAS`/`GGA`→Naturgy, `GTG`→
+TotalEnergies, `IBG`→Iberdrola; see the trap below on the one wrong guess this
+caught before it went in. The prefix dictionary grew substantially during the
+gas-cap and levy work too, and an earlier **45.3%** figure recorded here was
+stale — left as a dated note rather than silently deleted).
 
 **Measure coverage on the near-marginal band, never on total volume.** Price is
 set at the margin: a 5 GW unit offering at 0 €/MWh is inframarginal almost
@@ -269,15 +272,15 @@ total-volume coverage flatters the mapping for the units that matter least.
 
 `build_unit_agents.py` also rolls agents up to a **parent firm** using the
 legal names in ESIOS archive 83 (`IBEG`, `IGNU`, `IBGT` are three agents and
-one Iberdrola). **68 parent firms, 78.2% of generation volume** (rerun
+one Iberdrola). **68 parent firms, 81.9% of generation volume** (rerun
 2026-08-17; an earlier "17 firms, 39.1%" recorded here was stale for the same
-reason as above). Top eight: EDP 15.5%, Endesa 13.9%, Iberdrola 9.0%, Naturgy
-7.1%, Axpo 6.8%, Acciona 5.2%, Repsol 3.2%, Wind to Market 2.4%. **EDP is now
+reason as above). Top eight: EDP 15.5%, Endesa 13.9%, Naturgy 9.5%, Iberdrola
+9.3%, Axpo 6.8%, Acciona 5.2%, Repsol 3.5%, Wind to Market 2.4%. **EDP is now
 the largest attributed firm, not Axpo** — an earlier note here naming Axpo as
 largest predates the prefix-dictionary expansion.
 
 **These firm shares are not market shares.** They are the share of *generation*
-volume that could be attributed; **21.8% is unattributed** at the firm level
+volume that could be attributed; **18.1% is unattributed** at the firm level
 (more once retailers/purchasers are counted). Do not substitute them for s_i
 in Lerner = s/eta without saying so. Axpo remains a **representative** trading
 third-party assets rather than a producer -- see `agent_type` in archive 83,
@@ -285,11 +288,29 @@ which flags 11 of 739 agents as `Representante`.
 
 Prefixes whose owner could not be established *from the data* are left
 unmapped on purpose. As of the 2026-08-17 rebuild the largest are `CEV`
-(2.4% of generation volume), `IGV` (1.5%), `NEX` (1.4%), `GGA` (1.4%), `IGN`
-(1.4%), `GAS` (1.1%), `VGE` (0.9%), `GAL` (0.9%) — together well under half
-what the earlier `EDP`/`GED`/`GGN`/`ADO`/`IBE`/`IGV` list summed to, because
-`EDP` and `IBE` are now resolved. Several remaining ones are guessable by a
-domain expert; a guess would silently corrupt every market-share and markup
+(2.4% of generation volume), `IGV` (1.5%), `NEX` (1.4%), `IGN` (1.4%), `VGE`
+(0.9%), `GAL` (0.9%), `GES` (0.7%), `PEG` (0.7%) — `GAS`/`GGA`/`GTG`/`IBG`
+are now resolved (see above). Several of the rest were tried by hand against
+OMIE's own agent list and explicitly **withdrawn** on inspection rather than
+left silently unmapped:
+
+- **`IGN` was hypothesised as Iberdrola** ("Iberdrola Generación") and
+  withdrawn — its cab names ("UOF XALLAS I", "SOLAR MULA", "GALICIA VENTO")
+  never mention Iberdrola, and OMIE's own agent list gives Ignis Energía's
+  actual codes as `IGNIS`/`IGNS1`/`MORTE`/`CYDDP`, none of which is `IGN`.
+  See `PREFIX_AGENTS` in `build_unit_agents.py`.
+- **`IGV`** ("MOLINOS DEL EBRO, S.A.") is genuinely mixed ownership within
+  one prefix — some units trace to Grupo Samca, one ("Renovables del
+  Cierzo") to Statkraft (post-2023 acquisition of Enerfín) — so a single
+  prefix→firm assignment would be wrong for part of the bucket.
+- **`GAL`/`CLI` have one verified plant each, not a verified prefix**: `GAL`
+  contains Extresol I/II/III (ACS/Cobra Energía per public reporting); `CLI`
+  contains SEAT's Martorell cogeneration plant (Cofely España, part of
+  ENGIE, per its own filings — but Cofely's actual OMIE code is `ELYM`, not
+  `CLI`). Neither generalises to the rest of its prefix's units without
+  checking each one, so neither is encoded.
+
+A guess across the rest would silently corrupt every market-share and markup
 figure downstream.
 
 `det` (offer detail) was checked and carries **no** agent field — it is
@@ -299,7 +320,7 @@ Full documentation of the mapping — layers, fields, coverage, glossary and the
 five ways it can mislead — is in [`docs/unit-agent-mapping.md`](docs/unit-agent-mapping.md).
 
 ### Technology coverage is a separate, weaker mapping than ownership
-Ownership reaches 88.3% of near-marginal offered volume. **Technology reaches
+Ownership reaches 89.1% of near-marginal offered volume. **Technology reaches
 41.2%** — a different problem with different sources, and the binding
 constraint on anything that asks *which technology sets the price*. This gap
 did not close when ownership coverage did — the two are genuinely different

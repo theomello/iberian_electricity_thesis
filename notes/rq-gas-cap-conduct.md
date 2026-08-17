@@ -123,26 +123,46 @@ plant's own revealed behaviour rather than by an engineering table.
    here it is a confound for the quantity margin, less so for the price margin.
 5. **Efficiency is estimated, not observed**, under either route.
 
-## Why this over the alternative
+## How it compares to the alternative — both are now live
 
-The other candidate — whether the 2021 levy on non-emitting generation changed
-hydro's opportunity cost of stored water — has been taken as far as reduced-form
-methods allow, and it stopped:
+**Updated 2026-08-14, after the levy question acquired a working design.** An
+earlier version of this note argued that the levy route was exhausted. That was
+premature: only the *cross-country* route was.
 
-- The continuous-intensity design returns a **clean null** (β = −0.0013,
-  t = −0.67), with a passing placebo.
-- The intertemporal version, which is the theoretically correct test, **fails its
-  own placebo** (t = −2.11, worse at −3.17 after absorbing seasonality). The gas
-  spot-forward spread predicts the Spanish–Portuguese hydro offer gap in years
-  when no levy existed, so it cannot serve as a proxy.
+Three designs comparing Spanish to Portuguese hydro all failed, and failed the
+same way — any regressor shaped like the gas-price path predicts the ES–PT gap
+in years when no levy existed, because the two fleets differ in mix, hydrology
+and capture rate. The monthly level test appeared to pass its placebo only
+because that outcome is seven times noisier than the alternatives; a sharper
+outcome exposed the same contamination at t = 2.21.
 
-What remains there is a structural water-value model: one model carrying the
-entire result, no descriptive fallback, and three datasets still to fetch. It is
-the more ambitious thesis and might be the better paper, but it is a bet.
+But a fourth design, using **differential contract exposure within Spain**,
+works. RDL 23/2021 exempted forward-contracted energy, so unhedged plants faced
+a much larger effective levy than hedged ones facing the same gas price.
+Exposure is predetermined (measured before September 2021) and close to bimodal
+across the 23 units. Portugal never enters.
 
-The gas cap question is **untested, has a counterfactual given by the policy
-itself, needs no control group, sits in a documented literature gap, and has
-90% of its data already assembled.** The preliminary table above took one query.
+| | β | se | t |
+|---|---|---|---|
+| exposure × intensity, offer level | 0.00666 | 0.00177 | **3.76** |
+| placebo, −36m pre-levy | −0.00208 | 0.00550 | −0.38 |
+
+Exposed plants raised their offers relative to the market price by more when the
+levy bit harder — a cost pass-through, correctly signed, with a clean placebo.
+Caveats: 18–23 units, and only *physical* contracts are observable, so exposure
+carries measurement error that attenuates β toward zero.
+
+**So the choice is no longer "a result versus a bet".** Both questions have
+something real. The distinction is now about what kind of thesis each is:
+
+|  | Gas cap | Levy and water value |
+|---|---|---|
+| Counterfactual | given by the statute | from a comparison group |
+| Control group | none needed | contract exposure, within Spain |
+| Units carrying it | 55–58 combined-cycle plants | 18–23 hydro plants |
+| Status | untested, data 90% ready | one working specification |
+| Literature gap | documented and precise | narrower — hydro conduct is studied |
+| Still to build | efficiencies, carbon prices, cap path | markup calibration, water-value model |
 
 ## What I would put to her
 

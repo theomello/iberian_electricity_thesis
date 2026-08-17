@@ -136,33 +136,43 @@ and capture rate. The monthly level test appeared to pass its placebo only
 because that outcome is seven times noisier than the alternatives; a sharper
 outcome exposed the same contamination at t = 2.21.
 
-But a fourth design, using **differential contract exposure within Spain**,
-works. RDL 23/2021 exempted forward-contracted energy, so unhedged plants faced
-a much larger effective levy than hedged ones facing the same gas price.
+A fourth design, using **differential contract exposure within Spain**, gets
+closest. RDL 23/2021 exempted forward-contracted energy, so unhedged plants
+faced a much larger effective levy than hedged ones facing the same gas price.
 Exposure is predetermined (measured before September 2021) and close to bimodal
-across the 23 units. Portugal never enters.
+across the 23 units. Portugal never enters, and **both placebos pass** — the
+only design here that manages that.
 
-| | β | se | t |
+It still cannot produce a reportable estimate, because the sign depends on which
+outcome variable is chosen:
+
+| outcome | β | t | across trimming rules |
 |---|---|---|---|
-| exposure × intensity, offer level | 0.00666 | 0.00177 | **3.76** |
-| placebo, −36m pre-levy | −0.00208 | 0.00550 | −0.38 |
+| log(median submitted offer) | +0.0067 | 3.76 | stable |
+| median submitted offer, levels | +0.31 | 0.43 | 0.13 → 1.82 |
+| marginal accepted offer, levels | −0.73 | −1.96 | −0.69 → +0.17 |
 
-Exposed plants raised their offers relative to the market price by more when the
-levy bit harder — a cost pass-through, correctly signed, with a clean placebo.
-Caveats: 18–23 units, and only *physical* contracts are observable, so exposure
-carries measurement error that attenuates β toward zero.
+A per-MWh levy predicts an *additive* shift, so levels is the correct functional
+form — and in levels nothing survives sample choice. The marginal accepted offer
+is additionally censored by the clearing price: if the levy pushes
+high-water-value plants out of the market, the units still clearing are the
+low-value ones and the measured threshold falls with no behavioural response at
+all, which would generate the negative sign mechanically.
 
-**So the choice is no longer "a result versus a bet".** Both questions have
-something real. The distinction is now about what kind of thesis each is:
+**The binding problem is measurement, not identification.** Design 4 identifies
+cleanly and still yields nothing, because hydro's opportunity cost is
+unobservable and every proxy for it has turned out to be contaminated, censored
+or unstable. That is precisely the case for estimating a water-value function —
+and precisely why the levy question is structural-or-nothing.
 
 |  | Gas cap | Levy and water value |
 |---|---|---|
-| Counterfactual | given by the statute | from a comparison group |
-| Control group | none needed | contract exposure, within Spain |
+| Counterfactual | given by the statute | must be estimated |
+| Control group | none needed | none that works |
 | Units carrying it | 55–58 combined-cycle plants | 18–23 hydro plants |
-| Status | untested, data 90% ready | one working specification |
-| Literature gap | documented and precise | narrower — hydro conduct is studied |
-| Still to build | efficiencies, carbon prices, cap path | markup calibration, water-value model |
+| Status | untested, data 90% ready | reduced form exhausted, 4 designs |
+| Reduced-form fallback | the conduct result itself | **none** |
+| Still to build | efficiencies, carbon prices, cap path | a structural water-value model |
 
 ## What I would put to her
 

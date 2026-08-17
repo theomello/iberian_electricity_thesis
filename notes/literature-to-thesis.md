@@ -72,7 +72,14 @@ it is read as a mistake.
 **Hortaçsu & Puller (2008) — contract positions for free.** Where a firm's
 supply curve crosses its marginal cost curve, the markup term is zero, so at
 that quantity `θ_it` equals the offered quantity (H&P p. 146 fn. 24; K&R
-p. 697). Costs → contract positions, without contract data.
+p. 697). Costs → contract positions, without contract data. We now hold this
+paper directly (RAND JoE 39(1), printed pp. 86–114, `papers/md/the-rand-j...`)
+rather than only through the Handbook chapter's summary — worth reading in
+full for the ERCOT institutional detail, since it is also the paper that
+finds *small* firms bid "excessively steep" relative to the profit-maximising
+benchmark, with scale economies in bidding sophistication as the explanation.
+That is a second candidate mechanism (alongside market power) for any bid
+that looks irrational, worth keeping distinct from the θ story above.
 
 **Reguant (2014) — joint estimation.** With several units per firm and several
 steps per unit, costs `c_jt` and the firm-level `θ_it` can be recovered
@@ -148,6 +155,32 @@ Eight more years, double the VRE. We have both markets at unit level.
 6.7% of periods. Wolak (2015) and Ryan (2021) use exactly this — congestion
 shrinks the effective market and steepens residual demand (K&R pp. 701–702).
 MIBEL gives a clean binary version of that with two well-defined zones.
+
+**F. Regime-stable supply curves without bids.** Sánchez Canales et al. (2026,
+*Energy Economics*, `papers/md/main.md`) estimate supply curves from price/
+quantity equilibria alone by detecting windows where fundamentals (fuel
+prices, plant availability) are stable, so short-run demand shocks trace out
+the supply curve — a PELT changepoint segmentation over daily drivers. We
+don't need the bid-free version of this (we have `cab`/`curva_pbc_uof`
+directly), but the regime-stability argument is a clean, citable way to
+partition the 2018–2026 window into periods where a single supply relationship
+plausibly holds, before pooling data across them for any of A–E. The paper
+explicitly flags the Iberian gas-price mechanism (`docs/` — see
+`literature-iberian-exception.md`) as a natural application of its own
+framework, which makes it a direct competitor/complement to whatever design
+gets chosen for the levy/gas-cap work already underway on this branch.
+
+**G. Day-ahead / intraday arbitrage and who has power over the gap.**
+Borenstein, Bushnell, Knittel & Wolfram (2008, *JIE*,
+`papers/md/jie08arbitrage.md`) is the reference case for candidate D: before
+treating a day-ahead/intraday premium as a pure risk-aversion or forecast-error
+story, check whether specific agents have enough scale to hold a persistent
+gap open rather than arbitrage it away. Their finding — a dominant buyer
+(PG&E) and a dominant arbitrageur (Enron) both had market power *in the spread
+itself* — has a direct MIBEL analogue given how concentrated `unit_agents.parquet`
+shows generation ownership to be (§ "Who controls a unit's bid" in
+`CLAUDE.md`). Worth pairing with Ito & Reguant (2016) rather than substituting
+for it.
 
 ---
 

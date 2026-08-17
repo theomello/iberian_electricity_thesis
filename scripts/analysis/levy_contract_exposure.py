@@ -134,6 +134,28 @@ def panel(units: set[str]) -> pd.DataFrame:
                        include_groups=False)
                 .rename("offer").reset_index())
 
+        # The MARGINAL ACCEPTED offer: the highest-priced step of this unit that
+        # actually cleared. In a uniform-price auction a unit's cleared steps are
+        # those priced at or below the clearing price, so this is the price at
+        # which the plant revealed itself willing to run -- its opportunity cost,
+        # which for a reservoir is the water value.
+        #
+        # This is the right outcome and the median submitted offer is not. A
+        # plant that does not want to generate submits a deliberately unclearable
+        # bid; that price expresses an intention *not* to run and reflects no
+        # marginal cost at all. Pooling the two is what made the levels estimate
+        # swing from 0.13 to 1.82 depending on where the sample was trimmed.
+        #
+        # It is censored above by the clearing price: a unit whose water value
+        # exceeds the market price simply does not appear that period. That is
+        # selection, and it biases toward finding no effect when the levy pushes
+        # plants out of the market entirely.
+        acc = t[(t.status == "C") & (t.price_eur_mwh > 0)]
+        mrg = (acc.groupby(["month", "unit", "date", "period"]).price_eur_mwh.max()
+                  .groupby(level=["month", "unit"]).mean()
+                  .rename("marginal_accepted").reset_index())
+        a = a.merge(mrg, on=["month", "unit"], how="outer")
+
         cl = t[t.status == "C"].copy()
         cl["q"] = cl.power_mw * cl.resolution_min / 60.0
         cl["qp"] = cl.q * cl.price_es
@@ -142,7 +164,9 @@ def panel(units: set[str]) -> pd.DataFrame:
 
     d = pd.concat(out, ignore_index=True)
     d = d.groupby(["month", "unit"], as_index=False).agg(
-        offer=("offer", "mean"), q=("q", "sum"), qp=("qp", "sum"))
+        offer=("offer", "mean"),
+        marginal_accepted=("marginal_accepted", "mean"),
+        q=("q", "sum"), qp=("qp", "sum"))
     d = d.merge(pbar, left_on="month", right_index=True)
     d["ratio"] = d.offer / d.pbar
     d["capture"] = np.where(d.q > 0, d.qp / (d.q * d.pbar), np.nan)
@@ -178,6 +202,45 @@ def main() -> int:
         b, se, t, n, k = twfe(x, "y", "treat", "unit", "month")
         print(f"{'exposure x intensity — ' + lbl:<38}{b:>10.5f}{se:>9.5f}"
               f"{t:>7.2f}{n:>8,}{k:>7}")
+
+    # ---- calibration -------------------------------------------------------
+    # The levy is a per-MWh cost, so full pass-through means the offer rises by
+    # exactly the levy. Run in LEVELS and beta is the pass-through rate itself:
+    # 1.0 complete, below 1 partial, above 1 over-shifting. The log
+    # specification above cannot be read that way -- its coefficient has to be
+    # multiplied by the offer level to mean anything, which is why it looked
+    # implausibly large.
+    print(f"\nPASS-THROUGH, in levels (EUR/MWh of offer per EUR/MWh of levy)\n")
+    print(f"{'outcome':<38}{'beta':>10}{'se':>9}{'t':>7}{'obs':>8}{'units':>7}")
+    for lbl, col in (("median submitted offer", "offer"),
+                     ("MARGINAL ACCEPTED offer", "marginal_accepted")):
+        lv = d.dropna(subset=[col]).copy()
+        bl, sel, tl, nl, kl = twfe(lv, col, "treat", "unit", "month")
+        lo, hi = bl - 1.96 * sel, bl + 1.96 * sel
+        print(f"{lbl:<38}{bl:>10.4f}{sel:>9.4f}{tl:>7.2f}{nl:>8,}{kl:>7}")
+        print(f"      95% CI [{lo:6.3f}, {hi:6.3f}]   full pass-through "
+              f"{'inside' if lo <= 1 <= hi else 'OUTSIDE'}, zero "
+              f"{'inside' if lo <= 0 <= hi else 'OUTSIDE'}")
+        # robustness to sample choice is what broke the previous outcome
+        row = []
+        for q in (0.99, 0.95, 0.90):
+            x = lv[lv[col] <= lv[col].quantile(q)]
+            b2, _, _, _, _ = twfe(x, col, "treat", "unit", "month")
+            row.append(f"p{int(q*100)} {b2:.3f}")
+        print(f"      trimmed: {'   '.join(row)}")
+    bl = 0.0
+
+    # Cross-check: the log coefficient should equal the levels one divided by
+    # the offer level it is evaluated at. If these disagree the two are not
+    # measuring the same thing.
+    win = d[(d.month >= LEVY_START_M) & (d.month <= pd.Period("2023-12"))]
+    mo = win.offer.median()
+    x = d.dropna(subset=["ratio"]).copy()
+    x["y"] = np.log(x.ratio.clip(lower=1e-6))
+    blog, *_ = twfe(x, "y", "treat", "unit", "month")
+    print(f"\n    median offer in the levy window: {mo:,.1f} EUR/MWh")
+    print(f"    log coefficient {blog:.5f} x median offer = {blog * mo:.3f}"
+          f"   vs levels beta {bl:.3f}")
 
     # Placebo: real intensity path, 36 months earlier, pre-levy sample only.
     fake = inten[(inten.index >= LEVY_START_M) &

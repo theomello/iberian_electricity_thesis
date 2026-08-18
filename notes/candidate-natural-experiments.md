@@ -85,8 +85,11 @@ Neill and Wyrwoll estimate.
 
 A also offers a **size discontinuity**: treated above 10 MW, exempt below. We
 have nameplate capacity from `cab` for effectively all near-marginal units, so a
-regression discontinuity in capacity is available. Whether enough small units
-bid near the margin is an open empirical question.
+regression discontinuity in capacity is available. **Checked 2026-08-18, see
+[`rq-clawback-size-rdd.md`](rq-clawback-size-rdd.md): density is not the
+problem (280 units within ±5 MW, 108 within ±2 MW) — classifying which
+wind/solar units are actually treated (merchant) versus exempt (RECORE) is.
+Hydro/nuclear alone are cleanly classifiable but thin (5 units within ±2 MW).**
 
 ---
 

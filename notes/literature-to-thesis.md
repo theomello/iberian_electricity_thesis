@@ -110,6 +110,14 @@ costs are ignored — firms look *more* powerful once they are included.
 So the wedge we measured is not noise to be cleaned away. It is the object of a
 published identification strategy, and we found it independently in the data.
 
+**Update 2026-08-18.** G1 and G3 below are resolved (`cab`'s minimum-income
+condition; the `unit_agents.parquet` firm mapping, 68 parent firms). G2 is
+partly resolved — `implied_marginal_cost_daily.parquet` (JRC efficiency ×
+MIBGAS/EUA/coal) covers 53 JRC-matched units, still a lower bound, see
+CLAUDE.md. G4 is partly resolved — `pdbf` gives a physical-contract proxy for
+theta. Kept below as originally written; see §9 for what a second literature
+pass (14 more papers) adds on top of this.
+
 ## 5. Gaps between what we hold and what these designs need
 
 - **G1 — complex conditions are not in our files.** `offer_type` is null in
@@ -223,3 +231,126 @@ Skip on a first pass: all of K&R §2 (oil and gas), §3 (vehicles), §5
 3. **Compute residual demand curves and their slopes** for a sample of hours.
    It is the object both chapters are built on, it needs nothing we lack, and
    it will tell us quickly whether the market-power route has any bite here.
+
+---
+
+## 9. Second literature pass (2026-08-18): 14 more papers
+
+Five agents read the rest of `papers/` — everything not already covered
+above. Full per-paper detail (citation, method, what it's worth) is now in
+`papers/README.md`'s table; the two most load-bearing findings went straight
+into the design notes they bear on (`hydro-water-value-design.md`,
+`rq-gas-cap-conduct.md`, `literature-iberian-exception.md` — see those for
+detail, not repeated here). What's below is what belongs at the toolkit
+level: general identification tricks, not tied to one design.
+
+### 9.1 Two more identification tricks worth stealing, beyond §3
+
+**A directly implementable residual-demand-slope recipe for step-function
+bids**, from McRae & Wolak, "How do firms exercise unilateral market power?
+Empirical evidence from a bid-based wholesale electricity market" (book
+chapter, New Zealand; `papers/mrae_wolak_how_do_firms_exercise_market_power.pdf`
+— scanned, no text layer, rendered to page images to read). Their eq. 3.6
+(printed p.399): take a ±10% price window around the clearing price, find
+the nearest residual-demand step outside it on each side, `DR'(P*) =
+(Q1−Q2)/(P1−P2)` — a finite-difference procedure built for exactly the
+discretization problem OMIE's step-function offers have, not an abstract
+elasticity formula assuming a continuous curve. Two indices follow: ability
+`η_i = -(1/100)·DR_i(P*)/DR'_i(P*)` (their eq. 3.4) and a contract-adjusted
+incentive version `η_i^C = η_i·[(DR_i(P*)−Q_C)/DR_i(P*)]` (eq. 3.10, `Q_C`
+the firm's net position — ours is `pdbf`'s theta proxy). Then a regression
+with **no cost data on either side**: offer level on η/η^C with day×hour
+fixed effects absorbing unobserved marginal cost entirely (their eq. 4.1–4.2,
+coefficients $0.46–$22.86/MWh per unit across their 8 units, incentive always
+dominating ability). A companion market-power *hypothesis test*, not a
+markup calculation: regress a unit's own offer on its own cost shifters plus
+**rivals'** hydro storage level — storage shouldn't predict a unit's own
+price under no market power, and it does for all 8 of their tested units
+(§18.5, eq. 5.1, β −2.34 to −24.31 $/MWh per TWh). This whole apparatus is
+buildable now from `curva_pbc_uof` (status `O`) + `unit_agents.parquet`, no
+new fetch, and is the cheapest concrete next step for candidate question B
+(residual demand elasticity across the VRE transition) — arguably cheaper
+than the aggregate elasticity already computed, since it's firm-specific.
+
+**A structural explanation, and a reduced-form fallback, for the "small
+firms bid excessively steep" finding already flagged in §3.** Hortaçsu,
+Luco, Puller & Zhu (2019, *AER* 109(12): 4302–4342,
+`papers/md/hortasu-strategicabilityaffect-2019.md`) model this as a
+cognitive-hierarchy (CH) type distribution — level-0 bidders bid their
+contract position, level-k best-respond assuming rivals are Poisson-
+distributed over levels 0..k−1 — identified by matching observed ERCOT bids
+to CH-predicted bids across every possible type (p4328–4329), using
+*observed* marginal cost (heat rate × fuel price) to separate type from
+cost, something we lack at scale. Firm size is the dominant driver of
+sophistication (p4330). **The reduced-form design is the portable part**:
+a two-month 2002 nuclear outage steepened aggregate marginal cost, and large
+firms' bids got measurably steeper in response while small firms' did not
+(Table 3, p4336) — a falsification test using a public, common, non-firm-
+specific cost/capacity shock. Spain has ready-made shocks of this kind: a
+large plant outage, or the VRE-driven residual-demand steepening itself
+(candidate B again) — testing whether large vs. small Spanish firms respond
+differently in bid slope needs only `unit_agents.parquet`'s firm-size
+information and no new cost data.
+
+### 9.2 A candidate extension of Jha & Leslie, now with Spain's own advantage
+### made concrete
+
+Jha & Leslie (SSRN 3603627) is already extensively summarised in CLAUDE.md's
+`implied_marginal_cost` section; a second, closer read
+(`papers/md/ssrn-3603627.md`) surfaced the operational equations CLAUDE.md
+didn't have (production function eq.1–2 p.-44; cost function p.-43/-42;
+dynamic dispatch problem eq.3–8 p.-38/-36; competitive-pricing rule with
+dynamic + static rationality constraints eq.9–11 p.-34/-33; the solar-lag
+regression eq.12 p.-23/-22, which uses **48 half-hourly lags** of demand
+interacted with hour-of-day — dropping the lags badly mispredicts the
+evening effect, per their own appendix F.1). Their mechanism: daytime VRE
+displacement forces thermal plants to stop, and some choose not to re-incur
+start-up costs at the evening ramp, softening competition and raising
+evening markups as VRE grows. **They corroborate this firm-by-firm using
+McRae & Wolak's own η measure (§9.1 above)** — a direct bridge between the
+two paper groups this pass covered separately.
+
+This is a directly testable prediction on our 2018–2026 window (VRE share
+23.9%→41.8%) — and Spain has a genuine advantage over their Western
+Australia setting the note should say plainly: Jha & Leslie *estimate*
+start-up costs from gas-metering data because their market doesn't publish
+them; `cab`'s minimum-income condition is a firm's own **declared** start-up-
+recovery number (to 2025-03-18). Testing their mechanism on CCGT units that
+declare a minimum-income condition would use a real number where their own
+paper had to use an estimated one — a genuine methodological improvement on
+the source paper, not just a replication. Not yet built; flagged here as a
+concrete next step alongside candidate question B, complementary to but
+distinct from the gas-cap and hydro-water-value designs already underway.
+
+### 9.3 Citation-only or low-relevance — read, and honestly not more than that
+
+- **Tangerås & Wolak (2021)**, linking markets across space — real theory,
+  doesn't map onto MIBEL's spot-price splitting without a separate argument;
+  detail and why in `literature-iberian-exception.md`.
+- **Fabra, Rapson, Reguant & Wang (2021)**, real-time pricing elasticity —
+  on-setting (Spain) but the wrong market side (retail households, not
+  wholesale agents); elasticity ≈ 0, useful only as background support for
+  treating demand as inelastic. Detail in `rq-gas-cap-conduct.md`.
+- **Leslie, Stern, Shanker & Hogan**, VRE market design (Australia NEM) —
+  citation value for framing `cab`'s minimum-income condition as the
+  "missing dynamic-cost instrument" the NEM literature says is needed; also
+  flags a cheap, immediate check with data already in hand — a duck-curve /
+  evening-price-ramp test on OMIE prices + REE realtime 5-min generation,
+  no new fetch.
+- **Wolak (EEPE)**, long-term resource adequacy (California Aug 2020, Texas
+  Feb 2021 shortfalls) — no Spain analogue event confirmed, but the paper's
+  own method (distribution of low-combined-wind+solar-output durations,
+  their Tables 3–6) is directly reusable on REE realtime data as a cheap
+  descriptive check of whether Spain's multi-hour VRE-shortfall tail risk
+  grew with VRE share — independent of whether resource adequacy becomes an
+  actual thesis question.
+- **McRae & Wolak, "Reliability Options..." (NBER w32616)**, Colombia — the
+  policy mechanism (reliability options with capped forward-contract
+  settlement) has no Spanish counterpart; two techniques are transferable
+  regardless — the unilateral-scarcity-triggering test and the water-
+  opportunity-cost-by-dispatch-matching approach, both worth a pointer for
+  whoever works the residual-demand or hydro-water-value designs.
+- **Thurber et al.**, SFPFC game-based study — an experimental/behavioral
+  study with fictional players, no real market microdata; citation-only
+  companion to the Wolak SFPFC proposal, no methodological overlap with an
+  observational bid-microdata thesis.

@@ -248,3 +248,75 @@ or nothing" than either probe alone: it isn't that the data has no
 information in it, it's that a single-equation regression on any one input
 can't separate the cost-shifter channel from the strategy channel. That is
 exactly the job the joint estimation is for.
+
+## 2026-08-18: the paper this note names has now been read, and "structural"
+## turns out to mean something much cheaper than assumed
+
+Arzhintar, Leslie, Neill & Wyrwoll, "Inferring the Value of Stored Water in
+Hydroelectric Schemes" (working paper, 11 Nov 2025, SSRN 5736763,
+`papers/md/ssrn-5736763.md`) — the paper this note has cited by name since
+2026-08-13 without anyone having actually read it. Full findings on request;
+this is what changes for the design.
+
+**It is plain OLS, not a dynamic program.** They explicitly reject the
+stochastic-reservoir-optimization literature (Tilmant et al., Aubin et al.)
+and instead (1) restrict to intervals where their own scheme is the
+price-setting unit — the Fabra & Reguant (2014) marginal-unit trick, imported
+wholesale, identified from AEMO's own published "Price Setter" feed — (2)
+construct an FOC-implied opportunity cost from price, quantity and a
+kernel-smoothed residual-demand slope, and (3) regress that construction on
+forward price, reservoir volume and snowpack, **additively, never
+interacted**, by ordinary least squares (their footnote 35 calls the
+residual "statistical, not structural" and explicitly declines to claim a
+causal interpretation for β2/β3). The appendix robustness battery (log
+transforms, quartile dummies, quarter-of-year interactions) never once
+multiplies Vol × Snow or nests one inside the other — if the working
+assumption here was that `c(pf, Vol, Snow)` needs some joint index blending
+fill and snowpack, that assumption is not what this paper does.
+
+**The mechanism that actually nets out the price-co-movement confound is not
+exotic: `pf` sits in the same regression as `Vol`.** Both of this design's
+own reduced-form probes (rain anomaly, then reservoir-fill anomaly) regressed
+the offer on the water-state variable *alone*, with unit+month FE but no
+control for the expected-price channel. The paper's equivalent step puts the
+forward price in the same equation, so its Vol/Snow coefficients are
+identified net of forward-price variation rather than off the raw univariate
+correlation that conflates the two channels. That is a much smaller lift
+than "structural or nothing" implied, and it's buildable from data already
+on disk (OMIE bids for the residual-demand slope, OMIP for `pf`, MITECO for
+`Vol`, ERA5 for `Snow`) plus one piece of new engineering: OMIE does not
+publish AEMO's "who is marginal right now" feed, so it would have to be
+derived from the bid/clearing data directly — the `capacity_quantile_offer.py`
+marginal-technology work already does a coarser version of this (26–47%
+hydro-marginal share by year).
+
+**What it does not solve: Vol's own endogeneity.** The paper never claims to
+— it disclaims causal interpretation outright (footnote 35) precisely
+because reservoir volume is the outcome of the operator's own past release
+decisions, which is the identical reverse-causality path the 2026-08-18 fill
+regression above already surfaced (a plant that expects water to be worth
+more later bids high now and stays fuller for the same reason). If this
+thesis needs a causal claim about the levy/gas-cap response, that
+endogeneity is inherited whole from this template, not resolved by it.
+
+**Recommended next step, before building anything bigger:** re-run
+`hydro_water_value_reservoir.py` with the OMIP forward price added as a
+control alongside the fill-level regressor — the cheap version of the
+paper's actual move, at a fraction of the cost of reconstructing a
+marginal-unit sample and a kernel-smoothed residual-demand-slope estimator.
+If the wrong sign and cross-trimming instability survive that control, that
+is real evidence the problem is the endogenous-bidding-strategy channel the
+paper doesn't solve either — worth knowing before investing in the larger
+build, since the full apparatus is unlikely to fix what a forward-price
+control doesn't.
+
+Institutional fit, briefly: SHL is one operator with de facto market power
+over its region, so its FOC-with-market-power framing suits Spain's handful
+of large hydro-owning firms (Iberdrola, Endesa) far better than the 44
+fragmented UGH units as a whole — a small cascade with a thin capacity share
+is closer to a price-taker, where the residual-demand-slope machinery may
+not even be well identified. Iberian hydro is also far less snowpack-driven
+than the Snowy Scheme, consistent with this design's own rain probe finding
+no signal — expect `Snow` to carry little weight here, if it's kept at all.
+No replication code exists for the paper (checked); the estimating equations
+above are the only reusable artefact.

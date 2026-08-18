@@ -197,3 +197,254 @@ among several.
 2. Estimated efficiencies from pre-cap bidding, or engineering values from JRC?
 3. Is the second question (did uncapped hydro raise its offers?) a separate
    chapter or the same one? It is the more novel half and the harder to identify.
+
+## 2026-08-18: a literature pass supplies the precedent equation, a
+## pass-through prior, and a cheap complementary test for question 2
+
+**Novelty check closed.** González-de Miguel, van Wunnik & Sumper (2024,
+*Energies* 17:3102, `papers/md/energies-17-03102.md`) — the closest existing
+paper, already flagged in `literature-iberian-exception.md` as using real
+bids for an aggregate counterfactual — turns out to *assume* full CCGT
+pass-through by construction ("CCGTs are obliged to pass through the
+subsidies into their market bids", their p9) and to say outright they lack
+the data to model how hydro would have bid absent the subsidy (their p13).
+So the passthrough test here is not just unattempted elsewhere, it is the
+literal null hypothesis the closest paper builds in rather than tests. One
+data point worth keeping for the power calculation on question 2: they
+document Spanish hydro was essentially absent from the market June–Sept
+2022 (drought), with only Portuguese hydro clearing in that window — the
+Spanish-side hydro-response sample may be thin exactly when the cap first
+bound, though Portuguese hydro bids into the same MIBEL stack.
+
+**Fabra & Reguant (2014, AER 104(9), `papers/md/fabra-passthroughemissionscosts-2014.md`)
+is the direct precedent for the whole design**, applied to the 2004–2006
+EU ETS Phase 1 start rather than the gas cap. Their structural decomposition
+(p2884–2885) is essentially the equation already sketched above:
+```
+bid_it(q) = mc_it(q) + markup_it(q)
+mc_it(q) = marginal_emissions_cost_it(q) + marginal_input_cost_it(q)
+markup_it(q) = -q_it · dP_it/dq_it        (residual-demand slope × net quantity)
+```
+and their reduced-form test (p2881, their eq. 1):
+```
+p_th = ρ·τ_t·e_th + β0·X_th^common + β1·X_th^demand + β2·X_th^supply + β3·ι_h + ε_th
+```
+— price on the marginal unit's emissions cost, instrumented by the EUA permit
+price itself (naive OLS gives a *negative* coefficient, −0.17 to −0.22,
+because the marginal unit's identity correlates with demand — an artefact
+worth guarding against in our own specification too). Their engineering
+marginal-cost construction (heat rate × fuel price + emissions rate × permit
+price, from national plant registries) is the same category of object as
+`implied_marginal_cost_daily.parquet` (JRC efficiency × MIBGAS × EUA/coal),
+including the identical caveat that plant efficiency may be stale or
+generic.
+
+**Headline pass-through ≈ 86% (77–86% across specs, Table 1), near 100% at
+peak, ~60% off-peak** (dynamic/start-up costs cited as the off-peak friction).
+**Why it's high is the load-bearing part for setting our prior, not just the
+number**: their own explanation (p2894) is that pass-through is high when
+(a) the cost shock hits every price-setting firm together (a market-wide EUA
+move, not firm-idiosyncratic) and (b) demand can't respond, so there's no
+differential margin worth protecting. **The gas cap violates (a) by design**
+— it is asymmetric across technology (CCGT/coal/non-RECORE cogen capped,
+hydro/nuclear not), which is exactly the kind of *relative*-cost shift that
+gives a firm a markup-adjustment incentive Fabra & Reguant's mechanism says
+is otherwise absent. So 86% is a reasonable *null* prior ("no markup, same
+mechanism as EUA") but not a mechanical prediction — a materially lower
+pass-through would be consistent with, not contrary to, this precedent's own
+logic. Fabra, Rapson, Reguant & Wang (2021, AER P&P, real-time pricing
+elasticity, `papers/md/fabra-et-al-2021-...md`) is a useful supporting fact
+here too, from the same setting: Spanish *retail* demand elasticity to
+real-time price is essentially zero (point estimates 0 to −0.02, no
+detectable RTP-vs-non-RTP difference) — background support for treating
+demand as price-inelastic in this market, consistent with condition (b)
+above.
+
+**A cheap complementary test for question 2 that needs no cost benchmark at
+all.** McRae & Wolak's residual-demand market-power design — both the 2017
+Colombia draft (`papers/md/mcrae-and-wolak-columbia-0.md`) and the fuller
+Handbook chapter (`papers/mrae_wolak_how_do_firms_exercise_market_power.pdf`,
+scanned, no text layer) — never estimates opportunity cost at all. It
+constructs, per firm per hour, the residual demand curve from rivals'
+*observed* offers plus system demand (`DR_j(p) = Q_D − Σ_{k≠j} S_k(p)`, ours
+buildable now from OMIE `status == 'O'` bids + `unit_agents.parquet`), then
+two indices: an inverse semi-elasticity `η_i = -(1/100)·DR_i(P*)/DR'_i(P*)`
+and a contract-adjusted incentive version `η_i^C = η_i·[(DR_i(P*)−Q_C)/DR_i(P*)]`
+netting out the firm's forward/contract position (their eq. 3.4, 3.10 —
+`Q_C` is exactly what `pdbf`'s theta proxy already gives us). The test:
+regress each hydro firm's own offer level on its own η/η^C with day×hour
+fixed effects absorbing unobserved marginal cost entirely (their eq. 4.1–4.2)
+— coefficients answer "does a firm bid higher exactly when its own
+residual-demand shape says it can," with no cost data required on either
+side of the equation. Sharper still for our exact question: their §18.5
+exclusion-restriction test regresses each unit's offer on its *own* cost
+shifters plus *rivals'* hydro storage level — under no market power, a
+rival's storage shouldn't predict a unit's own price, and all eight of their
+tested units reject that null (β −2.34 to −24.31 $/MWh per TWh). The gas cap
+gives a mechanically clean version of the same exclusion test: does capped
+CCGT rivals' cost (or the cap's bite, directly observable) predict hydro's
+own offer, controlling for hydro's own fundamentals? This is buildable now,
+cheaper than the passthrough regression (no marginal-cost construction
+needed on the hydro side), and answers the "did uncapped hydro exploit the
+cap" question directly rather than through the opportunity-cost detour that
+`hydro-water-value-design.md` already found expensive. Worth raising to the
+supervisor as a first cut at question 2, ahead of (not instead of) the
+structural water-value route.
+
+Peña (2024, *Utilities Policy* 87, `papers/md/pena.md`) is the closest
+existing Spain-specific paper making a version of the question-2 claim
+already (hydro priced 3–12% above a CCGT-lag opportunity-cost proxy in
+2021–Q1 2022) but it: (a) stops before the gas cap (window ends 31 March
+2022, cap starts 15 June), so it says nothing about either policy directly;
+and (b) its opportunity-cost proxy is *yesterday's* CCGT marginal cost, which
+shares the exact price-co-movement confound this design's own reduced-form
+probes were built to avoid — good for citation and for motivating why a
+cruder proxy isn't good enough, not a method to reuse.
+
+---
+
+## 2026-08-18: a sharper design — test conduct against the ex-post optimal
+## bid, not against a raw markup
+
+Written after building the marginal-cost side out with the supervisor's HP2008
+question in mind. This is a refinement of question 1 above (did capped firms
+retain part of the subsidy), not a replacement — it uses the same 45-unit
+engineering marginal cost, but changes what the outcome variable *is*, and the
+change matters for identification.
+
+### The problem with a raw markup regression
+
+The design as written above tests `offer_it − MC_it(capped gas) = markup_it`
+and asks whether `markup_it` moves at 15 June 2022. But `MC_it` is not the only
+thing the cap changes. Capping every rival CCGT's cost also flattens the
+supply stack in the price range those units occupy, which mechanically changes
+each firm's **residual demand slope** — the object that sets the
+profit-maximizing markup in the first place (Kellogg & Reguant eq. 23, §2
+above). A raw markup regression at the cutoff conflates two things: firms
+behaving differently, and firms facing a different profit-maximization problem
+even if their behaviour (conduct) hasn't changed at all. A stable or shifting
+`markup_it` is consistent with either story, and the design as written cannot
+tell them apart.
+
+### The fix: difference against the firm's own ex-post optimal bid
+
+Hortaçsu & Puller (2008, `papers/md/the-rand-j-of-economics-2008-...md`,
+their eq. 2 and Proposition 3, printed p.86ff) construct exactly the object
+that nets this out: given a firm's realized residual demand `RD_i(p)` that
+hour (computed from rivals' *actual* submitted offers — mechanically observed,
+not modelled), its contract position `Q_C_i`, and its marginal cost `MC_i(q)`,
+the **ex-post optimal bid** is the point where marginal revenue implied by
+`RD_i` equals marginal cost:
+
+```
+p*(q) − MC_i(q) = −(q − Q_C_i) · dp/dq |_{RD_i}          (their eq. 2, rearranged)
+```
+
+Because `RD_i(p)` is recomputed fresh every hour from rivals' actual offers,
+this benchmark **automatically re-prices the profit-maximization problem**
+every time the cap changes a rival's cost, a rival exits the price range, or
+demand shifts. It is, by construction, "what a purely profit-maximizing firm
+should bid given everything that actually happened that hour" — cost shock,
+demand shock, and residual-demand-slope shock all included. What is left over
+after differencing the actual bid against it is conduct, not environment.
+
+**Outcome variable**, following HP2008's own scale-normalized metric so firms
+of very different size are comparable (their Percent Achieved, adapted):
+
+```
+PctAchieved_iht = (π_actual_iht − π_avoid_iht) / (π*_iht − π_avoid_iht)
+```
+
+`π_actual` = realized profit under the firm's actual bid; `π*` = profit under
+the ex-post optimal bid at the same realized `RD_i`, `Q_C_i`, `MC_i`;
+`π_avoid` = profit from bidding to avoid being dispatched at all (HP2008's own
+finding — see §4 above — is that this, not marginal-cost bidding, is the
+relevant floor: units that fail their minimum-income condition withdraw for
+the whole day rather than bid competitively). `PctAchieved = 1` is exactly
+optimal; `PctAchieved = 0` is "did not do better than not participating."
+
+### Data mapping — everything needed is already in hand
+
+| object | Spain source |
+|---|---|
+| `MC_i(q)` | `implied_marginal_cost_daily.parquet`, capped gas price substituted for the market price where the cap binds (post 15 June 2022, 45 units with real efficiency) |
+| `RD_i(p)` | constructed per firm per hour from `curva_pbc_uof` `status=='O'` rows of every *other* agent, aggregated by `unit_agents.parquet` |
+| `Q_C_i` | `pdbf` role_code `'4'` rows, aggregated to firm level |
+| actual bid | `curva_pbc_uof` `status=='O'`, the firm's own units |
+| firm size / sophistication proxy | `unit_agents.parquet` parent-firm generation share (HLPZ2019's own finding: size is the dominant driver of CH type — no need to estimate a cognitive-hierarchy type distribution ourselves, a size rank is the same variable they find actually does the work) |
+
+Nothing new to fetch. The one piece of new engineering is computing
+`RD_i(p)` and the FOC crossing per firm-hour at scale — mechanical, not a new
+data problem.
+
+### Specification
+
+Event study around 15 June 2022, unit and firm fixed effects, restricted to
+non-splitting periods (drop the 6.7% ES/PT-split hours, same restriction
+HP2008 use for their own congestion exclusion):
+
+```
+PctAchieved_iht = Σ_k β_k · 1[week = k] + α_i + τ_h + ε_iht
+```
+
+k indexed relative to the cutoff week; `α_i` unit or firm fixed effects,
+`τ_h` hour-of-day fixed effects. A flat `β_k` across the cutoff is evidence
+that conduct, not just cost, passed through unchanged — a genuinely different
+and stronger claim than "offers fell by the capped amount," since it is
+already conditioning on the fact that offers *should* fall by the capped
+amount.
+
+**The sophistication interaction (HLPZ2019, extending §9.1 in
+`literature-to-thesis.md`):**
+
+```
+PctAchieved_iht = β1·Post_t + β2·Post_t·Size_i + α_i + τ_h + ε_iht
+```
+
+`Size_i` = firm's pre-period generation share (predetermined, avoiding the
+obvious reverse-causality problem of using a post-period size measure). A
+negative `β2` — small firms' gap from optimal widening more than large firms'
+right at the cap — would be a "policy complexity" finding: the compensation
+mechanism (paid outside the auction, on a different schedule than the bid
+itself) is more costly for less sophisticated agents to price correctly into
+their bid, distinct from and additional to the market-power story the level
+regression already targets.
+
+### Threats specific to this design, on top of the four already listed in §
+### "Threats, honestly" above
+
+1. **`RD_i(p)` is itself measured with the same whole-day-dropout
+   contamination flagged in CLAUDE.md's known-anomaly section** — 63 affected
+   days, concentrated 2025-03-19 to 2025-06-09, well outside this window, but
+   the general point (a unit's absence from the bid file must be checked
+   against the clearing identity, not assumed to mean "not available") applies
+   to whichever agents are used to construct rivals' supply that hour.
+2. **The ex-post optimal bid assumes the firm has full information on rivals'
+   realized offers when it bids — which it does not, ex ante.** HP2008's own
+   defence (§2 above, "ex post optimality") is that this is a valid benchmark
+   for *ex post* rationality, not a claim about what the firm could have known
+   in advance; the same defence applies here, but it is worth stating rather
+   than assuming.
+3. **`Q_C_i` is a physical-contract proxy for theta, not theta** (misses
+   financial hedges — the same caveat `pdbf`'s own documentation carries).
+   `PctAchieved` inherits that measurement error whole.
+4. **The 45-unit marginal-cost set is not a random sample of the treated
+   fleet** — see the "binding constraint" from the earlier HP2008-methodology
+   discussion (only 31 of 62 CCGT units, 14 of the coal fleet, have real
+   rather than generic JRC efficiency). Firm-level `PctAchieved` aggregates
+   only over a firm's units that are in this set; a firm with no covered
+   units cannot be scored at all, and the sophistication interaction should
+   be checked for whether covered-unit ownership correlates with size in a
+   way that would bias `β2`.
+
+### Relationship to the existing design
+
+Not a replacement for the passthrough test in "The identification, and why it
+does not need a control group" above — a complement that answers a different
+question with a cleaner counterfactual. Run both: the raw markup regression
+is the easier, first-pass, more interpretable result ("firms kept X €/MWh of
+the subsidy"); `PctAchieved` is the harder, second-pass result that says
+whether that X €/MWh is explained by the environment changing (residual
+demand, rivals' costs) or by conduct changing, which is the sharper causal
+claim and the one no existing paper (see §"González-de Miguel..." above)
+comes close to.

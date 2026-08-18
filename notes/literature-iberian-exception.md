@@ -36,6 +36,60 @@ peninsular market, so they are not a usable control.
 **Settled, do not re-do:** the price effect, the inflation effect, the export
 surge to France, congestion rents, and the direction of the rent transfer.
 
+## González-de Miguel et al., read in full 2026-08-18 — quantified, and it
+## explicitly closes off the novelty question
+
+The table row above described the method; having now read the paper
+(`papers/md/energies-17-03102.md`) in full, here are the point estimates for
+their headline window (15 June – 30 Sept 2022), which sharpen "settled, do
+not re-do" from qualitative to quotable: mean subsidy 173.35 €/MWh
+(72.73–346.16), 48.1 TWh subsidised, total cost €8,350M (~2.1% of Spanish
+GDP); price effect −107.10 €/MWh mean (max −240); cleared-energy effect
++3,191 MWh/h mean (max 17,057, mostly gas); cross-border effect on price
++21.12 €/MWh (the interconnector limits the relief); rent transfer:
+non-fossil producer surplus **−€1,885M**, extra-cleared fossil surplus
+**+€447M**, infra-marginal fossil surplus **+€2,628M**; consumer surplus
+**+€6,811M**; congestion rents **+€251M** (financing 3.1% of the subsidy,
+independently corroborated against another source's €576M for a longer
+window).
+
+More important than the numbers: they state outright, twice, that
+individual-firm conduct is outside what their method can do. Their
+counterfactual *assumes* CCGTs pass the subsidy through to their bids 1:1
+by construction ("CCGTs are obliged to pass through the subsidies into
+their market bids", p9) rather than testing it, and on hydro they say
+directly "we lack sufficient information to estimate how the bidding price
+for HPPs would change" (p13). Both are exactly the two open questions this
+note already lists as unaddressed — the closest existing paper confirms it
+by admission, not just by absence. See `rq-gas-cap-conduct.md`'s 2026-08-18
+section for what this implies for the design (in short: their passthrough
+assumption is the literal null hypothesis our test is built to reject or
+confirm), and for the Fabra & Reguant (2014) precedent equation and pass-
+through prior it also supplies.
+
+One incidental fact worth carrying forward for a power calculation: they
+document Spanish hydro was essentially absent from the market June–Sept
+2022 (drought — only Portuguese hydro cleared in that window), which may
+thin the Spanish-side hydro-response sample exactly when the cap first
+bound.
+
+**Tangerås & Wolak (2021), "The Competitive Effects of Linking Electricity
+Markets Across Space" (`papers/md/the-competitive-effects-of-linking-electricity-markets-across-space-april-2021.md`),
+checked for fit and set aside for now.** Theory paper on US-style nodal
+markets: linking local markets through a *regional forward contract* is
+pro-competitive (producers internalize only 1/M of their own price-
+suppressing effect on the hub price), linking *consumer prices* regionally
+is anti-competitive, and multi-market producers weaken the pro-competitive
+forward effect (their Prop. 7). None of this is about spot-price linkage
+itself, so MIBEL's 6.7% market-splitting periods are **not** this paper's
+natural experiment without a separate argument — its comparative statics
+are between forward-contract *regimes*, not between hours of one regime.
+Testing whether MIBEL firms active in both ES and PT behave differently
+(Prop. 7's prediction) would first need confirming whether OMIP forwards
+settle against a single MIBEL reference or a zone-specific one — not yet
+established in this repo. Parked as a possible future question, not a fit
+for the gas-cap design.
+
 ## Correcting an earlier claim of mine
 
 I previously told Theodor that "none of them uses the bid microdata". **That is

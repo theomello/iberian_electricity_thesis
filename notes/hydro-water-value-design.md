@@ -143,3 +143,108 @@ without its marginal value moving much. This closes off the cheap shortcut
 rather than opening one: the structural model (reservoir levels, snowpack,
 forward price, jointly estimated) is still the only route in, not an
 alternative to it.
+
+## 2026-08-18: the actual state variable was tried, and it's a different
+## kind of failure — sign, not power
+
+The rain probe tested a proxy one step removed from the state variable. This
+tests the state variable directly. `fetch_hydro_reservoirs.py` pulls MITECO's
+Boletín Hidrológico Semanal historical archive — 720,099 rows, 401
+reservoirs, 16 hydrographic demarcations, weekly, 1987–2026, token-free — and
+`hydro_water_value_reservoir.py` reruns the identical own-basin-vs-placebo
+design from the rain probe with basin-aggregate fill ratio (stored/capacity,
+seasonally de-meaned by ISO week) in place of rainfall anomaly.
+
+One data problem surfaced and was worth recording: MITECO's own
+`ELECTRICO_FLAG`, meant to mark hydroelectric reservoirs, is not trustworthy
+for this purpose — it flags **0% of Guadiana's reservoirs**, despite `GDNA`
+("UGH. GUADIANA") being a real storage cascade in our own unit registry, and
+under 20% in Guadalquivir, Segura and Tajo, baskets that plainly contain
+generating reservoirs. Restricting to it drops real hydro storage rather than
+excluding irrigation-only reservoirs as intended, so the script's default is
+all reservoirs in the basin; the restricted version is kept behind
+`--hydro-only` for comparison, not because it's preferred.
+
+| outcome | regressor | β | t |
+|---|---|---|---|
+| median submitted offer | own-basin fill anomaly | +203.2 | **2.00** |
+| median submitted offer | placebo-basin fill anomaly | +33.5 | 0.38 |
+| marginal accepted offer | own-basin fill anomaly | +52.0 | **1.65** |
+| marginal accepted offer | placebo-basin fill anomaly | −6.2 | −0.23 |
+
+This is a genuinely different result from the rain probe, not a repeat of it.
+Own-basin fill **does** beat placebo-basin fill, on both outcomes — the
+basin-specific signature the rain probe never produced. But the sign is
+**positive**, the opposite of the cost-shifter prediction (fuller reservoir →
+lower opportunity cost → lower offer, i.e. negative).
+
+**A positive sign here is not neutral evidence — it points at a specific,
+different mechanism.** A plant that expects water to be worth more later can
+bid high now *specifically to avoid being dispatched*, which mechanically
+both raises its offer and keeps its reservoir fuller, with no cost-shifter
+story required. That reverse-causality path predicts exactly this sign, and a
+single reduced-form regression cannot tell it apart from a fill level that
+moves offers through some entirely different channel. So this result doesn't
+resurrect the reduced-form route — if anything it sharpens the case against
+it: fill level looks endogenous to the plant's own bidding strategy, which is
+precisely why Arzhintar, Leslie, Neill and Wyrwoll estimate `c(pf, Vol,
+Snow)` jointly rather than regressing offer on `Vol` directly.
+
+## 2026-08-18, Stage B: partialling reservoir fill out of Design 4 changes
+## almost nothing — the instability is not an omitted-variable problem
+
+The natural next step, given fill level carries real (if ambiguous) signal:
+does controlling for it stabilise Design 4's beta, whose sign flips across
+functional form and trimming in `levy_contract_exposure.py`? Method: the same
+Frisch-Waugh-Lovell orthogonalisation that script already uses internally
+(`treat_rel` against `treat`) — partial the reservoir fill anomaly out of the
+treatment variable (`exposure x intensity`), unit+month FE absorbed on both
+sides, then rerun the same levels/trimming battery. Script:
+`levy_contract_exposure_reservoir.py`. Sample: the 17 (of Design 4's
+exposure-measured units) whose basin is identifiable, smaller than the
+original 23 because it's a different filter (basin-name-in-`cab` vs. pre-levy
+PDBF volume) — so baseline is rerun on this same restricted sample, not taken
+from the original script, to isolate the effect of the control.
+
+| outcome | spec | β | t |
+|---|---|---|---|
+| median offer, levels | baseline | +0.127 | 0.18 |
+| median offer, levels | controlled | +0.136 | 0.19 |
+| marginal accepted, levels | baseline | −0.673 | −1.80 |
+| marginal accepted, levels | controlled | −0.671 | −1.80 |
+| log(offer/market) | baseline | +0.00663 | 3.61 |
+| log(offer/market) | controlled | +0.00670 | 3.63 |
+
+**Barely moves.** Beta changes in the third decimal place on every
+specification; the trimming instability that broke the levels specs before
+(median offer: p99 −0.08 → p95 +1.42 → p90 +1.69) reproduces almost exactly
+under the control (−0.08 → +1.42 → +1.69). The placebo is likewise unchanged
+(−0.0024 baseline vs. −0.0023 controlled, both null).
+
+**This is a real negative result, not a non-result.** The reservoir probe
+(above) showed fill level is not noise — it has a genuine own-basin
+signature against offers. That it does almost nothing to Design 4's
+treatment coefficient means it is close to orthogonal to `exposure x
+intensity` in this sample, so whatever is producing the sign instability is
+not the thing this control removes. That rules out the simplest version of
+the omitted-variable diagnosis — "hydro's opportunity cost moves with fill
+level and that's what's contaminating beta" — cleanly enough to stop
+pursuing a linear control for it. What's left standing is the harder
+reading `rq-gas-cap-conduct.md` already gave this design: the instability is
+a measurement problem in the outcome itself (censoring by the clearing price,
+a strategic bid deliberately unclearable and mixed in with genuine marginal
+offers), which a control variable — reservoir-based or otherwise — cannot
+fix, because it isn't omission, it's the wrong latent object being averaged
+into "the offer." Structural or nothing, now tested three ways rather than
+argued once.
+
+**Practical consequence: all three structural inputs are now in hand.**
+`pf` (OMIP forwards, ES 2018–2026), `Snow` (ERA5, `fetch_hydro_precipitation.py`)
+and now `Vol` (MITECO, this fetch) are all fetched. Two independent reduced-form
+probes on two different pieces of that input set have now failed for two
+different reasons — no signal at all (rain) and the wrong-signed signal for
+a plausible reason (fill level) — which is a cleaner argument for "structural
+or nothing" than either probe alone: it isn't that the data has no
+information in it, it's that a single-equation regression on any one input
+can't separate the cost-shifter channel from the strategy channel. That is
+exactly the job the joint estimation is for.

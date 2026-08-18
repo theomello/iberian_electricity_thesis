@@ -165,6 +165,21 @@ unobservable and every proxy for it has turned out to be contaminated, censored
 or unstable. That is precisely the case for estimating a water-value function —
 and precisely why the levy question is structural-or-nothing.
 
+**Updated 2026-08-18.** Tested directly rather than left as an inference: a
+new MITECO reservoir-level fetch supplies the actual state variable (not
+rainfall, tried and null earlier), and partialling its fill-level anomaly out
+of Design 4's treatment variable moves beta in the third decimal place on
+every specification — the sign instability across trimming reproduces almost
+exactly under the control. So it is not an omitted-variable problem that a
+reservoir-based control can fix; whatever is producing the instability lives
+in the outcome measurement (censoring by the clearing price mixing genuine
+marginal offers with deliberately unclearable ones), not in something linear
+that was left out. See
+[`hydro-water-value-design.md`](hydro-water-value-design.md) for the full
+run. This closes off the cheapest remaining fix rather than opening one —
+structural estimation is now the only route left untried, not one option
+among several.
+
 |  | Gas cap | Levy and water value |
 |---|---|---|
 | Counterfactual | given by the statute | must be estimated |

@@ -66,6 +66,9 @@ scripts/
 | `fetch/fetch_ren_portugal.py` | REN `servicebus.ren.pt` | no | `data/ren/ren_{production_15min,installed_power_monthly,market_prices,consumption_supply_daily}.parquet` |
 | `fetch/fetch_esios_spain.py` | ESIOS | **yes** | `data/esios/esios_{id}.parquet` |
 | `fetch/fetch_entsoe_spain.py` | ENTSO-E | **yes** | `data/entsoe/entsoe_{series}_{zone}.parquet` |
+| `fetch/fetch_hydro_precipitation.py` | Open-Meteo ERA5 | no | `data/weather/precipitation_basins_daily.parquet` |
+| `fetch/fetch_omip_forwards.py` | OMIP | no | `data/omip/parquet/omip_forwards_{zone}_{YYYY}.parquet` |
+| `fetch/fetch_hydro_reservoirs.py` | MITECO Boletín Hidrológico | no | `data/miteco/embalses_historico.parquet` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
 `lib/config.py` loads tokens from a gitignored `.env`.
@@ -509,6 +512,44 @@ Only **installed capacity** still lacks a source: REE's `potencia-instalada`
 returns HTTP 500 under every parameter combination tried. Tokens are needed
 for that alone; see `config.py`. Both scripts are written but never executed.
 
+### MITECO reservoir levels — the missing water-value state variable
+`data/miteco/embalses_historico.parquet`, fetched 2026-08-18, token-free.
+**720,099 rows, 401 reservoirs, 16 hydrographic demarcations, weekly,
+1987-10-06 → present.** Source: MITECO's Boletín Hidrológico Semanal, the
+same weekly bulletin published since 1988; the only downloadable
+distribution is a zipped Access database
+(`BD-Embalses.zip` → one table, `T_Datos Embalses 1988-2026`), not a
+CSV/API — confirmed against the `datos.gob.es` catalogue entry too. Parsed
+with `access_parser` (pure-Python MDB reader) rather than `mdbtools`, to
+avoid a slow from-source Homebrew build chain.
+
+Columns: `date`, `ambito` (demarcation), `embalse` (reservoir name),
+`capacity_hm3`, `stored_hm3`, `hydro_flag`. Exists to supply `Vol` in the
+hydro opportunity-cost function `c(pf, Vol, Snow)` that
+[`hydro-water-value-design.md`](notes/hydro-water-value-design.md) argues is
+necessary for the 2021 windfall-levy question — `pf` (OMIP forwards) and
+`Snow` (ERA5) were already fetched; this was the missing piece. MITECO's own
+label is "provisional, unvalidated."
+
+**`ELECTRICO_FLAG` is not a reliable hydroelectric marker — do not filter on
+it without checking coverage first.** It flags 0% of Guadiana's reservoirs
+despite `GDNA` ("UGH. GUADIANA") being a real storage cascade in
+`unit_agents.parquet`, and under 20% in Guadalquivir, Segura and Tajo, all
+baskets that plainly contain generating reservoirs. Whatever it actually
+encodes at MITECO, it under-covers real hydro storage; basin-level analysis
+should aggregate all reservoirs in a demarcation, not just flagged ones.
+
+A first probe against bidding data is in
+[`hydro-water-value-design.md`](notes/hydro-water-value-design.md#2026-08-18-the-actual-state-variable-was-tried-and-its-a-different-kind-of-failure--sign-not-power):
+basin-aggregate fill level (seasonally de-meaned) shows a real basin-specific
+relationship with hydro storage units' offers — own-basin beats a
+placebo-basin rotation at t = 2.00 on the median offer — but with a
+**positive** sign, opposite the simple cost-shifter prediction. Read there,
+not as a green light for a reduced-form regression: the sign is consistent
+with reverse causality through storage strategy (a plant conserving water
+bids high and stays fuller for the same reason), which is exactly why the
+opportunity-cost function needs joint, not single-equation, estimation.
+
 ---
 
 ## Traps
@@ -615,6 +656,12 @@ silently swap the two countries in every price-based result.
 `marginalpdbc` uses a **dot** (`77.7`). `curva_pbc_uof` uses a **comma**
 decimal with a **dot** thousands separator (`1.500,00` = 1500.0). Do not
 share a number parser between them. Both files are **latin-1**, not UTF-8.
+
+### MITECO's reservoir file uses a comma decimal too — same trap, third source
+`AGUA_TOTAL`/`AGUA_ACTUAL` in the historical reservoir database are strings
+like `"38,00"`. `fetch_hydro_reservoirs.py`'s `parse_comma_decimal()` handles
+it the same way `curva_pbc_uof` is handled; do not reuse `marginalpdbc`'s
+dot-decimal parser here either.
 
 ### OMIE splits this dataset by age
 Prices for 2018–2022 exist **only as yearly zips**; 2023+ are daily files.

@@ -69,6 +69,13 @@ scripts/
 | `fetch/fetch_hydro_precipitation.py` | Open-Meteo ERA5 | no | `data/weather/precipitation_basins_daily.parquet` |
 | `fetch/fetch_omip_forwards.py` | OMIP | no | `data/omip/parquet/omip_forwards_{zone}_{YYYY}.parquet` |
 | `fetch/fetch_hydro_reservoirs.py` | MITECO Boletín Hidrológico | no | `data/miteco/embalses_historico.parquet` |
+| `fetch/fetch_jrc_ppdb_efficiency.py` | JRC-PPDB-OPEN (Zenodo) | no | `data/jrc_ppdb/jrc_spain_units.parquet` |
+| `fetch/fetch_mibgas_prices.py` | MIBGAS | no | `data/mibgas/mibgas_price_index_daily.parquet` |
+| `fetch/fetch_eua_carbon_price.py` | investing.com (browser-captured) | no, but not resumable | `data/investing/eua_carbon_price_daily.parquet` |
+| `fetch/fetch_coal_price.py` | investing.com (browser-captured) | no, but not resumable | `data/investing/coal_price_daily.parquet` |
+| `fetch/fetch_ecb_fx.py` | ECB Statistical Data Warehouse | no | `data/ecb/ecb_usd_eur_daily.parquet` |
+| `build/build_jrc_cab_match.py` | JRC + `unit_agents` | no | `data/jrc_ppdb/jrc_cab_match.parquet` |
+| `build/build_implied_marginal_cost.py` | MIBGAS + EUA + the match | no | `data/jrc_ppdb/implied_marginal_cost_daily.parquet` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
 `lib/config.py` loads tokens from a gitignored `.env`.
@@ -589,6 +596,85 @@ with reverse causality through storage strategy (a plant conserving water
 bids high and stays fuller for the same reason), which is exactly why the
 opportunity-cost function needs joint, not single-equation, estimation.
 
+### Implied CCGT marginal cost — the first real cost primitive, not a declared one
+Built 2026-08-18 from three separate fetches plus a matching layer, in
+response to CLAUDE.md's own cost section noting that nothing token-free here
+gives an actual engineering marginal cost — `cab`'s minimum-income condition
+is a *declared*, strategic number (see above), not a fuel cost. This
+constructs `gas_price / efficiency + 0.2020 * co2_price / efficiency` per
+unit per day — 0.2020 tCO2/MWh(th) being the EU ETS MRR Annex VI default
+emission factor for natural gas, a regulatory constant, not fetched data.
+
+**Three inputs, three different fetch problems:**
+
+- **Efficiency** — `data/jrc_ppdb/jrc_spain_units.parquet`, from the JRC's
+  open power-plant database (Zenodo, CC-BY, static, no registration).
+  **1,827 Spanish generating units, 456 with a non-null efficiency** — but
+  only 66 of the underlying generator rows are `OEM_derived` (from real
+  equipment specs); most of the rest are `Class_derived`, a technology-class
+  *average*, not a measurement — see the trap below. JRC identifies units by
+  ENTSO-E EIC code, sharing no key with any OMIE dataset.
+- **Gas price** — `data/mibgas/mibgas_price_index_daily.parquet`, MIBGAS's
+  own "Market Results" workbook, found by fetching the page's AJAX fragment
+  directly (`/es/ajax/node/1184`) since the page itself is a JS SPA with no
+  visible static link. **3,152 days, 2018-01-01 → 2026-08-18, 100% coverage,**
+  mean 38.75 €/MWh, range 4.17–225.03 (the August 2022 gas crisis).
+- **CO2 price** — `data/investing/eua_carbon_price_daily.parquet`. Took
+  eight sources to find: CBAM Guide (spot only), Sandbag's "Carbon Price
+  Viewer" (a static cropped JPEG, not the interactive chart it looks like),
+  ICAP, Ember (real API, wrong quantity — carbon *intensity*, not *price*),
+  EEX's free widget (real EUA auction data, but capped to a rolling ~6-week
+  window no matter what date range is requested), KRBN (a real proxy, but
+  only from 2020-07-31), and EUTL registry data (annual, not a price
+  series) were all tried and ruled out before investing.com's own
+  historical-data page (ticker `CFI2Z6`, the front-month ICE ECX EUA
+  future) turned up the real thing. **2,217 days, 2018-01-02 → 2026-08-18,**
+  mean 55.38 €/tCO2, range 8.07–98.01. See the trap below on why this one
+  fetcher is not resumable.
+
+**The match: `data/jrc_ppdb/jrc_cab_match.parquet`, 77 units** (rebuilt
+2026-08-18, up from an initial 53 — see below). JRC and OMIE share no key at
+all, so this is name/capacity matching in the same spirit as
+`build_unit_agents.py` — three paths, all requiring positive evidence,
+nothing forced: 30 by exact code match (JRC's `name_g` sometimes *is* the
+OMIE code, e.g. `ESCCC1`), 36 by capacity-within-6%-plus-name-similarity
+(30 outright, 4 by a capacity tiebreak, 2 by a twin-registration-marker
+tiebreak — both below), 11 by a hand-verified alias table. Ambiguous or
+implausible candidates are printed and left unmapped, not guessed at —
+Castejón's real CCGT unit (`CTJON3`, 418.5 MW) matched correctly; OMIE's
+*other* Castejón-named codes (3.0 MW test units) correctly did not.
+
+**Coverage, measured on capacity rather than plant count** (JRC's 344
+candidates include hundreds of sub-5 MW cogeneration units that barely move
+this number either way): of 39,427 MW JRC has an in-window efficiency for,
+**32,589 MW now matches an OMIE unit — 82.7%** (80.3% of gas, 90.0% of
+coal), up from 54.2% at the first cut. See the two traps below for what
+closed most of that gap — one was a real bug, not a coverage limit.
+
+**Of the 77 matches: 54 Fossil Gas, 23 Fossil Hard coal.** Of the gas
+units, **46 carry a plant-specific efficiency** (`eff_is_generic ==
+False`); the rest match correctly on capacity and name but their efficiency
+is a generic technology-class default (see the `eff_is_generic` trap).
+
+**The output: `data/jrc_ppdb/implied_marginal_cost_daily.parquet`, 170,402
+unit-days, `fuel` column distinguishes gas/coal.** Gas (46 trustworthy
+units): mean 94.27 €/MWh, range 16.51–466.41 — sits sensibly above OMIE's
+73.31 €/MWh mean day-ahead price, consistent with CCGT usually setting the
+margin. Coal (22 trustworthy units): mean 101.62 €/MWh, range 30.94–297.58
+— close to gas, plausible given coal's lower thermal efficiency (0.29–0.38
+vs. gas's 0.52–0.55) offset by cheaper fuel per MWh(th). Coal's price
+converts USD/tonne (`fetch_coal_price.py`, Rotterdam API2, ICE ticker
+`ATWMc1`) through `data/ecb/ecb_usd_eur_daily.parquet` (ECB's own daily
+reference rate — divide, don't multiply, see the FX trap) and a cited
+calorific value (API2's own 6,000 kcal/kg NAR spec = 6.978 MWh(th)/tonne,
+S&P Global's CIF ARA methodology) onto the same EUR/MWh(th) basis as gas;
+treat coal as a **looser** bound than gas on top of the "bound, not a
+measurement" caveat both share (it omits O&M, water and startup
+amortisation, and uses static full-load efficiency, not the part-load
+figure a unit actually runs at) — API2 is the Rotterdam *import* benchmark,
+and some plants may have burned domestic Spanish coal at a different price
+before the mines closed.
+
 ---
 
 ## Traps
@@ -813,6 +899,127 @@ Codes worth knowing beyond the ones already fetched: `pdbc`/`pdbcpt`/`pdbce`
 occupation), `trades`/`orders`/`precios_pibcic` (continuous intraday),
 `cab`/`det` (offer header and detail).
 
+### JRC's `eff` is not one kind of number — most of it is a class average, not a measurement
+`JRC_OPEN_PERFORMANCE.csv` carries a `best_source` field easy to miss on a
+first pass (a first cut of `fetch_jrc_ppdb_efficiency.py` didn't check it,
+and looked done). For Spain's Fossil Gas units it splits: 66 generator rows
+`OEM_derived` (mean eff 0.53, range 0.52–0.55 — a real CCGT), 620
+`Class_derived` (mean eff 0.31, clustering at suspiciously round values
+0.23/0.35/0.36 — a technology-class default JRC fills in when it has no
+plant figure), plus 2 `emissions_*_derived` (plant-specific, back-calculated
+from that plant's own reported emissions). `eff_is_generic` in
+`jrc_cab_match.parquet` and `implied_marginal_cost_daily.parquet` flags the
+`Class_derived`-only rows explicitly — filter on it, not just on `eff` being
+non-null, or a small cogeneration plant's generic 0.23 efficiency will
+divide the 2022 gas-price spike into an implied cost over 1,000 €/MWh.
+
+### JRC's `eic_g` is not always a valid join key
+A handful of Spanish units (La Muela's pumped-storage generators among
+them) are registered twice in JRC's own source data — once under a
+pumping-plant `eic_p`, once under a generation-plant `eic_p` — sharing the
+same `eic_g`. A merge naive to this fans out into duplicate rows. Worse:
+many renewable units carry a **blank** `eic_g`, and a join that treats `""`
+as a valid key silently matches every Spanish blank-`eic_g` row against
+every *other country's* blank-`eic_g` row — caught by hand when a first pass
+returned German- and Polish-looking EIC codes on nominally-Spanish rows.
+`fetch_jrc_ppdb_efficiency.py` drops blank keys before joining and
+deduplicates on `eic_g` (preferring a row with a real `eff`) before merging.
+
+### `build_jrc_cab_match.py`'s digit gate was silently inverted by a pandas coercion
+Found 2026-08-18, after a first pass already looked complete (53 matches) and
+was reported as done. `root_and_digit()` returns `None` for a name with no
+trailing unit number, but assigning that into a DataFrame column via
+`zip(*series.map(root_and_digit))` silently coerces every `None` to
+`float('nan')` — confirmed on this data: 3,882 of 4,945 cab rows, 306 of 344
+JRC rows. The gate meant to fire only when *both* sides carry a digit and
+disagree was written as `c.digit is not None and j.digit is not None and
+c.digit != j.digit` — but `nan is not None` is `True`, and `nan != nan` is
+*also* always `True` in Python, so the gate fired on every pair where both
+sides genuinely had **no** digit, rejecting them as if they disagreed.
+Single-block plants with no trailing number in their name — Meirama,
+Castelnou, Los Barrios — were silently absent from the matched set entirely,
+not showing up even as a near-miss. Fixed with `has_digit()`, which checks
+`isinstance(x, str)` instead of `is not None`, immune to the coercion either
+way. This alone recovered several large plants; two further issues below
+compounded with it.
+
+### JRC glues a unit number onto the last word; cab always spaces it
+`root_and_digit()` originally only split a name at whitespace, so "SOTO 4" (cab)
+correctly gave digit `"4"`, but "SOTO5" (JRC, no space) fell through the
+digit-less branch entirely, becoming a digit-less name that skirts the digit
+gate above rather than a name with digit `5`. This isn't hypothetical
+either: Soto de Ribera has both a unit 4 and unit 5 at similar capacity, and
+the digit-less "SOTO5" briefly out-competed the *correct* "SOTORIBE 4" pairing
+for OMIE's `SRI4R` (unit 4) once a capacity tiebreak was added, purely
+because SOTO5's capacity happened to be closer. `root_and_digit()` now
+splits a trailing digit off the last token whether or not it's glued on.
+
+### Two Castilian plant names can be closer than they look, and capacity is the tiebreaker
+"CASTELLÓN" (a city) and "CASTELNOU" (a specific plant) share enough
+characters that `SequenceMatcher` rates them 0.78 similar — comfortably
+over this matcher's 0.6 threshold — and with neither JRC nor cab name
+carrying a digit to disambiguate (see the trap above), `CTN3`/`CTN4`
+(Castellón 3/4) and `CTNU` (Castelnou) all passed the gate against *each
+other's* JRC plant as well as their own, correctly reported as ambiguous
+rather than guessed at. Capacity resolves it cleanly (Castellón 3 is 782.0
+MW against `CTN3`'s 782.0 MW; Castelnou is 790.6 against `CTNU`'s 797.8) —
+`build_jrc_cab_match.py`'s capacity tiebreak accepts a pairing only when it
+is *mutually* the closest-capacity candidate on both sides, with a 1.5x
+margin over the runner-up, precisely to resolve cases like this without
+opening the door to a coincidental capacity match with an unrelated plant.
+
+### Building a hand-verified alias table recovered 2.4 GW no gate combination would find
+`P.G.RODR 5` (JRC) and `PGR5` "C.C. PUENTES 5" (cab) are the same 855.6 MW
+plant, capacities matching to the decimal — but `P G RODR` and `PUENTES`
+share almost no characters (JRC abbreviates the plant's full name, cab uses
+one word from it), so no similarity threshold that also accepts genuine
+spelling variants (`ESCATRÓN`/`ESCAT`, `SOTORIBE`/`SOTO`) can also reject
+this one. Same story for `ESC IBER 6`/`ESC6` (Escombreras), `ESC CART
+1-3`/`CTGN1-3` (Cartagena), and `CAMPGIB1/2`/`CAMGI10/CAMGI20` (Campo de
+Gibraltar, which additionally uses different internal unit numbering
+between the two sources). `MANUAL_ALIASES` in `build_jrc_cab_match.py`
+encodes these 11 pairings by hand, each checked against capacity before
+being added — the same discipline `PREFIX_AGENTS` in `build_unit_agents.py`
+already uses for ownership. Combined with the two fixes above, matched
+capacity went 54.2% → 82.7% without loosening either automatic gate.
+
+### MIBGAS reshaped its own workbook twice — three layouts, not one
+Checked year-by-year rather than assumed: 2018–2020 uses sheet `Indices`,
+one row/day, price in `MIBGAS-ES Index`; 2021–2022 keeps the sheet name but
+goes **long** — two rows/day, `Area` in `{ES, PT}`, price renamed to
+`MIBGAS Index`; 2023 onward renames the sheet to `MIBGAS Indexes` (plural),
+back to one row/day, with several new PVB/VTP columns alongside the old
+price. `fetch_mibgas_prices.py` dispatches on the sheet name and column set
+actually present per year, not on a hardcoded date, the same discipline
+`cab`'s 2025-03-19 layout change already required.
+
+### The EUA and coal price fetchers are the two non-resumable sources in this repo
+`api.investing.com`'s historical-data endpoint (the only free source found
+with full 2018–2026 daily coverage — see the data-inventory section above)
+returns HTTP 403 to a plain `requests`/`curl` client even with a complete,
+realistic browser header set (Origin, Referer, `sec-fetch-*`, `sec-ch-ua`,
+a real Chrome UA) — this is TLS/behavioural fingerprinting, not a missing
+header, and it only succeeds from an authenticated browser session.
+`fetch_eua_carbon_price.py` (and `fetch_coal_price.py`, same instrument
+family, ticker `ATWMc1`, id `1112838`) therefore do not fetch anything
+themselves; they parse an already-captured raw CSV
+(`data/investing/raw/eua_carbon_emissions_historical.csv` and
+`coal_rotterdam_historical.csv` respectively) and exit with instructions
+rather than a stack trace if that raw file is missing. Refreshing either
+series needs a human (or a browser-automation session) to repeat the
+capture — every other fetcher in this repo is a `requests`-only script that
+re-runs unattended; these two are not.
+
+### The ECB FX field name inverts the obvious reading
+`ecb_usd_eur_daily.parquet`'s `usd_per_eur` column sits under a series keyed
+`D.USD.EUR.SP00.A` (`CURRENCY=USD`, `CURRENCY_DENOM=EUR`) — read naively
+that looks like "how many EUR per USD," the opposite of what it is. The
+published number is USD needed to buy 1 EUR (1.2065 on 2018-01-02, correct
+for that date), so converting a USD amount to EUR **divides** by it, not
+multiplies. `build_implied_marginal_cost.py`'s coal-price conversion divides;
+getting this backwards would move the coal-side marginal cost the wrong
+direction by the square of the true adjustment.
+
 ## Known source-data anomaly: whole-day unit dropouts
 
 A recurring class of gap in OMIE's publication — **not** a parsing artifact.
@@ -894,5 +1101,7 @@ a month, and a timestamp column silently full of NaT.
 - Raw downloads are never modified; re-fetch instead.
 - Derived outputs go to `outputs/`; raw and parsed data to `data/`.
 - Fetchers are resumable — they skip what is already on disk.
+  **Exception: `fetch_eua_carbon_price.py` and `fetch_coal_price.py`** —
+  see the trap above.
 - Commit messages: imperative, present tense, ≤72-char subject.
 - Never commit `.env` or anything under `data/`.

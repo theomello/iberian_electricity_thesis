@@ -1,145 +1,210 @@
 #!/usr/bin/env python3
-"""Fetch MIBGAS Iberian natural gas prices.
+"""Fetch MIBGAS's daily gas price indexes -- the fuel-cost input a CCGT
+implied marginal cost needs.
 
     .venv/bin/python scripts/fetch/fetch_mibgas_prices.py
-    .venv/bin/python scripts/fetch/fetch_mibgas_prices.py --year 2021
+    .venv/bin/python scripts/fetch/fetch_mibgas_prices.py --verify
 
-Writes data/mibgas/mibgas_prices.parquet (one row per trading day and product).
+Writes data/mibgas/mibgas_price_index_daily.parquet, one row per delivery
+day. Resumable like the OMIE fetchers: skips a year whose raw file is
+already on disk unless --refresh is passed.
 
-WHY THIS EXISTS
+WHY
 
-The 2021 Spanish clawback on non-emitting generation (RDL 17/2021) sets the levy
-per installation i in month t as
+CCGT variable cost is dominated by gas: CNMC's own supervision reports say
+so directly ("el gas natural es el combustible con mayor impacto... dado que
+los costes de producción de los ciclos combinados dependen de él"). Combined
+with `fetch_jrc_ppdb_efficiency.py`'s per-unit thermal efficiency, this gives
+`gas_price / efficiency` -- most of an implied marginal cost, missing only
+the CO2 term.
 
-    Y_it = Q_it * FMIG_t * (PGN_t - 20) * alpha,     alpha = 0.9
+SOURCE, AND HOW IT WAS FOUND
 
-where `PGN_t` is the **monthly average natural gas price at the Iberian virtual
-balancing point (PVB)** and the levy is zero if that average falls below
-20 EUR/MWh. `Q_it` is energy actually produced, so this is a **per-MWh output
-levy whose rate varies month to month with the gas price** -- not a lump sum.
+MIBGAS's own market-results pages are a JS-rendered SPA with no visible
+static link -- curl on the page returns none of the download links a
+browser sees. The actual files sit behind a predictable path, found by
+fetching the page's AJAX fragment directly
+(`https://www.mibgas.es/es/ajax/node/1184`), which does embed a real link:
 
-That is what makes a continuous treatment-intensity design possible: rather than
-one before/after break in September 2021, treatment intensity varies over the
-27 months the levy ran, and the interaction of that intensity with Spanish
-(treated) versus Portuguese (untreated) hydro identifies the response.
+    https://www.mibgas.es/es/file-access/MIBGAS_Data_{YYYY}.xlsx?path=AGNO_{YYYY}/XLS
 
-`GDAES_D+1` at `PVB`, area `ES`, is the series the formula refers to. Monthly
-means of it reconstruct `PGN_t` directly.
+Confirmed for 2018 through 2026 (the current year), token-free, no
+registration. Each file is MIBGAS's own "Market Results" workbook for that
+year, one row per trading day per product.
 
-FMIG -- the factor measuring how much of the day-ahead electricity price is
-attributable to gas -- is NOT published in a machine-readable form found so far;
-REE publishes only PDFs. Two options, in order of preference: take it from those
-PDFs, or estimate it from this repo's own marginal-technology series, which
-measures the same object (the share of periods where gas sets the price) from
-bid microdata. Do not silently substitute one for the other.
+THREE LAYOUTS, LIKE `cab`'S -- MIBGAS RESHAPED ITS OWN WORKBOOK TWICE
 
-SOURCE AND FORMAT
+The index sheet is not stable across the window. Checked year-by-year rather
+than assumed:
 
-`mibgas.es`, token-free. One CSV per year at
+  * **2018-2020** -- sheet `Indices`, one row per day, `Area` column present
+    but constant (`ES`), price in `MIBGAS-ES Index`.
+  * **2021-2022** -- still sheet `Indices`, but now **long**: two rows per
+    day, `Area` in `{ES, PT}`, price in the differently-named `MIBGAS Index`.
+    Filtering `Area == "ES"` recovers one row per day.
+  * **2023 onward** -- sheet renamed `MIBGAS Indexes` (plural, with an "es"),
+    back to one row per day, price back in `MIBGAS-ES Index`, and several
+    new columns alongside it (`PVB`/`VTP` last- and average-price variants,
+    `MIBGAS-PT`, `LNG-ES`, `AVB-ES`).
 
-    /en/file-access/MIBGAS_Data_YYYY.csv?path=AGNO_YYYY/XLS
+A parser hardcoded to any one layout silently fails or silently
+mis-reads the others -- exactly the trap CLAUDE.md already documents for
+`cab`'s 2025-03-19 width change and REE realtime's 2025-12-12 field swap.
+This one is dispatched **on the sheet name actually present** in each
+year's workbook, which is what the data itself signals, rather than on a
+hardcoded year cutoff.
 
-**The first line is a publication timestamp, not a header** -- skip it or every
-column is mislabelled. Semicolon-separated, **comma decimal**, latin-1. Dates
-are `DD/MM/YYYY`.
+WHAT'S HARMONIZED VS. ERA-ONLY
 
-Products include daily (`GDAES_D+1`), monthly (`GMAES`), quarterly (`GQES_Q+1`)
-and further forward gas contracts; all are kept, since the forward gas curve is
-itself an input to a water-value model. Filter on `product` when reconstructing
-PGN -- mixing daily and forward products would bias the monthly mean.
+Only `mibgas_es_eur_mwh` -- the plain MIBGAS-ES daily index -- exists in a
+comparable form across all three eras, and is the column this repo's
+implied-marginal-cost use case actually needs. The 2023+-only richer fields
+(PVB/VTP split, MIBGAS-PT, LNG-ES, AVB-ES) are carried through but are
+**null for 2018-2022** by construction, the same era-boundary-null pattern
+CLAUDE.md documents for REE realtime's 2025-12-12 field swap -- do not
+treat them as continuous series back to 2018.
+
+`Regulated gas` / `PGN_RD_10_2022` (the RD-L 10/2022 "Iberian exception"
+gas-cap price paid to generators) is a separate, smaller series -- relevant
+to the gas-cap question this repo has already tried and failed to identify
+a market-wide effect for (`notes/rq-gas-cap-conduct.md`) -- and is
+deliberately left unparsed here rather than folded in silently.
 """
 
 from __future__ import annotations
 
 import argparse
-import io
 import sys
+from datetime import date
 from pathlib import Path
 
 import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-from omie_common import DATA, END, START, session  # noqa: E402
+from omie_common import DATA, session  # noqa: E402
 
-OUT = DATA / "mibgas"
-URL = "https://www.mibgas.es/en/file-access/MIBGAS_Data_{y}.csv"
+OUT_DIR = DATA / "mibgas"
+RAW_DIR = OUT_DIR / "raw"
+OUT = OUT_DIR / "mibgas_price_index_daily.parquet"
+URL_TMPL = "https://www.mibgas.es/es/file-access/MIBGAS_Data_{year}.xlsx?path=AGNO_{year}/XLS"
+FIRST_YEAR = 2018
 
-SCHEMA = pa.schema([
-    ("trading_day", pa.date32()),
-    ("product", pa.string()),
-    ("place_of_delivery", pa.string()),
-    ("area", pa.string()),
-    ("first_delivery", pa.date32()),
-    ("last_delivery", pa.date32()),
-    ("price_eur_mwh", pa.float64()),
-])
+# 2018-2020: one row/day, Area constant "ES".
+LAYOUT_A_MAP = {
+    "Delivery day": "date",
+    "MIBGAS-ES Index\n[EUR/MWh]": "mibgas_es_eur_mwh",
+}
+# 2021-2022: two rows/day (Area in {ES, PT}); filter Area == "ES" first.
+LAYOUT_B_MAP = {
+    "Delivery day": "date",
+    "MIBGAS Index\n[EUR/MWh]": "mibgas_es_eur_mwh",
+}
+# 2023+: one row/day, richer field set.
+LAYOUT_C_MAP = {
+    "Delivery day": "date",
+    "MIBGAS PVB Last Price Index Day-Ahead\n[EUR/MWh]": "pvb_last_eur_mwh",
+    "MIBGAS PVB Average Price Index Day-Ahead\n[EUR/MWh]": "pvb_avg_eur_mwh",
+    "MIBGAS VTP Last Price Index Day-Ahead\n[EUR/MWh]": "vtp_last_eur_mwh",
+    "MIBGAS VTP Average Price Index Day-Ahead\n[EUR/MWh]": "vtp_avg_eur_mwh",
+    "MIBGAS-ES Index\n[EUR/MWh]": "mibgas_es_eur_mwh",
+    "MIBGAS-PT Index\n[EUR/MWh]": "mibgas_pt_eur_mwh",
+    "MIBGAS\nLNG-ES Index\n[EUR/MWh]": "lng_es_eur_mwh",
+    "MIBGAS\nAVB-ES Index\n[EUR/MWh]": "avb_es_eur_mwh",
+}
+ALL_ERA_ONLY_COLS = sorted(
+    set(LAYOUT_C_MAP.values()) - {"date", "mibgas_es_eur_mwh"}
+)
 
 
-def fetch_year(sess, year: int) -> pd.DataFrame | None:
-    r = sess.get(URL.format(y=year), params={"path": f"AGNO_{year}/XLS"},
-                 timeout=300)
-    if r.status_code != 200 or not r.content:
-        return None
-    txt = r.content.decode("latin-1")
-    # First line is "Fecha Emision : ...", not a header. skiprows=1 is load-bearing.
-    df = pd.read_csv(io.StringIO(txt), sep=";", decimal=",", skiprows=1,
-                     dtype=str, engine="python")
-    df.columns = [c.strip().strip('"') for c in df.columns]
-    keep = {
-        "Trading day": "trading_day", "Product": "product",
-        "Place of delivery": "place_of_delivery", "Area": "area",
-        "First Day Delivery": "first_delivery",
-        "Last Day Delivery": "last_delivery",
-    }
-    price_col = next((c for c in df.columns if "Price" in c), None)
-    if price_col is None:
-        return None
-    df = df.rename(columns={**keep, price_col: "price_eur_mwh"})
-    cols = [c for c in SCHEMA.names if c in df.columns]
-    df = df[cols].copy()
-    for c in ("trading_day", "first_delivery", "last_delivery"):
-        if c in df:
-            df[c] = pd.to_datetime(df[c], format="%d/%m/%Y",
-                                   errors="coerce").dt.date
-    df["price_eur_mwh"] = pd.to_numeric(
-        df.price_eur_mwh.astype(str).str.replace(",", ".", regex=False),
-        errors="coerce")
-    return df.dropna(subset=["trading_day", "price_eur_mwh"])
+def years() -> list[int]:
+    return list(range(FIRST_YEAR, date.today().year + 1))
+
+
+def download(sess, year: int) -> Path:
+    RAW_DIR.mkdir(parents=True, exist_ok=True)
+    path = RAW_DIR / f"MIBGAS_Data_{year}.xlsx"
+    if path.exists():
+        return path
+    url = URL_TMPL.format(year=year)
+    r = sess.get(url, timeout=120)
+    r.raise_for_status()
+    path.write_bytes(r.content)
+    print(f"  {year}: downloaded {len(r.content):,} bytes")
+    return path
+
+
+def parse_year(path: Path, year: int) -> pd.DataFrame:
+    import openpyxl
+    sheetnames = openpyxl.load_workbook(path, read_only=True).sheetnames
+
+    if "MIBGAS Indexes" in sheetnames:
+        raw = pd.read_excel(path, sheet_name="MIBGAS Indexes", engine="openpyxl")
+        col_map = LAYOUT_C_MAP
+    elif "Indices" in sheetnames:
+        raw = pd.read_excel(path, sheet_name="Indices", engine="openpyxl")
+        if "MIBGAS Index\n[EUR/MWh]" in raw.columns:
+            raw = raw[raw["Area"] == "ES"]
+            col_map = LAYOUT_B_MAP
+        else:
+            col_map = LAYOUT_A_MAP
+    else:
+        raise RuntimeError(f"{path.name}: no recognised index sheet in {sheetnames}")
+
+    missing = set(col_map) - set(raw.columns)
+    if missing:
+        raise RuntimeError(f"{path.name}: missing expected columns {missing}")
+    df = raw[list(col_map)].rename(columns=col_map)
+    df["date"] = pd.to_datetime(df["date"]).dt.date
+    df = df.dropna(subset=["date"])
+    for col in ALL_ERA_ONLY_COLS:
+        if col not in df.columns:
+            df[col] = pd.NA
+    df["source_year"] = year
+    return df
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--year", type=int)
+    ap = argparse.ArgumentParser(description=__doc__,
+                                  formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--verify", action="store_true",
+                     help="re-derive coverage facts from the written parquet")
+    ap.add_argument("--refresh", action="store_true",
+                     help="re-download every year even if already on disk")
     args = ap.parse_args()
-    sess = session()
-    years = [args.year] if args.year else range(START.year, END.year + 1)
-    frames = []
-    for y in years:
-        df = fetch_year(sess, y)
-        if df is None or df.empty:
-            print(f"  {y}  NO DATA")
-            continue
-        frames.append(df)
-        d = df[df["product"].eq("GDAES_D+1")] if "product" in df else df
-        print(f"  {y}  {len(df):,} rows   daily-product mean "
-              f"{d.price_eur_mwh.mean():7.2f} EUR/MWh")
-    if not frames:
-        return 1
-    out = pd.concat(frames, ignore_index=True)
-    OUT.mkdir(parents=True, exist_ok=True)
-    tbl = pa.Table.from_pandas(out[list(SCHEMA.names)], schema=SCHEMA,
-                               preserve_index=False)
-    pq.write_table(tbl, OUT / "mibgas_prices.parquet", compression="zstd")
-    print(f"\n{tbl.num_rows:,} rows in {OUT / 'mibgas_prices.parquet'}")
-    daily = out[out["product"].eq("GDAES_D+1")].copy()
-    daily["m"] = pd.to_datetime(daily.trading_day).dt.to_period("M")
-    pgn = daily.groupby("m").price_eur_mwh.mean()
-    live = pgn[(pgn.index >= "2021-09") & (pgn.index <= "2023-12")]
-    print(f"\nPGN monthly mean over the levy window: min {live.min():.1f}, "
-          f"max {live.max():.1f}, months below the 20 EUR floor: "
-          f"{(live < 20).sum()}")
+
+    if OUT.exists() and not args.refresh and not args.verify:
+        print(f"  {OUT} already exists; pass --refresh to re-fetch")
+        df = pd.read_parquet(OUT)
+    else:
+        OUT_DIR.mkdir(parents=True, exist_ok=True)
+        sess = session()
+        frames = []
+        for yr in years():
+            if args.refresh:
+                (RAW_DIR / f"MIBGAS_Data_{yr}.xlsx").unlink(missing_ok=True)
+            path = download(sess, yr)
+            frames.append(parse_year(path, yr))
+        df = pd.concat(frames, ignore_index=True)
+        df = df.sort_values("date").drop_duplicates("date", keep="last").reset_index(drop=True)
+        df.to_parquet(OUT, index=False)
+        print(f"  wrote {OUT}")
+
+    print(f"\n{len(df):,} days, {df.date.min()} -> {df.date.max()}")
+    print(f"  mibgas_es_eur_mwh null: {df.mibgas_es_eur_mwh.isna().sum()}")
+    print(f"  mibgas_es_eur_mwh mean: {df.mibgas_es_eur_mwh.mean():.2f} EUR/MWh, "
+          f"range {df.mibgas_es_eur_mwh.min():.2f}-{df.mibgas_es_eur_mwh.max():.2f}")
+    print(f"  2023+-only fields null before 2023: "
+          f"{df.loc[df.source_year < 2023, 'pvb_last_eur_mwh'].isna().all()}")
+
+    if args.verify:
+        dupe = df.duplicated("date").sum()
+        assert dupe == 0, "duplicate date rows -- parse is not a key"
+        expected_days = (pd.Timestamp(df.date.max()) - pd.Timestamp(df.date.min())).days + 1
+        coverage = len(df) / expected_days
+        assert coverage > 0.95, f"day coverage {coverage:.1%} looks too low for a daily index"
+        assert df.mibgas_es_eur_mwh.isna().mean() < 0.02, "mibgas_es_eur_mwh should be near-complete"
+        print(f"  day coverage vs. calendar span: {coverage:.1%}")
+        print("\n  --verify passed")
     return 0
 
 

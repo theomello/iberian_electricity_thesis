@@ -127,6 +127,16 @@ first_seen, last_seen, days_observed, net_cleared_mwh`.
   generation_large 211, storage_mixed 45, pumping 22. Decoded from cleared
   quantity sign/volume, constant within a unit. Separating **generators from
   retailers** is what any supply-curve or bidding work needs.
+
+  **Supply is spread over FOUR roles, and `generation` alone is the wrong
+  filter.** `role == "generation"` reads like "keep the generators" and in fact
+  drops **all 62 combined-cycle units (29.6 GW), all 7 nuclear (7.2 GW), the 44
+  hydro cascade units (14.2 GW) and every pumped-storage unit** — Ascó 1 is
+  `generation_large`, not `generation`. What survives is wind and solar, which
+  offer at zero, so any bidding measure built on it collapses to a mass point
+  at €0 and shows no merit order. Cost a day on 2026-08-18 before it was
+  caught. Use `generation`, `generation_large`, `storage_mixed`, `pumping` —
+  see `SUPPLY_ROLES` in `scripts/analysis/capacity_quantile_offer.py`.
 - **group_tag** — corporate tags (`IB`, `REP`, `GE`, …), 9 distinct,
   populated for only some units.
 
@@ -275,12 +285,41 @@ total-volume coverage flatters the mapping for the units that matter least.
 
 `build_unit_agents.py` also rolls agents up to a **parent firm** using the
 legal names in ESIOS archive 83 (`IBEG`, `IGNU`, `IBGT` are three agents and
-one Iberdrola). **68 parent firms, 81.9% of generation volume** (rerun
-2026-08-17; an earlier "17 firms, 39.1%" recorded here was stale for the same
-reason as above). Top eight: EDP 15.5%, Endesa 13.9%, Naturgy 9.5%, Iberdrola
+one Iberdrola). **68 parent firms, 82.4% of generation volume** (rerun
+2026-08-18; an earlier "17 firms, 39.1%" recorded here was stale for the same
+reason as above, and 81.9% predates the twin layer below). Top eight: EDP 15.5%, Endesa 13.9%, Naturgy 9.5%, Iberdrola
 9.3%, Axpo 6.8%, Acciona 5.2%, Repsol 3.5%, Wind to Market 2.4%. **EDP is now
 the largest attributed firm, not Axpo** — an earlier note here naming Axpo as
 largest predates the prefix-dictionary expansion.
+
+**Layer 4, the twin layer (added 2026-08-18): a plant registered twice
+inherits its own owner.** OMIE registers the pumping leg of a hydro cascade and
+the *representada* version of a plant as separate units, and frequently
+attributes the owner to one registration and not the other — `ALIMA` "LIMA"
+resolves to EDP while `ALIMAB` "BOMBAS DO LIMA" did not. Two rules, each
+requiring positive evidence that this is a second registration: the unit code
+is a mapped code plus a trailing `B` (*bombagem*) or `R` (*representada*), or
+the description contains a pumping/represented marker and matches a mapped
+unit's name once that marker is stripped. It fills 12 units and refuses 8
+ambiguous names.
+
+**A shared description alone is deliberately NOT a rule.** The first version
+allowed it and proposed `SOECC01` "BUY BID UNIT" from `TOECC01` "BUY BID UNIT",
+`FENVD03` "EOLICA" from `IBGEVD1` "EÓLICA", and `DCESC01` "UNIDAD DE
+COMERCIALIZACION" — boilerplate labels shared by unrelated agents. Every
+accepted pairing is printed with both descriptions at build time; read them.
+
+**Measure firm coverage by capacity, not by unit count.** On the 383
+dispatchable units the two differ enormously: **62.9% of units but 96.0% of
+capacity** (up from 91.3% before the twin layer). The unmapped residual is
+almost entirely small cogeneration and micro-hydro.
+
+**Only 32 parent firms own dispatchable plant at all** — 26 with a computable
+pre-2021 renewable exposure, 11 above 1,000 GWh. That is the population, not a
+sample, and it is a hard ceiling: any design whose treatment varies at
+parent-firm level has at most a few dozen clusters. It is why the differential
+renewable exposure design was withdrawn (see `a2a8c7a`), and it should be
+checked *before* building any further cross-firm design, not after.
 
 **These firm shares are not market shares.** They are the share of *generation*
 volume that could be attributed; **18.1% is unattributed** at the firm level

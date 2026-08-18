@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import unicodedata
 import sys
 from pathlib import Path
 
@@ -507,7 +508,127 @@ def build(month: str, tier: str = "all") -> pd.DataFrame:
         df["firm_named"] = df.descr.map(firm_from_name)
         df["firm"] = df.firm_group.fillna(df.firm_named).fillna(df.agent)
         df["is_major"] = df.firm_group.notna() | df.firm_named.notna()
+        # Layer 4: a plant registered twice inherits its own owner.
+        df = apply_twin_layer(df)
+        df["is_major"] = df.is_major | df.firm_twin.notna() if "firm_twin" in df else df.is_major
     return df.drop(columns=["agent_esios", "agent_prefix", "_agent_name_src"], errors="ignore")
+
+
+# Markers that distinguish a second registration of the SAME plant from the
+# plant itself. "B" suffixed codes are bombagem/bombeo -- the pumping leg of a
+# hydro cascade; "R" suffixed are representada, a unit bid on behalf of its
+# owner by another agent. Both are the same physical asset registered twice,
+# and OMIE frequently attributes the owner to one registration and not the
+# other: ALIMA "LIMA" resolves to EDP while ALIMAB "BOMBAS DO LIMA" does not.
+TWIN_MARKERS = [
+    r"\bBOMBAGEM\b", r"\bBOMBEO\b", r"\bBOMBAS?\s+D[EOA]\b",
+    r"\bREPRESENTADAS?\b", r"\bREPRESENTADO\b", r"\bREPR\b",
+]
+# Normalised names too generic to identify a plant. A match on one of these
+# would pair unrelated units that merely share a boilerplate label.
+TWIN_GENERIC = {
+    "GENERICA VENTA", "GENERICA COMPRA", "VENTA", "COMPRA", "VENTA RE",
+    "EOLICA HABILITADA", "R ESPECIAL", "R ORDINARIA", "HIDRO", "SOLAR",
+}
+
+
+def twin_key(descr: str) -> str | None:
+    """Plant name with the pumping/represented markers removed.
+
+    Two registrations of one plant share this key; two different plants should
+    not. Accents are stripped because cab is latin-1 and the same plant is
+    written with and without them across the layout change.
+    """
+    if not isinstance(descr, str) or not descr.strip():
+        return None
+    u = unicodedata.normalize("NFKD", descr.upper())
+    u = "".join(c for c in u if not unicodedata.combining(c))
+    for pat in TWIN_MARKERS:
+        u = re.sub(pat, " ", u)
+    u = re.sub(r"[^A-Z0-9 ]+", " ", u)
+    u = re.sub(r"\s+", " ", u).strip()
+    if len(u) < 4 or u in TWIN_GENERIC:
+        return None
+    return u
+
+
+def has_twin_marker(descr: str) -> bool:
+    """Does the name itself say this is a pumping or represented registration?"""
+    if not isinstance(descr, str):
+        return False
+    u = unicodedata.normalize("NFKD", descr.upper())
+    u = "".join(c for c in u if not unicodedata.combining(c))
+    return any(re.search(pat, u) for pat in TWIN_MARKERS)
+
+
+def apply_twin_layer(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
+    """Fill a missing firm from another registration of the same plant.
+
+    TWO RULES, BOTH REQUIRING POSITIVE EVIDENCE OF A SECOND REGISTRATION
+
+      code -- the unit code is a mapped unit's code plus a trailing B or R.
+              ALIMAB is ALIMA + B; GUADIAB is GUADIA + B; CTJON1R is CTJON1 + R.
+      name -- the description CONTAINS a pumping/represented marker, and the
+              description with that marker stripped equals a mapped unit's
+              normalised description. ACAVADB "BOMBAS DO CAVADO" reaches
+              ACAVADO "CAVADO" this way, which the code rule misses because
+              stripping the B gives ACAVAD, not a unit.
+
+    A shared description ALONE is not evidence and is deliberately not a rule.
+    The first version accepted it and proposed SOECC01 "BUY BID UNIT" from
+    TOECC01 "BUY BID UNIT", FENVD03 "EOLICA" from IBGEVD1 "EOLICA", and
+    DCESC01 "UNIDAD DE COMERCIALIZACION" -- boilerplate labels shared by
+    unrelated agents. Requiring a marker or a code suffix removes all of them.
+
+    Ambiguity is refused rather than resolved: a normalised name whose donors
+    disagree on the firm yields no pairing at all. Every accepted pair is
+    printed with both descriptions and its rule, for inspection by eye.
+    """
+    df = df.copy()
+    df["twin_key"] = df.descr.map(twin_key)
+    df["twin_marker"] = df.descr.map(has_twin_marker)
+    mapped = df[df.firm.notna()]
+    firm_by_unit = dict(zip(mapped.unit, mapped.firm))
+
+    donors = mapped[mapped.twin_key.notna()]
+    agree = donors.groupby("twin_key").firm.nunique()
+    unambiguous = set(agree[agree == 1].index)
+    firm_by_key = (donors[donors.twin_key.isin(unambiguous)]
+                   .drop_duplicates("twin_key").set_index("twin_key").firm.to_dict())
+    code_by_key = (donors[donors.twin_key.isin(unambiguous)]
+                   .drop_duplicates("twin_key").set_index("twin_key").unit.to_dict())
+
+    rows = []
+    for r in df[df.firm.isna()].itertuples():
+        u = str(r.unit)
+        if u[-1:] in ("B", "R") and u[:-1] in firm_by_unit:
+            rows.append((u, firm_by_unit[u[:-1]], u[:-1], "code"))
+        elif r.twin_marker and r.twin_key in firm_by_key:
+            rows.append((u, firm_by_key[r.twin_key], code_by_key[r.twin_key], "name"))
+    if not rows:
+        return df.drop(columns=["twin_key", "twin_marker"])
+
+    t = pd.DataFrame(rows, columns=["unit", "firm_twin", "twin_donor", "twin_rule"])
+    df = df.merge(t, on="unit", how="left")
+
+    if verbose:
+        rej = int((agree > 1).sum())
+        need = df.firm_twin.notna()
+        print(f"  TWIN LAYER -- {int(need.sum())} units filled "
+              f"({rej} names refused as ambiguous)")
+        d_by_u = dict(zip(df.unit, df.descr))
+        show = df.loc[need].sort_values("max_power_mw", ascending=False)
+        print(f"    {'unit':<10}{'MW':>8}  {'firm':<14}{'donor':<10}{'rule':<6} descriptions")
+        for r in show.itertuples():
+            print(f"    {r.unit:<10}{(r.max_power_mw or 0):>8.1f}  {str(r.firm_twin):<14}"
+                  f"{str(r.twin_donor):<10}{r.twin_rule:<6} "
+                  f"{str(r.descr)[:30]:32s}<- {str(d_by_u.get(r.twin_donor, '?'))[:30]}")
+
+    df["firm"] = df.firm.fillna(df.firm_twin)
+    df["source"] = df.source.fillna(df.firm_twin.notna().map({True: "twin", False: None}))
+    df["confidence"] = df.confidence.fillna(
+        df.firm_twin.notna().map({True: "twin", False: None}))
+    return df.drop(columns=["twin_key", "twin_marker"])
 
 
 def near_marginal_coverage(month: str, mapped: set[str]) -> None:

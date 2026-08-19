@@ -442,6 +442,48 @@ suggested. Two panels saved, Python and R versions, for cross-checking:
 `outputs/tables/hydro_water_value_structural_panel.parquet` and
 `..._panel_R.parquet`.
 
+**2026-08-19: the first actual RQ test, run on the fitted model --
+real numbers, but likely contaminated, not a result to report yet.**
+`hydro_water_value_policy_test.R` adds a policy-window dummy to the
+already-validated `c ~ pf + vol + unit FE` model, handling the levy/cap
+overlap the way `candidate-natural-experiments.md` already prescribes: the
+gas-cap test is run on the levy-active sub-sample (16 Sep 2021 - 31 Dec
+2023) so the levy differences out; the levy test is run on the pre-cap
+sub-sample (before 15 Jun 2022) so the cap can't contaminate it.
+
+| test | window | n | b3 (post-policy) | cluster bootstrap 95% CI |
+|---|---|---|---|---|
+| gas cap | 15 Jun 2022 -> 31 Dec 2023, within levy period | 2,567 | **-40.3** (t=-5.0) | [-55.4, -17.9] -- excludes 0 |
+| levy | 16 Sep 2021 -> 14 Jun 2022, before the cap | 7,129 | **+46.6** (t=4.1) | [17.9, 62.9] -- excludes 0 |
+
+Both are robust to the cluster bootstrap, not just the asymptotic SE.
+
+**Do not read this as "hydro exploited the cap and marked down, then marked
+up during the levy" without the caveat that comes with it.** `c` is built
+directly from the market clearing price -- and both windows coincide with
+massive, policy-*independent* price swings: the levy window is exactly the
+2021-22 gas crisis ramp-up (already flagged, this section's whole earlier
+history, as hydro's price peak tracking the gas cycle "not any calendar
+date"); the gas-cap window is exactly when the cap itself mechanically
+suppressed spot prices by ~E100+/MWh (González-de Miguel et al.'s own
+estimate, see `rq-gas-cap-conduct.md`). The model's `pf`/`vol` coefficients
+are fit mostly on the "normal" 2018-2020/2023-2026 variation; there is a
+real, live possibility they simply do not extrapolate correctly into these
+extreme out-of-sample regimes, in which case the "policy" coefficient above
+is partly or wholly the model failing to absorb an independent price shock,
+not evidence of hydro conduct. This is the identical contamination problem
+the whole structural-model route was built to route around, one level more
+sophisticated than the raw-price reduced-form probes, not demonstrated to
+be solved by it.
+
+**The next step that would actually distinguish the two stories, not yet
+built:** run the identical test on the implied cost of a *non-hydro*
+marginal-setting technology during the same two windows. If other
+technologies show a similarly large "unexplained" shift, the effect above
+is a market-wide artifact of the price regime, not something specific to
+hydro. If hydro's shift is distinctly larger, that is real evidence of
+conduct. Flagged as the clear next step rather than rushed.
+
 **What would actually move this from "probably real" to "significant":**
 more clusters, which means widening past the 25 basin-identified units
 (most of the other 6 target units and any of the excluded non-basin-

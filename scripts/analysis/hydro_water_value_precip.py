@@ -89,6 +89,19 @@ from levy_contract_exposure import panel as offer_panel  # noqa: E402
 # build_unit_agents.py uses for the Portuguese cascades, applied to the
 # Spanish UGH names. Left unmapped rather than guessed where the name is a
 # plant/company label with no basin cue (e.g. "GRDZ", "TRC2").
+#
+# Two fixes made 2026-08-19, checked against the data before adding, not
+# guessed: (1) `AG[UÚÜ]ERA` now accepts both accents -- the original
+# `AG[UÜ]ERA` (dieresis only) missed ASIAGU ("HYDRO CUENCA AGÚERA", acute
+# accent), a real Cantabrian cascade sitting unmatched purely on a character
+# mismatch. (2) `\bTER\b` added for TERE ("UGH. TER", 150.3 MW) -- the Ter
+# river in Catalonia, bigger than 21 of the 25 units this file's basin match
+# previously covered, dropped only because no pattern existed for it and
+# MITECO's own "Cuencas Internas de Cataluña" demarcation (9 real
+# reservoirs, including Sau and Susqueda) was never wired into
+# `AMBITO_TO_BASIN` in `hydro_water_value_reservoir.py` either -- see that
+# file. Checked for false positives: `\bTER\b` matches TERE and nothing else
+# in the unit registry.
 BASIN_PATTERNS: list[tuple[str, str]] = [
     (r"\bDUERO\b|\bESLA\b|\bTERA\b", "duero"),
     (r"\bEBRO\b", "ebro"),
@@ -97,16 +110,17 @@ BASIN_PATTERNS: list[tuple[str, str]] = [
     (r"\bGUADALQUIVIR\b", "guadalquivir"),
     (r"\bJUCAR\b|J[UÚ]CAR", "jucar"),
     (r"\bSIL\b|\bMI[NÑ]O\b|\bBIBEY\b|\bEUME\b|GALICIA", "galicia_sil_mino"),
-    (r"\bVIESGO\b|\bAG[UÜ]ERA\b|HIDROCANT[AÁ]BRICO|CANT[AÁ]BRICO", "cantabrico"),
+    (r"\bVIESGO\b|\bAG[UÚÜ]ERA\b|HIDROCANT[AÁ]BRICO|CANT[AÁ]BRICO", "cantabrico"),
     (r"\bABAR[AÁ]N\b|\bARCHENA\b|\bULEA\b|\bSEGURA\b", "segura"),
+    (r"\bTER\b", "cataluna_interna"),
 ]
 
 # Fixed wrong-basin rotation for the placebo: never a basin's own name.
 PLACEBO_ROTATION = {
     "duero": "guadalquivir", "ebro": "jucar", "tajo": "ebro",
-    "guadiana": "tajo", "guadalquivir": "duero", "jucar": "guadiana",
+    "guadiana": "tajo", "guadalquivir": "cataluna_interna", "jucar": "guadiana",
     "galicia_sil_mino": "segura", "cantabrico": "galicia_sil_mino",
-    "segura": "cantabrico",
+    "segura": "cantabrico", "cataluna_interna": "duero",
 }
 
 

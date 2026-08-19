@@ -310,6 +310,278 @@ paper doesn't solve either — worth knowing before investing in the larger
 build, since the full apparatus is unlikely to fix what a forward-price
 control doesn't.
 
+**Stage C, tried immediately after (2026-08-18): the forward price, done
+properly, doesn't move Design 4's beta either.** `levy_contract_exposure_forward.py`
+partials `exposure_i × forward_price_t` out of `treat`, the same FWL move as
+Stage B. First attempt used the forward price level and looked like a big
+effect (log spec t: 3.61 → 1.10) — but `corr(treat, control) = 0.81`, because
+the levy's intensity and the forward price both just track the 2021–22 gas
+crisis. That's collinearity eating power, not a clean test. Redone with
+`forward_price − spot_price` (the term-structure spread, stripped of the
+common trend, `corr = 0.27` — genuinely separate variation): **beta barely
+moves at all**, same as Stage B (log spec 0.00663 → 0.00659, t 3.61 → 3.20;
+marginal-accepted-offer levels −0.673 → −0.707; trim instability pattern
+unchanged in both). Placebo still null under the control.
+
+**Two independent reduced-form controls (reservoir fill, forward-price
+spread) now both fail to explain Design 4's sign instability.** Neither
+omitted-variable story survives contact with the data. This narrows, not
+widens, what's left: the instability is very unlikely to be a linear omitted
+cost-shifter of either kind tried so far, which is further support for
+`rq-gas-cap-conduct.md`'s "measurement, not identification" diagnosis (the
+outcome itself — a bid that mixes genuine marginal offers with deliberately
+unclearable ones — is the more likely source) over a still-untried linear
+control fixing it.
+
+**2026-08-18, the structural model, first build:**
+`hydro_water_value_structural.py`. Scoped first (`hydro_marginal_hours.py`):
+12,470 marginal-hydro periods 2018-2026, present every month, but 70%
+concentrated in 4 cascades (Duero, Tajo, Sil, Hidrocantábrico) — read
+everything below as those cascades' behaviour, not "hydro in general".
+Built the FOC-implied opportunity cost `c = p* - (q_i - Q_C_i)/|RD'_i(p*)|`
+for every marginal-hydro period (residual-demand slope reused from
+`residual_demand_slope.py`, a documented **aggregate-market** simplification,
+not netted for unit i's own offers — a lower bound for large cascades, see
+the script's own docstring), regressed on `pf` (OMIP front-quarter forward,
+national monthly) and `Vol` (MITECO basin-aggregate stored volume, monthly),
+no Snow (Iberian hydro isn't snow-driven and the rain probe already found
+nothing there). 14,433 unit-periods, 19 units.
+
+| spec | b1 (pf) | b2 (Vol) |
+|---|---|---|
+| pooled | 0.961 (t=14.8) | +0.0019 (t=1.23, ns) |
+| pooled, trimmed p1-p99 | 0.861 (t=11.8) | +0.0018 (t=1.23, ns) |
+| **with unit fixed effects** | 0.949 (t=12.6) | **-0.0039 (t=-2.23, p=0.026)** |
+
+`pf`'s coefficient is stable at ~0.86-0.96 across every specification — close
+to complete passthrough of the forward price, the same direction and even
+closer to 1.0 than Arzhintar et al.'s own 1.260 (their Table 1, p.28).
+
+**`Vol` only gets the textbook sign — and becomes significant — once unit
+fixed effects are added.** Pooled, it repeats the same wrong-signed,
+insignificant result every reduced-form probe before this one has found
+(rain, reservoir-fill-on-offer, both Design-4 FWL controls). With unit FE,
+comparing each cascade's own fill level to its own history rather than
+pooling across cascades of very different scale, it flips to negative and
+significant — fuller reservoir, lower opportunity cost, exactly the
+cost-shifter prediction, for the first time in this project's whole hydro
+water-value line of work.
+
+**Updated 2026-08-19: the outliers were fixed at the source, not trimmed
+post hoc, and the result held — got stronger, in fact.** Two separate
+mechanisms diagnosed and dropped before regressing, not after: (1) periods
+where the residual-demand slope sits in its thinnest 1% (36.9 MW/EUR)
+produce near-zero-slope blowups — one period alone (SIL, 2023-01-25 h20,
+slope 0.08 against a sample median of 354) was the entire source of the
+6,111 EUR/MWh max; (2) periods clearing at or below 1 EUR/MWh (reusing
+`residual_demand_slope.py`'s own `ZERO_PRICE` convention) are curtailment or
+must-run, not a cost-revealing bid, and were the source of every negative
+`c` in the sample. 182 of 14,433 periods dropped (1.3%); `c` afterward is
+sane — 0.95 to 651, no negatives.
+
+| spec | b1 (pf) | b2 (Vol) |
+|---|---|---|
+| pooled | 0.957 (t=17.4) | +0.0018 (t=1.19, ns — same wrong sign as every reduced-form probe) |
+| **with unit fixed effects** | 0.941 (t=15.2) | **-0.0043 (t=-2.74, p=0.006)** |
+
+Both coefficients are essentially unchanged from the pre-fix run, and the
+fixed-effects `Vol` result got *more* significant (t: -2.23 -> -2.74; p:
+0.026 -> 0.006) — evidence the earlier result wasn't an outlier artifact.
+14 of the 19 target units retain enough periods to enter after the filter;
+14,251 unit-periods.
+
+**Ported to R** (`hydro_water_value_structural.R`) as the reporting layer:
+reads the panel `hydro_water_value_structural.py --save` writes, runs the
+same two specifications via `lm()` + `sandwich::vcovCL` (cluster-robust,
+matching statsmodels' `cov_type="cluster"` line for line), and reproduces
+every coefficient to four decimal places — a clean cross-check of the whole
+pipeline as a byproduct. Division of labour is deliberate: the expensive
+104-month bid-archive scan stays in Python; R only re-runs the regression,
+so changing the specification doesn't require repeating a two-minute build.
+
+**Updated 2026-08-19: both remaining caveats addressed, in a complete R
+port (`hydro_water_value_structural.R`, self-contained — builds the panel
+from the raw archives itself, no dependency on the Python script).**
+
+**Fix 1 — net the marginal unit's own offers out of the residual-demand
+slope, instead of using the aggregate-market density as a lower bound.**
+Barely moved anything: every coefficient is within 0.001-0.002 of the
+un-netted version (pf 0.956 vs 0.957 pooled, 0.942 vs 0.941 with FE; vol
+0.0018 vs 0.0018 pooled, -0.0042 vs -0.0043 with FE). Even the four
+dominant cascades are a small enough share of total volume near any given
+price point that this correction, while theoretically real, isn't doing
+much empirically. Not a source of the earlier result — good news, it means
+the simplification wasn't quietly propping the finding up.
+
+**Fix 2 — a cluster (pairs) bootstrap (2,000 reps, resampling the 14
+surviving cascades with replacement) in place of trusting the asymptotic
+cluster-robust SE with only 14 clusters.** This is the one that changes the
+read:
+
+| spec | coefficient | asymptotic cluster SE | cluster bootstrap 95% CI |
+|---|---|---|---|
+| pooled | pf | 0.956 (t=16.6) | [0.78, 1.05] — excludes 0 |
+| pooled | vol | 0.0018 (t=1.2, ns) | [-0.004, 0.004] — includes 0, consistent |
+| FE | pf | 0.942 (t=14.6) | [0.78, 1.09] — excludes 0, holds up |
+| FE | vol | -0.0042 (t=-2.63, p=0.009) | **[-0.0086, +0.0011] — includes 0** |
+
+**The forward-price result is genuinely robust** — both specifications, both
+inference methods agree. **The reservoir-volume result in the
+fixed-effects spec does not survive proper few-cluster correction at 95%
+confidence.** The asymptotic SE was likely overstating its own precision
+with only 14 clusters; the bootstrap CI is noticeably wider and just
+crosses zero.
+
+**Accurate one-line summary: correctly signed, still probably real (point
+estimate and sign are completely stable across every specification and
+both fixes), but not conventionally significant once inference correctly
+accounts for having only 14 cascades.** That is a real, useful result —
+better than every reduced-form attempt before it, which got the sign wrong
+outright — just a more modest one than the first run's asymptotic p=0.026
+suggested. Two panels saved, Python and R versions, for cross-checking:
+`outputs/tables/hydro_water_value_structural_panel.parquet` and
+`..._panel_R.parquet`.
+
+**What would actually move this from "probably real" to "significant":**
+more clusters, which means widening past the 25 basin-identified units
+(most of the other 6 target units and any of the excluded non-basin-
+identified `hydro_ugh` units never set the margin in this sample, so this
+needs either a longer/different marginal-unit definition or accepting the
+14-cascade ceiling) — not a quick fix, flagged rather than attempted here.
+
+**2026-08-19: two basin-matching fixes, and a much bigger find in
+Portugal.**
+
+*Fixes to the Spanish basin match.* Checked all 19 previously-unmatched
+`hydro_ugh` units by hand rather than guessing. Two real issues, the rest
+genuinely unmappable: (1) `AG[UÜ]ERA` (dieresis only) missed `ASIAGU`
+("HYDRO CUENCA AGÚERA", acute accent) on a character mismatch — fixed to
+accept both; contributes zero marginal periods on its own (3.6 MW), so this
+is a correctness fix, not a sample-size one. (2) `TERE` ("UGH. TER", 150.3
+MW, the Ter river in Catalonia) was dropped entirely — no basin pattern for
+"TER", and MITECO's "Cuencas Internas de Cataluña" demarcation (9 real
+reservoirs including Sau and Susqueda) was never wired into
+`AMBITO_TO_BASIN`, on the wrong assumption that no `hydro_ugh` unit mapped
+there. Fixed in `hydro_water_value_precip.py` and
+`hydro_water_value_reservoir.py` (and mirrored in the R script's ported
+copies). Rerunning `hydro_marginal_hours.py --country ES`: **TERE
+contributes 117 marginal periods (0.9% of the sample)** — a real if modest
+addition, bigger than several units already in the sample. The other 17
+unmatched units are all under 13 MW with mill/place names and no river cue
+— not forced, per the same discipline the twin-layer matching in
+`build_unit_agents.py` already applies.
+
+*Portugal is a much bigger opportunity than expected, gated on one missing
+data source.* Scoped with the same script (`--country PT`, 14 Portuguese
+`tech=="hydro"` units, basin not required — Portuguese cascade names are
+already clean: LIMA, CAVADO, TAMEGA, TEMON "Sistema Tejo-Mondego", GUADIA
+"Bacia Hid. do Guadiana", MONDEGO, DOUSUP "Douro Internacional"):
+**25,311 marginal-hydro periods, roughly double the Spanish sample**,
+present every month, 22-36% of periods per year (vs. Spain's 8-25%) — eight
+real contributing cascades (`ADOURO` 2,875 MW alone is bigger than any unit
+in the Spanish sample), none of the "aggregation vehicle disguised as a
+unit" problem the RDD hit, since these are OMIE's own large single-cascade
+registrations.
+
+**The blocker: MITECO is Spain-only, confirmed by checking its actual list
+of demarcations** — nothing Portuguese in it, and this isn't a gap that a
+shared-river shortcut can close (the Portuguese stretch of the Douro is
+fed by different, Portuguese-administered dams MITECO simply doesn't
+track). No Portuguese reservoir-level source exists anywhere in this repo
+yet. `pf` (forward price) is a cheap, separate fix — `fetch_omip_forwards.py`
+already supports `--zone PT`, just never run; fetch launched 2026-08-19,
+result pending.
+
+**2026-08-19: built, and it genuinely helps but is genuinely thin.**
+`fetch_snirh_reservoirs_wayback.py` -- systematically fetches every
+Wayback Machine capture (from 2018 onward) of the six basin pages
+(Tejo=17, Douro=12, Lima=1551779250, Mondego=47, Cávado=107,
+Guadiana=23), parses the reservoir list + fill percentage out of each,
+and uses the page's own stated data month/year rather than the crawl
+timestamp (the two can differ by over a year -- confirmed directly: one
+March-2018 crawl of the Tejo page displays December-2016 data, meaning
+the live site itself had gone stale for over a year before that crawl).
+**1,006 reservoir-snapshot rows, 42 distinct reservoirs, all six target
+basins**, `data/snirh/reservoirs_wayback.parquet`. About one in five
+captures parses to zero rows -- checked directly, not silently dropped:
+those specific captures rendered the page as a clickable image map
+instead of a text table, so the percentages simply are not present in
+that capture's HTML.
+
+**The coverage number that actually matters: 16-18 basin-months out of 96
+possible (2018-2025), ~17-19%.** Compare Spain's MITECO, which gives
+essentially complete weekly coverage across the same window. Portuguese
+hydro is marginal in some period during all 101 months of the sample
+(per the earlier scoping), so most marginal periods will fall in a month
+with no reservoir reading and get dropped, the same way unmatched rows
+already get dropped for Spain -- just at a much higher rate here.
+**2024 is a near-total blackout**: every basin except Lima has zero
+captures that year, removing a full year outright. The Portuguese
+OMIP forward price (`--zone PT`, launched the same day) finished
+2018-2025 cleanly, so `pf` is solid for Portugal even though `Vol` is
+not. A Portugal-side version of the structural model is buildable on
+this, but the usable sample will be a fraction of Spain's 14,251 rows,
+with a real hole in 2024 -- not yet built, flagged as the next step if
+worth prioritising over other open threads.
+
+**Why this matters beyond sample size.** Portugal is not covered by RDL
+17/2021 (Spain-only), which makes it the natural control group for the
+levy question — but `rq-gas-cap-conduct.md` already records that three
+separate ES-vs-PT comparisons **on raw offer levels** failed exactly this
+way: the two fleets differ enough in hydrology and composition that a
+gas-price-shaped regressor "finds" an effect even in years with no policy.
+This model doesn't compare raw offers across countries — it compares each
+cascade's residual after controlling for its *own* basin's fundamentals,
+which is precisely the confound that broke the earlier attempts. Worth
+trying once Portuguese `Vol` exists; not a guarantee, since nothing has
+tested whether this specific fix survives the placebo the raw-offer
+version failed.
+
+**2026-08-19: scoped a Portuguese reservoir source via browser automation
+— real, confirmed to exist, no full-history public copy found.** Two
+findings, both load-bearing:
+
+1. **`snirh.apambiente.pt` itself (Portugal's MITECO-equivalent, run by
+   APA) blocks every request, including from a real Chrome browser** — not
+   just a bot-fingerprint issue (the kind a `requests`-header workaround
+   fixes), since a full browser session with normal JS execution still got
+   a flat 403 on the root domain and every page tried. Most likely
+   geo-restricted to Portuguese IPs. A sibling portal, `sniamb.apambiente.pt`,
+   loads fine, but its own reservoir-status link (`Análise e Monitorização
+   > Água > Albufeiras de Águas Públicas`) redirects to an ArcGIS dashboard
+   tracking *administrative approval phases* for reservoir management
+   plans, not water levels — a dead end, though it confirmed real dam
+   names (Castelo do Bode, Crestuma-Lever, Caniçada) along the way.
+2. **The actual bulletin does exist and was found, twice, but only as
+   fragments, both dead ArcGIS Online publications from APA's own account
+   (`source: "Agência Portuguesa do Ambiente, I.P."`):**
+   - `Armazenamento_nas_Albufeiras_de_Portugal_Continental_em_setembro_de_2022`
+     — a Feature Service, but a **single-month snapshot** (September 2022
+     only), basin-level (`Douro`, `Lima`, `Cávado e Ribeiras Costeiras`,
+     `Guadiana`, ...), fields `Capacidade_Total_10m` (total capacity) and
+     `Média_Mensal____` (monthly average fill %) — structurally identical
+     to what MITECO gives for Spain, confirming the bulletin's shape.
+   - `Albufeiras do Boletim SNIRH`, a web map built Jan–Feb 2019 and never
+     touched again, with **10 monthly layers embedded directly as static
+     data** (December 2018 – September 2019 only), **per-reservoir** (61
+     named dams, e.g. `Alto Lindoso` for Lima, `Aguieira` for Mondego),
+     with each dam's own SNIRH station code (`Codigo`, e.g. `02H/01A`) and
+     a link back to the (blocked) SNIRH detail page for it
+     (`salbufeirasimbolo=02H/01A`) — real station identifiers, confirming
+     the exact per-reservoir vocabulary needed if API access is ever
+     restored, but covering ten months out of the eight years needed.
+
+**No public source covering 2018–2026 was found.** What exists confirms
+the data itself is real and was once shared, just not as a maintained
+open archive — closer to APA occasionally publishing a derived snapshot
+than to MITECO's standing bulk download. Two ways forward, neither
+attempted here: contact APA directly for a bulk historical export (a
+reasonable ask for a research use case, and the two dead publications are
+evidence someone at APA has already extracted this shape of data before),
+or accept the geo-block and route a fetch through a Portuguese network
+if one becomes available. Not pursued further without a decision on
+which of those is worth the effort.
+
 Institutional fit, briefly: SHL is one operator with de facto market power
 over its region, so its FOC-with-market-power framing suits Spain's handful
 of large hydro-owning firms (Iberdrola, Endesa) far better than the 44

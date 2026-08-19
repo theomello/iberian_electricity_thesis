@@ -89,11 +89,22 @@ from hydro_water_value_precip import (  # noqa: E402
 )
 from levy_contract_exposure import panel as offer_panel  # noqa: E402
 
-# MITECO's 16 hydrographic demarcations, collapsed onto the same 9 basin
+# MITECO's 16 hydrographic demarcations, collapsed onto the same basin
 # buckets fetch_hydro_precipitation.py uses (one ERA5 point per bucket).
 # Demarcations with no hydro_ugh unit mapped to them are left out on purpose:
-# Cuenca Mediterránea Andaluza, Cuencas Internas de Cataluña, Cuencas Internas
-# del País Vasco, Guadalete-Barbate, Tinto Odiel y Piedras.
+# Cuenca Mediterránea Andaluza, Cuencas Internas del País Vasco,
+# Guadalete-Barbate, Tinto Odiel y Piedras.
+#
+# "Cuencas Internas de Cataluña" was on that left-out list until 2026-08-19,
+# on the assumption that no hydro_ugh unit mapped to it -- wrong: TERE
+# ("UGH. TER", 150.3 MW) does, once `hydro_water_value_precip.py`'s basin
+# regex was fixed to recognise "TER" at all (see that file). MITECO carries
+# 9 real reservoirs under this demarcation (Sau, Susqueda, La Baells and
+# others), so it's a genuine basin bucket, not an empty one. NOTE:
+# `fetch_hydro_precipitation.py`'s ERA5 point-per-bucket does NOT yet have a
+# Catalonia point -- rain_anomaly() in hydro_water_value_precip.py will
+# return NaN for this basin until one is added; not needed for Vol, which
+# this file supplies from MITECO directly.
 AMBITO_TO_BASIN = {
     "Duero": "duero",
     "Ebro": "ebro",
@@ -106,6 +117,7 @@ AMBITO_TO_BASIN = {
     "Cantábrico Occidental": "cantabrico",
     "Cantábrico Oriental": "cantabrico",
     "Segura": "segura",
+    "Cuencas Internas de Cataluña": "cataluna_interna",
 }
 
 

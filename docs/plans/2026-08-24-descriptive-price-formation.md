@@ -167,7 +167,7 @@ print(d.shape, d.eta_h5.median())
 "
 ```
 
-Expected: `(79036, 26)` and a median `eta_h5` near `0.87`. Record both numbers — Step 5 must reproduce them.
+Expected: `(79036, 26)` and a median `eta_h5` of `0.9678`. Both verified 2026-08-24. Step 5 must reproduce them exactly.
 
 - [ ] **Step 2: Create the library module**
 
@@ -279,7 +279,7 @@ def month_slopes(bids: pd.DataFrame, px_m: pd.DataFrame) -> pd.DataFrame:
     return out.drop(columns=[f"mw_h{h:g}" for h in BANDWIDTHS])
 ```
 
-Delete the now-dead `period_slopes` helper only if nothing else references it; check with `grep -rn "period_slopes" scripts/`.
+**Keep `period_slopes` as it is.** Checked 2026-08-24: nothing outside its own file references it, but it is the readable per-period reference implementation that `month_slopes`'s docstring cites as the source of its own verification. Deleting it would remove the only legible statement of the algorithm. Leave it untouched and unimported.
 
 - [ ] **Step 4: Re-run the full sweep**
 

@@ -1,0 +1,409 @@
+% =====================================================================
+% Supervisor meeting, 20 August 2026
+% "The Iberian setting: what the data holds, and what killed each design"
+%
+% Build:  bash slides/build-tex.sh
+%   or:   cd slides && xelatex supervisor-2026-08-19-data-and-designs.tex
+%
+% Compile from INSIDE slides/. Running xelatex from the repo root with
+% -output-directory=slides fails to load the figures: kpathsea resolves
+% "figures/" through the output directory and reports a hit, but the graphics
+% loader then reads the path relative to the working directory and finds
+% nothing. It exits 0 with a 2-page PDF, so the failure is easy to miss.
+%
+% Figures come from scripts/analysis/slides_data_figures.py and
+% scripts/analysis/slides_figures.py -- regenerate with:
+%   PYTHONPATH=scripts/analysis .venv/bin/python scripts/analysis/slides_data_figures.py
+% =====================================================================
+\documentclass[9pt,aspectratio=169]{beamer}
+
+% Metropolis, tuned light: the theme ships a dark bar behind the frame title;
+% this deck uses a plain title with a thin accent rule under it instead, so the
+% figures (which are drawn on white) sit on the same background as the slide.
+\usetheme[titleformat frame=smallcaps,
+          progressbar=frametitle,
+          numbering=fraction,
+          block=fill]{metropolis}
+
+% ---------- fonts (xelatex) ------------------------------------------
+\usepackage{fontspec}
+\setmainfont{Helvetica Neue}
+\setsansfont{Helvetica Neue}
+\setmonofont{Menlo}[Scale=0.9]
+\usepackage{amsmath}          % load before unicode-math
+\usepackage{unicode-math}
+\setmathfont{STIX Two Math}
+
+% ---------- packages --------------------------------------------------
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{etoolbox}
+\graphicspath{{figures/}{slides/figures/}}
+
+% Unicode the sans font lacks, mapped to math equivalents, so you can type
+% readable characters straight into the source instead of LaTeX escapes.
+\usepackage{newunicodechar}
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+\newunicodechar{×}{\ensuremath{\times}}
+\newunicodechar{≈}{\ensuremath{\approx}}
+\newunicodechar{−}{\ensuremath{-}}
+\newunicodechar{β}{\ensuremath{\beta}}
+\newunicodechar{η}{\ensuremath{\eta}}
+\newunicodechar{Δ}{\ensuremath{\Delta}}
+% Helvetica Neue carries the euro glyph, so \euro needs no extra package.
+\providecommand{\euro}{€}
+
+% ---------- look ------------------------------------------------------
+% Accent is the blue the figures already use (dataviz palette), so the rule
+% under each title and the chart lines are the same colour.
+\definecolor{accent}{HTML}{2A78D6}
+\definecolor{ink}{HTML}{0B0B0B}
+\definecolor{ink2}{HTML}{52514E}
+
+\setbeamercolor{normal text}{fg=ink,bg=white}
+\setbeamercolor{frametitle}{fg=ink,bg=white}      % kill Metropolis' dark bar
+\setbeamercolor{progress bar}{fg=accent,bg=accent!25}
+\setbeamercolor{alerted text}{fg=accent}
+\setbeamerfont{frametitle}{size=\large,series=\bfseries}
+\setbeamerfont{page number in head/foot}{size=\scriptsize}
+\setbeamercolor{page number in head/foot}{fg=ink2}
+
+% Do NOT override \setbeamertemplate{frametitle} here: Metropolis draws the
+% smallcaps title AND the accent progress bar from that template, so replacing
+% it silently removes both. Adjust padding with the theme's own length instead.
+\makeatletter
+\setlength{\metropolis@frametitle@padding}{1.4ex}
+\makeatother
+
+\setlength{\aboverulesep}{0pt}
+\setlength{\belowrulesep}{0pt}
+\renewcommand{\arraystretch}{1.25}
+
+% Every slide's table is set at \small and full text width. Two shapes are
+% used throughout, so changing these two macros restyles the whole deck.
+%
+%   \designtable{<left column width>}{ rows... }   label + free text
+%   \figframe{<title>}{<file>}{ caption... }       one figure, one caption
+%
+\newcommand{\designtable}[2]{%
+  \small
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{#1}X@{}}
+  \toprule
+  #2
+  \bottomrule
+  \end{tabularx}%
+}
+\newcommand{\figframe}[3]{%
+  \begin{frame}{#1}
+    \centering\includegraphics[width=\textwidth]{#2}\par
+    \vspace{0.6em}
+    \raggedright\small #3
+  \end{frame}%
+}
+
+\title{The Iberian setting: what the data holds, and what killed each design}
+\author{Theodor Mello}
+\date{20 August 2026}
+
+\begin{document}
+
+\begin{frame}[plain]
+  \titlepage
+\end{frame}
+
+% =====================================================================
+% 1. The decision
+% =====================================================================
+\begin{frame}{The decision on the table}
+  \textbf{Keep the Iberian setting, or kill it.}
+
+  \vspace{0.8em}
+  Three things to put to you:
+
+  \vspace{0.4em}
+  \begin{enumerate}
+    \item \textbf{The data} is good --- and it is built, audited and
+          documented.
+    \item \textbf{One result} already holds up: market power roughly doubled
+          while measured concentration \emph{fell}.
+    \item \textbf{Twelve designs have died.} Not twelve accidents --- three
+          recurring causes, and they are properties of the setting.
+  \end{enumerate}
+
+\end{frame}
+
+% =====================================================================
+% 2. What we hold
+% =====================================================================
+\figframe{What we hold: nine years, fully re-fetchable}
+         {data_coverage.png}
+         {Both Spanish interventions sit \textbf{inside} the window:
+          \textbf{3.7 years before the levy}, and \textbf{2.4 years after the
+          cap ended}.}
+
+% =====================================================================
+% 3. Why the data is unusual
+% =====================================================================
+\begin{frame}{Why this data is unusual}
+  \designtable{0.24\textwidth}{
+    \textbf{Full bid curves} &
+    354\,M unit-level day-ahead offers --- \textbf{accepted \emph{and}
+    rejected}. We observe firms' supply \emph{functions}, not just realised
+    supply. \\
+    \midrule
+    \textbf{Declared start-up costs} &
+    Every plant states, each day, the minimum revenue it needs to run --- a
+    fixed \euro/day and a variable \euro/MWh term. \\
+    \midrule
+    \textbf{Observable contract position} &
+    The volume sold forward, which blunts the incentive to withhold. Bilateral contracts run
+    \textbf{39--49\%} of scheduled sell volume. \\
+    \midrule
+    \textbf{Two countries, one auction} &
+    Spain and Portugal clear jointly against one merged bid stack --- same
+    price, same forward curve, different regulator. \\
+  }
+\end{frame}
+
+% =====================================================================
+% 4. The window
+% =====================================================================
+\figframe{The window: a price shock, and a VRE share that doubled}
+         {price_vre.png}
+         {Day-ahead price 34 \euro/MWh (2020) → 168 (2022) → 46 (2026).
+          Wind and solar 24\% → 42\% of Spanish generation.}
+
+% =====================================================================
+% 5. Who sets the price
+% =====================================================================
+\figframe{Who sets the price}
+         {marginal_tech.png}
+         {\textbf{Hydro is the modal marginal technology in every year} ---
+          30--52\% of periods. Gas is second and collapses after the cap. This
+          is why every design here ended up about hydro.}
+
+% =====================================================================
+% 6. Ownership mapping
+% =====================================================================
+\begin{frame}{Who owns what: the mapping, and its ceiling}
+  \small
+  OMIE publishes no owner. Built in four layers from ESIOS, \texttt{cab} plant
+  names and a hand-verified prefix dictionary.
+
+  \vspace{0.8em}
+  \centering
+  \begin{tabular}{@{}lr@{}}
+    \toprule
+    what & coverage \\
+    \midrule
+    Units in the registry (ES 4,960 / PT 150)            & 5,137 \\
+    \textbf{Near-marginal offered volume → market agent} & \textbf{89.1\%} \\
+    Generation volume → parent firm (68 firms)           & 82.4\% \\
+    \textbf{Dispatchable capacity → parent firm}         & \textbf{96.0\%} \\
+    Generation volume bid by a \emph{named plant} (technology readable) & 47.7\% \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{1.0em}
+  \raggedright
+  \textbf{Why only 48\%?} The rest is \textbf{not unparsed --- it is bid by
+  portfolios, not plants}. \texttt{EDPSVD1} ``VENTA RE'' is 6,500 MW of mixed
+  renewables in one unit: there is no single technology to name.
+\end{frame}
+
+% =====================================================================
+% 7. The result
+% =====================================================================
+\figframe{The result that holds: market power doubled as concentration fell}
+         {concentration_markup.png}
+         {$L_i = s_i/\eta$. Shares barely moved; \textbf{$\eta$ halved} ---
+          1.83 (2018) → 0.85 (2023). For Iberdrola/Endesa the implied Lerner
+          floor goes \textbf{11\% → 21\%}, and to \textbf{34\%} in the
+          highest-VRE third of 2023 hours.}
+
+% =====================================================================
+% 8. The mechanism
+% =====================================================================
+\figframe{The mechanism: renewables thin the market \emph{at the margin}}
+         {eta_vre.png}
+         {Wind and solar bid at zero and sit far inframarginal --- they do not
+          flatten the curve where the price is set, they push the crossing
+          point into a region with fewer flexible units.}
+
+% =====================================================================
+% 11. The diagnosis
+% =====================================================================
+\begin{frame}{The diagnosis: three causes, not twelve accidents}
+  \designtable{0.04\textwidth}{
+    \textbf{1} &
+    \textbf{The treatment has no cross-section.} Levy, gas cap and renewable
+    share hit every unit at once. Date fixed effects and the design are
+    mutually exclusive. \\
+    \textbf{2} &
+    \textbf{Any summary of ``how a plant bid'' changes sign depending on how
+    it is built.} The median sell offer is \euro 0 and the 99th percentile
+    \euro 1,000, so a few extreme offers decide the answer --- and none of them
+    can be read as withholding rather than a genuinely high cost. \\
+    \textbf{3} &
+    \textbf{A hard cluster ceiling.} Only 32 parent firms own dispatchable
+    plant. Any treatment varying at firm level has a few dozen clusters. \\
+    \textbf{+3} &
+    \textbf{No usable comparison, or too few observations.} The single-date
+    event study, the run-of-river control group and the 10 MW RDD each failed
+    before estimation. \\
+  }
+
+  \vspace{0.9em}
+  \small
+  \textbf{Everything that is a \emph{direct computation} held}: the elasticity
+  decline, firm and technology coverage, contract shares, firm-specific
+  residual demand, the implied-marginal-cost ordering by technology.
+
+  \vspace{0.4em}
+  Everything built as a \emph{constructed behavioural measure} collapsed.
+\end{frame}
+
+
+% =====================================================================
+% APPENDIX -- derivations. \appendix keeps these out of the slide count.
+% =====================================================================
+\appendix
+
+\begin{frame}[plain]
+  \centering\vspace{2em}
+  {\Large\bfseries Appendix: how the three numbers are built}
+\end{frame}
+
+% ---------------------------------------------------------------------
+% A1. Residual demand elasticity
+% ---------------------------------------------------------------------
+\begin{frame}{A1. Residual demand, and its elasticity $\eta$}
+  \small
+  Firm $i$ does not face market demand, it faces what is left after every
+  rival has supplied. For period $t$:
+  \[
+    RD_{it}(p) \;=\; D_t(p) \;-\; \sum_{j \neq i} S_{jt}(p)
+  \]
+  We build the \emph{market-wide} version, $RD_t(p) = D_t(p) - S_t(p)$, which
+  is the curve facing an infinitesimally small participant. Its slope at the
+  clearing price $p^*_t$ is
+  \[
+    \bigl| RD'_t(p^*_t) \bigr| \;=\; \bigl| D'_t(p^*_t) \bigr| \;+\; S'_t(p^*_t)
+  \]
+  Submitted curves are \textbf{step functions and have no derivative}, so the
+  slope is estimated as the density of offered volume in a price band of width
+  $2h$ around the clearing price:
+  \[
+    \bigl| RD'_t(p^*_t) \bigr| \;\approx\;
+      \frac{\text{sell MW} + \text{buy MW within } p^*_t \pm h}{2h}
+    \qquad\Longrightarrow\qquad
+    \eta_t \;=\; \frac{\bigl| RD'_t \bigr| \, p^*_t}{Q_t}
+  \]
+  $\eta_t$ is scale-free, so it is comparable across years in which the price
+  level moved by a factor of five.
+\end{frame}
+
+\begin{frame}{A1. How $\eta$ is applied to the data}
+  \designtable{0.30\textwidth}{
+    Unit of observation & One market period (one settlement interval for the
+    whole Iberian market) \\
+    Frequency & Hourly to 30 September 2025; \textbf{quarter-hourly} from
+    1 October 2025, when the market changed its settlement interval \\
+    Sample & \textbf{79,036 periods}, 2018--2026 --- 62,721 hourly and
+    16,315 quarter-hourly \\
+    Input & Every \emph{submitted} bid and offer, accepted \textbf{and}
+    rejected (354 M rows). Cleared-only data cannot give a slope \\
+    Bandwidth $h$ & \textbf{5 \euro/MWh} in the reported results; 1, 2 and 10
+    also computed, rank correlation 0.92--0.94 \\
+    Units & $|RD'|$ in MW per \euro/MWh; $p^*$ in \euro/MWh; $Q$ in MWh;
+    $\eta$ dimensionless \\
+    Periods dropped & Market splitting (Spain and Portugal price apart);
+    whole-day plant dropouts; empty price bands; $p^* \leq 1$ \euro/MWh,
+    where $\eta$ is not defined \\
+  }
+\end{frame}
+
+% ---------------------------------------------------------------------
+% A2. The markup
+% ---------------------------------------------------------------------
+\begin{frame}{A2. From $\eta$ to the markup}
+  \small
+  Firm $i$ picks its output taking the residual demand curve as given:
+  \[
+    \max_{q_i} \; p(q_i)\, q_i - C_i(q_i)
+    \qquad\Longrightarrow\qquad
+    p + q_i \frac{\partial p}{\partial q_i} = C_i'(q_i)
+  \]
+  and since $\partial p / \partial q_i = 1 / RD_i'(p)$, the markup over
+  marginal cost is
+  \[
+    p - C_i'
+    \;=\; \frac{q_i}{\bigl| RD_i' \bigr|}
+    \qquad\Longrightarrow\qquad
+    L_i \;\equiv\; \frac{p - C_i'}{p}
+    \;=\; \frac{q_i}{\bigl| RD_i' \bigr| \, p}
+    \;=\; \frac{s_i}{\eta}
+  \]
+  with $s_i = q_i / Q$. Volume already sold forward at a fixed price earns
+  nothing extra when $p$ rises, so with a contract position $\theta_i$ the
+  markup becomes $\bigl(q_i - \theta_i\bigr) / |RD_i'|$.
+
+  \vspace{0.5em}
+  \textbf{Why this is a lower bound.} A firm's own supply is excluded from its
+  own residual demand, so $|RD_i'| \leq |RD'|$: every real firm faces a curve
+  \emph{at least} as steep as the market-wide one. Hence
+  $L_i \geq s_i / \eta$ --- the least markup consistent with profit
+  maximisation, not an estimate of the markup taken.
+\end{frame}
+
+\begin{frame}{A2. How the markup is applied to the data}
+  \designtable{0.30\textwidth}{
+    $\eta$ & Median across all periods within the year, from A1 \\
+    $s_i$ & Annual generation share by business group, published by the
+    competition regulator, covering Spain and Portugal together, 2018--2023 ---
+    so the yearly figures pair an annual share with a per-period elasticity \\
+    Also computed & Share per firm \emph{per period} from cleared volume,
+    1,101,980 firm-period observations, which avoids treating a share as
+    constant across a year (within-year variation is large) \\
+    Units & $L_i$ is a share of the price, dimensionless; the markup in
+    \euro/MWh is $L_i \times p^*$ \\
+    Reported & For the average of the two largest firms: $L$ rises
+    \textbf{11\% (2018) → 21\% (2023)}, and to \textbf{34\%} in the
+    highest-renewable third of 2023 hours \\
+    Two biases, opposite & \textbf{Understated} on the elasticity side (the
+    market-wide curve is flatter than any firm's own). \textbf{Overstated} on
+    the share side: the published share counts volume sold bilaterally, which
+    is not exposed to the day-ahead price \\
+  }
+\end{frame}
+
+% ---------------------------------------------------------------------
+% A3. Concentration
+% ---------------------------------------------------------------------
+\begin{frame}{A3. Concentration, and why it moves the other way}
+  \small
+  The standard concentration measure is the sum of squared shares:
+  \[
+    H \;=\; 10{,}000 \times \sum_i s_i^{\,2}
+  \]
+  \vspace{-0.6em}
+  \designtable{0.30\textwidth}{
+    Source & Published by the competition regulator, annual, Spain and
+    Portugal together, 2008--2023 \\
+    Computed on & The \emph{operating schedule} --- day-ahead cleared volume
+    \textbf{plus} bilateral contracts and self-scheduling. On January 2024
+    that is \textbf{1.73$\times$} day-ahead cleared volume \\
+    Units & Index on 0--10,000; 1,000 is roughly ten equal firms \\
+  }
+
+  \vspace{0.8em}
+  \textbf{The two measures can move in opposite directions because they share
+  only one of their two ingredients.} $H$ depends on shares alone. The Lerner
+  index $L_i = s_i / \eta$ depends on shares \emph{and} on the slope of
+  residual demand. Between 2018 and 2023 shares barely moved --- $H$ fell
+  1,314 → 1,007 --- while $\eta$ fell 1.83 → 0.85. The same share converts
+  into twice the markup.
+\end{frame}
+
+\end{document}

@@ -1,0 +1,153 @@
+---
+title: "The Iberian setting: what the data holds, and what killed each design"
+author: "Theodor Mello"
+date: "19 August 2026"
+lang: en
+---
+
+# The decision on the table
+
+**Keep the Iberian setting, or kill it.**
+
+Three things to put to you:
+
+1. **The data** is unusually good — and it is built, audited and documented.
+2. **One result** already holds up: market power roughly doubled while measured
+   concentration *fell*.
+3. **Twelve designs have died.** Not twelve accidents — three recurring causes,
+   and they are properties of the setting, not of the coding.
+
+\vspace{0.6em}
+
+The question is whether cause (1) is worth living with cause (3).
+
+# What we hold: nine years, token-free, fully re-fetchable
+
+![](figures/data_coverage.png){width=100%}
+
+Both Spanish interventions sit **inside** the window: **3.7 years before the
+levy**, and **2.4 years after the cap ended**.
+
+# Why this data is unusual
+
+| | |
+|:-------------------------|:------------------------------------------------|
+| **Full bid curves** | 354 M unit-level day-ahead offers — **accepted *and* rejected**. We observe firms' supply *functions*, not just realised supply. Kellogg & Reguant's illustration of why electricity markets are special is built on this exact data. |
+| **Declared start-up costs** | OMIE's `cab` header publishes each unit's own minimum-income condition daily — a fixed €/day and variable €/MWh term. Reguant (2014) and Jha & Leslie *estimate* this primitive structurally. Here it is published. |
+| **Observable contract position** | The `theta` term in Wolak (2000) and Hortaçsu & Puller (2008) — volume sold forward, which blunts the incentive to withhold. Readable directly from PDBF role 4, not inferred. Bilateral contracts run **39–49%** of scheduled sell volume. |
+| **Two countries, one auction** | Spain and Portugal clear jointly against one merged bid stack — same price, same forward curve, different regulator. |
+
+# The window: a price shock, and a VRE share that doubled
+
+![](figures/price_vre.png){width=100%}
+
+Day-ahead price 34 €/MWh (2020) → 168 (2022) → 46 (2026). Wind and solar
+24% → 42% of Spanish generation.
+
+# Who sets the price
+
+![](figures/marginal_tech.png){width=100%}
+
+**Hydro is the modal marginal technology in every year** — 30–52% of periods.
+Gas is second and collapses after the cap. This is why every design here ended
+up about hydro.
+
+# Who owns what: the mapping, and its ceiling
+
+OMIE publishes no owner. Built in four layers from ESIOS, `cab` plant names and
+a hand-verified prefix dictionary.
+
+| what | coverage |
+|:------------------------------------------|--------:|
+| Units in the registry (ES 4,960 / PT 150) | 5,137 |
+| **Near-marginal offered volume → market agent** | **89.1%** |
+| Generation volume → parent firm (68 firms) | 82.4% |
+| **Dispatchable capacity → parent firm** | **96.0%** |
+| Technology identified (share of volume) | 41.2% |
+| Régime identified (special vs ordinary) | 63.3% |
+
+\vspace{0.4em}
+
+**The ceiling, and it matters below:** only **32 parent firms own dispatchable
+plant at all**; 26 have a computable renewable exposure, **11 above 1,000 GWh**.
+That is the population, not a sample.
+
+# The result that holds: market power doubled as concentration fell
+
+![](figures/concentration_markup.png){width=100%}
+
+$L_i = s_i / \eta$. Shares barely moved; **$\eta$ halved** — 1.83 (2018) → 0.85
+(2023). For Iberdrola/Endesa the implied Lerner floor goes **11% → 21%**, and
+to **34%** in the highest-VRE third of 2023 hours.
+
+# The mechanism: renewables thin the market *at the margin*
+
+![](figures/eta_vre.png){width=100%}
+
+Wind and solar bid at zero and sit far inframarginal — they do not flatten the
+curve where the price is set, they push the crossing point into a region with
+fewer flexible units. IV on wind speed and irradiance: **OLS −0.0291, 2SLS
+−0.0280**, agreeing to 4%; first-stage F = 29,240.
+
+# What killed each design — I: the 2021 levy (RDL 17/2021)
+
+| design | what killed it |
+|:-----------------------|:---------------------------------------------|
+| Single-date event study | 4 usable observations; placebo-year spread exceeded any plausible effect |
+| ES vs PT hydro, continuous intensity | Clean null (β −0.0013, t −0.67). Raw gap *does* widen +0.07 → +0.32 — but **Portugal's own clawback ended two weeks later**, so the control was relieved exactly when the treated was taxed |
+| Intertemporal margin, gas spot–forward spread | **Placebo fails**: t = −2.11 with no levy present. Absorbing seasonality makes it worse (−3.17) |
+| Within-month timing (capture rate) | **Placebo reproduces 60%** of the effect (t 2.21 vs 1.56) — and retro-invalidated the null above, whose placebo passed only because the outcome was too noisy |
+| Contract exposure — *passed every placebo* | **Sign depends on the outcome variable**: log median offer +0.0067 (t 3.76); the same in levels +0.31 (t 0.43); marginal accepted offer −0.73 (t −1.96) |
+
+Reservoir fill and the forward spread were each partialled out of the last one.
+**β moves in the third decimal** — so it is not an omitted variable.
+
+# What killed each design — II: the gas cap, conduct, structure
+
+| design | what killed it |
+|:-----------------------|:---------------------------------------------|
+| Gas-cap pass-through | **Not identified.** ΔMC = (gas − cap)/efficiency is common to every unit in a month, so month FE leave only cross-unit efficiency to identify from — 20 units. CI [−2.9, 2.8] contains both 0 and full pass-through |
+| Bid steepness (behavioural channel) | **Not sign-stable**: an *exogenous* 10% trim of each unit's own offered volume flips +0.428 → −0.202 |
+| Markup IV on renewable share | Treatment is market-wide: with firm + month + hour FE the identifying variation is **one hourly series copied N times**. Going 8 → 54 firms reverses the sign |
+| Differential renewable exposure | **Sign is set by the entity definition**: market agent +0.31 to +1.17, parent firm −3.46 to −15.5. Only 11 firms above 1,000 GWh |
+| Capacity-quantile offer price | Survives every construction rule, **dies to date fixed effects** — the market-wide-treatment problem again |
+| Run-of-river control group | **Does not exist.** 218 ESIOS run-of-river units, none bid their own unit; median 3.7 MW, 77% below the 10 MW exemption |
+| 10 MW size-threshold RDD | Needs a CNMC merchant-vs-RECORE registry we do not hold — and below 10 MW hydro is aggregated, so not like-for-like |
+
+# The diagnosis: three causes, not twelve accidents
+
+| | |
+|:--|:-------------------------------------------------------------|
+| **1** | **The treatment has no cross-section.** Levy, gas cap and renewable share hit every unit at once. Date fixed effects and the design are mutually exclusive. *(6 of the 12)* |
+| **2** | **Constructed measures of bidding are not sign-stable.** Offer distributions have enormous tails, and no principled rule separates withholding from cost-revealing bids. *(2 of the 12)* |
+| **3** | **A hard cluster ceiling.** Only 32 parent firms own dispatchable plant. Any treatment varying at firm level has a few dozen clusters — checkable *before* building, and now checked. |
+| **+3** | **No usable comparison, or too few observations.** The single-date event study, the run-of-river control group and the 10 MW RDD each failed before estimation. |
+
+\vspace{0.5em}
+
+**Everything that is a *direct computation* held**: the elasticity decline, firm
+and technology coverage, contract shares, firm-specific residual demand, the
+implied-marginal-cost ordering by technology.
+
+Everything built as a *constructed behavioural measure* collapsed.
+
+# Where that leaves us
+
+**Live:** a structural water-value model on storage hydro (Arzhintar, Leslie,
+Neill & Wyrwoll's template). Forward-price pass-through is robust, β 0.94–0.96.
+Reservoir volume takes the textbook sign only with unit FE, and **does not
+survive a cluster bootstrap** on 14 clusters. The first policy test is large
+(−40.3 and +46.6 €/MWh) but **likely contaminated** — the cost measure is built
+from the market price, and both windows are also the gas crisis.
+
+\vspace{0.6em}
+
+**Three questions for you:**
+
+1. Is "measurement, not identification" a thesis? The setting's advantage is
+   *observing primitives others estimate* — declared start-up costs, contract
+   position, full supply functions.
+2. Or do we accept the descriptive result — **market power doubled while HHI
+   fell** — as the contribution, and stop hunting for a policy shock?
+3. Or is the cluster ceiling fatal, and we should move setting now, while there
+   is still time?

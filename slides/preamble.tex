@@ -1,0 +1,20 @@
+% Glyphs the sans text font lacks, mapped to math equivalents so the markdown
+% can keep using readable Unicode (→, ×) instead of LaTeX escapes.
+\usepackage{newunicodechar}
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+\newunicodechar{×}{\ensuremath{\times}}
+\newunicodechar{≈}{\ensuremath{\approx}}
+\newunicodechar{−}{\ensuremath{-}}
+
+% Frame titles a touch tighter, and no navigation furniture.
+\setbeamertemplate{navigation symbols}{}
+\setbeamerfont{frametitle}{size=\large,series=\bfseries}
+\setbeamercolor{frametitle}{fg=black}
+
+% Tables: smaller, and never a longtable inside a frame.
+\AtBeginEnvironment{longtable}{\small}
+% booktabs is only loaded when a deck actually has a table, so guard these.
+\ifdefined\aboverulesep
+  \setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{0pt}
+\fi
+\renewcommand{\arraystretch}{1.15}

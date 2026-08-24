@@ -56,6 +56,7 @@ scripts/
 | `fetch/fetch_omie_prices.py` | OMIE `marginalpdbc` | no | `data/omie/prices/omie_day_ahead_prices.parquet` |
 | `fetch/fetch_omie_bids.py` | OMIE `curva_pbc_uof` | no | `data/omie/bids/parquet/bids_YYYYMM.parquet` |
 | `fetch/fetch_omie_intraday.py` | OMIE `curva_pibc_uof` | no | `data/omie/intraday/parquet/intraday_YYYYMM.parquet` |
+| `fetch/fetch_omie_intraday_prices.py` | OMIE `marginalpibc` | no | `data/omie/intraday_prices/omie_intraday_prices.parquet` |
 | `build/build_unit_registry.py` | OMIE `pdbc`,`pdbcpt`,`pdbce` | no | `data/omie/registry/unit_registry.parquet` |
 | `fetch/fetch_omie_cab.py` | OMIE `cab` | no | `data/omie/cab/parquet/cab_YYYYMM.parquet` |
 | `fetch/fetch_omie_pdbf.py` | OMIE `pdbf` | no | `data/omie/pdbf/parquet/pdbf_YYYYMM.parquet` |
@@ -63,10 +64,13 @@ scripts/
 | `build/build_unit_agents.py` | ESIOS + `cab` + prefixes | no | `data/omie/registry/unit_agents.parquet` |
 | `fetch/fetch_ree_daily.py` | REE `apidatos` | no | `data/ree/ree_{generation,demand,balance}_daily.parquet` |
 | `fetch/fetch_ree_realtime.py` | REE `demanda.ree.es` | no | `data/ree/ree_realtime_5min.parquet` |
+| `fetch/fetch_ree_demand_forecast.py` | REE `demanda.ree.es` | no | `data/ree/ree_demand_forecast_5min.parquet` |
 | `fetch/fetch_ren_portugal.py` | REN `servicebus.ren.pt` | no | `data/ren/ren_{production_15min,installed_power_monthly,market_prices,consumption_supply_daily}.parquet` |
 | `fetch/fetch_esios_spain.py` | ESIOS | **yes** | `data/esios/esios_{id}.parquet` |
 | `fetch/fetch_entsoe_spain.py` | ENTSO-E | **yes** | `data/entsoe/entsoe_{series}_{zone}.parquet` |
 | `fetch/fetch_hydro_precipitation.py` | Open-Meteo ERA5 | no | `data/weather/precipitation_basins_daily.parquet` |
+| `fetch/fetch_population_temperature.py` | Open-Meteo ERA5 | no | `data/weather/temperature_population_index.parquet` |
+| `fetch/fetch_omie_unavailability.py` | OMIE `indisp` | no | `data/omie/indisp/parquet/indisp_YYYYMM.parquet` |
 | `fetch/fetch_omip_forwards.py` | OMIP | no | `data/omip/parquet/omip_forwards_{zone}_{YYYY}.parquet` |
 | `fetch/fetch_hydro_reservoirs.py` | MITECO Boletín Hidrológico | no | `data/miteco/embalses_historico.parquet` |
 | `fetch/fetch_jrc_ppdb_efficiency.py` | JRC-PPDB-OPEN (Zenodo) | no | `data/jrc_ppdb/jrc_spain_units.parquet` |
@@ -503,6 +507,38 @@ session 4 on 2020-04-01) and correctly yield no rows.
 Parsing is streamed one row-group per source file: the IDA-era months are
 ~17 M rows each and buffering a month in memory exhausts it.
 
+### OMIE `marginalpibc` — published intraday prices, and why deriving fails
+`data/omie/intraday_prices/omie_intraday_prices.parquet`, fetched 2026-08-21,
+token-free. **411,263 rows, 2017-12-31 → 2026-08-20, sessions 1-6.** Columns:
+`date`, `session`, `period`, `price_a` (Portugal), `price_b` (Spain).
+
+**`price_a` is Portugal and `price_b` is Spain — the same PT-then-ES order as
+`marginalpdbc`, confirmed from the data rather than assumed by analogy.** On the
+864 periods of 2018 where *both* markets split, `price_a` sits 3.94 €/MWh from
+the day-ahead PT price and 9.19 from ES, while `price_b` sits 2.71 from ES and
+7.68 from PT.
+
+**The intraday clearing price cannot be derived accurately from the bid
+archive.** In a uniform-price auction it is bracketed by `max(cleared sell) ≤
+p* ≤ min(cleared buy)`, but checked against the published files on 1,875
+date-session-periods:
+
+| estimator | median abs err | p95 | exact | mean err |
+|---|---|---|---|---|
+| max cleared sell | 0.010 | 7.802 | 48.8% | **+1.069** |
+| min cleared buy | 0.000 | 3.876 | 53.7% | −0.651 |
+| bracket midpoint | 0.245 | 7.139 | 22.2% | +0.209 |
+
+The day-ahead/intraday premium is about 1 €/MWh, so a p95 error of 3.9-7.8
+swamps it. And `max(cleared sell)` is a *lower* bound whose error should never be
+positive — it is positive on 10% of rows, averaging +5.28 there.
+
+**Filenames are `marginalpibc_YYYYMMDD<SS>.1` — date PLUS a two-digit session
+index**, not one file per day. A date-only guess 404s on every request and reads
+as "the dataset does not exist" rather than "the pattern is wrong". As with
+`marginalpdbc`, **2018-2022 exist only as yearly zips** and 2023 onward as daily
+files.
+
 ### REE daily generation / demand / balance — complete
 Daily only (see the hourly limitation below), 2018-01-01 → 2026-05-31, no
 empty months. Generation 49,201 rows / 17 series (one being the aggregate);
@@ -525,6 +561,33 @@ autumn ones — matching the transitions in the window exactly.
 
 This is the primary sub-hourly source and is strictly better than the hourly
 series originally sought.
+
+### REE demand forecast — the anticipated/unanticipated split
+`data/ree/ree_demand_forecast_5min.parquet`, fetched 2026-08-21, token-free.
+**884,880 instants, 3,072 of 3,073 days**, 5-minute, from `prevProgPeninsula`.
+Columns: `demand_forecast_mw` (*prevista*), `demand_scheduled_mw`
+(*programada*), `utc_timestamp`, `local_date`.
+
+Exists because every weather design in this repo treated a **realisation** as a
+surprise, when day-ahead offers are submitted at noon on D-1 against a forecast.
+This is the first forecast series here.
+
+Full-sample error: mean −147.6 MW, sd 798.1, MAE 404.6 (1.39% of demand). **On
+the clean quarters the sd is 200-490 MW** — comparable to, not larger than, a
+one-sd heat shock (537 MW).
+
+**Three periods must be excluded** (see the trap below): from 2025-12-12 (the
+documented realtime contract change breaks comparability of the *actuals*, MAE
+336 → 1,569), 2025Q2 (the 28 April 2025 blackout, sd 2,394), and 2023Q1 (mean
+error −1,204 MW, **unexplained**).
+
+**It is NOT a wind forecast**, which is what the day-ahead/intraday premium
+design needs. No token-free route exists: `demanda.ree.es` publishes no
+renewable-forecast endpoint (`prevProgRenovablePeninsula`,
+`prevRenovablePeninsula`, `prevProgEolicaPeninsula`, `eolicaPeninsula` all 404),
+and ESIOS indicator 541 **and `/archives` itself** return HTTP 403 without a
+token — so the token-free archive route that works for archives 82 and 83 does
+not extend to indicators. See [`notes/email-esios-token.md`](notes/email-esios-token.md).
 
 ### REN Portugal — complete
 `servicebus.ren.pt/datahubapi/electricity`, token-free, documented at
@@ -674,6 +737,55 @@ amortisation, and uses static full-load efficiency, not the part-load
 figure a unit actually runs at) — API2 is the Rotterdam *import* benchmark,
 and some plants may have burned domestic Spanish coal at a different price
 before the mines closed.
+
+### Population-weighted temperature — the demand-side weather index
+`data/weather/temperature_population_index.parquet`, fetched 2026-08-21,
+token-free (Open-Meteo ERA5, same source as `fetch_weather.py`). **21 cities,
+1,548,792 city-hours, 73,752 hours**, 2018-01-01 → 2026-05-31. Columns:
+`temp_pop_es`, `temp_pop_iberia`, `temp_es_unweighted`, `cdh_es`, `hdh_es`
+(cooling and heating degree hours, base 18 C).
+
+Exists because `fetch_weather.py`'s ten points were chosen to span the regions
+where **wind and solar capacity** sit — Tarifa, La Mancha, Badajoz — which is
+the right frame for an instrument for renewable output and the wrong one for
+demand. Peninsular only: the Canaries and Balearics are separate electrical
+systems and do not clear in MIBEL. Portugal is included and tagged, so an
+Iberian index is available for market-total work.
+
+**It barely matters empirically, and that is worth recording rather than
+hiding.** The population-weighted series correlates **+0.993** with the
+renewable-sited mean and **+0.996** with an unweighted city mean; even in the
+top 1% of hours the two read 34.1 C and 34.3 C. It runs 1.27 C warmer on
+average with essentially the same standard deviation. So it is the right series
+on principle and will not rescue a weak first stage. Weights are approximate
+municipal populations, adequate because temperature is strongly spatially
+correlated at national scale; replace with INE series by year if a design ever
+turns on the weights themselves.
+
+### OMIE `indisp` — declared unit unavailability, with cause and lead time
+`data/omie/indisp/parquet/`, fetched 2026-08-21, token-free. **100 months
+2018-01 → 2026-05, 44,636 distinct outage records, 1,529 units.**
+Semicolon-delimited, **not fixed-width** — none of this repo's fixed-width
+parsers apply. Latin-1, dot decimal.
+
+Columns: `snapshot`, `outage_id`, `start`, `end`, `unit`, `available_mw`,
+`reason` (free text, Spanish, inconsistently cased), `declared`, `country`.
+
+Two things nothing else here publishes. The **cause** (top reasons:
+`INDISPONIBILIDAD OPERACIONAL` 3,655, `MANTENIMIENTO` 1,413, `PARADA
+PROGRAMADA` 890), and the **declaration timestamp** — so `start - declared`
+gives lead time: median **0.11 days**, and **74.6% declared under 24 hours
+ahead**. That short-lead tail is where economic withholding would hide, and it
+is the reason to hold this dataset at all.
+
+OMIE republishes the whole forward register ~30 times a day; each revision is a
+full snapshot (checked: rev 1 and rev 2 of 2024-01-01 are 144 and 146 lines at
+the same file size), so the fetcher keeps the **last snapshot per calendar day**.
+
+**The unit codes are a PHYSICAL namespace, not the market registry's** — see
+the trap below. And **`indisppt` does not exist**: checked against OMIE, it and
+two spelling variants return a valid page with zero zips. The
+`pdbc`/`pdbcpt` analogy does not extend here.
 
 ---
 
@@ -831,6 +943,21 @@ null on the wrong side of the boundary** — do not treat them as continuous
 series. The three new names are carried through unrenamed; confirm their
 meaning against REE documentation before using them.
 
+### The demand-forecast series has three unusable periods, one unexplained
+`ree_demand_forecast_5min.parquet` looks clean on a spot check and is not:
+
+| period | error sd | MAE | corr | cause |
+|---|---|---|---|---|
+| before 2025-12-12 | 694 | 336 | 0.990 | usable |
+| from 2025-12-12 | 1,737 | 1,569 | 0.938 | the documented realtime contract change — the *actuals* changed, not the forecast |
+| 2025Q2 | 2,394 | — | — | the 28 April 2025 Iberian blackout |
+| 2023Q1 | 819 (mean −1,204) | — | — | **unexplained** |
+
+A spot check on one day gave an error sd of 1,023 MW and a claim that this
+"nearly doubles" the heat shock; on the full series the clean-quarter sd is
+200-490 MW and the claim is wrong. **Compute dispersion on the whole series, not
+a sampled day** — the sampled day happened to fall in a contaminated stretch.
+
 ### REE timestamps are local, not UTC
 `apidatos` returns e.g. `2024-01-01T00:00:00.000+01:00`. Converting to UTC
 before taking the date relabels 1 January as 31 December. Use the
@@ -878,6 +1005,19 @@ still read `00:00`..`23:45` in every case, so the labels alone are useless
 for DST; the **count** carries the information. `day_periods_utc(d, n, tz)`
 derives the step from the local-day span, which handles it.
 
+### The intraday market splits independently of the day-ahead market
+ES and PT intraday prices differ on **3.4% of periods in 2018 and ~13% in
+2022+** — and *not* on the same periods the day-ahead market splits (day-ahead
+2018: 5.2%). Filtering a design on day-ahead splitting alone therefore leaves
+intraday-split periods in.
+
+This bites hardest on anything derived from `curva_pibc_uof`, because the bid
+archive tags almost every unit `MI` rather than by zone (see the trap below), so
+pooling both zones' units in a split period picks up whichever side's price is
+higher. That is the mechanism behind the 10% of derived intraday prices that
+exceed the published clearing price, which the bracket inequality says is
+impossible.
+
 ### `country` in the bid files does NOT identify a unit's country
 Only ~4.7% of matched rows carry `ES` or `PT`; the rest are tagged `MI` for
 the joint MIBEL market. That share tracks the ~6.7% market-splitting rate, so
@@ -894,8 +1034,9 @@ label→code map in its sidebar, reachable as::
     /es/file-access-list?parents%5B0%5D=<code>&realdir=<code>   -> file listing
 
 Codes worth knowing beyond the ones already fetched: `pdbc`/`pdbcpt`/`pdbce`
-(cleared schedule: Spanish / Portuguese / by company), `indisp`/`indisppt`
-(unit unavailability), `capacidad_inter_*` (interconnection capacity and
+(cleared schedule: Spanish / Portuguese / by company), `indisp`
+(unit unavailability — **`indisppt` does not exist**, see below),
+`capacidad_inter_*` (interconnection capacity and
 occupation), `trades`/`orders`/`precios_pibcic` (continuous intraday),
 `cab`/`det` (offer header and detail).
 
@@ -912,6 +1053,27 @@ from that plant's own reported emissions). `eff_is_generic` in
 `Class_derived`-only rows explicitly — filter on it, not just on `eff` being
 non-null, or a small cogeneration plant's generic 0.23 efficiency will
 divide the 2022 gas-price spike into an implied cost over 1,000 €/MWh.
+
+### `indisp` unit codes are a physical namespace — 4.9% join the registry
+Of 1,529 distinct codes in the unavailability file, only **75 join
+`unit_registry.parquet`**. The rest are wind farms, micro-hydro and
+cogeneration named `AEROGEN`, `AGBAENA`, `98D-481` — plant identifiers that
+never appear as OMIE programming units. Stripping a trailing `B` recovers none,
+so it is a genuine namespace difference and not a suffix convention.
+
+That is not fatal, because of *which* 75 match: the large conventional units,
+`ASC1` (Ascó 1), `ABO1`, `ARCOS1`, `BES3`. Coverage therefore depends entirely
+on which fleet is being asked about:
+
+| population | covered |
+|---|---|
+| all 1,529 `indisp` codes | 75 (4.9%) |
+| the 68 plant-specific-efficiency marginal-cost units | **55 (80.9%)** |
+| top 200 units by cleared volume | 41 (20.5%) |
+
+**Measure coverage on the fleet you are using, not on the file.** The 4.9%
+headline is the wrong number for every design that would reach for this
+dataset, and the 80.9% is the right one for a thermal markup design.
 
 ### JRC's `eic_g` is not always a valid join key
 A handful of Spanish units (La Muela's pumped-storage generators among

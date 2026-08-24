@@ -24,3 +24,11 @@ outputs/tables/*.parquet
 .Rhistory
 .RData
 .Rproj.user/
+
+# LaTeX build intermediates (regenerable via slides/build-tex.sh)
+*.aux
+*.nav
+*.snm
+*.toc
+*.out
+slides/*.log

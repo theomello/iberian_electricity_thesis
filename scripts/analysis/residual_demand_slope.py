@@ -66,9 +66,12 @@ DATA = ROOT / "data"
 BIDS = DATA / "omie/bids/parquet"
 
 SAMPLE_DAY = 15          # mid-month; exists in every month
-BANDWIDTHS = (1.0, 2.0, 5.0, 10.0)   # euro/MWh
-IDENTITY_TOL = 0.001     # relative gap between matched buy and matched sell
-ZERO_PRICE = 1.0         # euro/MWh; at or below this, eta is not meaningful
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
+from residual_demand import (  # noqa: E402
+    BANDWIDTHS, IDENTITY_TOL, KEY, ZERO_PRICE, band_offers,
+    cleared_by_period, slope_from_band_mw,
+)
 
 
 def load_prices() -> pd.DataFrame:
@@ -98,39 +101,21 @@ def load_system() -> pd.DataFrame:
 
 
 def month_slopes(bids: pd.DataFrame, px_m: pd.DataFrame) -> pd.DataFrame:
-    """Vectorised equivalent of period_slopes over a whole month.
-
-    The per-period loop is O(rows x periods) and does not survive the full
-    archive (~89,000 periods). Merging the clearing price onto the offer rows
-    turns the band test into one boolean column, after which every bandwidth is
-    a single groupby. Verified against period_slopes on the sample.
-    """
-    key = ["date", "period"]
-    px_m = px_m[key + ["price_es", "split", "resolution_min", "utc_timestamp"]]
-
-    mat = bids[bids.status == "C"]
-    m = (mat.groupby(key + ["side"])["power_mw"].sum()
-            .unstack("side").reindex(columns=["V", "C"]).fillna(0.0))
-    m.columns = ["sell_matched", "buy_matched"]
-    m = m[m.sell_matched > 0].reset_index()
-    m["identity_gap"] = (m.sell_matched - m.buy_matched).abs() / m.sell_matched
-
-    out = m.merge(px_m, on=key, how="inner").rename(
+    """Vectorised slopes for a whole month. See scripts/lib/residual_demand.py."""
+    px_m = px_m[KEY + ["price_es", "split", "resolution_min", "utc_timestamp"]]
+    m = cleared_by_period(bids)
+    out = m.merge(px_m, on=KEY, how="inner").rename(
         columns={"price_es": "p_star", "sell_matched": "q_cleared"})
 
-    off = bids[bids.status == "O"].merge(
-        out[key + ["p_star"]], on=key, how="inner")
-    dev = (off.price_eur_mwh - off.p_star).abs()
-
     for h in BANDWIDTHS:
-        mw = (off.loc[dev <= h].groupby(key)["power_mw"].sum()
-                 .rename(f"mw_h{h:g}"))
-        out = out.merge(mw, on=key, how="left")
-        slope = out[f"mw_h{h:g}"].fillna(0.0) / (2 * h)
+        mw = (band_offers(bids, out, h).groupby(KEY)["power_mw"].sum()
+                                       .rename(f"mw_h{h:g}"))
+        out = out.merge(mw, on=KEY, how="left")
+        slope, impact, eta = slope_from_band_mw(
+            out[f"mw_h{h:g}"], h, out.p_star, out.q_cleared)
         out[f"slope_h{h:g}"] = slope
-        out[f"impact_h{h:g}"] = np.where(slope > 0, 1 / slope.replace(0, np.nan), np.nan)
-        out[f"eta_h{h:g}"] = np.where(
-            (slope > 0) & (out.p_star > 0), slope * out.p_star / out.q_cleared, np.nan)
+        out[f"impact_h{h:g}"] = impact
+        out[f"eta_h{h:g}"] = eta
     return out.drop(columns=[f"mw_h{h:g}" for h in BANDWIDTHS])
 
 

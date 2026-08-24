@@ -30,6 +30,11 @@ search is offline after the first run.
 NOTE: written against the documented ESIOS contract but NOT yet executed --
 no token existed at authoring time (2026-08-07). Run ``--probe`` first; if
 the auth header or response shape differs, that is the place it will show.
+
+The --forecasts preset (indicators 541/542) is likewise unexecuted: no token
+existed at authoring time. When a token arrives, run --probe first, then
+--search "previsión" to confirm the catalogue names before trusting
+--forecasts to have resolved the right series.
 """
 
 from __future__ import annotations
@@ -52,6 +57,39 @@ CATALOGUE = OUT / "indicator_catalogue.parquet"
 
 # geo id for peninsular Spain in the ESIOS geo taxonomy
 GEO_PENINSULAR = 8741
+
+# Forecast indicators. IDs are recorded because the ESIOS documentation gives
+# them explicitly, but they are ALWAYS re-resolved by name against the live
+# catalogue before use -- ESIOS indicator ids are unstable across time, which
+# is why this script resolves by name everywhere else too. The id is the
+# fallback when the name search returns nothing.
+FORECAST_INDICATORS = {
+    "Previsión de la producción eólica nacional": 541,
+    "Previsión de la producción solar fotovoltaica": 542,
+}
+
+
+def resolve_forecast_ids(cat) -> list[int]:
+    """Resolve the forecast indicators by catalogue name, falling back to id.
+
+    Returns the ids to fetch and prints what matched, so a silent resolution
+    to the wrong series is visible rather than buried.
+    """
+    ids: list[int] = []
+    for name, fallback in FORECAST_INDICATORS.items():
+        hit = cat[cat["name"].str.contains(name, case=False, na=False)]
+        if len(hit) == 1:
+            ind_id = int(hit.iloc[0]["id"])
+            print(f"  resolved by name: {name!r} -> {ind_id}")
+        elif len(hit) > 1:
+            ind_id = int(hit.iloc[0]["id"])
+            print(f"  AMBIGUOUS ({len(hit)} matches) for {name!r}; "
+                  f"taking id {ind_id}. Check with --search.")
+        else:
+            ind_id = fallback
+            print(f"  no name match for {name!r}; falling back to id {ind_id}")
+        ids.append(ind_id)
+    return ids
 
 
 def esios_session(token: str):
@@ -106,6 +144,9 @@ def main() -> int:
     ap.add_argument("--probe", action="store_true", help="validate token, show catalogue size")
     ap.add_argument("--search", help="case-insensitive substring search over indicator names")
     ap.add_argument("--ids", nargs="*", type=int, help="indicator ids to download")
+    ap.add_argument("--forecasts", action="store_true",
+                    help="fetch the wind and solar generation forecasts "
+                         "(indicators 541/542), resolved by catalogue name")
     ap.add_argument("--start", type=date.fromisoformat, default=START)
     ap.add_argument("--end", type=date.fromisoformat, default=END)
     ap.add_argument("--geo", type=int, default=GEO_PENINSULAR)
@@ -130,6 +171,9 @@ def main() -> int:
 
     cat = fetch_catalogue(sess, refresh=args.refresh_catalogue)
     print(f"catalogue: {len(cat)} indicators -> {CATALOGUE}")
+
+    if args.forecasts:
+        args.ids = (args.ids or []) + resolve_forecast_ids(cat)
 
     if args.search:
         hay = cat.astype(str).agg(" ".join, axis=1).str.lower()

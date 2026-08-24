@@ -448,3 +448,94 @@ whether that X €/MWh is explained by the environment changing (residual
 demand, rivals' costs) or by conduct changing, which is the sharper causal
 claim and the one no existing paper (see §"González-de Miguel..." above)
 comes close to.
+
+## 2026-08-21: the 2022 drought — a usable control, not identifying variation
+
+Raised because the Iberian Exception took effect 15 June 2022 in the middle of a
+severe Iberian drought (national reservoir fill ~0.48 and falling; published
+assessments of the cap say the drought and the cap **jointly** explain the
+summer-2022 fall in hydro generation and are hard to separate — see
+[`literature-extreme-weather-economics.md`](literature-extreme-weather-economics.md)
+§5). Two questions, tested in order, both answered.
+
+### It is separable from the gas-price path — which is not obvious
+
+The 2021 levy design died because *any* regressor shaped like the gas-price path
+predicted the outcome (`levy_contract_exposure.py`). That trap was checked
+before building anything this time:
+
+| measure, cap window 2022-06-15 → 2023-12-31 | corr with MIBGAS, levels | corr, daily changes |
+|---|---|---|
+| national reservoir fill | −0.31 | −0.09 |
+| fill anomaly (de-meaned by ISO week) | −0.32 | −0.03 |
+| weekly change in fill | −0.19 | −0.06 |
+
+Fill moves **non-monotonically** inside the window (0.314 → 0.517, sd 0.065)
+while gas collapses monotonically from 92.3 to 31.1 €/MWh. The high-frequency
+components are orthogonal. So reservoir state **can** be entered alongside the
+gas path without one absorbing the other, and it is a legitimate control for
+question 2 — did the uncapped technologies raise their offers — where hydro's
+untreated behaviour was being moved by an unrelated shock.
+
+That is the useful result, and it is modest.
+
+### It is not an instrument for market power — the first stage is absent
+
+The attractive version was: drought → less hydro competing → steeper residual
+demand → more market power → less pass-through of the cap. Weather-driven
+variation in the *incentive to mark up*, inside the treated period, needing no
+before/after comparison at all. It does not survive its first stage.
+
+**Market level** (`residual_demand_slope_full.parquet`, hour + year-month FE,
+controls for log demand and VRE share): fill anomaly on residual-demand
+elasticity gives β = −0.645 (se 0.932) full sample. The channel needs β > 0.
+
+**Firm level** (`firm_residual_demand_drought.py`, built for this: the same
+band-density estimator with the firm's *own* offers removed from the ±5 €/MWh
+band, 888,815 firm-periods, 350,995 after dropping split periods and
+clearing-identity failures, 10 firms). The market-level object is the slope
+facing an *infinitesimal* participant and averages over firms, so whether
+drought steepens the residual demand facing **Iberdrola specifically** — which
+depends on whether *Iberdrola's rivals* hold the hydro — is a different
+question. It is answered the same way:
+
+| | β on log(price impact) | se | t |
+|---|---|---|---|
+| pooled, firm × hour + year-month FE | **+1.14** | 1.64 | 0.70 |
+| all ten firms individually | **+0.17 to +2.93** | — | max t = 1.49 |
+| cap window only (19 month clusters) | +1.67 | 8.18 | 0.20 |
+
+The channel needs β < 0 (drought = low fill anomaly should *raise* price
+impact). Every one of the ten firm-specific estimates is **positive** — drought
+makes residual demand *flatter*. None is significant, and there is no gradient
+with rival hydro exposure: Axpo, with the highest rival hydro share (19.1%),
+gives +1.03; EDP, with the lowest (12.1%), gives +1.11.
+
+Scale, so the null is not overread: fill anomaly sd = 0.0883, so β = 1.14 is
++10.1% on price impact per 1-sd drier-to-wetter move, 95% CI roughly
+[−18.3%, +38.5%]. That is **not a precise zero** — it is a wide interval
+centred on the wrong sign, with no firm-level heterogeneity available to
+rescue it.
+
+**Why the heterogeneity was always thin.** Rival hydro exposure across the top
+ten firms spans only 12.1% (EDP) to 19.1% (Axpo). No Spanish firm is large
+enough for its own hydro to move the *rivals'* aggregate much, so every large
+firm faces close to the same rival technology mix. Own hydro share varies far
+more (0.05% to 32.8%) but by construction does not enter a firm's own residual
+demand. This is a structural feature of the market, and it caps any design that
+wants cross-firm variation in exposure to a technology-specific shock.
+
+### What this leaves
+
+Hydrology moves the **price** strongly (corr of the fill anomaly with the
+clearing price = −0.41) and firms' **residual-demand steepness** not at all.
+That is a merit-order effect, not a competition effect. The drought therefore
+enters this design as a control on question 2 and nothing more; it is not a
+route to a conduct result.
+
+Two bugs found and fixed while establishing this, both of the silent kind:
+`hour_utc` in the slope panel is a full timestamp, not an hour, so factorising
+it directly creates one fixed effect per row and absorbs the regressor
+completely (first run returned exact zeros with zero standard errors); and
+selecting a duplicated column name — `fe2` and the cluster variable are both
+`ym` — returns a DataFrame rather than a Series.

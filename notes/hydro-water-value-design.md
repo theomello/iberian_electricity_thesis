@@ -634,3 +634,89 @@ than the Snowy Scheme, consistent with this design's own rain probe finding
 no signal — expect `Snow` to carry little weight here, if it's kept at all.
 No replication code exists for the paper (checked); the estimating equations
 above are the only reusable artefact.
+
+## 2026-08-21, the spill-window design: correctly signed, bootstrap-clearing,
+## and killed by its own event study
+
+The two probes above both failed on **rainfall or fill measured smoothly**. The
+2026-08-17 note's own diagnosis of why — "a large reservoir can buffer a wet or
+dry quarter without its marginal value moving much" — is an argument against
+*smooth* hydrology, not against hydrology. So this probe tested the sharp,
+state-dependent version: the **spill constraint**. Water arriving at a reservoir
+with no headroom either generates or is lost over the weir, so its opportunity
+cost collapses for a few days. Three changes from the earlier probes:
+
+1. **Daily, not monthly.** Three-day cumulative basin precipitation against
+   daily offers.
+2. **The interaction is the object,** not a main effect. `beta < 0` on
+   `shock x antecedent wetness` — an inflow shock should cut the offer *by more*
+   where there was no room to store it.
+3. **Both arms weather-driven.** Antecedent wetness is cumulative own-basin
+   precipitation over t−90 to t−4, not realised fill, precisely so the
+   2026-08-18 reverse-causality path is cut rather than reintroduced.
+
+Identification is unit + **date** fixed effects. Date FE absorb the gas price,
+carbon, the levy, the gas cap and national demand in one stroke; precipitation
+varies across the nine basins within a single day, so the rain terms survive.
+That within-auction comparison is what the monthly designs could not do.
+
+Feasibility was checked before any regression: the joint cell is populated —
+2,007 unit-days of top-decile three-day rain at above-median basin fill, 219
+distinct episodes, spread over all nine basins and all nine years, with the
+low-fill contrast arm equally populated (2,186 unit-days). Power was not the
+constraint.
+
+`scripts/analysis/hydro_spill_window_did.py`, 58,815 unit-days.
+
+### It looks like it works
+
+| block | outcome | beta | t | p_wcb |
+|---|---|---|---|---|
+| shock × wet90 | marginal accepted | −0.173 | −2.55 | 0.148 |
+| shock × wet90 | 10th-pct offer | −0.056 | −1.29 | 0.266 |
+| **placebo** shock × wet90 | marginal accepted | −0.051 | −0.53 | 0.609 |
+| shock × **1(fill in basin's top quartile)** | marginal accepted | **−0.302** | **−3.71** | **0.039** |
+
+Every offer outcome carries the predicted sign, the wrong-basin placebo is null
+on all four — the basin-specificity the 2026-08-17 probe never produced — and
+the threshold form clears a wild cluster bootstrap on nine basins. No earlier
+hydro probe in this repo got this far.
+
+### The event study says it is not real
+
+Split by fill regime, the shock-day coefficient in the **high-fill** arm — the
+arm where a spill constraint does all of its work — is **+0.008 (t = 0.16)**.
+Nothing. The whole interaction comes from the **low-fill** arm, which jumps
+**+0.159 (t = 3.48)** on the shock day. A negative interaction assembled from a
+positive low-fill response and a zero high-fill response is arithmetic, not a
+spill constraint.
+
+On the 10th-percentile outcome the high-fill arm carries large negative
+coefficients at k = −5, −4, −3, −2 (t to −2.10) and a k = 0 sitting right on
+that path: a drift already under way, not an event.
+
+Two checks close it:
+
+- **Not a censoring artefact.** The +0.13 shock effect on the marginal accepted
+  offer is not the unit climbing its own offer curve as the shock moves its
+  volume — adding log cleared MWh as a control moves it from +0.131 to +0.137.
+  Rain genuinely raises the price at which these plants agree to run. Wrong sign
+  for a cost shifter, and now the **third** wrong-signed hydro result here.
+- **The one robust finding is physical.** In basins already in their top fill
+  quartile, extreme rain cuts *offered* volume by 13% (p_wcb = 0.008, the only
+  result that clears the bootstrap comfortably). Plants withdraw capacity during
+  floods — spill bypass, ramping limits, flood-control operation. A supply
+  restriction, not a water value, and one of ~30 tests in that file.
+
+### Two lessons worth more than the result
+
+**With nine clusters, a correctly signed interaction that clears a bootstrap is
+not enough.** The event study is what separated a mechanism from an arithmetic
+artefact. Run it before believing any single coefficient from this family.
+
+**Day-ahead bids are submitted against a weather *forecast*.** Realised
+precipitation is not a surprise to a plant bidding the day before — see
+[`literature-extreme-weather-economics.md`](literature-extreme-weather-economics.md)
+§3.2. Any future version of this should treat the forecast, not the realisation,
+as the treatment; that is a design flaw shared by all three probes above and it
+was not recognised until the literature pass.

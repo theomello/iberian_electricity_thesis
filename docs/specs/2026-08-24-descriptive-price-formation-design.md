@@ -30,9 +30,16 @@ by establishing what actually changed and where.
 
 ## §1 — The question, and the identity it rests on
 
-**RQ: As variable renewable energy (VRE) went from 21% to 38% of Spanish
-generation between 2018 and 2026, how did the structure of price formation in
-MIBEL change — and does aggregate concentration still describe it?**
+**RQ: As variable renewable energy (VRE) rose across 2018–2026, how did the
+structure of price formation in MIBEL change — and does aggregate concentration
+still describe it?**
+
+Two VRE measures appear in this repo and they are not interchangeable. The
+**median hourly wind-plus-solar share of demand** in the analysis sample runs
+**21.0% → 38.4%**; the **annual wind-plus-solar share of generation** runs
+**23.9% (2018) → 41.8% (2024)**. The chapter uses the hourly measure, because
+every statistic here is period-level; the annual figure appears only when
+quoting published totals.
 
 MIBEL is the Iberian electricity market (*Mercado Ibérico de Electricidad*),
 which clears Spain and Portugal jointly against one merged bid stack.
@@ -98,7 +105,7 @@ the supply-curve anatomy as its mechanism.
 | # | Series | Source | New work |
 |---|---|---|---|
 | 1 | `η_t` — market residual-demand elasticity at `p*` | built, 79,036 periods | none; re-used |
-| 2 | `η_it`, `|RD′_it|` — **firm-specific** slope, ability and incentive indices | bids `O` + `unit_agents.parquet` | one sweep |
+| 2 | `eta_i` and the firm-specific slope, plus the ability and incentive indices | bids `O` + `unit_agents.parquet` | one sweep |
 | 3 | `HHI_total`, `HHI_margin` | bids `C`/`O` + `unit_agents.parquet` | same sweep |
 | 4 | `θ_it` — bilateral contract position | `pdbf`, `role_code == "4"` | join |
 | 5 | Supply-curve anatomy | bids `O` + `cab` | partly exists |
@@ -143,8 +150,11 @@ ability    η_i   = q_it / (100 · |RD′_it|)              €/MWh per 1% withh
 incentive  η_i^C = η_i · (q_it − θ_it) / q_it
 ```
 
-Built for the parent firms flagged `is_major` in `unit_agents.parquet` — the
-~8–12 with meaningful dispatchable plant.
+Built for the parent firms flagged `is_major` in `unit_agents.parquet`. Checked
+2026-08-24: **18 major firms** hold units in the four supply roles, led by EDP,
+Axpo, Iberdrola and Acciona. Note that 52.2% of supply *units* carry no firm
+attribution while 89.1% of near-marginal *volume* does — the unit count is the
+misleading one, and coverage is reported on volume throughout (§5).
 
 ### 2.3 θ is a proxy and must be labelled one
 

@@ -667,7 +667,14 @@ print(maj.groupby('firm').ability_h5.median().sort_values(ascending=False).head(
 "
 ```
 
-Expected: firm-specific `eta_i` is **below** the market `eta` in every year (a real firm faces steeper residual demand), and it declines over the window as the market series does.
+Expected: **`eta_i` sits ABOVE the market `eta` in every year, and that is correct.** A
+real firm faces a weakly *steeper* residual demand — `|RD'_i| <= |RD'|`, which is
+verify invariant 1 — but `eta_i = |RD'_i| p* / q_i` divides by the firm's own much
+smaller quantity rather than by market volume, so the elasticity comes out larger.
+The two elasticities are evaluated at different scales and **must never be plotted on
+one axis or compared as levels**. The comparable within-firm object is
+`lerner_bound_h5 = 1 / eta_i_h5`. (An earlier draft of this step asserted the
+opposite; corrected 2026-08-24 after the implementer flagged it.)
 
 - [ ] **Step 7: Commit**
 

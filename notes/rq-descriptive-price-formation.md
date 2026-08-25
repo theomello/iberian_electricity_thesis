@@ -250,20 +250,42 @@ cleared volume:
 [established]. The peak coincides exactly with the gas crisis, which is what
 §5.2 is about.
 
-**Iberdrola's incentive index is persistently negative while its ability is
-positive** [established]. That is the Hortaçsu & Puller (2008) contract-position
-sign flip: `θ > q`, so the firm is a **net buyer** in the day-ahead auction and
-wants the price *down*, whatever its ability to push it up. It is consistent
-with Iberdrola dominating the bilateral-contract panel (621 TWh of θ, more than
-three times the next firm).
+**The incentive column carries a coverage trend that the ability column does
+not — read this table with the drift beside it.** `incentive = ability ·
+(q − θ)/q` depends on θ, and θ's firm-mapping coverage is not stable:
 
-**Correction to the earlier reading: Iberdrola is not alone** [established].
-Naturgy's incentive is negative from 2019 onward, and Endesa's is negative in
-2018–2023 before turning positive in 2024. Three of the six largest firms spend
-substantial stretches of this window as net day-ahead buyers. The sign flip is a
-feature of the Iberian contracting structure, not one firm's idiosyncrasy, and
-any design that reads ability as an incentive will get the sign wrong for a
-large share of the market.
+| year | 2018 | 2020 | 2022 | 2023 | 2024 | 2025 | 2026 |
+|---|---|---|---|---|---|---|---|
+| `theta_coverage` (median) | 0.739 | 0.886 | 0.923 | **0.942** | 0.838 | 0.819 | 0.805 |
+
+Coverage rises to a 2023 peak and then falls by about 14 points. Unmapped θ is
+θ *attributed to no firm*, so a firm's own θ can look smaller purely because the
+mapping got worse — which pushes `(q − θ)/q` up, i.e. **makes incentive look more
+positive**. **Where ability and incentive disagree, ability is the clean series**
+[established].
+
+**Iberdrola's incentive index is persistently negative while its ability is
+positive** [bounded]. That is the Hortaçsu & Puller (2008) contract-position sign
+flip: `θ > q`, so the firm is a **net buyer** in the day-ahead auction and wants
+the price *down*, whatever its ability to push it up. It is consistent with
+Iberdrola dominating the bilateral-contract panel (621 TWh of θ, more than three
+times the next firm), and it is the one incentive result robust to the drift —
+the sign holds in every year including the 2023 coverage peak, and the magnitude
+is far too large to be a mapping artefact.
+
+**Iberdrola is not alone, but the timing of the others is confounded**
+[confounded]. Naturgy's incentive is negative from 2019 onward and Endesa's in
+2018–2023, so three of the six largest firms spend substantial stretches as net
+day-ahead buyers — the sign flip is a feature of Iberian contracting, not one
+firm's idiosyncrasy. **But Endesa's flip to positive in 2024 (−0.049 → +0.076)
+lands in exactly the year θ coverage drops 0.942 → 0.838**, which is precisely
+the confound above and precisely the direction it predicts. Do not read that flip
+as a change in Endesa's contract position. Its *ability* series shows no such
+break (0.071 → 0.114 → 0.134), which is the reason to trust ability here.
+
+The general lesson for any design built on these indices: **ability is measured
+from the bid archive alone and inherits only the ownership mapping; incentive
+inherits the ownership mapping twice over, through θ as well.**
 
 **Axpo's θ is ≈ 0, so its ability and incentive coincide exactly** [established]
 — consistent with `CLAUDE.md`'s note that Axpo is a *representante* trading
@@ -289,21 +311,25 @@ even monotone through it. The spec required re-estimating both trends on
 **2018–2020 + 2024–2026 only**, before anyone reads a mechanism into the series.
 
 Specification: `y_t = b·t + hour-of-day FE + month-of-year FE (+ block FE)`, `t`
-in years, standard errors clustered on year-month. Six columns; `clean` pools the
-two clean blocks with one slope, `clean+block` adds a late-block dummy so the
-slope is identified from **within-block** variation only and cannot borrow
-strength from the level gap across the excluded years.
+in years, standard errors clustered on year-month. Six specifications; `clean`
+pools the two clean blocks with one slope, `clean+block` adds a late-block dummy
+so the slope is identified from **within-block** variation only and cannot borrow
+strength from the level gap across the excluded years, and `clean+15min` adds a
+dummy for the 15-minute market time unit.
 
-| outcome (log) | full | clean | clean+block | early 18–20 | late 24–26 |
-|---|---|---|---|---|---|
-| `eta_h5` | −0.152 (t −12.9) | −0.154 (t −13.0) | −0.206 (t −4.8) | −0.289 (t −7.3) | −0.073 (t −0.9) |
-| **`p_star`** | +0.008 (t 0.5) | +0.013 (t 1.0) | −0.184 (t −3.5) | **−0.285 (t −8.7)** | +0.003 (t 0.0) |
-| **`eta_h5 / p_star`** | −0.161 (t −12.6) | −0.167 (t −20.1) | **−0.022 (t −0.7)** | **−0.004 (t −0.2)** | −0.076 (t −1.1) |
-| `hhi_margin_h5` | +0.076 (t 15.2) | +0.080 (t 16.3) | **+0.015 (t 0.8)** | **−0.036 (t −2.5)** | +0.094 (t 3.9) |
-| `hhi_margin` × cov² | +0.032 (t 5.8) | +0.035 (t 7.1) | +0.028 (t 1.5) | −0.035 (t −2.5) | +0.087 (t 3.1) |
-| `hhi_total` | −0.020 (t −6.4) | −0.019 (t −6.2) | −0.049 (t −4.3) | −0.047 (t −2.9) | −0.036 (t −3.7) |
-| `band_density_h5` | −0.161 (t −11.4) | −0.166 (t −19.9) | −0.016 (t −0.5) | −0.033 (t −1.8) | −0.023 (t −0.3) |
-| `share_at_zero` (level) | +0.0149 (t 20.4) | +0.0153 (t 21.4) | +0.0090 (t 3.1) | +0.0104 (t 4.5) | +0.0078 (t 1.4) |
+| outcome (log) | full | clean | clean+block | clean+15min | early 18–20 | late 24–26 |
+|---|---|---|---|---|---|---|
+| **`eta_h5`** | −0.152 (t −12.9) | −0.154 (t −13.0) | **−0.206 (t −4.8)** | −0.175 (t −11.9) | −0.289 (t −7.3) | −0.073 (t −0.9) |
+| `p_star` | +0.008 (t 0.5) | +0.013 (t 1.0) | −0.184 (t −3.5) | +0.015 (t 0.8) | −0.285 (t −8.7) | +0.003 (t 0.0) |
+| `eta_h5 / p_star` | −0.161 (t −12.6) | −0.167 (t −20.1) | −0.022 (t −0.7) | −0.190 (t −16.0) | −0.004 (t −0.2) | −0.076 (t −1.1) |
+| **`hhi_margin_h5`** | +0.076 (t 15.2) | +0.080 (t 16.3) | **+0.015 (t 0.8)** | +0.079 (t 12.5) | **−0.036 (t −2.5)** | +0.094 (t 3.9) |
+| `hhi_margin` × cov² | +0.032 (t 5.8) | +0.035 (t 7.1) | +0.028 (t 1.5) | +0.024 (t 3.9) | −0.035 (t −2.5) | +0.087 (t 3.1) |
+| `hhi_total` | −0.020 (t −6.4) | −0.019 (t −6.2) | −0.049 (t −4.3) | −0.012 (t −3.0) | −0.047 (t −2.9) | −0.036 (t −3.7) |
+| `band_density_h5` | −0.161 (t −11.4) | −0.166 (t −19.9) | −0.016 (t −0.5) | −0.195 (t −16.7) | −0.033 (t −1.8) | −0.023 (t −0.3) |
+| `share_at_zero` (level) | +0.0149 (t 20.4) | +0.0153 (t 21.4) | +0.0090 (t 3.1) | +0.0165 (t 18.0) | +0.0104 (t 4.5) | +0.0078 (t 1.4) |
+
+Clusters: 101 (full), 65 (clean), **36 (early)**, 29 (late). The early block's 36
+year-month clusters are what the −0.036 (t = −2.51) below rests on.
 
 **Verdict, in three parts.**
 
@@ -312,32 +338,63 @@ strength from the level gap across the excluded years.
 not what produces either trend, and the naive worry — that a straight line
 through the gas spike manufactured the result — is dead.
 
-**(b) But the raw `eta` decline is substantially a price-level effect**
-[established, and this is new]. `η = |RD′| · p*/q`, so it is proportional to the
-clearing price and a fuel-price move drags it around with no change whatever in
-the stack. Within 2018–2020, log `p*` falls at −0.285/yr and log `η` falls at
-−0.289/yr — the two are numerically indistinguishable. Netting the price out
-leaves `η/p* = |RD′|/q`, a pure quantity object, and its early-block trend is
-**−0.004 (t = −0.18): zero**. The price-netted decline holds at every bandwidth
-(early-block estimates −0.018, −0.015, −0.004, +0.014 for h1, h2, h5, h10; none
-significant).
+**(b) The `η` decline cannot be separated from the price level in the early
+block — but `η` is still the right series** [confounded].
 
-**(c) Both spine trends are level shifts across the crisis, not slopes through
-it** [established]. Under `clean+block`, the price-netted elasticity trend is
-−0.022 (95% CI [−0.084, +0.040]) and the `hhi_margin` trend is +0.015
-(CI [−0.019, +0.049]). In both cases the pooled slope (−0.167, +0.080) lies
-**outside** that interval, so this is a rejection rather than a power failure.
-And within 2018–2020, `hhi_margin` runs the *wrong way* — −0.036/yr, t = −2.51,
-negative at every bandwidth. Concentration at the margin was flat-to-falling
-before the crisis, rose across it, and has kept rising since (late block +0.094,
-t = 3.90) without reverting.
+Within 2018–2020, log `p*` falls at −0.285/yr and log `η` at −0.289/yr, and
+`η/p* = |RD′|/Q` is flat (−0.004, t = −0.18) at every bandwidth (−0.018, −0.015,
+−0.004, +0.014 for h1/h2/h5/h10, none significant). An earlier draft of this note
+read that as `η` being contaminated by the price level and `η/p*` being the clean
+structural object. **That is backwards, and the correction matters.**
 
-**What this means for the chapter, stated plainly.** The spine is **not** a
-smooth secular trend driven by renewable growth. It is a **step change
-concentrated at the 2021–2023 crisis that did not reverse**, plus a genuine
-continuation in the late block. The chapter must be written as that, not as a
-gradual re-organisation. The honest sentence is: *price formation in MIBEL
-re-organised around the gas crisis and stayed re-organised* — which is a more
+Take a pure proportional rescaling of the whole stack by λ — a fuel shock,
+nothing structural. `|RD′|` counts offered MW inside a band that is **fixed in
+euros**, so that band now spans 1/λ of the relative price range and
+`|RD′| ∝ 1/λ`. Then `η = |RD′|·p*/Q` is **invariant**, exactly as an elasticity
+should be, while `η/p*` scales as 1/λ. Confirmed numerically on simulated step
+curves: for λ = 0.5, 1, 2 the elasticity reads 0.829, 0.830, 0.830 while `η/p*`
+halves at each step. So it is `η/p*`, not `η`, that a price move drags around.
+This is the same fixed-€-band mechanic §5.5 already invokes, and the earlier
+draft contradicted itself between the two sections.
+
+The identity settles which series belongs in the chapter. `L = s/η` is a
+**proportional** markup, so a lower `η` at a lower `p*` is a genuinely larger
+proportional markup bound, not an artefact. `η/p*` is a semi-elasticity and
+appears nowhere in the identity. **Raw `η` is the headline series and Figure 1 is
+correct as drawn.**
+
+What the data show is therefore an **observational equivalence**, not an
+attribution: `|RD′|/Q` was flat while `p*` fell. That is consistent with
+€-sticky offer steps (a stack that did not rescale, so a falling price walked
+down a fixed ladder and `η` fell mechanically) *and* with real proportional
+steepening that happened to offset. **Nothing in this data separates them**, and
+the direction is not settled either way. Both series are reported; neither is
+presented as the corrected version of the other.
+
+**(c) The margin-concentration rise is a level shift; the elasticity decline is
+not** [established]. These must be stated separately, because they behave
+differently:
+
+- **`η` survives the strict test.** Under `clean+block` it is −0.206 with
+  t = −4.77, at 1.35× the pooled slope. The elasticity decline is robust in every
+  specification run — full, clean, within-block, with a 15-minute dummy, and at
+  all four bandwidths.
+- **`hhi_margin` does not.** Under `clean+block` it is +0.015 (t = 0.84). The
+  load-bearing evidence is the two blocks estimated separately, which are
+  independent samples: **within 2018–2020 it runs the wrong way at −0.036,
+  t = −2.51 on 36 clusters, negative at all four bandwidths**, and within
+  2024–2026 it rises at +0.094, t = +3.90. Concentration at the margin was
+  flat-to-falling before the crisis, stepped up across it, and has kept rising
+  since without reverting. (The `clean+block` point estimate sits outside the
+  pooled CI, but that comparison is a heuristic — the two estimates come from the
+  same data and are not independent — so nothing rests on it.)
+
+**What this means for the chapter.** The elasticity story is a trend and can be
+written as one. The **concentration** story is not: it is a step change
+concentrated at the 2021–2023 crisis that did not reverse, plus genuine
+continuation after 2024. The honest sentence is: *residual demand steepened
+throughout, while the ownership of the margin re-organised around the gas crisis
+and stayed re-organised* — which is a more 
 specific and more interesting claim than the one the design started with, and a
 harder one to attribute to VRE growth alone.
 
@@ -370,13 +427,28 @@ mean, and it is superseded. The reproducible version:
 | `p* ∈ [70,100]` | 4,567 | 4,841 | +6.0% |
 | `p* ∈ [75,95]` | 4,888 | 5,194 | +6.2% |
 
-The raw row is not the like-for-like comparison, because median `p*` is 77.5 in
-September and 93.5 in October and a fixed ±5 €/MWh band is a narrower *relative*
-window at the higher price. **Price-matched, the break is worth about +6% against
-a +79% window trend** [bounded]. Raw, it runs *negative*. Either reading leaves
-the break an order of magnitude too small to produce the result, and the raw one
-has the wrong sign to produce it at all — so the conclusion the superseded figure
-supported still stands, on numbers that reproduce.
+The raw row is **not** a usable comparison and is shown only to document what the
+uncorrected number looks like: median `p*` is 77.5 in September and 93.5 in
+October, and a fixed ±5 €/MWh band is a narrower *relative* window at the higher
+price, so the two months are not measuring the same object. The conclusion rests
+on the price-matched rows alone.
+
+**Price-matched, the break is worth about +6% against a +79% window trend**
+[bounded] — an order of magnitude too small to produce the result.
+
+**`η` by resolution era** [established], which the spec asks for and the
+`hhi_margin` check above does not cover:
+
+| era | by year |
+|---|---|
+| 60-minute (62,721 periods) | 2018 1.83 · 2020 0.97 · 2022 0.89 · 2024 0.66 · 2025 0.49 |
+| 15-minute (16,315 periods) | 2025 **0.65** · 2026 0.45 |
+
+Nothing is at risk here — 2026 is wholly 15-minute, so the 2026 figure needs no
+splitting — but note the direction: *within* 2025 the 15-minute periods read
+**higher** `η` (0.65) than the hourly ones (0.49), which is the opposite of the
+mechanical band-thinning worry, and the decline continues inside the 15-minute
+era alone (0.65 → 0.45).
 
 ### 5.4 Coverage drift — the bound, and one place it bites
 
@@ -487,9 +559,13 @@ significant. So *"a demand surprise moves the intraday price by roughly 0.7–1.
 €/MWh per GW, correctly signed"* is defensible; *"absorption capacity changed as
 VRE grew"* is **not** and must not be claimed.
 
-Note the family resemblance to §5.2(b): **twice now, an apparent strengthening
-over time has turned out to be the price level.** Any trend in a €/MWh-denominated
-quantity over this window should be checked against `p*` before it is believed.
+The general lesson, and §5.2(b) is the other instance of it: **the price level
+moved by a factor of five across this window, so any trend in a
+€/MWh-denominated quantity has to be checked against `p*` before it is
+believed.** Note that the check cuts both ways — here it *demoted* a result,
+while in §5.2(b) it turned out that the fixed-€ band already makes `η`
+scale-invariant and the naive correction was the contaminated one. Work out how
+the specific measure scales; do not reach for a ratio by reflex.
 
 **The fact worth keeping:** Spanish demand became harder to forecast, and two
 independent predictors degraded in step — REE's forecast error sd 143 → 369 MW
@@ -513,12 +589,16 @@ rather than a data-quality problem.
 Three candidate next steps, in order of how much of this chapter's machinery they
 re-use:
 
-1. **The step, not the slope.** §5.2 turns the crisis from a nuisance into the
-   design. Price formation re-organised across 2021–2023 and did not revert; the
-   question is what made it permanent. Contract positions (θ), entry and exit in
-   the near-marginal band, and the gas-to-hydro substitution are all observable
-   here, and the fact that `hhi_margin` was *falling* before 2021 is what makes
-   the break identifiable rather than a trend to be extrapolated.
+1. **The step in *ownership*, against the trend in *steepness*.** §5.2 turns the
+   crisis from a nuisance into a design, and the asymmetry is what makes it one:
+   residual demand steepened smoothly throughout (`η` survives every
+   specification), while concentration at the margin was *falling* before 2021,
+   stepped up across the crisis, and never reverted. A gradual driver cannot
+   explain a step, so the two series need different explanations — and the
+   pre-2021 negative slope is what makes the break identifiable rather than a
+   trend to be extrapolated. Contract positions (θ), entry and exit in the
+   near-marginal band, and the gas-to-hydro substitution are all observable
+   here.
 2. **The midday margin.** §4.3 says the thin, concentrated part of the day is
    solar noon, not the evening ramp. That is a within-day comparison with a
    plausible exogenous driver (the solar profile) and it does not need a cost
@@ -543,16 +623,18 @@ not after.
 | claim | status | where it can break |
 |---|---|---|
 | `η` fell 1.83 → 0.45 | **established** | none; direct panel measurement |
-| the `η` fall is *structural* rather than a price-level effect | **confounded** | early-block price-netted trend is zero (§5.2b) |
+| the `η` fall can be separated from the price level in the early block | **confounded — cannot** | band MW per unit of cleared volume is flat while `p*` falls; €-sticky offer steps and real steepening are observationally equivalent here. Note the fixed-€ band makes `η` itself scale-invariant, so this is *not* a reason to prefer `η/p*` (§5.2b) |
 | `hhi_total` fell, matching CNMC | **established** | significant in every specification and both blocks |
 | `hhi_margin` rose +79% | **established as a level** | +54% coverage-adjusted (§5.4) |
-| `hhi_margin`'s rise is a secular *trend* | **rejected** | it is a step across 2021–2023 (§5.2c); pre-2021 slope is negative |
+| the `η` decline is a trend, not a crisis step | **established** | survives `clean+block` at −0.206, t = −4.77, and all four bandwidths |
+| `hhi_margin`'s rise is a secular *trend* | **rejected** | it is a step across 2021–2023 (§5.2c); pre-2021 slope is negative, t = −2.51 on 36 clusters |
 | the divergence between the two HHIs is real | **established** | survives price-matching, which *strengthens* it (§5.5) |
 | `share_at_zero` rose 0.235 → 0.343 | **established, lower bound** | dropped zero-price periods are where it is largest |
 | band density fell ~2/3 | **established** | falls as a step 2020→2022, not a slide |
 | the collapse is an *evening ramp* phenomenon | **rejected** | it is a midday phenomenon (§4.3) |
 | gas left the margin, hydro took it | **bounded** | resolved periods only, 69–81% coverage |
-| Iberdrola is a net day-ahead buyer | **established** | so are Naturgy and (to 2023) Endesa |
+| Iberdrola is a net day-ahead buyer | **bounded** | robust to θ-coverage drift; so are Naturgy and (to 2023) Endesa |
+| Endesa's 2024 flip to a positive incentive | **confounded** | coincides with θ coverage falling 0.942 → 0.838 (§4.5) |
 | θ measures contract position | **bounded** | physical bilateral only; misses financial hedges |
 | any 2026 figure | **confounded** | 66.1% retention, selected against high-VRE hours |
 

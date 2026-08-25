@@ -156,12 +156,27 @@ def load_panel(bandwidth: float) -> pd.DataFrame:
         d[f"hhi_margin_{h}"] * d[f"mapped_share_margin_{h}"] ** 2
     )
 
-    # Elasticity net of the price level. eta = |RD'| * p* / q, so eta is
-    # proportional to the clearing price and a fuel-price move drags it around
-    # with no change whatever in the stack's shape. Dividing it out leaves
-    # |RD'| / q -- band density per unit of cleared volume, a pure quantity
-    # object and the structural half of eta. If the eta decline is really about
-    # a thinning stack rather than about gas, this is where it has to show up.
+    # eta divided by the price level. READ THE SIGN OF THIS CAREFULLY -- an
+    # earlier version of this script had it backwards.
+    #
+    # It is tempting to call eta/p* = |RD'|/Q "eta with the price netted out",
+    # i.e. the clean structural object. It is NOT. |RD'| counts offered MW
+    # inside a band FIXED IN EUROS, so under a pure proportional rescaling of
+    # the stack by lambda (a fuel shock, nothing structural) that band spans
+    # 1/lambda of the relative price range and |RD'| ~ 1/lambda. Then
+    # eta = |RD'| * p*/Q is INVARIANT -- as an elasticity should be -- while
+    # eta/p* scales as 1/lambda. So it is eta/p*, not eta, that a price move
+    # drags around. Verified numerically on simulated step curves.
+    #
+    # The identity settles which one the chapter wants: L = s/eta is a
+    # PROPORTIONAL markup, so eta is the object in it and eta/p* is a
+    # semi-elasticity that appears nowhere. eta stays the headline.
+    #
+    # This column is kept anyway, because the two together are informative: if
+    # |RD'|/Q is flat while p* falls, that is consistent BOTH with EUR-sticky
+    # offer steps (eta falling mechanically as a falling price walks down a
+    # fixed ladder) AND with real proportional steepening that offsets. Nothing
+    # here separates them. Report both; attribute neither.
     d[f"eta_norm_{h}"] = d[f"eta_{h}"] / d["p_star"]
     return d
 
@@ -216,7 +231,7 @@ def run_outcome(d: pd.DataFrame, outcome: str, log: bool, label: str,
     unit = "log pts/yr" if log else "units/yr"
     print(f"\n  {label}   ({unit})")
     print(f"    {'spec':<13} {'b/yr':>10} {'se':>9} {'t':>8} "
-          f"{'95% CI':>20} {'n':>9}")
+          f"{'95% CI':>20} {'n':>9} {'clust':>6}")
     for name, (frame, extra) in specs.items():
         if frame.empty:
             continue
@@ -225,7 +240,7 @@ def run_outcome(d: pd.DataFrame, outcome: str, log: bool, label: str,
         t = b / se if se > 0 else np.nan
         ci = f"[{b - 1.96 * se:+.4f},{b + 1.96 * se:+.4f}]"
         print(f"    {name:<13} {b:>+10.4f} {se:>9.4f} {t:>+8.2f} "
-              f"{ci:>20} {n:>9,}")
+              f"{ci:>20} {n:>9,} {g:>6}")
     return out
 
 
@@ -249,16 +264,17 @@ def verdict(name: str, r: dict[str, tuple[float, float, int, int]],
             tag = "FAILS"
         note = ""
         if spec == "clean+block":
-            # A null here is only informative if the pooled slope is actually
-            # OUTSIDE this interval. Inside it, the block-FE spec simply lacks
-            # the power to tell a trend from a step, and says nothing either
-            # way -- a distinction worth printing rather than leaving to be
-            # inferred from a t-statistic.
+            # Comparing the restricted point estimate against the
+            # unrestricted model's CI on the SAME data is a heuristic, not a
+            # test -- the two estimates are not independent. It is printed to
+            # separate "small and precisely so" from "merely imprecise", and
+            # nothing should rest on it alone: the load-bearing evidence is
+            # the two blocks estimated separately, which ARE independent
+            # samples.
             lo, hi = b - 1.96 * se, b + 1.96 * se
-            note = ("  [pooled slope RULED OUT by this CI]"
+            note = ("  [pooled slope outside this CI -- suggestive only]"
                     if not (lo <= b_pool <= hi)
-                    else "  [pooled slope inside this CI -- underpowered, "
-                         "not a rejection]")
+                    else "  [pooled slope inside this CI -- underpowered]")
         lines.append(f"    {spec:<13} {tag:<28} "
                      f"{ratio:>5.2f}x the full-sample slope{note}")
     return f"  {name}\n" + "\n".join(lines)
@@ -300,6 +316,15 @@ def resolution_break(d: pd.DataFrame, bandwidth: float) -> None:
           f"Oct {med.get('2025-10'):.1f} -- why the raw row is not the "
           f"like-for-like one")
 
+    # The spec asks for eta by resolution era too, not just hhi_margin. 2026 is
+    # wholly 15-minute so no 2026 claim is at risk either way, but the check is
+    # cheap and its absence would be a gap.
+    print("\n    eta by resolution era (median, all retained periods)")
+    for era, g in d.groupby("resolution_min"):
+        gy = g.groupby(g.date.dt.year)[f"eta_{h}"].median()
+        yrs = ", ".join(f"{y}:{v:.2f}" for y, v in gy.items())
+        print(f"      {era:>2}-min ({len(g):>6,} periods)  {yrs}")
+
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
@@ -337,8 +362,9 @@ def main() -> None:
                       f"log hhi_margin_{h}  -- near-marginal concentration",
                       args.weighted)
     nrm = run_outcome(d, f"eta_norm_{h}", True,
-                      f"log eta_norm_{h}  -- eta / p*, the price-netted "
-                      f"elasticity (|RD'| / q)", args.weighted)
+                      f"log eta_norm_{h}  -- eta / p* = |RD'|/Q. NOT a "
+                      f"'cleaner' eta -- see the note on it in load_panel()",
+                      args.weighted)
     adj = run_outcome(d, f"hhi_margin_adj_{h}", True,
                       f"log hhi_margin_adj_{h}  -- the same, times coverage^2",
                       args.weighted)
@@ -374,7 +400,8 @@ def main() -> None:
     print("VERDICT -- does the chapter's spine survive without 2021-2023?")
     print("=" * 72)
     print(verdict("eta falls", eta, -1))
-    print(verdict("eta falls, net of the price level", nrm, -1))
+    print(verdict("eta/p* falls (a DIFFERENT object, not a cleaner eta)",
+                  nrm, -1))
     print(verdict("hhi_margin rises", hhi, +1))
     print(verdict("hhi_margin rises, coverage-adjusted", adj, +1))
     print("\n  'clean' pools the two blocks with one slope; 'clean+block' adds")

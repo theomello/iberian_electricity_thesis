@@ -113,8 +113,14 @@ def fig_divergence(eta: pd.DataFrame, conc: pd.DataFrame, cnmc: pd.DataFrame) ->
                     textcoords="offset points", va="center", color=INK, fontsize=14)
     cn = base(cnmc.set_index("year").HHI.loc[2018:2023])
     ax.plot(cn.index, cn.values, color=MUTED, lw=2, ls=(0, (4, 3)), zorder=2)
-    ax.annotate("CNMC, published", xy=(2023, cn.loc[2023]), xytext=(6, -16),
-                textcoords="offset points", color=MUTED, fontsize=12)
+    # The dashed line runs visually coincident with "Concentration, all volume"
+    # (orange) for most of its span, so a same-color leader line anchored to
+    # its own endpoint -- not just nearby text -- is what makes the label
+    # unambiguous rather than reading as attached to whichever line is closest.
+    ax.annotate("CNMC, published", xy=(2023, cn.loc[2023]), xytext=(34, -34),
+                textcoords="offset points", color=MUTED, fontsize=12,
+                arrowprops=dict(arrowstyle="-", color=MUTED, lw=1.3,
+                                 shrinkA=2, shrinkB=4))
     for a, b in ((2021.71, 2023.99), (2022.46, 2023.99)):
         ax.axvspan(a, b, color=GRID, alpha=0.45, zorder=0)
     ax.set_ylabel("Index, 2018 = 100")
@@ -232,15 +238,35 @@ def fig_firm_ability(firm: pd.DataFrame) -> None:
         _frame(ax)
         dd = g[g.firm == f].sort_values("year")
         ax.axhline(0, color=GRID, lw=1.0, zorder=1)
-        ax.plot(dd.year, dd.ability_h5, color=BLUE, lw=2.6, marker="o", ms=6,
-                zorder=3, markeredgecolor=SURFACE, markeredgewidth=1.4,
-                label="Ability (own η)")
-        ax.plot(dd.year, dd.incentive_h5, color=ORANGE, lw=2.0, marker="o", ms=5,
+        # incentive drawn wider and underneath, ability narrower on top: where
+        # the two series are literally identical (a firm with theta ~ 0, see
+        # below) this leaves a visible orange edge rather than the orange
+        # series disappearing entirely under blue.
+        ax.plot(dd.year, dd.incentive_h5, color=ORANGE, lw=4.6, marker="o", ms=9,
                 zorder=2, markeredgecolor=SURFACE, markeredgewidth=1.4,
                 label="Incentive (θ-adjusted)")
+        ax.plot(dd.year, dd.ability_h5, color=BLUE, lw=2.2, marker="o", ms=6,
+                zorder=3, markeredgecolor=SURFACE, markeredgewidth=1.4,
+                label="Ability (own η)")
         ax.set_ylim(*ylim)
         ax.text(0.05, 0.92, f, transform=ax.transAxes, fontsize=13.5,
                 fontweight="bold", color=INK, va="top")
+
+        # Both conditions are read off the plotted series themselves, not
+        # hardcoded to a firm name, so they fire wherever the data shows the
+        # pattern rather than only for the firm that motivated adding them.
+        max_gap = (dd.ability_h5 - dd.incentive_h5).abs().max()
+        mean_incentive = dd.incentive_h5.mean()
+        # Placed on its own row directly under the firm-name label -- both
+        # ability and incentive stay well below this band for every firm the
+        # condition actually fires on, so it clears the data regardless of
+        # where in the year range a series happens to dip or peak.
+        if max_gap < 1e-3:
+            ax.text(0.05, 0.78, "θ ≈ 0: incentive = ability", transform=ax.transAxes,
+                    ha="left", va="top", fontsize=10.5, color=MUTED, style="italic")
+        elif mean_incentive < -0.05:
+            ax.text(0.05, 0.78, "net buyer: θ > cleared volume", transform=ax.transAxes,
+                    ha="left", va="top", fontsize=10.5, color=MUTED, style="italic")
         if c != 0:
             ax.tick_params(labelleft=False)
         else:
@@ -258,6 +284,10 @@ def fig_firm_ability(firm: pd.DataFrame) -> None:
     axc.set_ylabel("θ coverage, %", fontsize=11)
     axc.set_ylim(0, 100)
     axc.tick_params(labelsize=11)
+    # theta_coverage is a different quantity (contract-position coverage) and
+    # does not stand in for the period-thinning note every other time-axis
+    # figure carries -- add it explicitly rather than relying on the strip.
+    axc.text(0.0, -0.32, THIN_NOTE, transform=axc.transAxes, fontsize=10.5, color=MUTED)
 
     fig.savefig(FIGS / "firm_ability.png", dpi=200, bbox_inches="tight")
     plt.close(fig)

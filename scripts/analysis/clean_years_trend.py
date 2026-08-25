@@ -264,6 +264,43 @@ def verdict(name: str, r: dict[str, tuple[float, float, int, int]],
     return f"  {name}\n" + "\n".join(lines)
 
 
+def resolution_break(d: pd.DataFrame, bandwidth: float) -> None:
+    """The 15-minute market time unit arrived on 2025-10-01. Compare the two
+    adjacent months either side of it.
+
+    RAW AND PRICE-MATCHED, because the raw comparison is not interpretable on
+    its own: median p* is 77.5 in Sep-2025 and 93.5 in Oct-2025, and a fixed
+    +/-h EUR/MWh band is a narrower RELATIVE window at a higher price level.
+    Restricting both months to a common p* window is the like-for-like version.
+    An earlier note recorded this check as "4808 vs 5016, +4%"; that does not
+    reproduce on this panel at any bandwidth and is superseded by what prints
+    here.
+    """
+    h = f"h{bandwidth:g}"
+    d = d.copy()
+    d["ym"] = d.date.dt.strftime("%Y-%m")
+    s = d[d.ym.isin(["2025-09", "2025-10"])]
+    print("\n" + "=" * 72)
+    print("THE 15-MINUTE BREAK, 2025-10-01 -- adjacent months")
+    print("=" * 72)
+    print(f"    {'window':<18} {'Sep-2025 (60min)':>18} "
+          f"{'Oct-2025 (15min)':>18} {'step':>8}")
+    windows = [("raw", None), ("p* in [70,100]", (70, 100)),
+               ("p* in [75, 95]", (75, 95))]
+    for label, w in windows:
+        t = s if w is None else s[(s.p_star >= w[0]) & (s.p_star <= w[1])]
+        g = t.groupby("ym")[f"hhi_margin_{h}"].median()
+        if len(g) < 2:
+            continue
+        a, b = g.get("2025-09"), g.get("2025-10")
+        print(f"    {label:<18} {a:>18,.0f} {b:>18,.0f} "
+              f"{(b / a - 1):>+7.1%}")
+    med = s.groupby("ym").p_star.median()
+    print(f"    median p*: Sep {med.get('2025-09'):.1f}, "
+          f"Oct {med.get('2025-10'):.1f} -- why the raw row is not the "
+          f"like-for-like one")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--bandwidth", type=float, default=5.0,
@@ -330,6 +367,8 @@ def main() -> None:
                 f"mapped_share_margin_{h}  -- firm-mapping coverage in the "
                 f"band (NOT a market outcome: a falling coverage trend "
                 f"mechanically inflates hhi_margin)", args.weighted)
+
+    resolution_break(d, args.bandwidth)
 
     print("\n" + "=" * 72)
     print("VERDICT -- does the chapter's spine survive without 2021-2023?")

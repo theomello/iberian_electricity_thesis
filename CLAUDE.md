@@ -13,6 +13,11 @@ the question can be chosen against what the data can actually identify,
 rather than the reverse. Do not add an RQ section here until one is chosen;
 do not import framing from the previous project.
 
+**A descriptive chapter is under way** — design in
+[`docs/specs/2026-08-24-descriptive-price-formation-design.md`](docs/specs/2026-08-24-descriptive-price-formation-design.md),
+running note in [`notes/rq-descriptive-price-formation.md`](notes/rq-descriptive-price-formation.md).
+Findings live there, not here.
+
 The previous Brazil project remains intact at
 `~/Desktop/vre_hydro_thesis` and is not to be modified. Nothing was copied
 from it. If something there turns out to be needed, port that one piece

@@ -127,6 +127,25 @@ while the energy still clears in the auction, and since what matters is whether
 *revenue* is fixed, that omission is the more serious one. **θ is bounded, not
 measured** [bounded].
 
+**θ and `q` are measured over different unit populations, and the gap is not
+neutral across firms** [bounded]. `build_contract_position.py` maps role-4 sell
+legs through the *unrestricted* unit→firm table, while `residual_demand_firm.py`
+builds `q` from cleared sell volume on `SUPPLY_ROLES` only (`generation`,
+`generation_large`, `storage_mixed`, `pumping`). On 2024-01, **14.1% of role-4
+contracted sell MW sits on `purchase_retail` registrations** — MW that enter θ
+and can never enter `q`. The share is wildly uneven by firm: **EDP 83.4%,
+Acciona 77.5%, ENGIE 56.6%, Naturgy 6.0%, Endesa 0.6%, Iberdrola 0.0%.**
+
+Since `incentive = ability · (q − θ)/q`, θ carrying volume that `q` structurally
+cannot pushes that factor down, so **measured incentive is biased downward for
+exactly those firms** — a known direction, in proportion to how much of the
+firm's contract book sits on retail registrations, which makes it a bound rather
+than noise. Iberdrola's 0.0% is why §4.5's net-buyer result is untouched by
+this; EDP's and Acciona's levels are not, and §4.5 says so where they are read.
+The asymmetry is deliberate, not a bug: restricting θ to supply roles would drop
+real contracted volume, and widening `q` would put retail registrations into a
+supply-side elasticity. It is documented instead of resolved.
+
 ### 3.3 A measurement note that will otherwise be re-litigated
 
 Firm-specific `eta_i` comes out **above** market `η` in every year (median
@@ -256,7 +275,7 @@ not — read this table with the drift beside it.** `incentive = ability ·
 
 | year | 2018 | 2020 | 2022 | 2023 | 2024 | 2025 | 2026 |
 |---|---|---|---|---|---|---|---|
-| `theta_coverage` (median) | 0.739 | 0.886 | 0.923 | **0.942** | 0.838 | 0.819 | 0.805 |
+| `theta_coverage` (median) | 0.739 | 0.885 | 0.923 | **0.942** | 0.838 | 0.819 | 0.805 |
 
 Coverage rises to a 2023 peak and then falls by about 14 points. Unmapped θ is
 θ *attributed to no firm*, so a firm's own θ can look smaller purely because the
@@ -268,8 +287,10 @@ positive**. **Where ability and incentive disagree, ability is the clean series*
 positive** [bounded]. That is the Hortaçsu & Puller (2008) contract-position sign
 flip: `θ > q`, so the firm is a **net buyer** in the day-ahead auction and wants
 the price *down*, whatever its ability to push it up. It is consistent with
-Iberdrola dominating the bilateral-contract panel (621 TWh of θ, more than three
-times the next firm), and it is the one incentive result robust to the drift —
+Iberdrola dominating the bilateral-contract panel (**621 TWh** of θ — 3.4× the
+next *named* firm, Endesa at 182 TWh, but only 2.8× the whole UNMAPPED bucket at
+221 TWh, so "three times the next firm" holds against a firm and not against the
+unattributed residual), and it is the one incentive result robust to the drift —
 the sign holds in every year including the 2023 coverage peak, and the magnitude
 is far too large to be a mapping artefact.
 
@@ -283,13 +304,28 @@ the confound above and precisely the direction it predicts. Do not read that fli
 as a change in Endesa's contract position. Its *ability* series shows no such
 break (0.071 → 0.114 → 0.134), which is the reason to trust ability here.
 
+**The incentive *levels* are not comparable across rows of this table** — a
+second reason, independent of the coverage drift above. §3.2's measurement
+asymmetry lands directly here: on 2024-01, 83.4% of EDP's θ and 77.5% of
+Acciona's sits on `purchase_retail` registrations whose MW can never enter `q`,
+against 6.0% for Naturgy, 0.6% for Endesa and 0.0% for Iberdrola (ENGIE, not
+tabulated, is 56.6%). EDP's and Acciona's incentive columns are therefore biased
+**downward** relative to the rest, so EDP's +0.076 → +0.133 should be read as a
+floor rather than a level, and the cross-firm ranking of the incentive columns is
+not like-for-like. The within-firm time profile is the safer reading, and
+`ability` is unaffected.
+
 The general lesson for any design built on these indices: **ability is measured
 from the bid archive alone and inherits only the ownership mapping; incentive
 inherits the ownership mapping twice over, through θ as well.**
 
-**Axpo's θ is ≈ 0, so its ability and incentive coincide exactly** [established]
-— consistent with `CLAUDE.md`'s note that Axpo is a *representante* trading
-third-party assets rather than an asset owner.
+**Axpo's θ is ≈ 0, so its ability and incentive very nearly coincide**
+[established] — not exactly: θ is non-zero in **10.5%** of Axpo's 79,036 periods,
+the largest gap between the two indices anywhere in the panel is **0.0297**
+€/MWh per 1% withheld, and the 2026 medians read **0.0546 against 0.0545**. The
+divergence is real but negligible, which is consistent with `CLAUDE.md`'s note
+that Axpo is a *representante* trading third-party assets rather than an asset
+owner.
 
 ---
 
@@ -377,8 +413,13 @@ differently:
 
 - **`η` survives the strict test.** Under `clean+block` it is −0.206 with
   t = −4.77, at 1.35× the pooled slope. The elasticity decline is robust in every
-  specification run — full, clean, within-block, with a 15-minute dummy, and at
-  all four bandwidths.
+  *pooled* specification — full, clean, within-block, with a 15-minute dummy, and
+  at all four bandwidths — and within the early block alone (−0.289, t = −7.3).
+  **It is not identified within the late block alone** (−0.073, t = −0.91;
+  insignificant at all four bandwidths, t = −0.29 / −0.44 / −0.91 / −0.97 for
+  h1/h2/h5/h10), on 29 clusters and 2.4 years. That is the reverse of
+  `hhi_margin`, which *is* identified within the late block, and §7 states the
+  asymmetry that way round.
 - **`hhi_margin` does not.** Under `clean+block` it is +0.015 (t = 0.84). The
   load-bearing evidence is the two blocks estimated separately, which are
   independent samples: **within 2018–2020 it runs the wrong way at −0.036,
@@ -469,9 +510,18 @@ sign in this data.
 0.950–0.987 throughout and hides the entire drift.
 
 **The bounded figure, and it is the one to quote** [bounded]: if the unmapped
-in-band volume is atomistic, `HHI_true ≈ HHI × coverage²`. On that adjustment the
-2018 → 2026 rise is **+54%, not +79%**. The headline survives at reduced
-magnitude.
+in-band volume is atomistic, `HHI_true ≈ HHI × coverage²`. Constructed **per
+period** — `hhi_margin_h5 × mapped_share_margin_h5²` on each of the 79,036 rows,
+then the median by year, which is exactly the series `clean_years_trend.py`
+regresses — the 2018 → 2026 rise is **+62.5%** (2,694 → 4,378) against **+78.6%**
+raw (2,877 → 5,137). The headline survives at reduced magnitude.
+
+**State the construction, because it is not unique and the spread is wide.**
+Aggregating before multiplying instead of after gives +69.9% (median HHI × median
+coverage²) or +53.7% (median HHI × *mean* coverage²) on the same panel. An
+earlier draft quoted the last of these as "+54%" without saying so, which made
+the note's own adjusted figure inconsistent with the adjusted *series* every
+regression in §5.2 uses. The per-period product is the one quoted throughout.
 
 Two things worth noting about the adjustment. It *weakens* the full-sample
 magnitude but *strengthens* the within-block reading — the coverage-adjusted
@@ -589,15 +639,26 @@ rather than a data-quality problem.
 Three candidate next steps, in order of how much of this chapter's machinery they
 re-use:
 
-1. **The step in *ownership*, against the trend in *steepness*.** §5.2 turns the
-   crisis from a nuisance into a design, and the asymmetry is what makes it one:
-   residual demand steepened smoothly throughout (`η` survives every
-   specification), while concentration at the margin was *falling* before 2021,
-   stepped up across the crisis, and never reverted. A gradual driver cannot
-   explain a step, so the two series need different explanations — and the
-   pre-2021 negative slope is what makes the break identifiable rather than a
-   trend to be extrapolated. Contract positions (θ), entry and exit in the
-   near-marginal band, and the gas-to-hydro substitution are all observable
+1. **The two series move in *different sub-periods*.** §5.2 turns the crisis
+   from a nuisance into a design, but the asymmetry has to be stated the way the
+   estimates actually run, and it is not the trend-versus-step contrast an
+   earlier draft of this section claimed. `η` falls steeply *before* the crisis
+   (−0.289, t = −7.3 in 2018–2020) and is **not identified within 2024–2026
+   alone** (−0.073, t = −0.91, insignificant at all four bandwidths).
+   `hhi_margin` does the opposite: negative before 2021 (−0.036, t = −2.51) and
+   rising only after (+0.094, t = +3.90). So each series is identified in the
+   block where the other is not.
+
+   **What that does to the pitch.** The original motivation — a *smooth* trend in
+   steepness set against a *step* in ownership, where "a gradual driver cannot
+   explain a step" — does not survive, because `η` is not measurably a trend in
+   the late block. What survives is narrower and still worth a design: the two
+   objects are sequenced differently around the crisis, so no single driver with
+   one time profile explains both. The narrower claim carries a caveat the wider
+   one did not: with 29 clusters and 2.4 years, the late-block `η` null is as much
+   a power result as a substantive one, and it should be treated as *not measured*
+   rather than as *shown to be flat*. Contract positions (θ), entry and exit in
+   the near-marginal band, and the gas-to-hydro substitution are all observable
    here.
 2. **The midday margin.** §4.3 says the thin, concentrated part of the day is
    solar noon, not the evening ramp. That is a within-day comparison with a
@@ -622,11 +683,11 @@ not after.
 
 | claim | status | where it can break |
 |---|---|---|
-| `η` fell 1.83 → 0.45 | **established** | none; direct panel measurement |
+| `η` fell 1.83 → 0.45 | **established** | none for the *level* fall; direct panel measurement. The *trend* is not identified within the late block alone (§5.2c) |
 | the `η` fall can be separated from the price level in the early block | **confounded — cannot** | band MW per unit of cleared volume is flat while `p*` falls; €-sticky offer steps and real steepening are observationally equivalent here. Note the fixed-€ band makes `η` itself scale-invariant, so this is *not* a reason to prefer `η/p*` (§5.2b) |
 | `hhi_total` fell, matching CNMC | **established** | significant in every specification and both blocks |
-| `hhi_margin` rose +79% | **established as a level** | +54% coverage-adjusted (§5.4) |
-| the `η` decline is a trend, not a crisis step | **established** | survives `clean+block` at −0.206, t = −4.77, and all four bandwidths |
+| `hhi_margin` rose +79% | **established as a level** | +62.5% on the per-period coverage-adjusted series (§5.4) |
+| the `η` decline is a trend, not a crisis step | **established** | survives `clean+block` at −0.206, t = −4.77, and all four bandwidths — but **not identified within the late block alone** (−0.073, t = −0.91), so it is a trend across the window, not a demonstrated one after 2024 (§5.2c, §7) |
 | `hhi_margin`'s rise is a secular *trend* | **rejected** | it is a step across 2021–2023 (§5.2c); pre-2021 slope is negative, t = −2.51 on 36 clusters |
 | the divergence between the two HHIs is real | **established** | survives price-matching, which *strengthens* it (§5.5) |
 | `share_at_zero` rose 0.235 → 0.343 | **established, lower bound** | dropped zero-price periods are where it is largest |

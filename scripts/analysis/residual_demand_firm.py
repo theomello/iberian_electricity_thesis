@@ -61,9 +61,16 @@ OUT = ROOT / "outputs/tables/firm_residual_demand_full.parquet"
 VERIFY_MONTH = "202401"   # the month every other verification in this repo uses
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
+# slope_from_band_mw is deliberately NOT imported. The firm arithmetic below is
+# inline because eta_i divides by the FIRM's cleared volume and so needs a
+# q_firm_mw > 0 guard that the shared function does not have (it guards only
+# slope > 0 and p_star > 0, which is right at market level where q is the
+# market's). Everything the two levels must share -- the band, the bandwidths,
+# the zero-price floor -- still comes from the library, which is what keeps
+# them from drifting apart.
 from residual_demand import (  # noqa: E402
     BANDWIDTHS, IDENTITY_TOL, KEY, ZERO_PRICE, band_offers,
-    cleared_by_period, slope_from_band_mw,
+    cleared_by_period,
 )
 
 # Every role that offers energy. `generation` alone is WRONG -- see CLAUDE.md:

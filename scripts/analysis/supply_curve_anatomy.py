@@ -172,7 +172,7 @@ def anatomy_month(bids: pd.DataFrame, px_m: pd.DataFrame,
     out["share_below_p"] = out.mw_below_p.fillna(0) / out.mw_offered_sell
 
     for h in BANDWIDTHS:
-        dens = (band_offers(b, mkt.rename(columns={"mw_cleared_sell": "q"}), h)
+        dens = (band_offers(b, mkt, h)
                 .groupby(KEY).power_mw.sum().rename(f"band_density_h{h:g}"))
         out = out.merge(dens, on=KEY, how="left")
 

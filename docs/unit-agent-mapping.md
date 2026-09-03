@@ -82,6 +82,35 @@ facing firm *i* is total demand minus *everyone else's* supply, so excluding
 | `tech_esios` | technology from ESIOS's 41-level taxonomy (registered units only) |
 | `tech_cab` | technology parsed from the `cab` plant name |
 | `max_power_mw` | nameplate capacity from `cab` |
+| `agent_owner` | **OMIE's own published owner**, from the *Listado de Unidades* snapshots — independent of the four layers below |
+| `agent_owner_pct` | ownership percentage OMIE states (6 units below 100%) |
+| `agent_owner_snapshot` | which snapshot the label came from |
+| `agent_owner_changed` | owner is not constant across the snapshots naming this unit (548 units) |
+
+### `agent_owner` is a second opinion, not a better `agent`
+
+Added 2026-09-03. It comes from `omie_unit_lists.parquet` and deliberately does
+**not** fill `agent` or `firm`, so a disagreement between OMIE's label and our
+inference stays visible rather than being silently resolved.
+
+It covers far more: **4,055 of 5,137 units against 2,441**, and **99.8% of
+near-marginal offered sell volume against 89.1%** (January 2024). It also
+resolves every prefix `PREFIX_AGENTS` left unmapped on purpose — `CEV` is
+Energya VM, `IGV` and `IGN` are both Ignis Energía, `NEX` Nexus, `VGE` Repsol,
+`GAL` Galp, `GES` Gesternova, `PEG` Endesa, `CLI` Holaluz-Clidom.
+
+**But it answers a different question.** `agent` names the registered operator;
+`agent_owner` names the commercialising entity that submits the offer. `ABA1` is
+Barbo Energías Renovables in ESIOS and **Wind to Market** here; `ACE4` is
+Naturgy Ciclos Combinados and **Gas Natural Comercializadora**. Both are true,
+and for market power the listing's entity is usually the one you want — it is
+who decides the bid. Of the 866 units carrying both a legal name and an owner,
+a naive string comparison agrees on 57.4%, but most of the gap is formatting
+(accents, `S.L.U.` suffixes) rather than a real conflict.
+
+**Do not treat it as static.** 548 units change owner across snapshots, and the
+column carries the latest one. Use `agent_owner_changed` to exclude them, or go
+back to `omie_unit_lists.parquet` for the nearest-preceding snapshot.
 
 ## How it is built — four layers, descending evidence
 

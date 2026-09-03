@@ -334,6 +334,27 @@ caught before it went in. The prefix dictionary grew substantially during the
 gas-cap and levy work too, and an earlier **45.3%** figure recorded here was
 stale — left as a dated note rather than silently deleted).
 
+**`agent_owner`, added 2026-09-03, is a second opinion that covers far more.**
+`build_unit_agents.py` now also carries OMIE's *published* owner from
+`omie_unit_lists.parquet`, alongside the inference chain rather than replacing
+it: **4,055 of 5,137 units against 2,441**, and **99.8% of near-marginal
+offered volume against 89.1%**. It resolves every prefix `PREFIX_AGENTS`
+deliberately left unmapped (`CEV` Energya VM, `IGV` **and** `IGN` both Ignis
+Energía, `NEX` Nexus, `VGE` Repsol, `GAL` Galp, `GES` Gesternova, `PEG` Endesa,
+`CLI` Holaluz-Clidom) — so three of the hand-researched conclusions recorded
+below are wrong, and the `IGN` note is wrong in its reasoning even though it
+was right to reject Iberdrola.
+
+**It is not a drop-in replacement for `agent`, because it names a different
+entity** — the commercialising entity that submits the offer, where `agent` is
+the registered operator. `ABA1` is Barbo Energías Renovables in ESIOS and Wind
+to Market in the listing; `ACE4` is Naturgy Ciclos Combinados and Gas Natural
+Comercializadora. For market power the listing's entity is usually the one you
+want. Companion columns `agent_owner_pct`, `agent_owner_snapshot` and
+`agent_owner_changed` come with it; **548 units change owner across snapshots**,
+so do not treat the column as static. Full detail in
+[`docs/unit-agent-mapping.md`](docs/unit-agent-mapping.md).
+
 **Measure coverage on the near-marginal band, never on total volume.** Price is
 set at the margin: a 5 GW unit offering at 0 €/MWh is inframarginal almost
 always and contributes nothing to the slope of residual demand, so
@@ -482,12 +503,13 @@ schedules*, and this is the load-bearing constraint:
 A design spanning the full window inherits the weaker number; one starting in
 2022 does not. The 2021 windfall-levy question is on the wrong side of that line.
 
-**The 41.2% and 63.3% figures below no longer reproduce**, on any basis tried
-(all cleared volume gives 47.7%/74.9%; `role == "generation"` alone gives
-22.8%/63.6%). Unit counts have drifted too — 1,492 against 1,474, 2,048 against
-2,037 — so they were computed on an earlier build of `unit_agents.parquet` and
-the stated basis, "of generation volume", is not precise enough to recover which.
-Treat them as dated, and state the filter explicitly if you recompute.
+**The 41.2% and 63.3% figures below do reproduce**, but only on one specific
+basis, which was never written down: `abs(net_cleared_mwh)` summed over the four
+`SUPPLY_ROLES`, with the share being units carrying `tech` (or `regime`) —
+exactly what `build_unit_agents.py` prints. Other readings of "of generation
+volume" give materially different answers (positive cleared volume only:
+47.7%/74.9%; `role == "generation"` alone: 22.8%/63.6%), so state the filter
+when quoting them.
 
 ESIOS is close to exhausted for this: only **128 of our 3,930 generation units**
 appear in its programming-unit registry, because REE registers dispatchable

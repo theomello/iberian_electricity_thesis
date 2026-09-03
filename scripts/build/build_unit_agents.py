@@ -14,6 +14,20 @@ only the market-wide residual demand is computable -- the elasticity facing an
 infinitesimal participant, which bounds every real firm's price impact from
 below but is not a Lerner index for anyone. This file supplies the grouping.
 
+A FIFTH, INDEPENDENT COLUMN: OMIE'S OWN PUBLISHED OWNER
+
+`agent_owner` comes from `omie_unit_lists.parquet` -- the dated *Listado de
+Unidades Ofertantes* PDFs OMIE supplied on request. It is **not** part of the
+inference chain below, does not fill `agent` or `firm`, and is not a
+replacement for them: it is a second, independently-sourced opinion, kept in
+its own column so a disagreement stays visible.
+
+Two reasons not to merge it. It reaches units the chain cannot (see
+`attach_listing_owner`), but it also answers a *different question* -- it names
+the commercialising entity that submits the offer, where `agent` names the
+registered operator. `ABA1` is Barbo Energias Renovables in ESIOS and Wind to
+Market in the listing; both are true.
+
 THREE LAYERS, IN DESCENDING ORDER OF EVIDENCE
 
 1. `esios`  -- exact match of the unit code to REE's programming-unit registry,
@@ -511,6 +525,9 @@ def build(month: str, tier: str = "all") -> pd.DataFrame:
         # Layer 4: a plant registered twice inherits its own owner.
         df = apply_twin_layer(df)
         df["is_major"] = df.is_major | df.firm_twin.notna() if "firm_twin" in df else df.is_major
+    # Independent of every layer above: OMIE's own published owner, carried
+    # alongside rather than merged into `agent`/`firm`. See the docstring.
+    df = attach_listing_owner(df)
     return df.drop(columns=["agent_esios", "agent_prefix", "_agent_name_src"], errors="ignore")
 
 
@@ -631,7 +648,64 @@ def apply_twin_layer(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
     return df.drop(columns=["twin_key", "twin_marker"])
 
 
-def near_marginal_coverage(month: str, mapped: set[str]) -> None:
+UNIT_LISTS = DATA / "omie" / "registry" / "omie_unit_lists.parquet"
+
+
+def attach_listing_owner(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
+    """Attach OMIE's own published owner from the *Listado de Unidades* snapshots.
+
+    **This does not feed the inference chain above and deliberately does not
+    fill `agent` or `firm`.** It is a parallel, independently-sourced column, so
+    that a disagreement between OMIE's label and our inference stays visible
+    instead of being silently resolved in favour of one of them.
+
+    `agent_owner` is NOT the same entity as `agent`, despite the name. Spot-checked
+    2026-09-03 against ESIOS-sourced rows: `ABA1` is "Barbo Energias Renovables"
+    in ESIOS but **Wind to Market** here, `ACE4` is "Naturgy Ciclos Combinados"
+    but **Gas Natural Comercializadora**. The listing records the commercialising
+    entity that submits the offer -- which is the object market power needs, and
+    the reason to carry both rather than pick one.
+
+    Snapshots are point-in-time and ownership changes, so one label per unit is
+    a simplification. The latest snapshot in which a unit appears is used, its
+    date is carried in `agent_owner_snapshot`, and `agent_owner_changed` flags
+    units whose owner is not constant across the snapshots that name them --
+    for those, a single label is wrong somewhere and the column should not be
+    treated as static.
+    """
+    if not UNIT_LISTS.exists():
+        if verbose:
+            print(f"  LISTING OWNER -- skipped, {UNIT_LISTS.name} not built")
+        for c in ("agent_owner", "agent_owner_pct", "agent_owner_snapshot",
+                  "agent_owner_changed"):
+            df[c] = None
+        return df
+
+    ul = pq.read_table(UNIT_LISTS).to_pandas()
+    ul = ul[ul.agent_owner.notna()].copy()
+    ul["snapshot"] = pd.to_datetime(ul.snapshot)
+    ul = ul.sort_values("snapshot")
+
+    changed = ul.groupby("unit").agent_owner.nunique() > 1
+    last = ul.drop_duplicates("unit", keep="last").set_index("unit")
+
+    df["agent_owner"] = df.unit.map(last.agent_owner)
+    df["agent_owner_pct"] = df.unit.map(last.ownership_pct)
+    df["agent_owner_snapshot"] = df.unit.map(last.snapshot.dt.date)
+    df["agent_owner_changed"] = df.unit.map(changed)
+
+    if verbose:
+        n = int(df.agent_owner.notna().sum())
+        gap = int((df.agent_owner.notna() & df.agent.isna()).sum())
+        ch = int(df.agent_owner_changed.fillna(False).sum())
+        print(f"  LISTING OWNER -- {n:,} of {len(df):,} units carry OMIE's published "
+              f"owner ({gap:,} of them have no inferred agent at all); "
+              f"{ch:,} changed owner across snapshots")
+    return df
+
+
+def near_marginal_coverage(month: str, mapped: set[str],
+                           label: str = "inferred agent") -> None:
     """Coverage weighted by offers sitting within BAND of the clearing price."""
     b = pq.read_table(DATA / "omie" / "bids" / "parquet" / f"bids_{month}.parquet",
                       columns=["date", "period", "unit", "side", "status",
@@ -644,7 +718,7 @@ def near_marginal_coverage(month: str, mapped: set[str]) -> None:
     near = o[(o.price_eur_mwh - o.price_es).abs() <= BAND]
     priced = o[o.price_eur_mwh > 0]
     taker = o[o.price_eur_mwh <= 0]
-    print(f"\n  coverage of OFFERED sell volume, {month}")
+    print(f"\n  coverage of OFFERED sell volume, {month} -- {label}")
     for lab, s in (("all offered", o), (f"near-marginal (+/-{BAND:g} EUR)", near),
                    ("priced above 0", priced), ("price takers (<=0)", taker)):
         w = s.power_mw
@@ -693,7 +767,19 @@ def main() -> int:
     print("   " + "  ".join(f"{k}:{v}" for k, v in
                             gg.tech_cab.value_counts().head(8).items()))
 
+    if df.agent_owner.notna().any():
+        own = df.agent_owner.notna()
+        print(f"\n  OMIE published owner (independent of the chain above): "
+              f"{int(own.sum()):,} of {len(df):,} units")
+        print(f"    generation volume with one: "
+              f"{vol[gen.agent_owner.notna()].sum() / tot:.1%}  "
+              f"(inferred agent: {vol[gen.agent.notna()].sum() / tot:.1%})")
+        both = df.agent.notna() & own
+        print(f"    units carrying both labels: {int(both.sum()):,}")
+
     near_marginal_coverage(args.month, set(df.loc[df.agent.notna(), "unit"]))
+    near_marginal_coverage(args.month, set(df.loc[df.agent_owner.notna(), "unit"]),
+                           label="OMIE published owner")
 
     unmapped = gen[gen.agent.isna()].assign(v=vol[gen.agent.isna()])
     top = (unmapped.groupby("prefix").v.sum().sort_values(ascending=False).head(8) / tot)

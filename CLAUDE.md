@@ -67,6 +67,7 @@ scripts/
 | `fetch/fetch_omie_pdbf.py` | OMIE `pdbf` | no | `data/omie/pdbf/parquet/pdbf_YYYYMM.parquet` |
 | `fetch/fetch_esios_units.py` | ESIOS archive 82 | **no** | `data/esios/esios_programming_units.parquet` |
 | `build/build_unit_agents.py` | ESIOS + `cab` + prefixes | no | `data/omie/registry/unit_agents.parquet` |
+| `build/build_omie_unit_lists.py` | OMIE *Listado de Unidades* PDFs (emailed, **not re-fetchable**) | no | `data/omie/registry/omie_unit_lists.parquet` |
 | `fetch/fetch_ree_daily.py` | REE `apidatos` | no | `data/ree/ree_{generation,demand,balance}_daily.parquet` |
 | `fetch/fetch_ree_realtime.py` | REE `demanda.ree.es` | no | `data/ree/ree_realtime_5min.parquet` |
 | `fetch/fetch_ree_demand_forecast.py` | REE `demanda.ree.es` | no | `data/ree/ree_demand_forecast_5min.parquet` |
@@ -198,19 +199,46 @@ Fixed-width, latin-1, **dot decimal** — unlike `curva_pbc_uof`, which uses a
 comma. Do not share a number parser between them. **Two layouts: 169 chars
 until 2025-03-18, 94 chars from 2025-03-19** — see the trap below.
 
-**The minimum income variable term is only available to 2025-03-18.** The
-narrow layout publishes two numerics where the wide one published nine: max
-power (confirmed) and one unidentified field that is neither the old fixed nor
-the old variable term. Anything needing declared start-up costs runs
-2017-01-01 → 2025-03-18. OMIE ticket #12541 is open; ask there.
+**The minimum income variable term ends at 2025-03-18 — because the market
+design changed, not because OMIE withheld it.** Resolved 2026-09-03 from
+OMIE's own published spec (see below). On 2025-03-19 the old complex condition
+was replaced by the **SCO** (*Scalable Complex Order*) for the European single
+day-ahead coupling, and the header now publishes **one** lump-sum `Fijoeuro` in
+EUR instead of a fixed €/day plus a variable €/MWh term. The variable term no
+longer exists as a separately declared parameter; what replaces it is the SCO's
+own scalable price tranches in `det`, which from the same date carry a **MAV**
+(Minimum Acceptable Volume) per offer.
+
+**The two fixed terms are different quantities and must never be spliced.**
+ABO1 (C.T. Aboño 1, 351 MW) declares 24,000 €/day fixed and 127.50 €/MWh
+variable on 18 March, and a single 601,620 € on 19 March. Nor is it the same
+population: across those two days 19 units declare a wide fixed term and 53 a
+variable one, against 31 declaring an SCO fixed term. They are held in separate
+columns, `min_income_fixed_eur` and `sco_fixed_eur`. So the conclusion is
+unchanged in substance — **declared start-up costs on a consistent basis run
+2017-01-01 → 2025-03-18** — but `sco_fixed_eur` is a usable primitive after
+that date, not a hole.
 
 Validated on January 2024: units declaring no minimum-income condition
 withdraw for a whole day **4.1%** of the time; units declaring one, **81.1%**;
 and units whose variable term exceeds the day's *highest* clearing price,
 **94.2%**. The condition does what the market rule says it does.
 
-Only three of the nine numeric fields are labelled in the parser. The other
-six are carried through unnamed rather than guessed at.
+**All nine numeric fields are now named**, from OMIE's own specification —
+*Modelo de Ficheros para la distribución pública de Información pública*,
+**v1.35** (the last edition describing the wide layout) and **v1.37** (current),
+public PDFs at
+`https://www.omie.es/sites/default/files/<YYYY-MM>/formato_ficheros_inf_pub_<v>.pdf`.
+Of the six previously carried unnamed, **two are documented as unused** (verified
+`0.000` on every row) and **four are ramp rates** — `MaxRamSub`, `MaxRamBaj`,
+`MaxRamArr`, `MaxRamPar`. Do not get excited about the ramps: on 2025-03-18 only
+5 of 2,454 units declare a non-zero up or down ramp and none declare a startup or
+shutdown ramp, and **the spec gives no unit of measure**, so they are carried
+under OMIE's field names without a unit suffix.
+
+Fetch the spec before touching any OMIE fixed-width parser. Every position in
+this repo's `cab` parser was reverse-engineered from the files until 2026-09-03,
+and one of those guesses was wrong — see the whitespace-splitting trap below.
 
 #### The minimum income condition is a *declared* start-up cost
 
@@ -270,6 +298,18 @@ technologies, EIC at 100%**, from ESIOS archive 82. **Token-free**, unlike the
 ESIOS indicator API; the web page is JS-rendered with no export, the JSON is at
 `api.esios.ree.es/archives/82/download_json?locale=es`. It is a **snapshot**
 with no entry/exit dates — record the fetch date with anything derived from it.
+
+**OMIE confirmed on 2026-09-03 that no historical unit listing exists for
+2021.** They supplied point-in-time listings for 2024, 2025 and 2026 on request
+(the 2025 one dated 31/01/2025), but stated plainly that the information is
+updated continuously and no complete historical series is kept for all dates.
+So every unit→agent attribution in this repo is a **forward or backward
+projection from a snapshot**, and the further from the snapshot date, the
+weaker it is. That bears directly on the 2021 windfall-levy question in
+[`rq-clawback-size-rdd.md`](notes/rq-clawback-size-rdd.md): its treatment varies
+at parent-firm level in 2021, five years before the earliest listing, and no
+source has been found that would validate the mapping for that year. Check this
+before building on it, not after.
 
 `Sujeto del Mercado` is the market agent, the entity that *decides the bid*.
 Nothing in the OMIE files publishes it, and it is the grouping every
@@ -377,12 +417,77 @@ price/quantity steps keyed by the same 7-digit unit id as `cab`.
 Full documentation of the mapping — layers, fields, coverage, glossary and the
 five ways it can mislead — is in [`docs/unit-agent-mapping.md`](docs/unit-agent-mapping.md).
 
-### Technology coverage is a separate, weaker mapping than ownership
-Ownership reaches 89.1% of near-marginal offered volume. **Technology reaches
-41.2%** — a different problem with different sources, and the binding
-constraint on anything that asks *which technology sets the price*. This gap
-did not close when ownership coverage did — the two are genuinely different
-problems, not the same 12% of volume.
+### OMIE's *Listado de Unidades Ofertantes* — the authoritative registry
+`data/omie/registry/omie_unit_lists.parquet`, built by
+`build/build_omie_unit_lists.py` from 12 dated PDFs in `data/omie/unit_lists/`.
+**51,703 rows, one per unit per snapshot.** Columns: `snapshot`, `unit`,
+`descr`, `agent_owner`, `ownership_pct`, `unit_type`, `status`, `zone`,
+`technology`.
+
+Obtained by asking OMIE directly (ticket #12541), not scraped. This settles
+what the rest of this file spends pages reconstructing: `agent_owner` is the
+owning company **published by OMIE with an ownership percentage**, and
+`technology` is OMIE's own label. Undocumented here until 2026-09-03 although
+eight analysis scripts already read it.
+
+| snapshot | units | technology | agent_owner |
+|---|---|---|---|
+| 2014-09-24 … 2020-03-09 (8 snapshots) | 3,656–5,102 | **0%** | 100% |
+| 2022-02-08 | 5,899 | 93.0% | 100% |
+| 2023-05-16 / 2023-12-30 / 2025-01-31 | 2,803 / 2,978 / 3,331 | ~99.4% | 100% |
+
+**They are snapshots, not spells.** A unit's agent between two snapshots is
+unobserved; an ownership change is locatable only to the bracketing interval.
+The builder prescribes the nearest *preceding* snapshot when attributing a bid
+— but note `marginal_technology.py` instead takes the **latest** snapshot per
+unit (`drop_duplicates(keep="last")`), which for 2018–2021 projects a 2022+
+technology label backwards. Defensible, but the opposite of the stated rule and
+undocumented at the call site.
+
+**No 2021 snapshot exists and none can be obtained** — see the ESIOS section
+above for OMIE's statement that no historical series is kept.
+
+**These 12 PDFs are the only genuinely irreplaceable files in `data/`.** The
+gitignore convention rests on `data/` being re-fetchable; that is false here,
+because OMIE does not keep history. About 6 MB. Back them up.
+
+### Technology coverage — superseded from 2022 by OMIE's own listings
+**Read this before believing the 41.2% figure below.** Everything in this
+section describes `unit_agents.parquet`, the hand-built inference chain, and it
+is still accurate *about that file*. It is **no longer the repo's ceiling**:
+`data/omie/registry/omie_unit_lists.parquet` (see the section above) publishes
+OMIE's own technology label, and eight analysis scripts — including
+`marginal_technology.py`, the very script that asks which technology sets the
+price — already read it instead.
+
+Measured 2026-09-03 on offered sell volume, nearest-preceding snapshot:
+
+| month | cab `tech` | OMIE listing | union |
+|---|---|---|---|
+| 2018-06 | 81.1% | **0.0%** | 81.1% |
+| 2020-01 | 77.4% | **0.0%** | 77.4% |
+| 2024-01 | 78.1% | 99.5% | 99.7% |
+| 2025-05 | 80.3% | 99.1% | 99.4% |
+
+**The listings carry no technology before 2022-02-08.** All eight snapshots from
+2014-09-24 to 2020-03-09 are 0% technology and 100% ownership — OMIE added the
+column to the listing format later. So the two mappings resolve on *different
+schedules*, and this is the load-bearing constraint:
+
+- **Ownership is solved for the whole window** — 100% on every snapshot back to
+  2014, ~99% of near-marginal offered volume.
+- **Technology is solved only from 2022 onward.** For 2018–2021 `cab` names
+  remain the only source, at the coverage this section documents.
+
+A design spanning the full window inherits the weaker number; one starting in
+2022 does not. The 2021 windfall-levy question is on the wrong side of that line.
+
+**The 41.2% and 63.3% figures below no longer reproduce**, on any basis tried
+(all cleared volume gives 47.7%/74.9%; `role == "generation"` alone gives
+22.8%/63.6%). Unit counts have drifted too — 1,492 against 1,474, 2,048 against
+2,037 — so they were computed on an earlier build of `unit_agents.parquet` and
+the stated basis, "of generation volume", is not precise enough to recover which.
+Treat them as dated, and state the filter explicitly if you recompute.
 
 ESIOS is close to exhausted for this: only **128 of our 3,930 generation units**
 appear in its programming-unit registry, because REE registers dispatchable
@@ -488,10 +593,14 @@ against the zip rather than trusting a clean exit.
 `session` is therefore **not comparable across the boundary**: 1-7 before,
 1-3 after, with different meanings and an overlap period where both appear.
 
-**Intraday also adopted the 15-minute MTU in June 2025, four months before
-the day-ahead market did (2025-10-01).** The two markets run at different
-resolutions in between, so read `resolution_min` per file rather than
-inferring it from the date.
+**Intraday adopted the 15-minute MTU on 2025-03-19, over six months before
+the day-ahead market did (2025-10-01).** Corrected 2026-09-03: an earlier note
+here said June 2025 and was simply wrong. Re-derived from `resolution_min` in
+the files — 2025-03-18 is the last day carrying any 60-minute rows (it carries
+both, the first quarter-hourly intraday auction having been held that afternoon
+for delivery on the 19th) and every day from 2025-03-19 is pure 15-minute. The
+two markets run at different resolutions for those six months, so read
+`resolution_min` per file rather than inferring it from the date.
 
 ### OMIE intraday bid curves — complete
 **101/101 months, 558,797,498 rows**, uniform schema — larger than the
@@ -810,18 +919,31 @@ Filter to `status == 'O'` for supply/demand functions and `status == 'C'`
 for cleared quantities. **Summing across both double-counts every accepted
 bid.** `fetch_omie_bids.py --verify` re-checks the identity per month.
 
-### Three OMIE datasets change on 2025-03-19 — treat it as a platform migration
-Established 2026-08-13. Each was found separately; together they are hard to
-read as coincidence:
+### Four OMIE datasets change on 2025-03-19 — and OMIE documents why
+Found piecemeal 2026-08-13, explained 2026-09-03. It is one platform migration,
+not a coincidence: OMIE went live on **18 March 2025** with the new day-ahead
+offer typology for the European single day-ahead coupling (SDAC) *and*
+quarter-hourly products in both intraday markets under SIDC, first delivery day
+**19 March**. Their press release is
+[250318_sco_15mtu_vf-es_0.pdf](https://www.omie.es/sites/default/files/2025-03/250318_sco_15mtu_vf-es_0.pdf);
+the field-level consequences are in the *Modelo de Ficheros* spec, v1.36 and
+v1.37.
 
-- **`cab`** switches fixed-width layout, 169 chars to 94 (trap below).
+- **`cab`** switches fixed-width layout, 169 chars to 94 (trap below), because
+  the offer typology it describes changed.
 - **`pdbf`** adopts the **15-minute MTU** — 24 periods a day through
-  2025-03-18, 96 from 2025-03-19. This is *six months before the day-ahead
-  auction* (2025-10-01) and three before intraday (June 2025).
+  2025-03-18, 96 from 2025-03-19. The operating schedule had to follow intraday.
+- **Intraday (`curva_pibc_uof`)** adopts the 15-minute MTU on the same day.
 - **The 61-day bid clearing-identity anomaly cluster** begins on this exact
   day and runs to 2025-06-09.
 
-**Every dataset has its own resolution date.** Intraday June 2025, PDBF
+**The day-ahead auction is the one that did *not* move with the others.** OMIE's
+own press release announced quarter-hourly day-ahead products for 11 June 2025,
+delivery 12 June; the data says it actually happened **2025-10-01**. So the
+published plan slipped by nearly four months — do not date the day-ahead switch
+from OMIE's announcements.
+
+**Every dataset still has its own resolution date.** Intraday and PDBF
 2025-03-19, day-ahead 2025-10-01. Read `resolution_min` per file; never infer
 one dataset's resolution from another's.
 
@@ -837,13 +959,32 @@ files: `schedule_mw * resolution_min / 60`.
 Found 2026-08-13, after 14 months of silently corrupt output. The file went
 from **169 characters to 94**, and every field moved:
 
-| field | wide (to 2025-03-18) | narrow (from 2025-03-19) |
-|---|---|---|
-| unit_id | `[0:7]` | `[0:10]`, now 8 digits |
-| unit | `[10:17]` | `[15:22]` |
-| descr | `[17:47]` | `[22:52]` |
-| offer_type | `[47:50]`, `VNO`/`CNO` | `[52:54]`, `VO`/`CO` |
-| numerics | nine | **two** |
+Positions below are OMIE's own, from the *Modelo de Ficheros* spec (v1.35 for
+the wide layout, v1.37 for the narrow), not reverse-engineered. The spec counts
+from 1; these slices are 0-based.
+
+| field | OMIE name | wide (to 2025-03-18) | narrow (from 2025-03-19) |
+|---|---|---|---|
+| offer_id | CodOferta | `[0:7]` | `[0:10]` |
+| version | Version | `[7:10]` | `[10:15]` |
+| unit | Código | `[10:17]` | `[15:22]` |
+| descr | Descripción | `[17:47]` | `[22:52]` |
+| side | CV | `[47:48]` | `[52:53]` |
+| ofer_plazo | OferPlazo | `[49:50]` | `[53:54]` |
+| max_ramp_up / _down | MaxRamSub / MaxRamBaj | `[84:91]` / `[91:98]` | — |
+| min_income_fixed_eur | Fijoeuro | `[98:115]` | — |
+| min_income_var_eur_mwh | Vareuro | `[115:132]` | — |
+| sco_fixed_eur | Fijoeuro | — | `[54:71]` |
+| max_power_mw | MaxPot | `[132:139]` | `[71:78]` |
+| max_ramp_startup / _shutdown | MaxRamArr / MaxRamPar | `[139:146]` / `[146:153]` | — |
+| cod_int | CodInt | `[153:155]` | `[78:80]` |
+| declared_at | — | `[155:169]` | `[80:94]` |
+| numerics | | nine | **two** |
+
+`offer_id` is the code of the *offer*, not a unit registration id — it changes
+day to day (ABO1 is 9497313 on 14 March, 9512371 on 18 March) and does **not**
+join to `pdbce`. It was called `unit_id` here until 2026-09-03, which was wrong.
+Join on `unit`.
 
 The old parser did not fail. Its guard tested that `line[:7]` was all digits,
 and in the narrow layout `[0:7]` is leading spaces plus digits, so it passed
@@ -858,17 +999,42 @@ raises on any unrecognised width.
 
 `max_power_mw` is **confirmed** across the boundary: of the 2,390 units present
 on both 2025-03-18 and 2025-03-19, 100% reproduce the same capacity. The other
-narrow numeric is **not** identified and is carried as `narrow_numeric_0`.
-ABO1 declares 24,000 €/day fixed and 127.50 €/MWh variable on 18 March and a
-single 601,620 on 19 March; the declaration is chosen per unit per day, so a
-day-over-day comparison cannot identify the field.
+narrow numeric, carried as `narrow_numeric_0` until 2026-09-03, is **`Fijoeuro`,
+the lump-sum fixed term of the SCO** — now `sco_fixed_eur`. See the `cab`
+section above for why it is not comparable with the old fixed term.
+
+### Splitting a fixed-width line on whitespace works until a value fills its column
+Found 2026-09-03, while rewriting the `cab` parser onto OMIE's published field
+positions. The parser had been reading the numeric fields by splitting the line
+on whitespace and indexing the resulting tokens. That is not the same thing as
+slicing at fixed positions, and it silently failed whenever a value was as wide
+as its column: `Vareuro` (`F17.3`) and `MaxPot` (`F7.1`) are adjacent, so a unit
+with a 12,000 MW capacity emits `0.00012000.0` with no separator. The merged
+token is not a valid float, the tokeniser stopped there, and the row came back
+with **null `max_power_mw` and null on both minimum-income terms**.
+
+It hit exactly the biggest units — `ICLIC01` "IBERDROLA CLIENTES COMPRA" at
+12,000 MW and `ENDE01` "ENDESA ENERGIA (ESP)" at 10,200 MW on 2024-01-15, and a
+handful per day throughout the archive. Since `build_unit_agents.py` and
+`capacity_quantile_offer.py` both filter on `max_power_mw > 0`, those units were
+being dropped from capacity-weighted coverage figures altogether rather than
+counted as unknown.
+
+**Slice fixed-width files by position, and get the positions from the
+publisher's spec.** The fix was verified on eight days spanning both layouts and
+2017–2026: every difference is a value the old parser had left null, and zero
+values it had already read were changed.
 
 **This is the same date the 61-day clearing-identity anomaly cluster begins**
 (2025-03-19 → 2025-06-09), which was recorded as unexplained because it
-predates the April blackout by five weeks. A publication-system change on that
-exact date is now the leading explanation for the March onset. It is a lead,
-not a demonstration — a header-format change does not mechanically break the
-market-clearing identity in the bid files.
+predates the April blackout by five weeks. As of 2026-09-03 the explanation for
+the March onset is no longer a guess about a publication-system change: OMIE
+replaced the **day-ahead offer typology itself** on that date (see the
+platform-migration section above), so the bid files record a different set of
+offer types on either side of it. That is a far better lead than a header-format
+change — but still a lead, not a demonstration. Nobody has shown the mechanism
+by which the new typology breaks the market-clearing identity, and it does not
+explain why the cluster *ends* on 2025-06-09.
 
 ### The 15-minute switch on 2025-10-01
 OMIE moved from hourly to **15-minute market time units** on 2025-10-01 (the

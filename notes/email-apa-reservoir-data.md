@@ -47,6 +47,86 @@ basin list and example change, as shown above.
 
 ---
 
+## 2026-09-03 — APA replied, from the security officer
+
+Their answer, in substance: SNIRH runs on 1990s technology, *"muito vulnerável
+e sem atualizações possíveis"*, and **for that reason access from outside
+Portugal is not permitted**. They offered to open an exception for a **fixed
+IP** of ours.
+
+That confirms the 403 diagnosis in
+[`hydro-water-value-design.md`](hydro-water-value-design.md) — geo-block, not
+bot-fingerprinting. See that note for why the bulk export is still the better
+ask and the IP whitelist the fallback.
+
+**Blocking unknown before replying: do we actually have a static IP?** Home
+broadband is normally dynamic. Ask university IT for the institution's fixed
+egress address, or a VPN with a stable exit. Do not answer the email until that
+is confirmed — offering an address that rotates wastes their exception and
+fails silently later.
+
+**Do not route around the block with a Portuguese VPN.** They have explained it
+is a security control on a system they cannot patch.
+
+### Draft reply — Portuguese
+
+**Assunto:** Re: Pedido de dados históricos de armazenamento de albufeiras (SNIRH)
+
+Exmo. Senhor,
+
+Muito obrigado pelo esclarecimento, e por explicar a razão da restrição — fica
+perfeitamente compreendido, e não era de todo evidente a partir da resposta 403.
+
+Antes de avançar com a exceção de IP, permita-me sugerir uma alternativa que
+talvez seja mais simples para ambos e que dispensa qualquer acesso ao SNIRH:
+**uma exportação única da série histórica**, em Excel ou CSV, do armazenamento
+das albufeiras (em hm³ e/ou percentagem da capacidade total, com periodicidade
+semanal ou mensal) para o período de 2018 a 2026.
+
+Para o meu trabalho basta um ficheiro estático — não necessito de acesso
+continuado nem de consultas em tempo real. Do vosso lado, evitaria abrir o
+sistema a um endereço externo, o que, face à preocupação que descreve, me
+parece preferível. Sei também que este tipo de extração já foi feito na APA:
+existem duas publicações vossas no ArcGIS Online exatamente com este formato,
+uma com o armazenamento de setembro de 2022 por bacia e outra com a situação
+mensal de 61 albufeiras entre dezembro de 2018 e setembro de 2019, esta última
+identificando cada albufeira pelo respetivo código de estação (por exemplo,
+Alto Lindoso, 02H/01A).
+
+Caso a exportação não seja viável, agradeço então a possibilidade da exceção de
+IP e indico-lhe o endereço fixo assim que o confirmar junto dos serviços
+informáticos da minha instituição. Nesse caso, agradecia que me confirmasse
+apenas se é suficiente um único endereço IPv4.
+
+Com os melhores cumprimentos,
+[Nome]
+[Instituição / orientador]
+
+### English (for reference)
+
+Thank you for the explanation, and for saying why the restriction exists — that
+was not apparent from the 403 alone.
+
+Before taking up the IP exception, may I suggest an alternative that is
+probably simpler for both of us and needs no SNIRH access at all: **a one-off
+export of the historical series**, in Excel or CSV, of reservoir storage (in
+hm³ and/or percentage of total capacity, weekly or monthly) for 2018 to 2026.
+
+A static file is all my work requires — I need neither continued access nor
+real-time queries. On your side it would avoid opening the system to an
+external address, which given the concern you describe seems preferable. I also
+know this kind of extract has been done at APA before: there are two of your
+own ArcGIS Online publications in exactly this format, one giving September 2022
+storage by basin and another giving the monthly status of 61 reservoirs from
+December 2018 to September 2019, the latter identifying each reservoir by its
+station code (for example Alto Lindoso, 02H/01A).
+
+If the export is not feasible, I would gratefully take up the IP exception and
+will send the fixed address once my institution's IT services confirm it. In
+that case, could you confirm whether a single IPv4 address is sufficient?
+
+---
+
 ## Norte — arhn.geral@apambiente.pt
 
 **Assunto:** Pedido de dados históricos de armazenamento de albufeiras (SNIRH) — bacias do Douro, Lima, Cávado e Tâmega

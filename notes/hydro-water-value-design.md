@@ -624,6 +624,43 @@ or accept the geo-block and route a fetch through a Portuguese network
 if one becomes available. Not pursued further without a decision on
 which of those is worth the effort.
 
+**2026-09-03: APA replied, and the geo-block hypothesis was exactly right.**
+The reply came from APA's own security officer (*responsável da segurança*),
+and is worth quoting because it settles the question rather than working
+around it: SNIRH runs on 1990s technology, *"muito vulnerável e sem
+atualizações possíveis"* — very vulnerable, with no updates possible — and
+**for that reason access from outside Portugal is not permitted**. The 403 was
+never a bot-fingerprint problem or a misconfiguration; it is a deliberate
+control on a system they cannot patch.
+
+**They offered a route: a fixed IP of ours can be whitelisted as an
+exception.** Three things follow, and the third is the one that decides it.
+
+1. **"Fixed" is the binding word.** A residential broadband address is
+   normally dynamic, and if it rotates, access dies silently mid-fetch. This
+   needs the university's static egress address, or a university VPN with a
+   stable exit — a question for institutional IT, not something that can be
+   determined from here.
+2. **Do not route around the block instead.** A Portuguese VPN exit would
+   defeat a control APA has now explicitly explained, on a system they have
+   told us is unpatchable. The sanctioned route is on offer and is also the
+   more stable one.
+3. **A whitelisted IP would make this the least portable source in the
+   repo.** `CLAUDE.md`'s standing convention is that all of `data/` is
+   gitignored *because it is fully re-fetchable*; a fetcher that only runs
+   from one network breaks that, in the same way the two browser-captured
+   investing.com fetchers do — except worse, because it cannot be re-run from
+   a different machine at all.
+
+**So the bulk historical export remains the better ask, and it is still
+open.** The four regional ARH offices in
+[`email-apa-reservoir-data.md`](email-apa-reservoir-data.md) were asked for a
+one-off file, which requires no network access, creates no ongoing dependency,
+survives being moved between machines, and — given the security officer's
+stated concern — exposes SNIRH less than opening a hole in it. Pursue both,
+but lead with the export; take the IP whitelist as the fallback, and only once
+a genuinely static address is confirmed to exist.
+
 Institutional fit, briefly: SHL is one operator with de facto market power
 over its region, so its FOC-with-market-power framing suits Spain's handful
 of large hydro-owning firms (Iberdrola, Endesa) far better than the 44

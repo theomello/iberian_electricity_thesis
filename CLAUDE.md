@@ -459,11 +459,13 @@ eight analysis scripts already read it.
 
 **They are snapshots, not spells.** A unit's agent between two snapshots is
 unobserved; an ownership change is locatable only to the bracketing interval.
-The builder prescribes the nearest *preceding* snapshot when attributing a bid
-— but note `marginal_technology.py` instead takes the **latest** snapshot per
-unit (`drop_duplicates(keep="last")`), which for 2018–2021 projects a 2022+
-technology label backwards. Defensible, but the opposite of the stated rule and
-undocumented at the call site.
+The builder prescribes the nearest *preceding* snapshot when attributing a bid,
+which is right for **ownership**. For **technology** the rule is the nearest
+snapshot in *either* direction, since the first one carrying a technology at all
+is 2022-02-08 — see the backward-projection argument below.
+`marginal_technology.py` took the latest snapshot for every year until
+2026-09-03, which pushed the 2025-01-31 relabelling back onto 2018; it now
+labels each period from the nearest snapshot per unit.
 
 **No 2021 snapshot exists and none can be obtained** — see the ESIOS section
 above for OMIE's statement that no historical series is kept.

@@ -169,11 +169,15 @@ What it buys, on near-marginal offered sell volume:
 It also gains *specificity*, not just coverage: `ABO1` is only "thermal" from its
 `cab` name and **coal** in the listing.
 
-**Caveat for callers.** `marginal_technology.py` takes the latest snapshot per
-unit (`drop_duplicates(keep="last")`), which for 2018–2021 projects the *2025*
-label backwards — past the relabelling in claim 3. `tech_omie_early` is the
-column that implements the argument above; `tech_omie` is the one to use from
-2022 on.
+**For callers.** `tech_omie_early` implements the argument above for 2018–2021;
+`tech_omie` is the one to use from 2022 on. `marginal_technology.py` does this
+without the columns, labelling each period from the snapshot **nearest it in
+time** per unit — one rule that resolves to 2022-02-08 for 2018–2021 and to a
+contemporaneous snapshot later. It took the latest snapshot for every year until
+2026-09-03, which pushed the 2025 relabelling back onto 2018; correcting it moved
+**60 of 22,067** periods, 55 of them pre-2022 and 48 a single
+cogeneration→biomass reversal. Post-2021 the choice is immaterial (0.19% of
+periods at worst) because the near-marginal band is large persistent plant.
 
 ## How it is built — four layers, descending evidence
 

@@ -16,14 +16,38 @@ rivers ("LIMA", "CAVADO", "BACIA HID. DO GUADIANA"), matched no technology
 keyword, and their absence made hydro look like a *declining* marginal
 technology when it is not.
 
-CAVEAT ON THE LABELS. Only OMIE listings from 2022-02-08 onward carry a
-technology column; the eight earlier snapshots have none. Technology is
-therefore assigned from whichever snapshot has it, not from the nearest
-preceding one. That is defensible because a plant's technology does not change
-hands the way its owner does -- but it means a unit that exited before 2022 is
-unlabelled, so pre-2022 coverage is really coverage *of surviving units*. The
-near-marginal band is dominated by large persistent plant, which is why it still
-reads near 100%.
+WHICH SNAPSHOT LABELS WHICH YEAR. Only OMIE listings from 2022-02-08 onward
+carry a technology column; the eight earlier snapshots have none. So 2018-2021
+is labelled by projecting a later snapshot backwards, and **the direction
+matters**: nearly every genuine class change in the listings lands at the last
+snapshot, 2025-01-31, mostly biomass/cogeneration reclassification of small
+Regimen Especial units. Taking the latest label -- as this script did until
+2026-09-03 -- pushes that 2025 relabelling back onto 2018.
+
+This script therefore labels each period from the snapshot **nearest it in
+time**, per unit -- one rule for the whole window rather than a special case:
+
+* **2018-2021** resolves to 2022-02-08, the first snapshot carrying a
+  technology at all. That is the backward projection, and it is
+  `tech_omie_early` in `unit_agents.parquet`.
+* **2022 onward** resolves to a contemporaneous snapshot rather than to 2025.
+
+Post-2021 that choice barely matters -- nearest and latest differ on 0.19% of
+periods at worst, because the near-marginal band is large persistent plant whose
+labels do not move. It matters pre-2022, where it reverses 48 periods of
+cogeneration/biomass relabelling, and it is the rule that stays correct as
+further snapshots arrive.
+
+The full argument for projecting technology backwards at all -- and for not
+doing the same to ownership -- is in `docs/unit-agent-mapping.md`, with its one
+untestable assumption stated. In short: technology changes for 2.07% of units
+across the technology-bearing snapshots against 6.19% for ownership, and the
+projected class agrees with the independent `cab`-name technology on 98.7% of
+units once sub-classes differing in granularity rather than kind are collapsed.
+
+A unit that exited before 2022 is still unlabelled, so pre-2022 coverage remains
+coverage *of surviving units*. The near-marginal band is dominated by large
+persistent plant, which is why it reads near 100% regardless.
 """
 
 from __future__ import annotations
@@ -60,9 +84,15 @@ def main() -> int:
     args = ap.parse_args()
 
     ul = pq.read_table(DATA / "omie/registry/omie_unit_lists.parquet").to_pandas()
-    lab = ul.dropna(subset=["technology"]).drop_duplicates("unit", keep="last")
-    tech = {u: classify(t) for u, t in zip(lab.unit, lab.technology)}
-    raw = dict(zip(lab.unit, lab.technology))
+    ul = ul.dropna(subset=["technology"]).copy()
+    ul["snapshot"] = pd.to_datetime(ul.snapshot)
+    ul["cls"] = ul.technology.map(classify)
+    labels = (ul[["unit", "snapshot", "technology", "cls"]]
+              .rename(columns={"snapshot": "date"})
+              .assign(unit=lambda d: d.unit.astype(str))
+              .sort_values("date"))
+    late = ul.sort_values("snapshot").drop_duplicates(
+        "unit", keep="last").set_index("unit").cls
 
     if args.months:
         months = args.months.split(",")
@@ -82,9 +112,36 @@ def main() -> int:
         rows.append(t.loc[t.groupby(["date", "period"]).price_eur_mwh.idxmax()])
 
     m = pd.concat(rows, ignore_index=True)
-    m["year"] = pd.to_datetime(m.date).dt.year
-    m["tech"] = m.unit.map(tech)
-    m["listed"] = m.unit.map(raw).notna()
+    m["date"] = pd.to_datetime(m.date)
+    m["year"] = m.date.dt.year
+    # The bid files dictionary-encode `unit`; merge_asof's `by` key must match
+    # the label frame's plain strings, and only errors when a single month is
+    # read (a multi-month concat happens to decode it).
+    m["unit"] = m.unit.astype(str)
+
+    # Label each period from the snapshot NEAREST it in time, per unit. This is
+    # one rule covering the whole window: for 2018-2021 the nearest is always
+    # 2022-02-08, the first snapshot carrying a technology, so those years get
+    # the backward projection the docstring argues for; later years get a
+    # contemporaneous label instead of a 2025 one. merge_asof falls back per
+    # unit, so a unit appearing in only one snapshot takes that label
+    # throughout.
+    m = pd.merge_asof(m.sort_values("date"), labels, on="date", by="unit",
+                      direction="nearest")
+    m["tech"] = m.cls
+    m["listed"] = m.technology.notna()
+
+    # Report the divergence from the old latest-snapshot behaviour, so the
+    # change cannot pass silently. Compare through a sentinel: a bare `!=`
+    # counts both-null pairs as differing, because nan != nan -- the same
+    # coercion trap CLAUDE.md records for build_jrc_cab_match's digit gate.
+    flipped = m.tech.fillna("~none") != m.unit.map(late).fillna("~none")
+    if int(flipped.sum()):
+        by_year = m[flipped].year.value_counts().sort_index()
+        print("note: nearest-snapshot labelling differs from the previous "
+              f"latest-snapshot rule on {int(flipped.sum()):,} of {len(m):,} "
+              "periods: "
+              + ", ".join(f"{y} {n}" for y, n in by_year.items()) + "\n")
     m["cls"] = m.tech.fillna(
         pd.Series(["unspecific label" if l else "not listed" for l in m.listed],
                   index=m.index))

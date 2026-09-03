@@ -40,6 +40,9 @@ import pyarrow.parquet as pq
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 DATA = ROOT / "data"
+
+sys.path.insert(0, str(ROOT / "scripts" / "lib"))
+from omie_tech import classify  # noqa: E402
 OUTDIR = ROOT / "outputs" / "tables"
 
 # OMIE's vocabulary, collapsed to readable technologies. "RE" is Regimen
@@ -47,38 +50,8 @@ OUTDIR = ROOT / "outputs" / "tables"
 # is the regulated last-resort tariff. Prefixes are stripped because the regime
 # is a remuneration arrangement, not a technology -- what generates the
 # electricity is the same either way.
-TECH_MAP: list[tuple[str, str]] = [
-    (r"Nuclear", "nuclear"),
-    (r"Ciclo Combinado", "gas CCGT"),
-    (r"Hulla|Antracita|Carb[oó]n|Lignito", "coal"),
-    (r"Bombeo", "pumped storage"),
-    (r"Hidr[aá]ulica", "hydro"),
-    (r"E[oó]lica", "wind"),
-    (r"Solar", "solar"),
-    (r"T[eé]rmica Renovable|Biomasa|Biog[aá]s", "biomass"),
-    (r"T[eé]rmica no", "cogeneration"),
-    (r"Geot[eé]rmica", "geothermal"),
-    (r"Almacenamiento", "storage"),
-    (r"H[ií]brida", "hybrid"),
-]
-
-# Labels that name a commercial arrangement rather than a technology. Counting
-# these as identified would overstate coverage; they are reported separately.
-UNSPECIFIC = re.compile(
-    r"Generica|Gen[eé]rica|Porfolio|Portfolio|Tarifa|Agente vendedor|"
-    r"Productor Reg|Venta excedentes", re.I)
-
-
-def classify(t: str | None) -> str | None:
-    if not isinstance(t, str) or not t.strip():
-        return None
-    if UNSPECIFIC.search(t):
-        return None
-    for pat, name in TECH_MAP:
-        if re.search(pat, t, re.I):
-            return name
-    return None
-
+# TECH_MAP, UNSPECIFIC and classify() moved to lib/omie_tech.py on
+# 2026-09-03 so build_unit_agents.py can share one definition.
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)

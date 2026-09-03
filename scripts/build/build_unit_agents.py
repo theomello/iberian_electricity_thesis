@@ -67,6 +67,9 @@ import pyarrow.parquet as pq
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 DATA = ROOT / "data"
+sys.path.insert(0, str(ROOT / "scripts" / "lib"))
+from omie_tech import classify  # noqa: E402
+
 OUT = DATA / "omie" / "registry" / "unit_agents.parquet"
 OUT_CONF = DATA / "omie" / "registry" / "unit_agents_confirmed.parquet"
 BAND = 5.0
@@ -528,6 +531,7 @@ def build(month: str, tier: str = "all") -> pd.DataFrame:
     # Independent of every layer above: OMIE's own published owner, carried
     # alongside rather than merged into `agent`/`firm`. See the docstring.
     df = attach_listing_owner(df)
+    df = attach_listing_tech(df)
     return df.drop(columns=["agent_esios", "agent_prefix", "_agent_name_src"], errors="ignore")
 
 
@@ -704,6 +708,86 @@ def attach_listing_owner(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame
     return df
 
 
+def attach_listing_tech(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
+    """OMIE's own technology, and the backward projection that makes it usable.
+
+    Only four of the twelve snapshots carry a technology at all -- 2022-02-08,
+    2023-05-16, 2023-12-30, 2025-01-31. Read under the nearest-*preceding*
+    snapshot rule the ownership mapping uses, that means **no technology exists
+    for 2018-2021**, which is most of the study window.
+
+    Projecting the 2022-02-08 label backwards fixes that, and unlike ownership it
+    is defensible. Measured 2026-09-03:
+
+    * **Technology is three times more stable than ownership.** Over the same
+      units and the same four snapshots, normalised class changes for 2.07% of
+      units against 6.19% for `agent_owner`.
+    * **Most apparent instability is OMIE relabelling itself.** 78 units change
+      raw label, 41 change normalised class; of 24 changes among dispatchable
+      units, 21 are pure renames ("VENTA GENERICA" -> "Unidad Generica",
+      "RE Tar. CUR Eolica" -> "RE Mercado Eolica").
+    * **What genuine change there is sits at the far end, away from the target.**
+      Nearly every class change lands at the 2025-01-31 snapshot, mostly
+      biomass<->cogeneration on small Regimen Especial aggregation units. The
+      2022-02-08 and latest labels differ on 1.22% of units, and units whose
+      class ever changed are 0.45% of near-marginal offered volume.
+    * **It is not circular, and it survives an independent check.** Against the
+      `cab`-name technology -- a different source entirely -- the projected class
+      agrees on 93.3% of the 522 units carrying both, and **98.7%** once
+      sub-classes that differ in granularity rather than kind are collapsed
+      (`coarsen`); the residual conflicts are hydro vs pumped storage and
+      waste vs biomass, not gas vs wind.
+
+    Coverage of near-marginal offered sell volume it buys, against `cab` alone:
+    2018 **100.0%** (cab 94.9%), 2019 99.9% (92.4%), 2020 99.6% (93.7%),
+    2021 94.9% (77.9%).
+
+    **The assumption that cannot be tested is the extrapolation itself** --
+    stability is only observable from 2022 on. The `cab` cross-check is evidence
+    for it, not proof, and a plant that changed fuel before 2022 is invisible
+    here. Spain's coal fleet mostly closed rather than converted over the window,
+    which is what makes that risk small rather than zero.
+
+    Three columns, so the choice stays with the caller: `tech_omie` from the
+    latest snapshot (use for 2022 onward), `tech_omie_early` from 2022-02-08
+    (use for 2018-2021), and `tech_omie_stable` where the two agree or only one
+    exists. Disagreement is left visible rather than resolved.
+    """
+    blank = ("tech_omie", "tech_omie_early", "tech_omie_stable")
+    if not UNIT_LISTS.exists():
+        for c in blank:
+            df[c] = None
+        return df
+
+    ul = pq.read_table(UNIT_LISTS).to_pandas()
+    ul = ul[ul.technology.notna()].copy()
+    ul["snapshot"] = pd.to_datetime(ul.snapshot)
+    ul["cls"] = ul.technology.map(classify)
+    ul = ul.dropna(subset=["cls"]).sort_values("snapshot")
+
+    latest = ul.drop_duplicates("unit", keep="last").set_index("unit").cls
+    first_snap = ul.snapshot.min()
+    early = (ul[ul.snapshot == first_snap].drop_duplicates("unit")
+               .set_index("unit").cls)
+
+    df["tech_omie"] = df.unit.map(latest)
+    df["tech_omie_early"] = df.unit.map(early)
+    df["tech_omie_stable"] = [
+        None if pd.isna(a) and pd.isna(b) else (pd.isna(a) or pd.isna(b) or a == b)
+        for a, b in zip(df.tech_omie, df.tech_omie_early)]
+
+    if verbose:
+        n = int(df.tech_omie.notna().sum())
+        e = int(df.tech_omie_early.notna().sum())
+        gained = int((df.tech_omie_early.notna() & df.tech.isna()).sum())
+        unst = int((df.tech_omie_stable == False).sum())  # noqa: E712
+        print(f"  LISTING TECH -- {n:,} units from the latest snapshot, "
+              f"{e:,} from {first_snap.date()} (the backward projection for "
+              f"2018-2021); {gained:,} of the latter have no cab/esios "
+              f"technology at all; {unst:,} disagree between the two")
+    return df
+
+
 def near_marginal_coverage(month: str, mapped: set[str],
                            label: str = "inferred agent") -> None:
     """Coverage weighted by offers sitting within BAND of the clearing price."""
@@ -766,6 +850,12 @@ def main() -> int:
           + "  ".join(f"{k}:{v}" for k, v in gg.regime.value_counts().items()))
     print("   " + "  ".join(f"{k}:{v}" for k, v in
                             gg.tech_cab.value_counts().head(8).items()))
+    if gg.tech_omie_early.notna().any():
+        print(f"  OMIE tech, latest snapshot:{gg.tech_omie.notna().sum():,} of {len(gg):,} "
+              f"({vv[gg.tech_omie.notna()].sum() / tot:.1%} of volume)")
+        print(f"  OMIE tech, 2022-02-08 (backward projection for 2018-2021): "
+              f"{gg.tech_omie_early.notna().sum():,} of {len(gg):,} "
+              f"({vv[gg.tech_omie_early.notna()].sum() / tot:.1%} of volume)")
 
     if df.agent_owner.notna().any():
         own = df.agent_owner.notna()

@@ -492,16 +492,28 @@ Measured 2026-09-03 on offered sell volume, nearest-preceding snapshot:
 
 **The listings carry no technology before 2022-02-08.** All eight snapshots from
 2014-09-24 to 2020-03-09 are 0% technology and 100% ownership — OMIE added the
-column to the listing format later. So the two mappings resolve on *different
-schedules*, and this is the load-bearing constraint:
+column to the listing format later.
 
-- **Ownership is solved for the whole window** — 100% on every snapshot back to
-  2014, ~99% of near-marginal offered volume.
-- **Technology is solved only from 2022 onward.** For 2018–2021 `cab` names
-  remain the only source, at the coverage this section documents.
+**That gap is closed by projecting the 2022-02-08 label backwards, and unlike
+ownership the projection is defensible** — `tech_omie_early` in
+`unit_agents.parquet`, added 2026-09-03. Technology changes for 2.07% of units
+across the four technology-bearing snapshots against 6.19% for ownership; most
+apparent instability is OMIE renaming its own categories; and the projected
+class agrees with the independent `cab`-name technology on 93.3% of units, or
+**98.7%** once sub-classes differing in granularity rather than kind are
+collapsed. Coverage of near-marginal offered sell volume, against `cab` alone:
 
-A design spanning the full window inherits the weaker number; one starting in
-2022 does not. The 2021 windfall-levy question is on the wrong side of that line.
+| year | projected from 2022-02-08 | `cab` names alone |
+|---|---|---|
+| 2018 | **100.0%** | 94.9% |
+| 2019 | 99.9% | 92.4% |
+| 2020 | 99.6% | 93.7% |
+| 2021 | 94.9% | 77.9% |
+
+**Do not project ownership the same way** — it changes three times as often, and
+548 units change owner across the snapshots. The asymmetry is the whole argument;
+see `attach_listing_tech` in `build_unit_agents.py` for the full statement,
+including the one assumption that cannot be tested.
 
 **The 41.2% and 63.3% figures below do reproduce**, but only on one specific
 basis, which was never written down: `abs(net_cleared_mwh)` summed over the four

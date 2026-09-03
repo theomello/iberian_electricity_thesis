@@ -86,6 +86,9 @@ facing firm *i* is total demand minus *everyone else's* supply, so excluding
 | `agent_owner_pct` | ownership percentage OMIE states (6 units below 100%) |
 | `agent_owner_snapshot` | which snapshot the label came from |
 | `agent_owner_changed` | owner is not constant across the snapshots naming this unit (548 units) |
+| `tech_omie` | OMIE's technology, normalised, from the latest snapshot — use for 2022 onward |
+| `tech_omie_early` | same, from 2022-02-08 — **the backward projection for 2018–2021** |
+| `tech_omie_stable` | the two agree, or only one exists (39 units disagree) |
 
 ### `agent_owner` is a second opinion, not a better `agent`
 
@@ -111,6 +114,66 @@ a naive string comparison agrees on 57.4%, but most of the gap is formatting
 **Do not treat it as static.** 548 units change owner across snapshots, and the
 column carries the latest one. Use `agent_owner_changed` to exclude them, or go
 back to `omie_unit_lists.parquet` for the nearest-preceding snapshot.
+
+### Why technology may be projected backwards and ownership may not
+
+Only four of the twelve snapshots carry a technology — 2022-02-08, 2023-05-16,
+2023-12-30, 2025-01-31 — so under the nearest-*preceding* rule that ownership
+uses, **2018–2021 has none at all**. Projecting the 2022-02-08 label backwards
+fills it. The argument, measured 2026-09-03, is four claims and one admission.
+
+**1. Technology is three times more stable than ownership.** Same units, same
+four snapshots: normalised class changes for **2.07%** of units, `agent_owner`
+for **6.19%**. This is the asymmetry the whole thing rests on, and it is why the
+same move is *not* licensed for ownership.
+
+**2. Most apparent instability is OMIE relabelling itself.** 78 units change raw
+label; only 41 change normalised class. Of the 24 raw changes among dispatchable
+units, **21 are pure renames** — "VENTA GENERICA" → "Unidad Generica",
+"RE Tar. CUR Eólica" → "RE Mercado Eólica" (same technology, different tariff
+regime), "Cliente cualificado" → "Rep. de consumidores directos". Normalising
+through `lib/omie_tech.classify` removes them.
+
+**3. What genuine change remains sits at the far end, away from the target
+period.** Nearly every class change lands at the **2025-01-31** snapshot, and is
+dominated by biomass↔cogeneration on small *Régimen Especial* aggregation units.
+The 2022-02-08 and latest labels differ on **1.22%** of units, and units whose
+class ever changed account for **0.45%** of near-marginal offered volume. Note
+the direction: projecting *backwards from the earliest* technology-bearing
+snapshot avoids the 2025 relabelling entirely, which is why `tech_omie_early`
+exists rather than reusing `tech_omie`.
+
+**4. It survives a check against a genuinely independent source.** Against the
+`cab`-name technology — different file, different extraction, no shared
+input — the projected class agrees on **93.3%** of the 522 units carrying both,
+and on **85.6%** of testable 2018 near-marginal volume. Collapsing sub-classes
+that differ in granularity rather than kind (`coarsen`) raises that to
+**98.7%**: the residual conflicts are hydro vs pumped storage and waste vs
+biomass, not gas vs wind.
+
+**The admission.** Stability is only *observable* from 2022 onward, so the
+extrapolation into 2018–2021 is exactly the thing the evidence cannot reach. The
+`cab` cross-check is evidence for it, not proof, and a plant that changed fuel
+before 2022 is invisible. Spain's coal fleet largely closed rather than
+converted over the window, which makes that risk small rather than zero.
+
+What it buys, on near-marginal offered sell volume:
+
+| year | projected from 2022-02-08 | `cab` names alone |
+|---|---|---|
+| 2018 | **100.0%** | 94.9% |
+| 2019 | 99.9% | 92.4% |
+| 2020 | 99.6% | 93.7% |
+| 2021 | 94.9% | 77.9% |
+
+It also gains *specificity*, not just coverage: `ABO1` is only "thermal" from its
+`cab` name and **coal** in the listing.
+
+**Caveat for callers.** `marginal_technology.py` takes the latest snapshot per
+unit (`drop_duplicates(keep="last")`), which for 2018–2021 projects the *2025*
+label backwards — past the relabelling in claim 3. `tech_omie_early` is the
+column that implements the argument above; `tech_omie` is the one to use from
+2022 on.
 
 ## How it is built — four layers, descending evidence
 

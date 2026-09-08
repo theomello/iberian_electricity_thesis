@@ -85,12 +85,34 @@ is paid only on dispatched energy, so a capped plant has an extra reason to
 price its first tranche low. That is conduct, not a benchmark error -- but it
 means even the capped MC is not the plant's true opportunity cost.
 
-THE IMPLICATION: use the declared floor, not an engineering cost. `cab`
-publishes what the firm says it needs. A firm declaring `fixed + variable * q`
-will not accept less, so `price - (variable + fixed/q)` is a lower bound on
-realised markup revealed by the firm itself, with no efficiency assumption and
-no static/dynamic confusion. That is the benchmark this repo's data actually
-supports; see min_income_conduct.py.
+RERUN AGAINST THE DECLARED COST (`--floor declared`, 2026-09-04)
+
+`cab` publishes what the firm says it needs, so this drops the efficiency
+assumption and the gas cap entirely. 24,401 unit-days, 108 units, 16 firms,
+2018-2024. Two results.
+
+**The cost-model artefact was real.** The wrong-signed, significant coefficient
+on the engineering benchmark (-51.7, t = -3.09) falls to -35.9, t = -1.43. Part
+of what looked like a finding there was the efficiency error described above.
+
+**At the margin, the median unit prices at exactly its declared cost.** Offer
+minus declared variable term, median gap by quantile of nameplate:
+
+    p25   -57.7   below on 82.3%
+    p50   -12.7   below on 63.0%
+    p75    +0.0   below on 46.3%
+
+The curve rises from far below the declared cost to exactly it. That is the
+same shape the start-up-cost diagnosis predicts -- cheap tranches to secure
+dispatch, the marginal tranche priced at declared cost -- and at p75 there is
+neither markup nor markdown for declaring units.
+
+**Still not identified.** Every specification is insignificant: the
+predetermined-denominator versions have the predicted positive sign at p50 and
+p75 (+273, +411) with standard errors two orders larger. 16 clusters instead of
+11 and 108 units instead of 68 is an improvement, not a fix. What remains is a
+clean null with the cost-measurement objection removed, which is worth more than
+the original wrong-signed estimate.
 
 FOUR REASONS THE TEST CANNOT WORK AS SPECIFIED, IN ORDER OF SEVERITY
 
@@ -139,6 +161,7 @@ levy_contract_exposure.py, which already builds the exposure measure.
 from __future__ import annotations
 
 import argparse
+import glob
 import sys
 from pathlib import Path
 
@@ -192,6 +215,68 @@ def load() -> pd.DataFrame:
     return d.dropna(subset=["markup", "frac", "frac_cap"])
 
 
+def load_declared() -> pd.DataFrame:
+    """The same test against the firm's OWN declared cost, from `cab`.
+
+    Two benchmarks live in the declaration and they are not interchangeable:
+
+    * `var` (EUR/MWh) is the firm's declared **marginal** cost. This is what an
+      offer should be compared against.
+    * `var + fixed / q_max` is **average** avoidable cost including start-up.
+      Offers routinely sit below it and that is not a markdown: the
+      minimum-income condition is a DAY-level safety net, so a firm can price
+      individual steps low and still refuse the whole day if total revenue does
+      not cover the fixed term.
+
+    Wide `cab` layout only, so 2018-01-01 to 2025-03-18.
+    """
+    parts = []
+    for f in sorted(glob.glob(str(DATA / "omie/cab/parquet/cab_*.parquet"))):
+        t = pq.read_table(f, columns=["date", "unit", "side",
+                                      "min_income_fixed_eur",
+                                      "min_income_var_eur_mwh",
+                                      "max_power_mw"]).to_pandas()
+        t = t[t.side == "V"]
+        parts.append(t.groupby(["date", "unit"], as_index=False).agg(
+            fixed=("min_income_fixed_eur", "max"),
+            var=("min_income_var_eur_mwh", "max"),
+            cap=("max_power_mw", "max")))
+    cab = pd.concat(parts, ignore_index=True)
+    cab["date"] = pd.to_datetime(cab.date)
+    cab = cab[(cab.date <= "2025-03-18") & (cab["var"].fillna(0) > 0) & (cab.cap > 0)]
+    cab["ac_best"] = cab["var"] + cab["fixed"].fillna(0) / (cab.cap * 24.0)
+
+    o = pq.read_table(ROOT / "outputs/tables/capacity_quantile_offer.parquet",
+                      columns=["date", "period", "unit", "p25", "p50",
+                               "p75"]).to_pandas()
+    o["date"] = pd.to_datetime(o.date)
+    day = o.groupby(["date", "unit"], as_index=False)[["p25", "p50", "p75"]].median()
+
+    ua = pq.read_table(DATA / "omie/registry/unit_agents.parquet",
+                       columns=["unit", "agent_owner", "role",
+                                "max_power_mw"]).to_pandas()
+    ua["firm"] = ua.agent_owner.map(owner_group)
+    cap_firm = ua[ua.role.isin(SUPPLY_ROLES)].groupby("firm").max_power_mw.sum()
+
+    rd = pq.read_table(ROOT / "outputs/tables/firm_residual_demand_full_owner.parquet",
+                       columns=["date", "period", "firm", "q_firm_mw",
+                                "theta_mw"]).to_pandas()
+    rd["date"] = pd.to_datetime(rd.date)
+    rd = rd.groupby(["date", "firm"], as_index=False).agg(
+        q=("q_firm_mw", "mean"), th=("theta_mw", "mean"))
+
+    d = (day.merge(cab, on=["date", "unit"], how="inner")
+            .merge(ua[["unit", "firm"]], on="unit", how="left")
+            .merge(rd, on=["date", "firm"], how="inner"))
+    d["cap_firm"] = d.firm.map(cap_firm)
+    d["frac"] = ((d.q - d.th) / d.q).clip(-5, 1)
+    d["frac_cap"] = (d.cap_firm - d.th) / d.cap_firm
+    d["ym"] = d.date.dt.to_period("M").astype(str)
+    for c in ("p25", "p50", "p75"):
+        d[f"mk_{c}"] = d[c] - d["var"]
+    return d
+
+
 def fe_ols(df, y, xs, fes, cluster, iters=6):
     """Within estimator by sequential demeaning, cluster-robust SEs."""
     w = df[[y] + xs + fes + [cluster]].dropna().copy()
@@ -212,10 +297,52 @@ def fe_ols(df, y, xs, fes, cluster, iters=6):
             len(w), w[cluster].nunique())
 
 
+def run_declared(args) -> int:
+    d = load_declared()
+    lo, hi = d.mk_p50.quantile([0.01, 0.99])
+    d = d[(d.mk_p50 >= lo) & (d.mk_p50 <= hi)]
+    print(f"{len(d):,} unit-days, {d.unit.nunique()} units, {d.firm.nunique()} "
+          f"firms, {d.date.dt.year.min()}-{d.date.dt.year.max()}")
+    print(f"declared variable term: median {d['var'].median():.1f} EUR/MWh\n")
+
+    print("offer vs the firm's OWN declared marginal cost")
+    for c in ("p25", "p50", "p75"):
+        v = d[c] - d["var"]
+        print(f"  {c}: below on {(v < 0).mean():6.1%}   median gap {v.median():8.1f}")
+    v = d.p50 - d.ac_best
+    print(f"  p50 vs AVERAGE avoidable cost (var + fixed/q_max): "
+          f"below on {(v < 0).mean():.1%}, median gap {v.median():.1f} "
+          f"-- see load_declared() on why this is not a markdown")
+
+    print("\nPREDICTION: beta > 0 -- nearer net-seller offers further above cost")
+    for out in ("mk_p25", "mk_p50", "mk_p75"):
+        for lab, xs in (("frac (q cleared)", ["frac"]),
+                        ("frac_cap (predetermined)", ["frac_cap"])):
+            r, n, nc = fe_ols(d, out, xs, ["unit", "ym"], "firm")
+            for nm, b, se in r:
+                if nm == "const":
+                    continue
+                print(f"  {out:7s} {lab:26s} beta={b:9.2f} se={se:8.2f} "
+                      f"t={b/se if se else float('nan'):6.2f}  n={n:,} clusters={nc}")
+    if args.save:
+        out = ROOT / "outputs" / "tables" / "markdown_declared_panel.parquet"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        d.to_parquet(out, index=False)
+        print(f"\nwrote {out.relative_to(ROOT)}  ({len(d):,} rows)")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--save", action="store_true")
+    ap.add_argument("--floor", choices=["mc", "declared"], default="mc",
+                    help="mc: implied engineering marginal cost. declared: the "
+                         "firm's own variable term from cab -- no efficiency "
+                         "assumption and no gas-cap contamination.")
     args = ap.parse_args()
+
+    if args.floor == "declared":
+        return run_declared(args)
 
     d = load()
     lo, hi = d.markup.quantile([0.01, 0.99])

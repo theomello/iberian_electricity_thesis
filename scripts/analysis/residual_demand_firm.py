@@ -56,11 +56,18 @@ DATA = ROOT / "data"
 BIDS = DATA / "omie/bids/parquet"
 AGENTS = DATA / "omie/registry/unit_agents.parquet"
 THETA = ROOT / "outputs/tables/contract_position_panel.parquet"
+THETA_OWNER = ROOT / "outputs/tables/contract_position_panel_owner.parquet"
 OUT = ROOT / "outputs/tables/firm_residual_demand_full.parquet"
+OUT_OWNER = ROOT / "outputs/tables/firm_residual_demand_full_owner.parquet"
+
+# Set from --tier in main(); module-level so load_agents/load_theta stay
+# single-argument, as the rest of this file assumes.
+TIER = "firm"
 
 VERIFY_MONTH = "202401"   # the month every other verification in this repo uses
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
+from omie_owner import owner_group  # noqa: E402
 # slope_from_band_mw is deliberately NOT imported. The firm arithmetic below is
 # inline because eta_i divides by the FIRM's cleared volume and so needs a
 # q_firm_mw > 0 guard that the shared function does not have (it guards only
@@ -88,8 +95,18 @@ def load_prices() -> pd.DataFrame:
 
 
 def load_agents() -> pd.DataFrame:
-    """unit -> firm, restricted to units that can actually supply energy."""
-    a = pq.read_table(AGENTS, columns=["unit", "role", "firm"]).to_pandas()
+    """unit -> firm, restricted to units that can actually supply energy.
+
+    Under `--tier owner` the label is OMIE's published `agent_owner` rolled up
+    by lib/omie_owner.owner_group, instead of the inference chain's `firm`.
+    Unlike theta, this side may read `unit_agents` directly: the q_firm
+    arithmetic below is over supply units, which are exactly the registry the
+    file covers.
+    """
+    cols = ["unit", "role"] + (["agent_owner"] if TIER == "owner" else ["firm"])
+    a = pq.read_table(AGENTS, columns=cols).to_pandas()
+    if TIER == "owner":
+        a["firm"] = a.agent_owner.map(owner_group)
     return a.loc[a.role.isin(SUPPLY_ROLES), ["unit", "firm"]]
 
 
@@ -98,7 +115,8 @@ def load_theta() -> pd.DataFrame:
     archive's date32 -> datetime.date reading (contract_position_panel.parquet
     stores date as a timestamp; merging that against the object-dtype date
     the bid/price files produce silently matches nothing)."""
-    th = pd.read_parquet(THETA, columns=KEY + ["firm", "theta_mw"])
+    src = THETA_OWNER if TIER == "owner" else THETA
+    th = pd.read_parquet(src, columns=KEY + ["firm", "theta_mw"])
     th["date"] = pd.to_datetime(th.date).dt.date
     return th
 
@@ -218,6 +236,9 @@ def verify(bids, px_m, agents, theta) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--tier", choices=["firm", "owner"], default="firm",
+                    help="owner: OMIE's published agent_owner; removes the "
+                         "theta_coverage drift documented in section 4.5")
     ap.add_argument("--verify", action="store_true",
                     help=f"run the three invariants on {VERIFY_MONTH} and exit")
     ap.add_argument("--full", action="store_true",
@@ -235,6 +256,8 @@ def main() -> int:
         return 1
 
     px = load_prices()
+    global TIER
+    TIER = args.tier
     agents = load_agents()
     theta_all = load_theta()
 
@@ -310,10 +333,11 @@ def main() -> int:
                  "q_cleared", "theta_mw", "theta_coverage", "q_unmapped_mw"] + band_cols]
 
     if args.save:
-        OUT.parent.mkdir(parents=True, exist_ok=True)
-        firm.to_parquet(OUT, index=False)
-        print(f"\nwrote {OUT.relative_to(ROOT)}  ({len(firm):,} rows, "
-              f"{OUT.stat().st_size/1e6:.1f} MB)")
+        out_path = OUT_OWNER if TIER == "owner" else OUT
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        firm.to_parquet(out_path, index=False)
+        print(f"\nwrote {out_path.relative_to(ROOT)}  ({len(firm):,} rows, "
+              f"{out_path.stat().st_size/1e6:.1f} MB)")
     else:
         print("\n(nothing written; pass --save to keep the panel)")
     return 0

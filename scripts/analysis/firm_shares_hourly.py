@@ -79,7 +79,6 @@ not a target to fit. The prefix assignments were fixed before this ran.
 from __future__ import annotations
 
 import argparse
-import re
 import sys
 from pathlib import Path
 
@@ -89,61 +88,12 @@ import pyarrow.dataset as ds
 import pyarrow.parquet as pq
 
 ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(ROOT / "scripts" / "lib"))
+from omie_owner import owner_group  # noqa: E402
 DATA = ROOT / "data"
 BIDS = DATA / "omie" / "bids" / "parquet"
 ETA = ROOT / "outputs" / "tables" / "residual_demand_slope_full.parquet"
 FIRMS = ["IBERDROLA", "ENDESA", "EDP", "NATURGY", "AXPO", "ACCIONA", "REPSOL"]
-
-
-# Legal-entity suffixes and divisional words to strip when rolling OMIE's
-# published owner up to something firm-like. "REPSOL SERVICIOS RENOVABLES,
-# S.A.", "REPSOL GENERACION ELECTRICA, S.L.U." and "REPSOL GENERACION
-# ELECTRICA, S.A" are three registrations of one firm; without this they are
-# three competitors. Deliberately crude -- it collapses 84 owners of plant
-# >=50 MW to 67 groups -- and it is presentation-level, not evidence.
-_OWNER_NOISE = re.compile(
-    r"\b(S\.?A\.?U?|S\.?L\.?U?|SLU|SAU|SA|SL|ESPANA|ESPAÑA|IBERIA|"
-    r"GENERACION|GENERACIÓN|RENOVABLES|SERVICIOS|ELECTRICA|ELÉCTRICA|"
-    r"ENERGIA|ENERGÍA|POWER|GROUP|COMERCIALIZADORA|PRODUCCION|PRODUCCIÓN)\b",
-    re.I)
-
-
-# Entities whose first token does not name their group. Each is corroborated
-# TWICE and independently -- by the unit codes themselves and by the ESIOS-based
-# inference chain in unit_agents.parquet -- not by outside knowledge:
-#
-#   SU ELETRICIDADE  4 units, all PT, coded EDPSVD1-3; chain says EDP  4/4
-#   GAS NATURAL     49 units, coded ACE4/BES4/ALZ1;    chain says NATURGY 44/49
-#   ENERGIA XXI     14 units, coded E21VD*;            chain says ENDESA/EEXXI
-#   CURENERGIA      11 units, coded IBCUC01/ICUVD*;    chain says IBERDROLA 11/11
-#
-# They matter: on 2023 cleared sell volume SU is 7.96%, GAS 2.83%. Left
-# unaliased they appear as separate firms and understate EDP and Naturgy.
-# This list is NOT exhaustive -- see the docstring on grouping.
-OWNER_ALIASES = {
-    "SU": "EDP",
-    "GAS": "NATURGY",
-    "XXI": "ENDESA",
-    "CURENERG": "IBERDROLA",
-}
-
-
-def owner_group(name: str | None) -> str | None:
-    """First surviving token of OMIE's published owner name.
-
-    Not a corporate-structure mapping: it will merge unrelated firms sharing a
-    first word and will split a group whose entities are named differently.
-    Use it for coverage and trend diagnostics, not for a published share table.
-    """
-    if not isinstance(name, str) or not name.strip():
-        return None
-    t = _OWNER_NOISE.sub(" ", name.upper())
-    t = re.sub(r"[^A-Z ]", " ", t)
-    t = " ".join(t.split())
-    if not t:
-        return None
-    g = t.split(" ")[0][:12]
-    return OWNER_ALIASES.get(g, g)
 
 
 def firm_period_volume(unit_firm: dict[str, str]) -> pd.DataFrame:

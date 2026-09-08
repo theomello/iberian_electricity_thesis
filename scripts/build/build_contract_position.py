@@ -52,7 +52,12 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent.parent
 PDBF = ROOT / "data" / "omie" / "pdbf" / "parquet"
 AGENTS = ROOT / "data" / "omie" / "registry" / "unit_agents.parquet"
+UNIT_LISTS = ROOT / "data" / "omie" / "registry" / "omie_unit_lists.parquet"
 OUT = ROOT / "outputs" / "tables" / "contract_position_panel.parquet"
+OUT_OWNER = ROOT / "outputs" / "tables" / "contract_position_panel_owner.parquet"
+
+sys.path.insert(0, str(ROOT / "scripts" / "lib"))
+from omie_owner import owner_group  # noqa: E402
 
 COLS = ["date", "period", "resolution_min", "unit", "schedule_mw", "role_code"]
 
@@ -60,12 +65,51 @@ COLS = ["date", "period", "resolution_min", "unit", "schedule_mw", "role_code"]
 COVERAGE_FLOOR = 0.90
 
 
+def unit_firm_map(tier: str) -> pd.DataFrame:
+    """unit -> firm. Static for `firm`; dated snapshots for `owner`.
+
+    `owner` reads `omie_unit_lists.parquet` **directly** rather than
+    `unit_agents.agent_owner`. That matters: `unit_agents` is restricted to the
+    5,137 codes in `unit_registry.parquet`, and PDBF role 4 contains contract
+    registrations the listings cover but the registry does not. Going through
+    `unit_agents` left January 2018 at 71.5% -- identical to the inference chain,
+    i.e. no gain at all -- while the listings give 100%.
+
+    It also returns one row per unit *per snapshot*, so `attach_firm` can take
+    the snapshot nearest each delivery date instead of freezing one label for
+    eight years. 548 units change owner across the snapshots.
+
+    `owner` names a different entity from `firm` (the commercialising one) and
+    does no group roll-up of its own; see lib/omie_owner.py.
+    """
+    if tier == "owner":
+        ul = pd.read_parquet(UNIT_LISTS, columns=["snapshot", "unit", "agent_owner"])
+        ul = ul[ul.agent_owner.notna()].copy()
+        ul["firm"] = ul.agent_owner.map(owner_group)
+        ul["date"] = pd.to_datetime(ul.snapshot)
+        return ul[["unit", "date", "firm"]].dropna(subset=["firm"]).sort_values("date")
+    return pd.read_parquet(AGENTS, columns=["unit", "firm"])
+
+
+def attach_firm(sell: pd.DataFrame, agents: pd.DataFrame) -> pd.DataFrame:
+    """Join the firm label, by nearest snapshot when the map is dated."""
+    if "date" not in agents.columns:
+        return sell.merge(agents, on="unit", how="left")
+    s = sell.copy()
+    s["_d"] = pd.to_datetime(s.date)
+    s["unit"] = s.unit.astype(str)
+    a = agents.rename(columns={"date": "_d"}).copy()
+    a["unit"] = a.unit.astype(str)
+    return pd.merge_asof(s.sort_values("_d"), a.sort_values("_d"),
+                         on="_d", by="unit", direction="nearest").drop(columns=["_d"])
+
+
 def load_month(path: Path) -> pd.DataFrame:
     d = pd.read_parquet(path, columns=COLS)
     return d[d.role_code == "4"].copy()
 
 
-def verify(path: Path) -> int:
+def verify(path: Path, tier: str = "firm") -> int:
     """Re-derive the two facts this build depends on, from the file itself.
 
     Returns 1 only on the netting identity -- see the module docstring on why
@@ -73,11 +117,11 @@ def verify(path: Path) -> int:
     """
     r4 = load_month(path)
     net = r4.groupby(["date", "period"])["schedule_mw"].sum().abs().max()
-    agents = pd.read_parquet(AGENTS, columns=["unit", "firm"])
-    sell = r4[r4.schedule_mw > 0].merge(agents, on="unit", how="left")
+    agents = unit_firm_map(tier)
+    sell = attach_firm(r4[r4.schedule_mw > 0], agents)
     mapped_mw = sell.loc[sell.firm.notna(), "schedule_mw"].sum() / sell.schedule_mw.sum()
 
-    print(f"  {path.name}")
+    print(f"  {path.name}  (tier={tier})")
     print(f"    role-4 net per period, max |sum| : {net:.6f}   (must be ~0)")
     print(f"    sell rows firm-mapped            : {sell.firm.notna().mean():.1%}")
     print(f"    sell MW   firm-mapped            : {mapped_mw:.1%}")
@@ -94,7 +138,7 @@ def verify(path: Path) -> int:
 
 def build_month(path: Path, agents: pd.DataFrame) -> pd.DataFrame:
     r4 = load_month(path)
-    sell = r4[r4.schedule_mw > 0].merge(agents, on="unit", how="left")
+    sell = attach_firm(r4[r4.schedule_mw > 0], agents)
     sell["firm"] = sell.firm.fillna("UNMAPPED")
     g = (sell.groupby(["date", "period", "resolution_min", "firm"])
              .agg(theta_mw=("schedule_mw", "sum"), n_units=("unit", "nunique"))
@@ -107,6 +151,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--verify", action="store_true")
     ap.add_argument("--save", action="store_true")
+    ap.add_argument("--tier", choices=["firm", "owner"], default="firm",
+                    help="firm: the inference chain. owner: OMIE's published "
+                         "agent_owner, which removes the theta_coverage drift.")
     args = ap.parse_args()
 
     months = sorted(PDBF.glob("pdbf_*.parquet"))
@@ -117,20 +164,21 @@ def main() -> int:
     if args.verify:
         checks = [m for m in months if m.stem in
                   ("pdbf_201801", "pdbf_202401", "pdbf_202605")]
-        return max(verify(m) for m in checks)
+        return max(verify(m, args.tier) for m in checks)
 
     if args.save:
-        agents = pd.read_parquet(AGENTS, columns=["unit", "firm"])
+        agents = unit_firm_map(args.tier)
+        out_path = OUT_OWNER if args.tier == "owner" else OUT
         frames = []
         for i, m in enumerate(months, 1):
             frames.append(build_month(m, agents))
             print(f"  [{i:3d}/{len(months)}] {m.stem}", end="\r", flush=True)
         d = pd.concat(frames, ignore_index=True)
         d["date"] = pd.to_datetime(d["date"])
-        OUT.parent.mkdir(parents=True, exist_ok=True)
-        d.to_parquet(OUT, index=False)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        d.to_parquet(out_path, index=False)
         print(" " * 40, end="\r")
-        print(f"wrote {len(d):,} rows -> {OUT.relative_to(ROOT)}")
+        print(f"wrote {len(d):,} rows -> {out_path.relative_to(ROOT)}")
         share = d.groupby(d.date.dt.year).apply(
             lambda g: g.loc[g.firm == "UNMAPPED", "theta_mwh"].sum()
                       / g.theta_mwh.sum(), include_groups=False)

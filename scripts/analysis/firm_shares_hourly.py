@@ -34,22 +34,40 @@ If a conclusion holds under both tiers, the inference does not matter. If it
 does not, the conclusion depends on an assumption that no public Spanish source
 can currently verify, and it must be reported that way.
 
-COVERAGE DRIFTS UPWARD -- DO NOT READ TIME TRENDS OFF THESE SHARES
+COVERAGE, AND WHICH TIER TO USE FOR TRENDS
 
-Mapped share of cleared sell volume rises from 49.0% in 2018 to 70.1% in 2026.
-The cause is that ESIOS is a snapshot of today's registry, so units that traded
-early in the window and have since exited are simply absent. Because unmapped
-volume stays in the denominator, a firm's measured share rises over time even
-if nothing about the firm changed.
+This docstring used to say coverage "rises from 49.0% in 2018 to 70.1% in 2026"
+and that across-year trends were therefore unusable. Re-measured 2026-09-04,
+that is no longer true of either tier:
 
-Consequences, and they are strict:
+    cleared sell volume covered   2018    2020    2022    2024    2025    2026
+      inferred firm              75.6%   75.3%   80.3%   71.7%   70.4%   73.9%
+      agent_owner (--tier owner) 92.9%   93.7%   95.7%   94.8%   90.1%   85.0%
 
-* **Within-year comparisons are valid.** Contrasting high-VRE against low-VRE
-  hours inside one year holds coverage fixed, so the gradient is real.
-* **Across-year trends in these shares are contaminated** and must not be
-  reported as growth in market share or in the Lerner index. For trends use the
-  CNMC-based estimates in markup_from_shares.py, which do not depend on this
-  mapping at all.
+The 49% figure described a build predating the 2026-08 prefix expansion. The
+inference chain is now flat-to-falling, not rising, so the mechanism the old
+warning described does not operate.
+
+* **`--tier owner`** uses OMIE's published `agent_owner`. Coverage is 92.7-95.7%
+  over 2018-2024, a 3-point range, and **this is the tier for across-year work**.
+  It falls to 90.1%/85.0% in 2025-26 purely because the unit listings stop at
+  the 2025-01-31 snapshot, so end trends there until a newer listing is loaded.
+* **`all` and `confirmed`** still carry a 10-point coverage range. Use them for
+  within-year contrasts, which hold coverage fixed, and for the tier robustness
+  check described above.
+
+Note the residual bias now runs *against* the headline rather than with it:
+coverage falls over 2024-26 while the measured Lerner rises, so that rise cannot
+be produced by coverage.
+
+GROUPING IS THE REMAINING WEAK POINT ON `--tier owner`
+
+`agent_owner` names legal entities, not corporate groups, and unlike `firm` it
+does no roll-up. On 2023 cleared sell volume `SU ELETRICIDADE` is 7.96% and is
+EDP's Portuguese regulated supplier. `OWNER_ALIASES` below fixes four such
+cases and is **not exhaustive**, so owner-tier share *levels* are diagnostic
+until a proper group mapping is built. The coverage claim above does not depend
+on the grouping.
 
 VALIDATION
 
@@ -61,6 +79,7 @@ not a target to fit. The prefix assignments were fixed before this ran.
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -74,6 +93,57 @@ DATA = ROOT / "data"
 BIDS = DATA / "omie" / "bids" / "parquet"
 ETA = ROOT / "outputs" / "tables" / "residual_demand_slope_full.parquet"
 FIRMS = ["IBERDROLA", "ENDESA", "EDP", "NATURGY", "AXPO", "ACCIONA", "REPSOL"]
+
+
+# Legal-entity suffixes and divisional words to strip when rolling OMIE's
+# published owner up to something firm-like. "REPSOL SERVICIOS RENOVABLES,
+# S.A.", "REPSOL GENERACION ELECTRICA, S.L.U." and "REPSOL GENERACION
+# ELECTRICA, S.A" are three registrations of one firm; without this they are
+# three competitors. Deliberately crude -- it collapses 84 owners of plant
+# >=50 MW to 67 groups -- and it is presentation-level, not evidence.
+_OWNER_NOISE = re.compile(
+    r"\b(S\.?A\.?U?|S\.?L\.?U?|SLU|SAU|SA|SL|ESPANA|ESPAÑA|IBERIA|"
+    r"GENERACION|GENERACIÓN|RENOVABLES|SERVICIOS|ELECTRICA|ELÉCTRICA|"
+    r"ENERGIA|ENERGÍA|POWER|GROUP|COMERCIALIZADORA|PRODUCCION|PRODUCCIÓN)\b",
+    re.I)
+
+
+# Entities whose first token does not name their group. Each is corroborated
+# TWICE and independently -- by the unit codes themselves and by the ESIOS-based
+# inference chain in unit_agents.parquet -- not by outside knowledge:
+#
+#   SU ELETRICIDADE  4 units, all PT, coded EDPSVD1-3; chain says EDP  4/4
+#   GAS NATURAL     49 units, coded ACE4/BES4/ALZ1;    chain says NATURGY 44/49
+#   ENERGIA XXI     14 units, coded E21VD*;            chain says ENDESA/EEXXI
+#   CURENERGIA      11 units, coded IBCUC01/ICUVD*;    chain says IBERDROLA 11/11
+#
+# They matter: on 2023 cleared sell volume SU is 7.96%, GAS 2.83%. Left
+# unaliased they appear as separate firms and understate EDP and Naturgy.
+# This list is NOT exhaustive -- see the docstring on grouping.
+OWNER_ALIASES = {
+    "SU": "EDP",
+    "GAS": "NATURGY",
+    "XXI": "ENDESA",
+    "CURENERG": "IBERDROLA",
+}
+
+
+def owner_group(name: str | None) -> str | None:
+    """First surviving token of OMIE's published owner name.
+
+    Not a corporate-structure mapping: it will merge unrelated firms sharing a
+    first word and will split a group whose entities are named differently.
+    Use it for coverage and trend diagnostics, not for a published share table.
+    """
+    if not isinstance(name, str) or not name.strip():
+        return None
+    t = _OWNER_NOISE.sub(" ", name.upper())
+    t = re.sub(r"[^A-Z ]", " ", t)
+    t = " ".join(t.split())
+    if not t:
+        return None
+    g = t.split(" ")[0][:12]
+    return OWNER_ALIASES.get(g, g)
 
 
 def firm_period_volume(unit_firm: dict[str, str]) -> pd.DataFrame:
@@ -98,17 +168,23 @@ def firm_period_volume(unit_firm: dict[str, str]) -> pd.DataFrame:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--tier", choices=["all", "confirmed"], default="all")
+    ap.add_argument("--tier", choices=["all", "confirmed", "owner"], default="all")
     ap.add_argument("--save", action="store_true")
     args = ap.parse_args()
 
     reg = (DATA / "omie" / "registry" /
-           ("unit_agents.parquet" if args.tier == "all" else "unit_agents_confirmed.parquet"))
+           ("unit_agents_confirmed.parquet" if args.tier == "confirmed"
+            else "unit_agents.parquet"))
     if not reg.exists():
         print(f"missing {reg.name} -- run build_unit_agents.py --tier {args.tier}",
               file=sys.stderr)
         return 1
     ua = pq.read_table(reg).to_pandas()
+    if args.tier == "owner":
+        # OMIE's published owner instead of the inference chain -- see the
+        # docstring's coverage section for why this is the tier to use for
+        # anything across years.
+        ua["firm"] = ua.agent_owner.map(owner_group)
     unit_firm = dict(zip(ua.loc[ua.firm.notna(), "unit"], ua.loc[ua.firm.notna(), "firm"]))
     print(f"tier={args.tier}: {len(unit_firm):,} units carry a firm\n")
 

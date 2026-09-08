@@ -269,19 +269,30 @@ cleared volume:
 [established]. The peak coincides exactly with the gas crisis, which is what
 §5.2 is about.
 
-**The incentive column carries a coverage trend that the ability column does
-not — read this table with the drift beside it.** `incentive = ability ·
-(q − θ)/q` depends on θ, and θ's firm-mapping coverage is not stable:
+**The incentive column carried a coverage trend that the ability column does
+not — and as of 2026-09-04 that trend is removable.** `incentive = ability ·
+(q − θ)/q` depends on θ, and θ's coverage under the inference chain is not
+stable. Under OMIE's published owner it is:
 
 | year | 2018 | 2020 | 2022 | 2023 | 2024 | 2025 | 2026 |
 |---|---|---|---|---|---|---|---|
-| `theta_coverage` (median) | 0.739 | 0.885 | 0.923 | **0.942** | 0.838 | 0.819 | 0.805 |
+| inferred `firm` | 0.741 | 0.887 | 0.902 | **0.929** | 0.848 | 0.809 | 0.774 |
+| **`agent_owner`** | **1.000** | **1.000** | **1.000** | **1.000** | **1.000** | 0.993 | 0.983 |
 
-Coverage rises to a 2023 peak and then falls by about 14 points. Unmapped θ is
-θ *attributed to no firm*, so a firm's own θ can look smaller purely because the
-mapping got worse — which pushes `(q − θ)/q` up, i.e. **makes incentive look more
-positive**. **Where ability and incentive disagree, ability is the clean series**
-[established].
+(PDBF `role_code == "4"` sell leg, Feb/Jun/Oct of each year. The `firm` row
+re-measures the same quantity the 0.739–0.942 series above reported; small
+differences are the 2026-08 mapping rebuilds.)
+
+**θ is fully attributable for 2018–2024 and ≥98% after.** The mechanism behind
+the old warning — unmapped θ being θ attributed to no firm, so a firm's own θ
+looks smaller when the mapping worsens, pushing `(q − θ)/q` and hence incentive
+*up* — has nothing left to operate on. Rebuild the θ panel on `agent_owner`
+before reporting incentive; on the inference chain the warning below still
+stands.
+
+**Where ability and incentive disagree on the old panel, ability is still the
+clean series** [established] — that judgement was correct and is why the
+ability results were reportable while the incentive ones were not.
 
 **Iberdrola's incentive index is persistently negative while its ability is
 positive** [bounded]. That is the Hortaçsu & Puller (2008) contract-position sign
@@ -298,11 +309,20 @@ is far too large to be a mapping artefact.
 [confounded]. Naturgy's incentive is negative from 2019 onward and Endesa's in
 2018–2023, so three of the six largest firms spend substantial stretches as net
 day-ahead buyers — the sign flip is a feature of Iberian contracting, not one
-firm's idiosyncrasy. **But Endesa's flip to positive in 2024 (−0.049 → +0.076)
+firm's idiosyncrasy. **Endesa's flip to positive in 2024 (−0.049 → +0.076)
 lands in exactly the year θ coverage drops 0.942 → 0.838**, which is precisely
-the confound above and precisely the direction it predicts. Do not read that flip
-as a change in Endesa's contract position. Its *ability* series shows no such
-break (0.071 → 0.114 → 0.134), which is the reason to trust ability here.
+the confound above and precisely the direction it predicts — so on the current
+panel it must not be read as a change in Endesa's contract position. Its
+*ability* series shows no such break (0.071 → 0.114 → 0.134), which is the
+reason to trust ability here.
+
+**This is now a testable claim rather than a permanent caveat.** θ coverage on
+`agent_owner` is 1.000 in both 2023 and 2024, so if the flip is an artefact it
+should disappear when the panel is rebuilt on that column, and if it survives it
+is a real change in Endesa's day-ahead contract position. That rebuild is the
+single highest-value outstanding task in this chapter: it converts the one
+finding here that is currently unreportable into either a result or a clean
+null.
 
 **The incentive *levels* are not comparable across rows of this table** — a
 second reason, independent of the coverage drift above. §3.2's measurement

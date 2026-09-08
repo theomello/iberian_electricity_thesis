@@ -152,11 +152,48 @@ from confirmed evidence (Acciona, Axpo, Endesa) are identical across tiers.
 Iberdrola and EDP move substantially, so **their magnitudes depend on the
 inferred prefix assignments while the sign and the trend do not.**
 
-**Do not read time trends off these shares.** Mapped coverage rises from 49.0%
-of cleared sell volume in 2018 to 70.1% in 2026, because ESIOS is a snapshot
-and units that exited early are absent, so measured shares climb mechanically.
-Within-year comparisons hold coverage fixed and are sound; across-year trends
-must come from the CNMC-based estimates above, which do not use this mapping.
+**The time-trend caveat is lifted for 2018–2024, on the `owner` tier only**
+(2026-09-04). It previously read: coverage "rises from 49.0% of cleared sell
+volume in 2018 to 70.1% in 2026… across-year trends must come from the
+CNMC-based estimates". Two things were wrong with that.
+
+**The stated mechanism no longer exists.** Re-measured on the current build,
+inference-chain coverage of cleared sell volume runs **75.6% in 2018 to 73.9%
+in 2026** — flat and slightly falling, not 49→70. The 49% figure describes a
+build of `unit_agents.parquet` that predates the 2026-08-17/18 prefix
+expansion. Residual drift is 70.4–80.3%, a 10-point range rather than 21.
+
+**And OMIE's published owner removes most of what remains.** `agent_owner`,
+added 2026-09-03, covers 92.7–95.7% of cleared sell volume across 2018–2024 —
+a 3-point range — falling to 90.1% (2025) and 85.0% (2026) only because the
+unit listings stop at the 2025-01-31 snapshot. Run
+`firm_shares_hourly.py --tier owner` for anything across years.
+
+| | 2018 | 2020 | 2022 | 2024 | 2025 | 2026 |
+|---|---|---|---|---|---|---|
+| inferred `firm` | 75.6% | 75.3% | 80.3% | 71.7% | 70.4% | 73.9% |
+| `agent_owner` | 92.9% | 93.7% | 95.7% | 94.8% | 90.1% | 85.0% |
+
+**Three conditions on using it.** Trends stop at **2024** — 2025–26 still carry
+a coverage decline, and only a newer OMIE listing fixes that. The direction of
+any remaining bias is now known and *opposes* the headline: coverage falls
+across 2024–26 while measured Lerner rises (Iberdrola 12.8% → 23.3%), so that
+rise cannot be a coverage artefact, which is what the old caveat feared. And
+the tier's **share levels** depend on rolling legal entities up to firms, which
+`agent_owner` does not do for you — see the grouping note below.
+
+**Grouping is the new weak point, and it is smaller but real.** `agent_owner`
+names legal entities, not groups. On 2023 cleared sell volume, `SU ELETRICIDADE`
+is 7.96% and is EDP's Portuguese regulated supplier; `GAS NATURAL
+COMERCIALIZADORA` is 2.83% and is Naturgy. `OWNER_ALIASES` in
+`firm_shares_hourly.py` encodes four such cases, each corroborated twice from
+the data (unit codes plus the independent ESIOS chain) rather than asserted —
+`SU ELETRICIDADE`'s units are coded `EDPSVD1–3`, `CURENERGÍA`'s `IBCUC01`.
+Adding them moved Naturgy from absent to 7.6–8.6%, against CNMC's 6–8%. **The
+list is not exhaustive**, so treat owner-tier *levels* as diagnostic until a
+proper group mapping exists; the *coverage* claim above does not depend on it.
+
+Within-year comparisons remain valid on every tier, as before.
 
 ## CNMC measures PDBF, not the day-ahead auction — and it matters
 

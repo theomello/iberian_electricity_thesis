@@ -68,6 +68,7 @@ scripts/
 | `fetch/fetch_esios_units.py` | ESIOS archive 82 | **no** | `data/esios/esios_programming_units.parquet` |
 | `build/build_unit_agents.py` | ESIOS + `cab` + prefixes | no | `data/omie/registry/unit_agents.parquet` |
 | `build/build_omie_unit_lists.py` | OMIE *Listado de Unidades* PDFs (emailed, **not re-fetchable**) | no | `data/omie/registry/omie_unit_lists.parquet` |
+| `build/build_owner_groups.py` | `omie_unit_lists` + ESIOS chain | no | `data/omie/registry/owner_groups.parquet` |
 | `fetch/fetch_ree_daily.py` | REE `apidatos` | no | `data/ree/ree_{generation,demand,balance}_daily.parquet` |
 | `fetch/fetch_ree_realtime.py` | REE `demanda.ree.es` | no | `data/ree/ree_realtime_5min.parquet` |
 | `fetch/fetch_ree_demand_forecast.py` | REE `demanda.ree.es` | no | `data/ree/ree_demand_forecast_5min.parquet` |
@@ -344,6 +345,23 @@ Energía, `NEX` Nexus, `VGE` Repsol, `GAL` Galp, `GES` Gesternova, `PEG` Endesa,
 `CLI` Holaluz-Clidom) — so three of the hand-researched conclusions recorded
 below are wrong, and the `IGN` note is wrong in its reasoning even though it
 was right to reject Iberdrola.
+
+**`agent_owner` names legal entities; `build_owner_groups.py` rolls them up.**
+`data/omie/registry/owner_groups.parquet` maps **1,451 owner strings to 1,098
+groups** on three evidence layers: the independent ESIOS chain's verdict on an
+entity's own units (**81.7%** of supply volume), a stem match onto a group that
+layer established (2.0%), seven hand-verified cases (0.3%), and **13.3% left
+standing as their own group** because no merge evidence was found. Without it
+`SU ELETRICIDADE` — 7.3% of supply volume, EDP's Portuguese regulated supplier —
+reads as a firm in its own right, and Repsol splits across nine entities.
+
+Two gates in that script are load-bearing, both learned from real failures.
+Layer 1 refuses a modal ESIOS firm supported by too few of an entity's own units
+(`GALP ENERGÍA`: 41 units, **one** carrying a firm, reading IGNIS). Layer 2 sets
+a higher bar still, because stem propagation *amplifies* thin evidence
+(`ENERGYA VM GESTIÓN` reads CENTE on 3 of 25 units; propagating that would
+relabel a sibling holding 392 units and 2.3% of supply volume). `VIESGO` →
+Repsol survives both, on 6 independently-agreeing units.
 
 **It is not a drop-in replacement for `agent`, because it names a different
 entity** — the commercialising entity that submits the offer, where `agent` is

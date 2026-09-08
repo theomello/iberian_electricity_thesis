@@ -1,76 +1,85 @@
 #!/usr/bin/env python3
-"""Roll OMIE's published `agent_owner` up to something firm-like.
+"""Roll OMIE's published `agent_owner` up to corporate groups.
 
 Shared by `build/build_contract_position.py`, `analysis/residual_demand_firm.py`
-and `analysis/firm_shares_hourly.py`; it lived in the last of those until
-2026-09-04.
-
-WHY THIS IS NEEDED AND WHY IT IS WEAK
+and `analysis/firm_shares_hourly.py`.
 
 `agent_owner` (OMIE's *Listado de Unidades*) covers far more units than the
 inference chain in `build_unit_agents.py` -- 100% of contracted sell MW against
-74-93% -- but it names **legal entities and does no roll-up**, where the chain's
-`firm` column rolls agents up through ESIOS legal names. Without this, one firm
-appears as several competitors.
+74-94% -- but it names **legal entities and does no roll-up**, so one firm
+appears as several competitors. This module supplies the roll-up.
 
-The first-token heuristic is crude by design and is **presentation-level, not
-evidence**: it will merge unrelated firms sharing a first word and split a group
-whose entities are named differently. Use it for coverage and trend diagnostics.
-Before publishing share *levels* from it, build a real group mapping.
+THE MAPPING IS BUILT, NOT GUESSED. `build/build_owner_groups.py` derives it from
+three layers of evidence -- the independent ESIOS chain's verdict on an entity's
+own units, a stem match onto a group that layer established, and a short
+hand-verified table -- and leaves anything unproven standing as its own group.
+Read that file before trusting a grouping; it prints its refusals.
+
+Until 2026-09-04 this module instead took the first surviving token of the
+owner name. That was explicitly diagnostic-only and it was wrong in ways that
+mattered: it read `SU ELETRICIDADE` (7.3% of supply volume) as a firm rather
+than as EDP, and split Repsol across three entities. The built mapping is used
+when present; the heuristic remains only as a fallback so a missing artefact
+degrades visibly rather than crashing a downstream run.
 """
 
 from __future__ import annotations
 
 import re
+import unicodedata
+from pathlib import Path
 
-# Legal-entity suffixes and divisional words to strip when rolling OMIE's
-# published owner up to something firm-like. "REPSOL SERVICIOS RENOVABLES,
-# S.A.", "REPSOL GENERACION ELECTRICA, S.L.U." and "REPSOL GENERACION
-# ELECTRICA, S.A" are three registrations of one firm; without this they are
-# three competitors. Deliberately crude -- it collapses 84 owners of plant
-# >=50 MW to 67 groups -- and it is presentation-level, not evidence.
-_OWNER_NOISE = re.compile(
-    r"\b(S\.?A\.?U?|S\.?L\.?U?|SLU|SAU|SA|SL|ESPANA|ESPAÑA|IBERIA|"
-    r"GENERACION|GENERACIÓN|RENOVABLES|SERVICIOS|ELECTRICA|ELÉCTRICA|"
-    r"ENERGIA|ENERGÍA|POWER|GROUP|COMERCIALIZADORA|PRODUCCION|PRODUCCIÓN)\b",
-    re.I)
+import pandas as pd
+
+ROOT = Path(__file__).resolve().parent.parent.parent
+GROUPS = ROOT / "data" / "omie" / "registry" / "owner_groups.parquet"
+
+_MAP: dict[str, str] | None = None
+_WARNED = False
+
+_NOISE = re.compile(
+    r"\b(SAU|SLU|SA|SL|SAS|SCA|SGPS|LIMITED|LTD|GMBH|BV|PLC|INC|"
+    r"ESPANA|IBERIA|PORTUGAL|ESPANOLA|GENERACION|COMERCIALIZADORA|"
+    r"COMERCIALIZADOR|COMERCIALIZACION|RENOVABLES|RENOVABLE|SERVICIOS|"
+    r"ELECTRICA|ELECTRICIDAD|ELETRICIDADE|ENERGIA|ENERGIAS|ENERGY|ENERGIE|"
+    r"POWER|GROUP|GRUPO|TRADING|MARKETS|PRODUCCION|GESTION|DESARROLLO|"
+    r"DESARROLLOS|IBERICA|GLOBAL|ULTIMO|RECURSO|REFERENCIA|CLIENTES|"
+    r"SUMINISTRO)\b", re.I)
+_CONNECTIVES = re.compile(r"\b(DE|DEL|DA|DO|DOS|DAS|LA|EL|LOS|LAS|Y|E|AND)\b", re.I)
 
 
-# Entities whose first token does not name their group. Each is corroborated
-# TWICE and independently -- by the unit codes themselves and by the ESIOS-based
-# inference chain in unit_agents.parquet -- not by outside knowledge:
-#
-#   SU ELETRICIDADE  4 units, all PT, coded EDPSVD1-3; chain says EDP  4/4
-#   GAS NATURAL     49 units, coded ACE4/BES4/ALZ1;    chain says NATURGY 44/49
-#   ENERGIA XXI     14 units, coded E21VD*;            chain says ENDESA/EEXXI
-#   CURENERGIA      11 units, coded IBCUC01/ICUVD*;    chain says IBERDROLA 11/11
-#
-# They matter: on 2023 cleared sell volume SU is 7.96%, GAS 2.83%. Left
-# unaliased they appear as separate firms and understate EDP and Naturgy.
-# This list is NOT exhaustive -- see the docstring on grouping.
-OWNER_ALIASES = {
-    "SU": "EDP",
-    "GAS": "NATURGY",
-    "XXI": "ENDESA",
-    "CURENERG": "IBERDROLA",
-}
+def _fallback(name: str) -> str | None:
+    s = "".join(c for c in unicodedata.normalize("NFKD", str(name))
+                if not unicodedata.combining(c)).upper()
+    s = re.sub(r"\(.*?\)", " ", s)
+    s = re.sub(r"[^A-Z0-9 ]", " ", s)
+    s = _CONNECTIVES.sub(" ", _NOISE.sub(" ", s))
+    parts = [p for p in s.split() if len(p) >= 3 and not p.isdigit()]
+    if not parts:
+        return None
+    return f"{parts[0]} {parts[1]}" if len(parts[0]) <= 4 and len(parts) > 1 else parts[0]
+
+
+def _load() -> dict[str, str]:
+    global _MAP, _WARNED
+    if _MAP is None:
+        if GROUPS.exists():
+            g = pd.read_parquet(GROUPS, columns=["agent_owner", "group"])
+            _MAP = dict(zip(g.agent_owner, g["group"]))
+        else:
+            _MAP = {}
+            if not _WARNED:
+                print(f"  NOTE: {GROUPS.name} missing -- falling back to the "
+                      "first-token heuristic; run build_owner_groups.py --save")
+                _WARNED = True
+    return _MAP
 
 
 def owner_group(name: str | None) -> str | None:
-    """First surviving token of OMIE's published owner name.
-
-    Not a corporate-structure mapping: it will merge unrelated firms sharing a
-    first word and will split a group whose entities are named differently.
-    Use it for coverage and trend diagnostics, not for a published share table.
-    """
+    """Corporate group for one OMIE `agent_owner` string, or None."""
     if not isinstance(name, str) or not name.strip():
         return None
-    t = _OWNER_NOISE.sub(" ", name.upper())
-    t = re.sub(r"[^A-Z ]", " ", t)
-    t = " ".join(t.split())
-    if not t:
-        return None
-    g = t.split(" ")[0][:12]
-    return OWNER_ALIASES.get(g, g)
-
-
+    m = _load()
+    if name in m:
+        return m[name]
+    return _fallback(name)

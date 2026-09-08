@@ -316,49 +316,55 @@ panel it must not be read as a change in Endesa's contract position. Its
 *ability* series shows no such break (0.071 → 0.114 → 0.134), which is the
 reason to trust ability here.
 
-**Rebuilt 2026-09-04, and the flip was an artefact** [established]. The θ panel
-and the residual-demand panel now exist on both mappings —
-`contract_position_panel_owner.parquet` (3,566,976 rows) and
-`firm_residual_demand_full_owner.parquet` (5,380,232 firm-periods), built with
-`--tier owner`. θ coverage on the owner tier is **1.000 for 2018–2024**, 0.997
-and 0.980 after. Median `incentive_h5`:
+**Rebuilt 2026-09-04, and the flip was an artefact** [established]. θ and the
+residual-demand panel now exist on both mappings —
+`contract_position_panel_owner.parquet` (3,553,773 rows) and
+`firm_residual_demand_full_owner.parquet` (5,499,066 firm-periods), via
+`--tier owner`. Ownership is rolled up to corporate groups by
+`build/build_owner_groups.py` (see below). θ coverage on the owner tier is
+**1.000 for 2018–2024**, 0.997 and 0.980 after, against 0.738–0.940 on the
+inference chain. Median `incentive_h5`:
 
 | firm | tier | 2018 | 2020 | 2022 | 2023 | **2024** | 2025 | 2026 |
 |---|---|---|---|---|---|---|---|---|
-| IBERDROLA | firm | −0.115 | −0.116 | −0.658 | −0.181 | −0.163 | −0.149 | −0.126 |
-| IBERDROLA | **owner** | −0.108 | −0.088 | −0.625 | −0.155 | −0.095 | −0.088 | −0.092 |
-| ENDESA | firm | −0.008 | −0.031 | −0.056 | −0.049 | **+0.076** | 0.099 | 0.091 |
-| ENDESA | **owner** | −0.012 | −0.032 | −0.068 | −0.048 | **−0.012** | 0.079 | 0.062 |
-| NATURGY | firm | **+0.015** | −0.024 | −0.077 | −0.052 | −0.033 | −0.038 | −0.046 |
-| NATURGY | **owner** | **−0.028** | −0.016 | −0.098 | −0.075 | −0.048 | −0.090 | −0.069 |
-| EDP | firm | 0.076 | 0.076 | 0.287 | 0.161 | 0.154 | 0.160 | 0.133 |
-| EDP | **owner** | 0.036 | 0.039 | 0.156 | 0.158 | 0.064 | 0.048 | 0.032 |
+| IBERDROLA | chain | −0.115 | −0.116 | −0.658 | −0.181 | −0.163 | −0.149 | −0.126 |
+| IBERDROLA | **owner** | −0.098 | −0.095 | −0.617 | −0.130 | −0.099 | −0.088 | −0.092 |
+| ENDESA | chain | −0.008 | −0.031 | −0.056 | −0.049 | **+0.076** | 0.099 | 0.091 |
+| ENDESA | **owner** | −0.017 | −0.023 | −0.063 | −0.066 | **−0.010** | 0.077 | 0.060 |
+| NATURGY | chain | **+0.015** | −0.024 | −0.077 | −0.052 | −0.033 | −0.038 | −0.046 |
+| NATURGY | **owner** | **−0.030** | −0.025 | −0.109 | −0.070 | −0.050 | −0.090 | −0.069 |
+| REPSOL | **owner** | 0.011 | 0.010 | 0.041 | 0.018 | −0.000 | −0.001 | −0.011 |
+| EDP | chain | 0.076 | 0.076 | 0.287 | 0.161 | 0.154 | 0.160 | 0.133 |
+| EDP | **owner** | 0.035 | 0.034 | 0.173 | 0.161 | 0.068 | 0.048 | 0.031 |
 
-**Endesa does not flip in 2024.** On flat θ coverage 2023 → 2024 goes
-−0.048 → **−0.012**, not −0.049 → +0.076. The firm stays a net day-ahead buyer
-through 2024 and flips in **2025**. The caution above was right, and it was
-right for the reason it gave.
+**Endesa does not flip in 2024.** On flat θ coverage 2023 → 2024 runs
+−0.066 → **−0.010**, not −0.049 → +0.076. It stays a net day-ahead buyer through
+2024 and flips in **2025**. The caution above was right, and right for the
+reason it gave.
 
-**Naturgy is a net buyer for the whole window, not from 2019.** Its 2018 sign
-reverses, +0.015 → −0.028. So **three of the six largest firms are net day-ahead
-buyers across essentially the entire window**, which strengthens the "feature of
-Iberian contracting" reading rather than weakening it.
+**Naturgy is a net buyer in every year**, its 2018 sign reversing (+0.015 →
+−0.030). **Repsol joins them at the end**, crossing to ≈0 in 2024 and negative
+by 2026. So **four of the seven largest firms are net day-ahead buyers over
+substantial stretches**, which strengthens the "feature of Iberian contracting"
+reading rather than weakening it.
 
-**Iberdrola's negative incentive survives everywhere** [established], with
-magnitudes 10–40% smaller. It was already the one result called robust to the
-drift, and it is.
+**Iberdrola's negative incentive survives everywhere** [established], 10–40%
+smaller. It was already the one result called robust to the drift, and it is.
 
-**EDP's magnitudes fall by roughly half and its sign does not change.** That is
-the `OWNER_ALIASES` entry for `SU ELETRICIDADE` doing its work: EDP's Portuguese
-regulated supplier now contributes θ to EDP, raising θ and lowering `(q − θ)/q`.
-It is a correction, not drift — but it means EDP's *levels* here supersede every
-earlier version of this table.
+**EDP's magnitudes halve without changing sign** — its Portuguese regulated
+supplier `SU ELETRICIDADE` (7.3% of supply volume) is now grouped into EDP, so
+θ rises and `(q − θ)/q` falls. A correction, not drift, but EDP's *levels* here
+supersede every earlier version of this table.
 
-**What still cannot be read off the owner tier: share and incentive *levels*
-across firms**, because `agent_owner` names legal entities and `owner_group`'s
-roll-up is a first-token heuristic with four hand-checked aliases (see
-`lib/omie_owner.py`). Signs, within-firm time paths and coverage are sound; a
-published cross-firm league table needs a real group mapping first.
+**Cross-firm levels are now usable, with one limit.**
+`data/omie/registry/owner_groups.parquet` maps 1,451 owner strings to 1,098
+groups on three evidence layers — the independent ESIOS chain's verdict on an
+entity's own units (81.7% of supply volume), a stem match onto a group that
+layer established (2.0%), and seven hand-verified cases (0.3%) — leaving 13.3%
+standing as their own group because no merge evidence was found. That last
+number is the limit: an unmerged entity understates its group, visibly and in a
+known direction. It does not merge competitors, which is the failure that would
+corrupt a share table.
 
 **The incentive *levels* are not comparable across rows of this table** — a
 second reason, independent of the coverage drift above. §3.2's measurement

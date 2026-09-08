@@ -38,6 +38,60 @@ Three specifications, three different reasons why not:
    That comparison is worthless: it sets Iberdrola's CCGTs against Cepsa's
    cogeneration, different plants with different efficiencies and fuels.
 
+WHAT THE RESIDUAL BELOW-COST SHARE ACTUALLY IS (diagnosed 2026-09-04)
+
+Valuing capped plants at the reference price cut the 2022 below-cost share from
+53.2% to 47.2%, against a 32.9% baseline in 2018-2021. The residual is **not**
+markdown. Three findings, in order of how much they explain:
+
+1. **It is the SHAPE of the offer curve, not its level.** Against the capped MC
+   in 2022, the price at 25% of nameplate is below cost 67.9% of the time
+   (median gap -91.1), at 50% 47.4% (median gap **+9.5**), at 75% 38.7%
+   (+14.2). The typical offer at half capacity is ABOVE capped cost. The 47% is
+   the lower half of a wide distribution, and reading it as "half of offers are
+   markdowns" mistakes a dispersion statistic for a location one.
+
+2. **The cheap tranche is a START-UP cost, and this repo can prove it.** Units
+   declaring a minimum-income condition in `cab` -- a firm's own statement that
+   it has a fixed daily cost to recover -- price below cost far more often at
+   every quantile:
+
+       declares a min-income condition   p25 59.7%   p50 32.1%   p75 18.8%
+       declares none                     p25 31.7%   p50 13.1%   p75  6.2%
+
+   A plant avoiding a shutdown-and-restart rationally offers its first tranche
+   below marginal cost and recovers the fixed cost over the day. That is exactly
+   Jha & Leslie's argument -- a STATIC marginal-cost benchmark misreads DYNAMIC
+   costs as market conduct -- and it means this benchmark cannot separate the
+   two, in either direction.
+
+3. **Efficiency imprecision amplifies both, and scales with the gas price.**
+   Below-cost share by efficiency tercile x gas price tercile runs 5.5-15.5%
+   for high-efficiency units against 18.8-31.7% for low-efficiency ones. Since
+   `MC = (gas + 0.202 * co2) / eff`, an error of 0.03 in `eff` moves MC by about
+   11 EUR/MWh at 2022 gas prices -- the same order as the markup being measured.
+   The below-cost share tracks the gas price LEVEL (45.0% in the top MIBGAS
+   decile against 17-27% mid-range) and NOT deviations from its 30-day mean,
+   which is the signature of a multiplicative cost-model error rather than of
+   plants reacting to price moves.
+
+Two things it is NOT. It is not a handful of bad units: only 4 of 46 gas units
+sit above 50% below-cost, and they are 5.5% of unit-periods. And it is not
+coal, which contributes 97 observations in 2022.
+
+One economic residual worth keeping. When the cap BINDS, 77.8% of p25 sits
+below the capped MC against 57.3% when it does not. The RDL 10/2022 adjustment
+is paid only on dispatched energy, so a capped plant has an extra reason to
+price its first tranche low. That is conduct, not a benchmark error -- but it
+means even the capped MC is not the plant's true opportunity cost.
+
+THE IMPLICATION: use the declared floor, not an engineering cost. `cab`
+publishes what the firm says it needs. A firm declaring `fixed + variable * q`
+will not accept less, so `price - (variable + fixed/q)` is a lower bound on
+realised markup revealed by the firm itself, with no efficiency assumption and
+no static/dynamic confusion. That is the benchmark this repo's data actually
+supports; see min_income_conduct.py.
+
 FOUR REASONS THE TEST CANNOT WORK AS SPECIFIED, IN ORDER OF SEVERITY
 
 * **The 2022 cost benchmark was broken and is now FIXED** (2026-09-04). It had

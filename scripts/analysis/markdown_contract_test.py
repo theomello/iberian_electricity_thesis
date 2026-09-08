@@ -40,13 +40,20 @@ Three specifications, three different reasons why not:
 
 FOUR REASONS THE TEST CANNOT WORK AS SPECIFIED, IN ORDER OF SEVERITY
 
-* **The 2022 cost benchmark is broken.** 53.2% of 2022 offers sit below implied
-  MC, against 33.0% before and 15.4% after, and the median markup goes negative.
-  That is not a markdown, it is the **gas cap**: from 15 June 2022 a capped
-  plant bids the capped gas price while `implied_marginal_cost_daily.parquet`
-  values it at the MARKET gas price. Compliance reads as strategic markdown.
-  Any version of this test must substitute the capped price -- see
-  rq-gas-cap-conduct.md, which already says so for its own design.
+* **The 2022 cost benchmark was broken and is now FIXED** (2026-09-04). It had
+  53.2% of 2022 offers below implied MC against 33.0% before, with a negative
+  median markup -- not a markdown but the **gas cap**: from 15 June 2022 a
+  capped plant offers on the reference gas price PRGN while the panel valued it
+  at the market price, so compliance read as strategic markdown.
+  `build_implied_marginal_cost.py` now carries `marginal_cost_capped_eur_mwh`
+  and this script uses it. 2022's median markup goes **-8.5 -> +9.7 EUR/MWh**
+  and the negative median disappears. A residual gap remains -- 47.2% of 2022
+  offers still sit below cost against 32.9% in 2018-2021 -- which is worth
+  understanding but is no longer a benchmark error: candidates are the coal
+  units, which stay uncapped here, and the compensation mechanics.
+  **Fixing it does not rescue the test**: frac_cap moves 232 -> 244 with the
+  same standard error. The identification problem is separate from the
+  benchmark problem, and only the second one is solved.
 * **Eleven clusters.** Only 11 firms own a unit with a plant-specific
   efficiency. Cluster-robust inference on 11 groups is weak whatever the point
   estimate.
@@ -99,8 +106,9 @@ def load() -> pd.DataFrame:
                         columns=["date", "period", "unit", "cap", "p50",
                                  "vre_share", "p_star"]).to_pandas()
     mc = pq.read_table(DATA / "jrc_ppdb/implied_marginal_cost_daily.parquet",
-                       columns=["unit", "date", "marginal_cost_eur_mwh", "fuel",
-                                "eff_is_generic"]).to_pandas()
+                       columns=["unit", "date", "marginal_cost_eur_mwh",
+                                "marginal_cost_capped_eur_mwh", "cap_binding",
+                                "fuel", "eff_is_generic"]).to_pandas()
     mc = mc[~mc.eff_is_generic]          # plant-specific efficiency only
     ua = pq.read_table(DATA / "omie/registry/unit_agents.parquet",
                        columns=["unit", "agent_owner", "role",
@@ -117,7 +125,12 @@ def load() -> pd.DataFrame:
             .merge(rd, on=["date", "period", "firm"], how="inner"))
     cap = ua[ua.role.isin(SUPPLY_ROLES)].groupby("firm").max_power_mw.sum()
     d["cap_firm"] = d.firm.map(cap)
-    d["markup"] = d.p50 - d.marginal_cost_eur_mwh
+    # Default to the CAPPED cost: under RDL 10/2022 a capped plant offers on
+    # the reference gas price, so the market price is the wrong benchmark
+    # exactly where the interesting variation is. `markup_uncapped` is kept
+    # only to show what the bug did.
+    d["markup"] = d.p50 - d.marginal_cost_capped_eur_mwh
+    d["markup_uncapped"] = d.p50 - d.marginal_cost_eur_mwh
     d["frac"] = ((d.q_firm_mw - d.theta_mw) / d.q_firm_mw).clip(-5, 1)
     d["frac_cap"] = (d.cap_firm - d.theta_mw) / d.cap_firm
     d["year"] = d.date.dt.year
@@ -168,12 +181,15 @@ def main() -> int:
             print(f"  {lab:42s} beta={b:9.2f}  se={se:8.2f}  "
                   f"t={b/se if se else float('nan'):6.2f}  n={n:,} clusters={nc}")
 
-    print("\nWHY THE 2022 COLUMN CANNOT BE USED -- the gas cap breaks the benchmark")
+    print("\nTHE 2022 BENCHMARK, capped vs uncapped (RDL 10/2022)")
+    print(f"  {'period':12s}{'n':>9}{'median (capped)':>17}{'below MC':>10}"
+          f"{'median (uncapped)':>19}{'below MC':>10}")
     for lab, m in (("2018-2021", d.year <= 2021), ("2022", d.year == 2022),
-                   ("2023-2026", d.year >= 2023)):
+                   ("2023", d.year == 2023), ("2024-2026", d.year >= 2024)):
         s = d[m]
-        print(f"  {lab:10s} n={len(s):8,}  median markup {s.markup.median():7.1f}"
-              f"  share below MC {(s.markup < 0).mean():6.1%}")
+        print(f"  {lab:12s}{len(s):9,}{s.markup.median():17.1f}"
+              f"{(s.markup < 0).mean():10.1%}{s.markup_uncapped.median():19.1f}"
+              f"{(s.markup_uncapped < 0).mean():10.1%}")
 
     print("\nCross-firm levels, which the docstring explains are not comparable")
     g = d.groupby("firm").agg(n=("markup", "size"), units=("unit", "nunique"),

@@ -107,6 +107,7 @@ import argparse
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
@@ -115,6 +116,54 @@ from omie_common import DATA  # noqa: E402
 OUT = DATA / "jrc_ppdb" / "implied_marginal_cost_daily.parquet"
 GAS_EMISSION_FACTOR_TCO2_PER_MWH_TH = 0.2020  # EU ETS MRR Annex VI, natural gas default
 COAL_EMISSION_FACTOR_TCO2_PER_MWH_TH = 0.3406  # EU ETS MRR Annex VI, other bituminous coal
+
+# ---------------------------------------------------------------- the gas cap
+# RDL 10/2022's "mecanismo de ajuste de costes de produccion" -- the Iberian
+# Exception. A capped plant forms its offer on a REFERENCE gas price PRGN, not
+# on the market price PGN, and is compensated for the difference. Valuing it at
+# the market price makes compliance look like a strategic markdown: before this
+# was applied, 53.2% of 2022 offers sat below implied marginal cost against
+# 33.0% before and 15.4% after (see analysis/markdown_contract_test.py).
+#
+# Figures transcribed from the CONSOLIDATED decree (BOE-A-2022-7843, which
+# incorporates RDL 3/2023's extension), article 3:
+#
+#   "PRGN es el precio de referencia del gas natural, en EUR/MWh, que tomara
+#    inicialmente el valor de 40 EUR/MWh. A partir del mes de enero de 2023 [...]
+#    el precio de referencia del gas natural tomara los siguientes valores
+#    mensuales: Enero 45, Febrero 50, Marzo 55, Abril 56,1, Mayo 57,2, Junio
+#    58,3, Julio 59,4, Agosto 60,6, Septiembre 61,7, Octubre 62,8, Noviembre
+#    63,9, Diciembre 65"
+#
+# So 40 EUR/MWh holds from the start through December 2022 -- the decree's
+# preamble says "40 EUR/MWh durante los seis primeros meses", but article 3
+# resolves the boundary by dating the first step to January 2023, not to six
+# months after the start.
+#
+# Start: Orden TED/517/2022 sets entry into operation at 14 June 2022, with the
+# first affected day-ahead session clearing for delivery on 15 June 2022. Our
+# panel is keyed by DELIVERY date, so the cap applies from 2022-06-15.
+# End: 31 December 2023, per article 1 as amended by RDL 3/2023.
+GAS_CAP_START = pd.Timestamp("2022-06-15")
+GAS_CAP_END = pd.Timestamp("2023-12-31")
+GAS_CAP_INITIAL = 40.0
+GAS_CAP_MONTHLY = {                      # from January 2023, article 3
+    "2023-01": 45.0, "2023-02": 50.0, "2023-03": 55.0, "2023-04": 56.1,
+    "2023-05": 57.2, "2023-06": 58.3, "2023-07": 59.4, "2023-08": 60.6,
+    "2023-09": 61.7, "2023-10": 62.8, "2023-11": 63.9, "2023-12": 65.0,
+}
+
+
+def gas_reference_price(dates: pd.Series) -> pd.Series:
+    """PRGN by delivery date; NaN outside the mechanism's window."""
+    d = pd.to_datetime(dates)
+    out = pd.Series(np.nan, index=d.index, dtype=float)
+    live = (d >= GAS_CAP_START) & (d <= GAS_CAP_END)
+    out[live & (d < pd.Timestamp("2023-01-01"))] = GAS_CAP_INITIAL
+    ym = d.dt.strftime("%Y-%m")
+    for k, v in GAS_CAP_MONTHLY.items():
+        out[live & (ym == k)] = v
+    return out
 COAL_CALORIFIC_VALUE_MWH_PER_TONNE = 6.978  # API2 spec, 6,000 kcal/kg NAR (S&P Global CIF ARA methodology)
 
 
@@ -146,6 +195,35 @@ def build_fuel_panel(units: pd.DataFrame, prices: pd.DataFrame, fuel_col: str,
     panel["fuel"] = fuel
     panel["marginal_cost_eur_mwh"] = (
         panel[fuel_col] / panel.eff
+        + emission_factor * panel.co2_eur_tco2 / panel.eff
+    )
+
+    # The capped variant. The decree makes the adjustment zero when the market
+    # price is already below the reference -- "Si el precio del gas natural
+    # (PGN) [...] es inferior al precio de referencia del gas natural (PRGN),
+    # el importe [...] sera nulo" -- so the price a plant offers on is
+    # min(PGN, PRGN), and the cap BINDS only where PGN > PRGN.
+    #
+    # Applied to GAS ONLY. Coal plants were inside the mechanism, but the
+    # decree defines the adjustment on the gas price, and converting it to a
+    # coal-fired plant's fuel cost needs a consumption factor the decree does
+    # not give. Rather than invent one, coal keeps its uncapped cost and
+    # `cap_applies` is False -- see the docstring.
+    panel["gas_reference_eur_mwh_th"] = (
+        gas_reference_price(panel.date) if fuel == "gas" else np.nan)
+    if fuel == "gas":
+        effective = panel[[fuel_col, "gas_reference_eur_mwh_th"]].min(axis=1)
+        effective = effective.where(panel.gas_reference_eur_mwh_th.notna(),
+                                    panel[fuel_col])
+        panel["cap_applies"] = panel.gas_reference_eur_mwh_th.notna()
+        panel["cap_binding"] = (panel.cap_applies
+                                & (panel[fuel_col] > panel.gas_reference_eur_mwh_th))
+    else:
+        effective = panel[fuel_col]
+        panel["cap_applies"] = False
+        panel["cap_binding"] = False
+    panel["marginal_cost_capped_eur_mwh"] = (
+        effective / panel.eff
         + emission_factor * panel.co2_eur_tco2 / panel.eff
     )
     return panel

@@ -887,6 +887,29 @@ units, **46 carry a plant-specific efficiency** (`eff_is_generic ==
 False`); the rest match correctly on capacity and name but their efficiency
 is a generic technology-class default (see the `eff_is_generic` trap).
 
+**The gas cap is now carried alongside, added 2026-09-04.**
+`marginal_cost_capped_eur_mwh` values a gas unit at RDL 10/2022's *reference*
+price `PRGN` rather than the market price, with `cap_applies` and `cap_binding`
+flags. The path is transcribed from the consolidated decree (BOE-A-2022-7843
+art. 3, which incorporates RDL 3/2023): **40 €/MWh from 2022-06-15 through
+December 2022**, then 45/50/55 for Jan–Mar 2023 and a linear 56.1 → 65.0 for
+Apr–Dec 2023, ending 2023-12-31. Start date from Orden TED/517/2022 (entry into
+operation 14 June, first delivery day the 15th).
+
+**Use the capped column for anything spanning mid-2022 to early 2023.** The cap
+binds on 43.5% of in-window gas unit-days — every month from 2022-06 to 2023-02,
+then never again, because MIBGAS fell below the reference from March 2023 and
+the decree makes the adjustment nil in that case. It is not a small correction:
+median gas marginal cost in August 2022 reads **317.5 €/MWh uncapped and 107.9
+capped**. Valuing a capped plant at the market price makes compliance look like
+strategic markdown — it put 53.2% of 2022 offers below cost with a negative
+median markup (see `analysis/markdown_contract_test.py`).
+
+**Coal keeps its uncapped cost and `cap_applies` is False.** Coal plants were
+inside the mechanism, but the decree defines the adjustment on the gas price and
+converting it to a coal plant's fuel cost needs a consumption factor the decree
+does not give. Not invented here.
+
 **The output: `data/jrc_ppdb/implied_marginal_cost_daily.parquet`, 170,402
 unit-days, `fuel` column distinguishes gas/coal.** Gas (46 trustworthy
 units): mean 94.27 €/MWh, range 16.51–466.41 — sits sensibly above OMIE's

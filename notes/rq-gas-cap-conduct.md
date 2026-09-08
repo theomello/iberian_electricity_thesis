@@ -94,7 +94,7 @@ is counted, against observed offers near €105. **That gap is the thesis.**
 | Which units are capped (combined cycle, coal, unregulated cogeneration) | in hand — technology coverage ~97% |
 | Which firm owns each unit | in hand — ~97% |
 | Market gas price (MIBGAS) | in hand |
-| The statutory cap path (€40 → €65) | in the decree, to be transcribed |
+| The statutory cap path (€40 → €65) | **in hand, 2026-09-04** — transcribed from the consolidated BOE-A-2022-7843 art. 3 into `build_implied_marginal_cost.py`; `marginal_cost_capped_eur_mwh` and `cap_binding` ship in the panel |
 | Plant thermal efficiency | **needed** — JRC database, or estimated per unit from pre-cap bidding |
 | Carbon price (EUA) | **needed** — straightforward to fetch |
 

@@ -1,0 +1,248 @@
+# Midday hydro: do the firms that set the price at solar noon price it strategically?
+
+Written 2026-09-28. **A sketch, not a spec.** It follows from §4.3, §4.4 and
+§7 of [`rq-descriptive-price-formation.md`](rq-descriptive-price-formation.md),
+and it is built to avoid the thing that killed the eight earlier conduct designs:
+it needs **no marginal cost at all**, not even a water value.
+
+Probe: `scripts/analysis/hydro_within_day_probe.py`, which reproduces every
+number in §3 and threat 8. 8 sample months, 30 storage-hydro sell units,
+30.2 GW. Every number below is **[preliminary]**.
+
+---
+
+## 1. The question
+
+> **When solar empties the midday market and storage hydro is left setting the
+> price, do hydro owners mark up their offers in the hours where their residual
+> demand is steepest — or do they bid a water value that is flat across the day?**
+
+Why this one:
+
+- **It is where the descriptive results point.** Residual-demand elasticity η
+  fell most at solar noon (−87% at hour 12, against −63% in the evening ramp,
+  §4.3). Near-margin concentration rose as a step (§5.2). Combined-cycle gas
+  left the margin and hydro took about three-quarters of resolved periods (§4.4).
+  So the thin, concentrated midday margin is a *hydro* margin.
+- **Few firms own the hydro.** Storage hydro in the sample: EDP 11.7 GW,
+  Iberdrola 10.8 GW, Endesa 3.5 GW, Movhera 2.2 GW, Naturgy 1.7 GW, Repsol
+  0.3 GW. Six groups. If market power lives anywhere at the midday margin, it
+  lives here.
+
+## 2. The identification idea: difference the water value out
+
+Every hydro design so far tried to measure water value's *level*
+([`hydro-water-value-design.md`](hydro-water-value-design.md)), and all three
+probes returned a wrong sign. This design never measures it.
+
+**For a storage plant, the opportunity cost of water is a daily shadow price
+λ_id.** Water released at 13:00 or at 21:00 comes out of the same reservoir, so
+it has the same value at the margin. That holds when the intra-day storage
+constraint does not bind and no flow or ramping limit binds (see §5).
+
+The supply-function first-order condition of Hortaçsu & Puller (2008), with
+marginal cost equal to λ, gives the offer price of unit *i*'s firm in hour *h*:
+
+```
+b_ih  =  λ_id  +  (q_fh − θ_fh) / |RD′_fh|
+```
+
+- `q_fh`: the firm's total output in hour *h*
+- `θ_fh`: its contract position, from PDBF (OMIE's daily operating schedule),
+  role code 4
+- `|RD′_fh|`: the slope of the residual demand the *firm* faces, which is
+  already computed in `firm_residual_demand_full_owner.parquet`
+
+**A unit × day fixed effect removes λ_id completely.** What remains is:
+
+```
+b_ih − b̄_i,d  =  β · [ (q−θ)/|RD′| ]_fh − mean over the day  +  ε
+```
+
+This makes a **point prediction**, not only a sign:
+
+| conduct | prediction |
+|---|---|
+| price-taking | β = 0: the offer curve is flat across the day at λ |
+| supply-function Nash | β = 1 |
+| in between | 0 < β < 1 |
+
+That is a sharper test than anything else in this repo, and the cost problem is
+gone by construction. The competitive benchmark is **a flat offer curve**, and
+that is observable directly.
+
+**The FOC itself is not new here.** `scripts/analysis/hortacsu_puller_test.py`
+(commit `6c900ec`) already measures every term and **inverts** it to recover an
+implied marginal cost per firm-period. What is new is using it the other way
+round: difference the cost out within a unit-day and test β, instead of solving
+for the cost. Two things carry over directly:
+
+- **`q` is total scheduled output from PDBF, not day-ahead cleared volume.**
+  Contracted energy never enters the auction, so cleared volume is already
+  roughly `q − θ`, and using it as `q` subtracts the contracts twice. The first
+  pass of that script made this mistake and got θ/q = 2.91 for Iberdrola.
+- **That script's result supports the premise.** Imposing θ moved implied
+  costs toward plausible, stable values, so the contract term belongs in X.
+
+## 3. What the probe found
+
+### 3.1 Flat curves are the norm, and becoming less so
+
+Share of unit-days where the offer price at 50% of capacity is identical in
+every hour:
+
+| 2019-01 | 2019-07 | 2021-04 | 2022-04 | 2024-04 | 2024-07 | 2025-04 | 2026-04 |
+|---|---|---|---|---|---|---|---|
+| 0.64 | 0.74 | 0.62 | 0.69 | 0.66 | 0.51 | 0.59 | **0.46** |
+
+The median within-day SD is **0.00 €/MWh**, against a median between-day SD of
+0.8–50. So **most of a hydro unit's price variation is between days, not within
+them**, which is what bidding a daily water value predicts. The within-day
+channel exists on about half the unit-days and is growing.
+
+### 3.2 The firms differ, and Iberdrola's behaviour changed
+
+Flat share by group, 2019–2022 sample months against 2024–2026:
+
+| group | early | late |
+|---|---|---|
+| **Iberdrola** | **0.90** | **0.48** |
+| Repsol | 0.69 | 0.39 |
+| EDP | 0.31 | 0.41 |
+| Naturgy | 0.22 | 0.19 |
+| Endesa | 0.17 | 0.13 |
+| Movhera | 0.13 | 0.06 |
+
+The largest Spanish hydro owner went from almost always flat to flat on less
+than half its days. **When** that happened is the first thing to establish on
+the full archive, since a dated break is far more informative than a trend.
+
+### 3.3 The midday deviation reversed sign
+
+On non-flat unit-days, mean deviation of the p50 offer from the unit's own daily
+mean, in €/MWh:
+
+| hour | 2019-01 | 2019-07 | 2024-04 | 2024-07 | 2025-04 |
+|---|---|---|---|---|---|
+| 13 | −7.1 | −9.9 | **+24.3** | **+26.1** | **+10.5** |
+| 16 | +1.5 | +6.1 | +19.7 | +20.4 | +13.8 |
+| 21 | −14.6 | −2.9 | −4.6 | **−52.9** | −5.5 |
+
+Before the solar build-out, midday offers sat at or below the daily mean. Now
+hydro units ask more at solar noon and less in the evening. That is the
+direction market power predicts if residual demand is steepest at midday. But
+it is also consistent with the physical constraints in §5, so it is a
+motivating fact, not a result.
+
+### 3.4 No withholding on quantity by hour
+
+Offered volume as a share of capacity moves only ±1–3 percentage points across
+the day. The hour-to-hour margin is **price, not quantity**. Two consequences:
+
+- the outcome variable is the offer price;
+- withholding, if present, shows up as a price rather than as missing
+  megawatts.
+
+### 3.5 The naive link has the right sign and almost no size
+
+Within unit-day, regressing the p50 deviation on the deviation of
+log |RD′_fh| gives −1.31 (2019–2022 months) and −1.01 (2024–2026). The sign is
+correct: a flatter residual demand means a lower offer. The correlations are
+−0.04 and −0.02, and this is OLS on an endogenous regressor with no
+instrument, no (q−θ) term and no clustering. It also covers only **83,180 of
+180,862** unit-periods (46%). Two filters compound: the firm slope panel keeps
+only periods with p* > 0 and no market splitting (threat 7), which 77% of
+unit-periods survive, and p50 is then undefined wherever a unit offers under
+half its capacity. **Do not read anything into it except that it is not
+wrong-signed.**
+
+## 4. Specification (to build)
+
+```
+b_ih − b̄_i,d = β · X̃_fh + γ_i,hour-of-day + δ_hour × month + ε_ih
+X_fh = (q_fh − θ_fh) / |RD′_fh|,   tilde = deviation from the firm-day mean
+```
+
+- **Outcome.** The offer price at fixed quantiles of *capacity* (p25, p50),
+  and at fixed quantiles of *offered* volume. p50 of capacity is censored on
+  35–50% of unit-periods, because units offer less than half their capacity.
+- **Unit × hour-of-day fixed effects (γ).** They absorb stable hydraulic
+  profiles: environmental minimum flows, habitual ramps, cascade coordination.
+  After them, β is identified from **day-to-day changes in the shape of the
+  day**, not from the average midday-versus-evening contrast.
+- **Instrument for X̃.** |RD′| is built from rivals' bids submitted at the
+  same time, so it is endogenous. Use the **clear-sky solar profile** (pure
+  astronomy, hour × day of year) × installed solar capacity. It shifts where
+  residual demand meets the rival stack, and so its slope. It needs no
+  forecast, which avoids the realised-weather flaw that sank the rain probes.
+  Installed capacity has no token-free Spanish source; use the monthly maximum
+  of REE's 5-minute solar output as a proxy.
+- **Inference.** Cluster on date. There are only six firms, so any difference
+  *between* firms is descriptive (the 32-firm ceiling, §7 of the descriptive
+  note, binds harder here).
+
+## 5. Threats, and how each is handled
+
+1. **Physical constraints make a competitive curve non-flat.** Ramping, turbine
+   limits, minimum flows and cascade coupling all do this. Stable ones are
+   absorbed by γ. Variable ones (floods, drought release rules) must be
+   controlled for. The spill-window probe found plants **cut offered volume by
+   13% in floods**, so flood days need a flag.
+2. **Water value is not constant within the day for small reservoirs.** A
+   daily-regulation pondage fills overnight and must release by evening, so its
+   λ varies by hour competitively. Split the fleet by storage size (MITECO
+   capacity ÷ turbine MW, i.e. hours of storage). **The prediction is that β is
+   larger for large seasonal reservoirs**, where the constant-λ assumption
+   holds. If β is larger for small ones, the constraint story wins.
+3. **Pumped storage is a different object.** La Muela and the Portuguese
+   bombagem units buy at midday. They are excluded from the main sample and are
+   a natural second object: pumping *demand* bids at midday should be the mirror
+   image.
+4. **A firm's portfolio moves X.** Iberdrola's midday solar output raises
+   `q_fh` exactly at noon. That is not a threat, because it is the incentive
+   the FOC says matters. But it means the **(q−θ) term must be computed on the
+   whole firm portfolio**, not on hydro alone.
+5. **Flat days are a mass point.** Half the unit-days have zero within-day
+   variation. Model the extensive margin separately (does a unit-day go
+   non-flat when the day's X profile is steeper?) before pooling.
+6. **Intraday re-optimisation.** Hydro can re-trade in the intraday sessions,
+   so the day-ahead curve may partly anticipate them. The intraday bids are on
+   disk, so check whether the midday premium is unwound there.
+7. **Sample selection.** The firm slope panel keeps only periods with p* > 0 and
+   no market splitting, which drops the high-solar hours (66% retention in
+   2026). The *offer* is defined in every hour, but |RD′| at p* is not.
+   Evaluating RD′ at the unit's own offer price rather than at p* would recover
+   those hours. This is a design choice to settle before building.
+8. **Complex conditions — checked, not a threat.** Daily-linked offers would
+   break the hour-by-hour FOC. But in `cab`, **none** of the 30 units declares a
+   minimum-income term or an SCO (Scalable Complex Order) in 2019-07, 2024-04 or
+   2026-04 (0 of 806, 900 and 894 unit-days). Storage hydro submits simple
+   hourly offers.
+
+## 6. What would kill it
+
+- **γ absorbs nearly all the within-day variation**, leaving nothing
+  identified from day-to-day changes in shape.
+- **β is not distinguishable from 0 with a tight interval.** That would be a
+  result, not a failure: hydro prices competitively at the midday margin,
+  which relocates the market-power question away from the technology that sets
+  the price.
+- **β is larger for small reservoirs than for large ones** (threat 2). That
+  would mean physics, not conduct.
+
+## 7. Build order
+
+1. **Full-archive unit-hour offer panel** for storage hydro, 2018 → 2026-06:
+   quantile prices, a flat flag, offered volume and cleared volume. This
+   extends the probe and is cheap.
+2. **Descriptive first:** the flat share by firm and month, and when
+   Iberdrola's break happened. Run this before any regression, following the
+   lesson of the spill-window design: look at the event-time shape before
+   believing a coefficient.
+3. **X_fh:** join the firm slope panel, and compute (q−θ) on the whole
+   portfolio, with q from PDBF as in `hortacsu_puller_test.py`.
+4. **Storage-hours per unit**, from MITECO reservoir capacity. Needs a
+   reservoir → OMIE unit match, which is new work.
+5. **Clear-sky instrument**, then the first stage.
+6. **Estimate**, with placebos: run-of-river units (no daily λ, so they should
+   be flat at about €0), and pumping units as the mirror image.

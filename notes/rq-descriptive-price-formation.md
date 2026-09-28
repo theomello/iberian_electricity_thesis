@@ -290,6 +290,17 @@ observable marginal cost.
 > Not yet done: rebuilding the `incentive_h*` columns on the net position. Until
 > then treat every `incentive` figure in this section as superseded by the
 > table above.
+>
+> **A second, smaller issue touches `ability` too** (2026-09-28,
+> `scripts/analysis/own_demand_in_band.py`). The firm slope removes a firm's own
+> *sell* offers from the band but maps only supply-role units, so its own
+> **demand** bids near p* are counted as everyone else's, overstating |RD′_i| and
+> understating `ability`. In the median firm-period the correction is zero for
+> every firm. In the tail it is not, and it is Iberdrola's: its own demand is
+> 4–13% of the band on average, and in its worst 10% of periods from 2023 the
+> slope is overstated 2.1–2.5×. EDP's is its pumping (worst decile 31–45% in
+> 2018–22, ≤ 10% from 2024); Endesa, Naturgy and Repsol are ≤ 8%. So
+> Iberdrola's `ability` is a lower bound, more so after 2022.
 
 Median `ability_h5` and `incentive_h5` (€/MWh per 1% withheld), top firms by
 cleared volume:

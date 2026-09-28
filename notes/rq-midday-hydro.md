@@ -404,15 +404,15 @@ price *lower*.
 **The first look at the test: not identified yet.**
 
 - **On the median offer, EDP looks price-taking.** Within a unit-day, X moves
-  about ±40 €/MWh across its deciles while `o50` moves about ±2, slightly
+  about ±20–35 €/MWh across its end deciles while `o50` moves about ±2, slightly
   *negatively* in 2018–23 and not at all in 2024–26. β = 1 would mean swings of
   about ±40. But the median offer is not the object the FOC is about.
 - **On price-setting periods, correctly signed and between 0 and 1.** Where an
   EDP unit's top cleared step is the zone price (3.6% of unit-periods; 3,438
   unit-days with 2+ such periods), the offer equals p*, so the FOC reads
-  p* = λ_day + X. Within unit-day slopes of p* on X: **0.32** (2018–20), **0.02**
-  (2021–23, outlier-driven; about 0.13 on quintile bins), **0.26** (2024–26;
-  about 0.5 on bins), monotone in every era.
+  p* = λ_day + X. Within unit-day slopes of p* on X: **0.26** (2018–20), **0.04**
+  (2021–23; about 0.13 on quintile bins), **0.26** (2024–26; about 0.5 on bins),
+  monotone in every era. (0.32, 0.05, 0.26 on the uncorrected slope; see 3b.)
 - **That relation is expected under price-taking too.** A price-taking hydro
   unit sells more in high-price hours, which raises EDP's net position, and so
   X, exactly when p* is high. The positive slope is mechanical until X is
@@ -545,10 +545,18 @@ tilde = deviation from the firm-day mean
 2e. ~~**EDP full-archive panel**~~ — done 2026-09-28, §3.9.
 3. ~~**X_fh**~~ — done for EDP, Movhera and Repsol in the panel (§3.9), on the
    net auction position rather than `q − θ`.
-3b. **Check EDP's own demand bids near the margin.** The firm slope removes a
-   firm's own *sell* offers only. EDP buys at midday; if its demand bids sit
-   near p*, they belong outside its residual demand too, and |RD′| is
-   overstated.
+3b. ~~**Check EDP's own demand bids near the margin**~~ — done 2026-09-28,
+   `own_demand_in_band.py`. The firm panel removes a firm's own *sell* offers
+   from the band and maps only supply-role units, so a firm's own demand bids
+   were counted as everyone else's. For EDP they are 0.9–7.6% of the band on
+   average — its pumping legs, peaking at night in 2018–20 and at midday in
+   2021–23 — with no correction in the median period and a 31–45% slope
+   overstatement in the worst 10% of periods in 2018–22 (≤ 10% from 2024). X now
+   uses the corrected `slope_net`, floored at 5 MW per €/MWh because a band the
+   firm's own demand nearly fills produced |X| up to 2.8 × 10⁸ (0.08% of
+   periods). Nothing substantive changes (§3.9). **Iberdrola is the firm it
+   matters for**: 4–13% of the band, and a slope overstated 2.1–2.5× in its worst
+   decile of periods from 2023.
 4. **Storage-hours per unit**, from MITECO reservoir capacity. Needs a
    reservoir → OMIE unit match, which is new work.
 5. **Clear-sky instrument**, then the first stage.

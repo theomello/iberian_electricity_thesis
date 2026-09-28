@@ -42,6 +42,11 @@ the hourly route split in `hydro_schedule_routes.parquet`.
   `hortacsu_puller_test.py` caught in its first pass. See
   `notes/rq-descriptive-price-formation.md` §4.5.
 
+  The slope in X is `slope_net`: the firm's own DEMAND bids near p* are removed
+  too, not only its sell offers (`own_demand_in_band.py`, which must be run
+  first). For EDP that is mostly its pumping legs, and it matters in a tail of
+  periods, not the median. `X_gross` keeps the firm panel's slope for comparison.
+
   EDP COMERCIAL (EDP's Portuguese retailer) stands as its own group in
   `owner_groups.parquet` for want of merge evidence. It offers essentially no
   supply, so the slope is unaffected, but it buys 1.6-4.7 TWh a year in
@@ -75,11 +80,17 @@ from hydro_within_day_probe import BIDS, storage_hydro  # noqa: E402
 DATA = ROOT / "data"
 PRICES = DATA / "omie/prices/omie_day_ahead_prices.parquet"
 FIRM_SLOPE = ROOT / "outputs/tables/firm_residual_demand_full_owner.parquet"
+OWN_DEMAND = ROOT / "outputs/tables/own_demand_in_band.parquet"   # own_demand_in_band.py
 OUT = ROOT / "outputs/tables/edp_hydro_panel.parquet"
 
 GROUPS = ("EDP", "MOVHERA", "REPSOL")
 NET_OWNERS = {"EDP": ("EDP", "EDP COMERCIAL"), "MOVHERA": ("MOVHERA",), "REPSOL": ("REPSOL",)}
 PRICE_OUT = 300.0     # EUR/MWh, as in hydro_schedule_routes.py
+# X is undefined below this slope. A band that the firm's own demand nearly
+# fills leaves a slope just above zero and an X up to 2.8e8 EUR/MWh -- a division
+# artefact, not a markup. 5 MW per EUR/MWh (50 MW in the +/-5 band) drops 0.08%
+# of EDP's periods.
+MIN_SLOPE = 5.0
 MIN_STEP_MW = 1.0     # as in hydro_flat_break.py
 QS = (0.25, 0.50, 0.75)
 TWINS = {"ACAVADO": "ACAVADB", "ADOURO": "ADOUROB", "ALIMA": "ALIMAB",
@@ -232,7 +243,10 @@ def build() -> pd.DataFrame:
     d = pd.concat([p for p in parts if not p.empty], ignore_index=True)
     d = add_firm(add_flatness(d))
     d = d.merge(pd.concat(nets, ignore_index=True), on=["date", "period", "group"], how="left")
-    d["X"] = np.where(d.slope_i_h5 > 0, d.net_mw / d.slope_i_h5, np.nan)
+    own = pd.read_parquet(OWN_DEMAND, columns=["date", "period", "firm", "slope_net"])
+    d = d.merge(own.rename(columns={"firm": "group"}), on=["date", "period", "group"], how="left")
+    d["X_gross"] = np.where(d.slope_i_h5 >= MIN_SLOPE, d.net_mw / d.slope_i_h5, np.nan)
+    d["X"] = np.where(d.slope_net >= MIN_SLOPE, d.net_mw / d.slope_net, np.nan)
     d["year"] = d.date.dt.year
     d["era"] = pd.cut(d.year, [2017, 2020, 2023, 2026], labels=list(ERAS))
     OUT.parent.mkdir(parents=True, exist_ok=True)
@@ -329,8 +343,11 @@ def report(d: pd.DataFrame) -> None:
         g = g.assign(bin=pd.qcut(g.X_w, 5, labels=False, duplicates="drop"))
         t = g.groupby("bin").agg(X_w=("X_w", "mean"), p_w=("p_zone_w", "mean"), n=("X_w", "size"))
         b = np.polyfit(g.X_w, g.p_zone_w, 1)[0]
-        print(f"  {era}: within unit-day slope of p* on X = {b:.3f} "
-              "(supply-function Nash predicts 1, price-taking 0)")
+        gg = g.dropna(subset=["X_gross"])
+        xg = gg.X_gross - gg.groupby(["unit", "date"]).X_gross.transform("mean")
+        bg = np.polyfit(xg, gg.p_zone_w, 1)[0]
+        print(f"  {era}: within unit-day slope of p* on X = {b:.3f} (on X_gross {bg:.3f}; "
+              "supply-function Nash predicts 1, price-taking 0)")
         print(t.round(2).T.to_string())
 
     print("\nEDP PUMPING: twin's cleared purchase by hour, MW per unit-period (units with a twin)")

@@ -121,6 +121,11 @@ def months(sess, dataset: str) -> list[str]:
 
 def get_zip(sess, dataset: str, ym: str) -> Path:
     dest = ZIPS / f"{dataset}_{ym}.zip"
+    # Deliberately NOT the `monthly_zip_may_grow` rule the other OMIE fetchers
+    # use. 43 of 100 indisp zips stop short of their month's last day, and they
+    # are short AT SOURCE, not frontier snapshots: re-fetched on 2026-09-28,
+    # 202401 still held 20 days, 202403 one, and 202605 was byte-for-byte what
+    # was fetched on 2026-08-21. Re-fetching would buy nothing.
     if dest.exists() and zipfile.is_zipfile(dest):
         return dest
     tmp = dest.with_suffix(".zip.part")

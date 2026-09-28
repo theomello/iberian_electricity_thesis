@@ -117,7 +117,8 @@ import pyarrow.parquet as pq
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 from omie_common import (  # noqa: E402
-    DATA, OMIE_LIST, month_range, omie_url, resolution_minutes, session, START, END,
+    DATA, OMIE_LIST, month_range, monthly_parquet_may_grow, monthly_zip_may_grow,
+    omie_url, resolution_minutes, session, START, END,
 )
 
 ZIPS = DATA / "omie" / "pdbf" / "zips"
@@ -145,20 +146,21 @@ def available_months(sess) -> list[str]:
 
 def download_month(sess, ym: str) -> Path | None:
     dest = ZIPS / f"pdbf_{ym}.zip"
-    if dest.exists() and zipfile.is_zipfile(dest):
+    have = dest.exists() and zipfile.is_zipfile(dest)
+    if have and not monthly_zip_may_grow(dest, ym):
         return dest
     tmp = dest.with_suffix(".zip.part")
     with sess.get(omie_url("pdbf", f"pdbf_{ym}.zip"), timeout=900,
                   stream=True, allow_redirects=True) as r:
         if r.status_code != 200:
-            return None
+            return dest if have else None
         with open(tmp, "wb") as fh:
             for chunk in r.iter_content(chunk_size=1 << 20):
                 fh.write(chunk)
     if not zipfile.is_zipfile(tmp):
         tmp.unlink(missing_ok=True)
-        return None
-    tmp.rename(dest)
+        return dest if have else None
+    tmp.replace(dest)
     return dest
 
 
@@ -211,7 +213,10 @@ def write_month(ym: str, rows: list, res: int) -> int:
 
 def process_month(sess, ym: str, keep_zips: bool) -> int:
     dest = OUT / f"pdbf_{ym}.parquet"
-    if dest.exists():
+    # The zip is deleted once parsed, so whether a month is complete has to be
+    # read off the parquet: a frontier month stops short of its last day and is
+    # re-fetched until it reaches it. See `month_may_grow` in omie_common.
+    if dest.exists() and not monthly_parquet_may_grow(dest, ym):
         return -1
     z = download_month(sess, ym)
     if z is None:

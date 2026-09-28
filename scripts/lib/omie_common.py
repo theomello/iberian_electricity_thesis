@@ -6,6 +6,8 @@ OMIE files on 2026-08-07. See CLAUDE.md for the full list.
 
 from __future__ import annotations
 
+import calendar
+import zipfile
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -51,6 +53,61 @@ def session() -> requests.Session:
 
 def omie_url(dataset: str, filename: str) -> str:
     return f"{OMIE_DOWNLOAD}?parents%5B0%5D={dataset}&filename={filename}"
+
+
+# A month fetched this long after it closed is final, whatever it holds. OMIE's
+# publication lag on unit-level offers is ~3 months, so 180 days clears it with
+# room to spare.
+FINAL_AFTER_DAYS = 180
+
+
+def month_last_day(ym: str) -> date:
+    y, m = int(ym[:4]), int(ym[4:])
+    return date(y, m, calendar.monthrange(y, m)[1])
+
+
+def month_may_grow(ym: str, covers_last_day: bool, fetched: date) -> bool:
+    """True if a month held on disk may be a frontier snapshot that OMIE has
+    since extended.
+
+    OMIE publishes the frontier month as a zip that grows as days are released:
+    `curva_pbc_uof_202605.zip` fetched on 2026-08-07 held 8 days. A fetcher that
+    treats any file on disk as final keeps that truncated copy forever, so
+    re-running it never extends the frontier. OMIE sends neither
+    Content-Length nor Last-Modified, so the data itself is the only evidence:
+    a month is complete once it reaches its last calendar day.
+
+    A month can also stop short for good -- intraday has no file for 2026-02-28
+    at source -- so one fetched more than FINAL_AFTER_DAYS after it closed is
+    treated as final. Such a month is re-fetched at most a few more times.
+    """
+    if covers_last_day:
+        return False
+    return (fetched - month_last_day(ym)).days < FINAL_AFTER_DAYS
+
+
+def monthly_zip_may_grow(path: Path, ym: str) -> bool:
+    """`month_may_grow` for a monthly zip whose members are named by date."""
+    last = month_last_day(ym).strftime("%Y%m%d")
+    with zipfile.ZipFile(path) as zf:
+        covers = any(last in n for n in zf.namelist())
+    return month_may_grow(ym, covers, date.fromtimestamp(path.stat().st_mtime))
+
+
+def monthly_parquet_may_grow(path: Path, ym: str, date_col: str = "date") -> bool:
+    """`month_may_grow` for a parsed month whose zip was deleted after parsing,
+    judged on the latest date the parquet holds."""
+    import pyarrow.compute as pc
+    import pyarrow.parquet as pq
+
+    latest = pc.max(pq.read_table(path, columns=[date_col]).column(date_col)).as_py()
+    covers = latest is not None and latest >= month_last_day(ym)
+    return month_may_grow(ym, covers, date.fromtimestamp(path.stat().st_mtime))
+
+
+def zip_members(path: Path) -> list[str]:
+    with zipfile.ZipFile(path) as zf:
+        return sorted(zf.namelist())
 
 
 def day_span_utc(d: date, tz: ZoneInfo = MADRID) -> tuple[datetime, datetime]:

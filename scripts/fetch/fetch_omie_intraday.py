@@ -55,8 +55,10 @@ from omie_common import (  # noqa: E402
     OMIE_LIST,
     START,
     month_range,
+    monthly_zip_may_grow,
     omie_url,
     session,
+    zip_members,
 )
 
 ZIPS = DATA / "omie" / "intraday" / "zips"
@@ -77,23 +79,33 @@ def available_months(sess) -> list[str]:
     return sorted(set(re.findall(r"curva_pibc_uof_(\d{6})\.zip", r.text)))
 
 
-def download_month(sess, ym: str) -> Path | None:
+def download_month(sess, ym: str) -> tuple[Path | None, bool]:
+    """Fetch a monthly zip, re-fetching one that may since have grown.
+
+    Returns the path and whether its contents changed, so the caller re-parses
+    a frontier month when OMIE has extended it. If a re-fetch fails, the copy
+    already on disk is kept.
+    """
     dest = ZIPS / f"curva_pibc_uof_{ym}.zip"
-    if dest.exists() and zipfile.is_zipfile(dest):
-        return dest
+    have = dest.exists() and zipfile.is_zipfile(dest)
+    if have and not monthly_zip_may_grow(dest, ym):
+        return dest, False
+    before = zip_members(dest) if have else None
+    fallback = (dest if have else None), False
     tmp = dest.with_suffix(".zip.part")
     with sess.get(omie_url("curva_pibc_uof", f"curva_pibc_uof_{ym}.zip"),
                   timeout=900, stream=True, allow_redirects=True) as r:
         if r.status_code != 200:
-            return None
+            return fallback
         with open(tmp, "wb") as fh:
             for chunk in r.iter_content(chunk_size=1 << 20):
                 fh.write(chunk)
     if not zipfile.is_zipfile(tmp):
         tmp.unlink(missing_ok=True)
-        return None
-    tmp.rename(dest)
-    return dest
+        return fallback
+    changed = zip_members(tmp) != before
+    tmp.replace(dest)
+    return dest, changed
 
 
 SCHEMA = pa.schema([
@@ -199,12 +211,12 @@ def main() -> int:
     done, failed = [], []
     for i, ym in enumerate(months, 1):
         try:
-            z = download_month(sess, ym)
+            z, changed = download_month(sess, ym)
             if z is None:
                 failed.append(ym)
                 print(f"  [{i}/{len(months)}] {ym}: download failed", flush=True)
                 continue
-            out, nsess = convert_month(z, ym, force=args.force)
+            out, nsess = convert_month(z, ym, force=args.force or changed)
             if out is None:
                 failed.append(ym)
                 print(f"  [{i}/{len(months)}] {ym}: no rows", flush=True)

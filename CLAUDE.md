@@ -973,6 +973,18 @@ OMIE republishes the whole forward register ~30 times a day; each revision is a
 full snapshot (checked: rev 1 and rev 2 of 2024-01-01 are 144 and 146 lines at
 the same file size), so the fetcher keeps the **last snapshot per calendar day**.
 
+**43 of the 100 monthly zips are partial AT SOURCE**, found 2026-09-28. Each
+runs contiguously from day 1 and stops short: 202401 holds 20 days, 202403 one,
+202605 two. Mostly 2023 onward; only 201809, 202105 and 202107 before that.
+Re-fetched that day they were identical to the 2026-08-21 copies, and OMIE's
+listing holds zips only, so there are no daily files to fill in from. Because
+each snapshot is the full forward register, planned outages are still seen from
+the first day of a month. What is lost is the **short-lead tail** — exactly the
+<24h declarations that are this dataset's reason to exist — for the uncovered
+days. **So the 74.6% short-lead share and any post-2023 withholding measure are
+computed on a thinning, non-random subset of days.** Check day coverage per
+month before using either.
+
 **The unit codes are a PHYSICAL namespace, not the market registry's** — see
 the trap below. And **`indisppt` does not exist**: checked against OMIE, it and
 two spelling variants return a valid page with zero zips. The
@@ -1136,6 +1148,27 @@ both. The decisive part is the 3,568 splitting instants where the two prices
 genuinely differ — REN's `PT` still matches `price_pt` at 0.0000, while the
 crossed comparison is off by up to 122 €/MWh. Getting this backwards would
 silently swap the two countries in every price-based result.
+
+### A frontier-month zip is a snapshot, and used to be kept forever
+Found 2026-09-28. OMIE publishes the month at the publication frontier as a zip
+that **grows** as days are released: `curva_pbc_uof_202605.zip` fetched on
+2026-08-07 held 8 days. The fetchers treated any valid zip on disk as final, so
+re-running them — even with `--force`, which only re-parses — kept that
+truncated copy forever and never extended the frontier.
+
+`month_may_grow()` in `lib/omie_common.py` now decides from the data itself,
+since OMIE sends neither `Content-Length` nor `Last-Modified`: a month is final
+once it reaches its last calendar day, or once it was fetched more than 180 days
+after it closed (a day can be absent at source for good — intraday 2026-02-28).
+A re-fetched zip whose member list changed is re-parsed automatically.
+
+Applied to bids, intraday, `cab` and the registry build on the zip, and to
+`pdbf` on the **parquet**, because `pdbf` deletes its zips once parsed. The
+2026-09-28 refresh it enabled recovered bids May (8 → 31 days), intraday May
+(11 → 31), `cab` May (13 → 31) and June (5 → 29), and `pdbf` May (15 → 31).
+
+**`indisp` deliberately keeps the old rule** — its short months are short at
+source, not frontier snapshots. See the `indisp` section.
 
 ### The two OMIE files use different decimal separators
 `marginalpdbc` uses a **dot** (`77.7`). `curva_pbc_uof` uses a **comma**

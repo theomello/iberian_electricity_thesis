@@ -138,7 +138,9 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-from omie_common import DATA, OMIE_LIST, omie_url, session  # noqa: E402
+from omie_common import (  # noqa: E402
+    DATA, OMIE_LIST, monthly_zip_may_grow, omie_url, session, zip_members,
+)
 
 ZIPS = DATA / "omie" / "cab" / "zips"
 OUT = DATA / "omie" / "cab" / "parquet"
@@ -186,23 +188,33 @@ def available_months(sess) -> list[str]:
     return sorted(set(re.findall(r"cab_(\d{6})\.zip", r.text)))
 
 
-def download_month(sess, ym: str) -> Path | None:
+def download_month(sess, ym: str) -> tuple[Path | None, bool]:
+    """Fetch a monthly zip, re-fetching one that may since have grown.
+
+    Returns the path and whether its contents changed, so the caller re-parses
+    a frontier month when OMIE has extended it. If a re-fetch fails, the copy
+    already on disk is kept. See `month_may_grow` in omie_common.
+    """
     dest = ZIPS / f"cab_{ym}.zip"
-    if dest.exists() and zipfile.is_zipfile(dest):
-        return dest
+    have = dest.exists() and zipfile.is_zipfile(dest)
+    if have and not monthly_zip_may_grow(dest, ym):
+        return dest, False
+    before = zip_members(dest) if have else None
+    fallback = (dest if have else None), False
     tmp = dest.with_suffix(".zip.part")
     with sess.get(omie_url("cab", f"cab_{ym}.zip"), timeout=600,
                   stream=True, allow_redirects=True) as r:
         if r.status_code != 200:
-            return None
+            return fallback
         with open(tmp, "wb") as fh:
             for chunk in r.iter_content(chunk_size=1 << 20):
                 fh.write(chunk)
     if not zipfile.is_zipfile(tmp):
         tmp.unlink(missing_ok=True)
-        return None
-    tmp.rename(dest)
-    return dest
+        return fallback
+    changed = zip_members(tmp) != before
+    tmp.replace(dest)
+    return dest, changed
 
 
 def _f(s: str) -> float | None:
@@ -353,11 +365,11 @@ def main() -> int:
 
     total = 0
     for i, ym in enumerate(months, 1):
-        z = download_month(sess, ym)
+        z, changed = download_month(sess, ym)
         if z is None:
             print(f"  ! {ym}: download failed")
             continue
-        p = convert_month(z, ym, args.force)
+        p = convert_month(z, ym, args.force or changed)
         if p is None:
             print(f"  ! {ym}: no parsable members")
             continue

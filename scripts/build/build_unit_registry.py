@@ -74,7 +74,9 @@ from pathlib import Path
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-from omie_common import DATA, END, START, month_range, omie_url, session  # noqa: E402
+from omie_common import (  # noqa: E402
+    DATA, END, START, month_range, monthly_zip_may_grow, omie_url, session,
+)
 
 OUTDIR = DATA / "omie" / "registry"
 TMP = OUTDIR / "_zips"
@@ -99,20 +101,23 @@ ROLE_LABELS = {
 def fetch_zip(sess, dataset: str, ym: str) -> Path | None:
     TMP.mkdir(parents=True, exist_ok=True)
     dest = TMP / f"{dataset}_{ym}.zip"
-    if dest.exists() and zipfile.is_zipfile(dest):
+    # A zip kept by --keep-zips or an interrupted run may be a frontier
+    # snapshot; reusing it would silently cut `last_seen` short.
+    have = dest.exists() and zipfile.is_zipfile(dest)
+    if have and not monthly_zip_may_grow(dest, ym):
         return dest
     tmp = dest.with_suffix(".part")
     with sess.get(omie_url(dataset, f"{dataset}_{ym}.zip"), timeout=900,
                   stream=True, allow_redirects=True) as r:
         if r.status_code != 200:
-            return None
+            return dest if have else None
         with open(tmp, "wb") as fh:
             for chunk in r.iter_content(chunk_size=1 << 20):
                 fh.write(chunk)
     if not zipfile.is_zipfile(tmp):
         tmp.unlink(missing_ok=True)
-        return None
-    tmp.rename(dest)
+        return dest if have else None
+    tmp.replace(dest)
     return dest
 
 

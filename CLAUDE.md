@@ -94,7 +94,9 @@ scripts/
 ## Data inventory
 
 Window: **2018-01-01 → 2026-05-31**, set by the bid archive's start.
-Bids alone stop at **2026-05-08** (a ~3-month publication lag — see below).
+Bids and intraday now run **past** it, to **2026-06-29** (refreshed 2026-09-28;
+a ~3-month publication lag — see below), so for June they have no matching
+prices, REE or REN yet.
 All of `data/` is gitignored — it is large and fully re-fetchable.
 
 ### OMIE day-ahead prices — complete
@@ -104,17 +106,19 @@ Spain mean 73.31 €/MWh, range −15.00 to 700.00. ES and PT differ in 6.7% of
 periods (market splitting).
 
 ### OMIE bid curves — complete to the publication frontier
-**101/101 months, 354,247,072 rows, uniform schema.**
+**102 months 2018-01 → 2026-06, 382,400,912 rows, uniform schema.** Refreshed
+2026-09-28; the clearing-identity gap is 0.00% on both new months.
 
-The bid archive ends **2026-05-08**, not 2026-05-31 like every other dataset.
-This is not a fetch failure: OMIE's May 2026 zip contains only 8 days, no
-daily bid files exist (the listing has none, and direct fetches 404), and the
-frontier sits 91 days before the fetch date of 2026-08-07 — a **~3-month
-publication lag**, as expected for commercially sensitive unit-level offers.
+The frontier is **2026-06-29**, 91 days before the refresh — the same
+**~3-month publication lag** measured at the first fetch (2026-05-08 on
+2026-08-07), as expected for commercially sensitive unit-level offers. No daily
+bid files exist (the listing has none, and direct fetches 404); OMIE extends the
+frontier month's zip as days are released.
 
-So the bid window is 2018-01-01 → 2026-05-08 while prices, REE and REN run to
-2026-05-31. Re-running the fetcher later extends the frontier; the last ~3
-months of any other series will never have matching bids.
+The first fetch left May 2026 at 8 days, and re-running did **not** extend it
+until 2026-09-28 — see the frontier-zip trap. Re-running now does. The last ~3
+months of any other series will never have matching bids at the time of a
+fetch; re-fetch prices, REE and REN before using June 2026.
 
 Unit-level day-ahead offers for **both** Spanish and Portuguese units, since
 MIBEL clears jointly. ~2.3–3.6 M rows/month in the hourly era, ~14 M/month
@@ -657,7 +661,7 @@ two markets run at different resolutions for those six months, so read
 `resolution_min` per file rather than inferring it from the date.
 
 ### OMIE intraday bid curves — complete
-**101/101 months, 558,797,498 rows**, uniform schema — larger than the
+**102 months 2018-01 → 2026-06, 588,054,115 rows**, uniform schema — larger than the
 day-ahead archive. Unit-level offers for each intraday **session**, where
 wind and solar forecast errors get corrected after the day-ahead auction.
 
@@ -668,9 +672,9 @@ carry their own delivery date, which can differ from the filename date — the
 row date is authoritative.
 
 Cleared intraday sell volume is ~18% of day-ahead (Jan 2024), as expected for
-an adjustment market. The frontier is 2026-05-11, three days past the
-day-ahead bid frontier. A few session files are published **empty** (e.g.
-session 4 on 2020-04-01) and correctly yield no rows.
+an adjustment market. The frontier is 2026-06-29, the same as the day-ahead
+bid frontier (refreshed 2026-09-28; it was 2026-05-11). A few session files are
+published **empty** (e.g. session 4 on 2020-04-01) and correctly yield no rows.
 
 Parsing is streamed one row-group per source file: the IDA-era months are
 ~17 M rows each and buffering a month in memory exhausts it.
@@ -973,9 +977,13 @@ OMIE republishes the whole forward register ~30 times a day; each revision is a
 full snapshot (checked: rev 1 and rev 2 of 2024-01-01 are 144 and 146 lines at
 the same file size), so the fetcher keeps the **last snapshot per calendar day**.
 
-**43 of the 100 monthly zips are partial AT SOURCE**, found 2026-09-28. Each
-runs contiguously from day 1 and stops short: 202401 holds 20 days, 202403 one,
-202605 two. Mostly 2023 onward; only 201809, 202105 and 202107 before that.
+**43 of the 100 monthly zips are partial AT SOURCE**, found 2026-09-28. 40 of
+them fall from 2023-02 on, and 37 of those run contiguously from day 1 and stop
+short: 202401 holds 20 days, 202403 one, 202605 two. The exceptions are 202506
+and 202508 (internal gaps) and 202509 (day 1 missing). Before 2023 there are
+only 201809 (last day missing), and 202105 and 202107, both rewritten in one go
+on 2021-08-25; 202105 is missing days 1–25. The full table is in
+[`notes/email-omie-indisp-gaps.md`](notes/email-omie-indisp-gaps.md).
 Re-fetched that day they were identical to the 2026-08-21 copies, and OMIE's
 listing holds zips only, so there are no daily files to fill in from. Because
 each snapshot is the full forward register, planned outages are still seen from
@@ -984,6 +992,24 @@ the first day of a month. What is lost is the **short-lead tail** — exactly th
 days. **So the 74.6% short-lead share and any post-2023 withholding measure are
 computed on a thinning, non-random subset of days.** Check day coverage per
 month before using either.
+
+**Why, from 2023 on: OMIE's nightly append job stops mid-month.** Zip member
+timestamps show each day's revisions appended overnight, around 00:40–02:15
+depending on the period. In the 37 day-1-contiguous months the appends simply
+stop (202401's last write is 2024-01-21 01:39, adding the 20th), and a fresh zip
+starts working again at the next month.
+The trigger is not a three-digit revision suffix — complete months hold days up
+to revision 123 — but failures track register churn: the median day in a partial
+month has 65 revisions against 34 in a complete one, and churn roughly doubled
+from 2023. The exact mechanism is inside OMIE.
+
+**Not recoverable from any public copy** (checked 2026-09-28): OMIE serves no
+daily `indisp` files, even for days inside a zip; its `comunzip` folder 404s;
+the one Wayback capture of a partial month is zero bytes. The next available
+snapshot recovers only outages still running when it was taken — about 24% of
+those declared in a simulated gap on complete months, 20% of the short-lead ones.
+Routes left: ask OMIE, or ENTSO-E Transparency Article 15.1 (units ≥100 MW,
+every version timestamped, token required).
 
 **The unit codes are a PHYSICAL namespace, not the market registry's** — see
 the trap below. And **`indisppt` does not exist**: checked against OMIE, it and

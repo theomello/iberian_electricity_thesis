@@ -276,6 +276,50 @@ residual, not in how it allocates water, since its bilateral share does not
 move. For EDP, Movhera and Repsol the auction offer *is* the allocation
 decision.
 
+### 3.8 The bilateral route is self-supply, and can be nominated after the auction
+
+**Who is on the other side: Iberdrola itself.** In March 2024, Iberdrola's six
+storage units sell through exactly two bilateral contracts (PDBF role 4). Their
+only buy legs are two Iberdrola retail purchase units: `ICLIC01` "IBERDROLA
+CLIENTES COMPRA" (2.03 TWh) and `IBRM01` "IBERDROLA SERVICIOS ENERGETICO"
+(0.12 TWh), both owned by Iberdrola Energía España. Sell and buy legs balance to
+0.000 MW in every contract-period, at 2.14 TWh a side. So the bilateral route is
+**Iberdrola's hydro serving Iberdrola's own retail customers**, outside the
+auction. One month checked; the other months and the other groups' contracts
+still need the same trace.
+
+**When it is nominated: optionally after the auction.** Red Eléctrica's
+operating procedure P.O. 3.1 (BOE-A-2024-11535, §6.2 and §6.4; the same windows
+appear in REE's November 2020 guide to physical bilateral contracts):
+
+| window | deadline, D−1 | what can be nominated |
+|---|---|---|
+| before the auction | 10:15 | domestic bilaterals that opt for a firm pre-market nomination |
+| after the auction | 13:00, or 20 minutes after the day-ahead results | domestic bilaterals without that option, and *increases* to firm ones |
+| by default | set 2+ business days ahead | a standing profile over a period |
+
+Day-ahead gate closure is 12:00. **Firm pre-market nomination is optional**, so
+a domestic contract can be nominated after the day-ahead prices are known.
+
+**What that does and does not mean — an inference, not yet checked.** The
+formal nomination can follow the auction, but the allocation probably cannot
+move freely after it. Iberdrola's retail units bid their demand into the
+auction by 12:00, and the energy they buy there plus the energy they receive
+bilaterally has to cover their customers' consumption. So the retail demand bid
+must already anticipate the self-supply, which means the hour profile of the
+self-supply is effectively committed at gate closure and formalised at 13:00.
+Testable: if that is right, `ICLIC01`'s auction purchases should be low exactly
+in the hours where the hydro bilateral is high.
+
+**Why it matters for the design.** For a vertically integrated firm that
+self-supplies, the price incentive in an hour runs through its *net* auction
+position: generation sold minus retail demand bought. The descriptive chapter
+already bounds Iberdrola as a net day-ahead **buyer** (§4.5 there). A net buyer
+gains from a *lower* price, so shifting its own water into the evening
+self-supply, and buying less in the auction then, is the direction a net buyer
+with market power would choose. It is also what a price-taker would do, since
+evening prices are higher. Only a benchmark allocation separates the two.
+
 ## 4. Specification (to build)
 
 ```
@@ -352,8 +396,8 @@ X_fh = (q_fh − θ_fh) / |RD′_fh|,   tilde = deviation from the firm-day mean
    because their auction offers are residuals. It stands for EDP, Movhera and
    Repsol, whose auction offers carry the allocation. What is still unseen is
    reserve and redispatch after the intraday market (ESIOS, token required),
-   and when bilateral schedules are nominated relative to the auction, which
-   decides whether they can respond to day-ahead prices at all.
+   Timing is now settled (§3.8): domestic bilaterals may be nominated after the
+   auction, and Iberdrola's are self-supply to its own retail units.
 
 ## 6. What would kill it
 
@@ -380,9 +424,13 @@ X_fh = (q_fh − θ_fh) / |RD′_fh|,   tilde = deviation from the firm-day mean
    across all three routes (`hydro_schedule_routes.parquet`). Testing whether
    that hour profile tilts away from the hours where the firm's residual demand
    is steepest is route-agnostic, so it covers Iberdrola too. The offer-based
-   test (§2, §4) survives as a second test on EDP, Movhera and Repsol. Before
-   building, establish from the market rules when bilateral schedules are
-   nominated relative to the day-ahead auction.
+   test (§2, §4) survives as a second test on EDP, Movhera and Repsol. The
+   nomination rules are settled (§3.8). For Iberdrola the quantity to model is
+   the **net** auction position, so it needs `ICLIC01`'s demand bids as well as
+   the hydro schedule.
+2d. **Check the self-supply inference first** (§3.8): `ICLIC01`'s hourly auction
+   purchases against the hydro bilateral schedule. Then trace the bilateral
+   counterparties for Endesa before 2024 and Naturgy from 2022.
 3. **X_fh:** join the firm slope panel, and compute (q−θ) on the whole
    portfolio, with q from PDBF as in `hortacsu_puller_test.py`.
 4. **Storage-hours per unit**, from MITECO reservoir capacity. Needs a

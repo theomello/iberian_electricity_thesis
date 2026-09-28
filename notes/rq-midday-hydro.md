@@ -301,15 +301,32 @@ appear in REE's November 2020 guide to physical bilateral contracts):
 Day-ahead gate closure is 12:00. **Firm pre-market nomination is optional**, so
 a domestic contract can be nominated after the day-ahead prices are known.
 
-**What that does and does not mean — an inference, not yet checked.** The
-formal nomination can follow the auction, but the allocation probably cannot
-move freely after it. Iberdrola's retail units bid their demand into the
-auction by 12:00, and the energy they buy there plus the energy they receive
-bilaterally has to cover their customers' consumption. So the retail demand bid
-must already anticipate the self-supply, which means the hour profile of the
-self-supply is effectively committed at gate closure and formalised at 13:00.
-Testable: if that is right, `ICLIC01`'s auction purchases should be low exactly
-in the hours where the hydro bilateral is high.
+**Is the allocation committed at gate closure? Tested — partly, and not the
+way first inferred.** The inference was that Iberdrola's retail units, which bid
+their demand into the auction by 12:00, would bid for less in the hours where
+they expect hydro self-supply, so the allocation would be committed before the
+13:00 nomination. `scripts/analysis/iberdrola_self_supply.py` regresses, within
+a day, each retail outcome on the hour's hydro self-supply and REE's day-ahead
+demand forecast. It sums over all ten Iberdrola purchase units: the two contract
+counterparties alone bid almost nothing before 2023 (11–143 MWh per hour), when
+Iberdrola's retail demand went through `IBCUC01` (its regulated reference
+supplier) and `IGESC01`.
+
+| response to 1 MWh more hydro self-supply | 8 sample months, 2019-03 → 2025-03 |
+|---|---|
+| demand **bid** volume | −0.15 to +0.14: **not cut** |
+| demand **cleared** | **−0.33 to −0.87** in six months, significant; −0.09 (2022-03) and −0.15 (2025-03) in the others |
+| intraday net purchases | −0.01 to +0.01: **no correction** |
+
+So in high-self-supply hours Iberdrola buys less in the auction, but not by
+bidding for less. The cut runs through the price of its demand bids or through
+the market price itself, and the two cannot be separated here: self-supply
+peaks in the evening, when the price does, so a price-elastic demand bid clears
+less then with no anticipation at all. And since intraday does not absorb it,
+0.13–0.67 of each self-supplied MWh is unaccounted for by these three routes in
+most months. Iberdrola's other bilateral contracts, or imbalance settlement,
+are the remaining candidates. **The allocation is not shown to be committed at
+gate closure, and the net-position framing below rests on that.**
 
 **Why it matters for the design.** For a vertically integrated firm that
 self-supplies, the price incentive in an hour runs through its *net* auction
@@ -428,8 +445,10 @@ X_fh = (q_fh − θ_fh) / |RD′_fh|,   tilde = deviation from the firm-day mean
    nomination rules are settled (§3.8). For Iberdrola the quantity to model is
    the **net** auction position, so it needs `ICLIC01`'s demand bids as well as
    the hydro schedule.
-2d. **Check the self-supply inference first** (§3.8): `ICLIC01`'s hourly auction
-   purchases against the hydro bilateral schedule. Then trace the bilateral
+2d. ~~**Check the self-supply inference**~~ — done 2026-09-28, §3.8. Partly
+   supported: cleared purchases fall with self-supply, bid volumes do not, and
+   part of it is unaccounted for. Still open: Iberdrola's other bilateral
+   contracts (do they offset the hydro one hour by hour?), and the bilateral
    counterparties for Endesa before 2024 and Naturgy from 2022.
 3. **X_fh:** join the firm slope panel, and compute (q−θ) on the whole
    portfolio, with q from PDBF as in `hortacsu_puller_test.py`.

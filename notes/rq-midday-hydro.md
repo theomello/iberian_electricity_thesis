@@ -5,9 +5,10 @@ Written 2026-09-28. **A sketch, not a spec.** It follows from §4.3, §4.4 and
 and it is built to avoid the thing that killed the eight earlier conduct designs:
 it needs **no marginal cost at all**, not even a water value.
 
-Probe: `scripts/analysis/hydro_within_day_probe.py`, which reproduces every
-number in §3 and threat 8. 8 sample months, 30 storage-hydro sell units,
-30.2 GW. Every number below is **[preliminary]**.
+Probe: `scripts/analysis/hydro_within_day_probe.py`, 30 storage-hydro sell
+units, 30.2 GW. Run bare, it reproduces the 8-sample-month figures; `--all`
+gives the full-archive figures (2018-01 → 2026-06). The break dating in §3.6 is
+`scripts/analysis/hydro_flat_break.py`. Every number below is **[preliminary]**.
 
 ---
 
@@ -100,39 +101,49 @@ The median within-day SD is **0.00 €/MWh**, against a median between-day SD of
 them**, which is what bidding a daily water value predicts. The within-day
 channel exists on about half the unit-days and is growing.
 
+**On the full archive it is a step, not a slide.** The flat share by year is
+0.65, 0.67, 0.64, 0.71, 0.73, 0.72 for 2018–2023, then 0.55, 0.44 and 0.51 for
+2024–2026.
+
 ### 3.2 The firms differ, and Iberdrola's behaviour changed
 
-Flat share by group, 2019–2022 sample months against 2024–2026:
+Flat share by group and year, full archive:
 
-| group | early | late |
-|---|---|---|
-| **Iberdrola** | **0.90** | **0.48** |
-| Repsol | 0.69 | 0.39 |
-| EDP | 0.31 | 0.41 |
-| Naturgy | 0.22 | 0.19 |
-| Endesa | 0.17 | 0.13 |
-| Movhera | 0.13 | 0.06 |
+| group | 2018 | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 |
+|---|---|---|---|---|---|---|---|---|---|
+| **Iberdrola** | 0.79 | 0.79 | 0.87 | 0.91 | 0.91 | 0.87 | **0.56** | **0.34** | **0.43** |
+| Repsol | 0.74 | 0.55 | 0.73 | 0.62 | 0.68 | 0.65 | **0.28** | 0.41 | 0.21 |
+| EDP | 0.38 | 0.37 | 0.33 | 0.36 | 0.29 | 0.32 | 0.35 | 0.38 | 0.39 |
+| Naturgy | 0.16 | 0.25 | 0.14 | 0.23 | 0.13 | 0.17 | 0.13 | 0.10 | 0.22 |
+| Endesa | 0.09 | 0.16 | 0.14 | 0.10 | 0.09 | 0.01 | 0.07 | 0.07 | 0.17 |
+| Movhera | — | — | — | 0.30 | 0.18 | 0.18 | 0.04 | 0.04 | 0.14 |
 
-The largest Spanish hydro owner went from almost always flat to flat on less
-than half its days. **When** that happened is the first thing to establish on
-the full archive, since a dated break is far more informative than a trend.
+The two groups that were mostly flat, Iberdrola and Repsol, both change in
+2024. The others were never mostly flat and do not change. §3.6 dates
+Iberdrola's change.
 
-### 3.3 The midday deviation reversed sign
+### 3.3 The midday deviation reversed sign, peaked in 2023, and is fading
 
 On non-flat unit-days, mean deviation of the p50 offer from the unit's own daily
-mean, in €/MWh:
+mean, in €/MWh, full archive:
 
-| hour | 2019-01 | 2019-07 | 2024-04 | 2024-07 | 2025-04 |
-|---|---|---|---|---|---|
-| 13 | −7.1 | −9.9 | **+24.3** | **+26.1** | **+10.5** |
-| 16 | +1.5 | +6.1 | +19.7 | +20.4 | +13.8 |
-| 21 | −14.6 | −2.9 | −4.6 | **−52.9** | −5.5 |
+| hour | 2018 | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 |
+|---|---|---|---|---|---|---|---|---|---|
+| 13 | −7.4 | −1.0 | +0.5 | +5.2 | +13.7 | **+32.8** | +19.0 | +7.5 | +6.8 |
+| 16 | +1.3 | +4.9 | +5.6 | +9.1 | +27.1 | +30.3 | +14.8 | +6.4 | +0.1 |
+| 21 | −15.2 | −9.9 | −13.2 | −24.1 | **−62.1** | −33.7 | −27.5 | −20.2 | −5.1 |
 
-Before the solar build-out, midday offers sat at or below the daily mean. Now
-hydro units ask more at solar noon and less in the evening. That is the
+Before the solar build-out, midday offers sat at or below the daily mean; from
+2021 hydro units asked more at solar noon and less in the evening. That is the
 direction market power predicts if residual demand is steepest at midday. But
 it is also consistent with the physical constraints in §5, so it is a
 motivating fact, not a result.
+
+**The first draft of this section, on 8 sample months, overstated 2024–25.**
+The midday premium peaked in 2023 at +32.8 and has fallen back since, to
++19.0 in 2024, +7.5 in 2025 and +6.8 in 2026. The
+selected non-flat days also exaggerate it (see §3.6: across *all* of
+Iberdrola's unit-days the midday shift is about 3 €/MWh).
 
 ### 3.4 No withholding on quantity by hour
 
@@ -146,15 +157,82 @@ the day. The hour-to-hour margin is **price, not quantity**. Two consequences:
 ### 3.5 The naive link has the right sign and almost no size
 
 Within unit-day, regressing the p50 deviation on the deviation of
-log |RD′_fh| gives −1.31 (2019–2022 months) and −1.01 (2024–2026). The sign is
-correct: a flatter residual demand means a lower offer. The correlations are
-−0.04 and −0.02, and this is OLS on an endogenous regressor with no
-instrument, no (q−θ) term and no clustering. It also covers only **83,180 of
-180,862** unit-periods (46%). Two filters compound: the firm slope panel keeps
+log |RD′_fh| gives −1.31 (2019–2022 months) and −1.01 (2024–2026) on the sample
+months, and −1.18 (before 2024) and −1.36 (2024 on) on the full archive. The
+sign is correct: a flatter residual demand means a lower offer. The
+correlations are −0.02 to −0.04, and this is OLS on an endogenous regressor
+with no instrument, no (q−θ) term and no clustering. It also covers only
+**83,180 of 180,862** unit-periods on the sample months (46%), and 978,299 of
+2,115,754 on the full archive. Two filters compound: the firm slope panel keeps
 only periods with p* > 0 and no market splitting (threat 7), which 77% of
 unit-periods survive, and p50 is then undefined wherever a unit offers under
 half its capacity. **Do not read anything into it except that it is not
 wrong-signed.**
+
+### 3.6 Dating Iberdrola's break: a staggered rollout in mid-2024, not an event
+
+`hydro_flat_break.py`, on the six Iberdrola units present across the whole
+archive (Tâmega was commissioned in 2022 and is reported but not pooled).
+Least-squares single mean shift on the daily share of flat unit-days, with
+Bai's (1994) 95% interval.
+
+**The robust break is in the price at 50% of capacity: 2024-06-29, interval
+2024-06-24 → 2024-07-04.** The flat share falls from 0.92 to 0.39 and the step
+explains 70% of the daily variance. The week-by-week share goes 0.71, 0.62, 0.43,
+0.33 through the weeks of 23 June to 14 July 2024. The share of unit-days on
+which p50 can be scored stays at 0.62–0.97 throughout, so this is not a change
+in censoring.
+
+**But the units did not move together.** Per-unit breaks in the same measure:
+
+| unit | break | flat share before → after |
+|---|---|---|
+| Tajo | 2023-12-02 | 0.84 → 0.21 |
+| Tâmega (PT) | 2024-01-29 | 0.85 → 0.48 |
+| La Muela | 2024-02-08 | 0.96 → 0.54 |
+| **Ebro** | **2024-06-25** (±5 days) | **0.99 → 0.20** |
+| Duero | 2024-08-14 | 0.90 → 0.21 |
+| Sil | 2024-08-16 | 0.94 → 0.19 |
+| Júcar | 2025-02-14 | 1.00 → 0.80 (barely moves) |
+
+So "Iberdrola's break" is a rollout over about nine months, with the bulk in
+June–August 2024. **No dated event lines up.** The rollout *starts* within weeks
+of the clawback (RDL 17/2021) and the gas cap (RDL 10/2022) both ending on
+2023-12-31, but the group date is 180 days after that, and nothing else on the
+list (the 2025 SDAC and MTU changes, the blackout) is close.
+
+**One apparent earlier break was an artefact.** A first version measured
+whether the unit used the same *set* of step prices all day, and found a sharp
+break on 2023-01-03, with Ebro and Júcar changing on that exact date. It was a
+**0.1 MW step at 0 €/MWh** that Iberdrola adds in some hours and not others: on
+2023-03-15 Ebro offers its whole 183 MW at 498 €/MWh in every hour, and the
+token step is the only thing that varies. Ignoring steps under 1 MW removes
+most of that break (the step's share of explained variance falls from 0.50 to
+0.20) and Ebro's and Júcar's entirely.
+
+**What changed, a year either side of 2024-06-29**, as the mean deviation of the
+p50 offer from its unit-day mean, across *all* unit-days:
+
+| hour | 02 | 05 | 08 | 11 | 13 | 15 | 18 | 20 | 21 | 22 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| before | −1.2 | −3.1 | +3.5 | −0.5 | −1.1 | −1.6 | −2.7 | −1.1 | +6.0 | +7.9 |
+| after | −4.1 | −3.7 | +0.9 | +2.6 | +2.0 | +1.5 | +0.2 | +4.3 | +4.2 | +4.9 |
+
+Midday offers rose by about 3 €/MWh relative to the day and the evening premium
+shrank. That is the direction §2 predicts, but the average is small because it
+averages large, discrete switches (next paragraph) over many unchanged days.
+
+**The within-day variation is bimodal, not a smooth markup.** Where Iberdrola's
+offers vary, the same point on the curve jumps by roughly 300–490 €/MWh between
+hours of one day: a tranche is offered cheaply in some hours and at a price-out
+level (384–498 €/MWh) in others. On 2024-03-13 Tajo offers 265 MW at 10 €/MWh
+in periods 11–18, clearing in the two where the price reaches it (10.00 and
+21.62 €/MWh), and prices itself out in periods 20–23, when the clearing price
+is 68–134 €/MWh. That is the
+unit choosing its own hours rather than letting a flat water value choose them.
+It is also the *opposite* of what either competitive water-value bidding or
+midday market power predicts for a storage plant, which is what threat 9 is
+about.
 
 ## 4. Specification (to build)
 
@@ -180,6 +258,11 @@ X_fh = (q_fh − θ_fh) / |RD′_fh|,   tilde = deviation from the firm-day mean
 - **Inference.** Cluster on date. There are only six firms, so any difference
   *between* firms is descriptive (the 32-firm ceiling, §7 of the descriptive
   note, binds harder here).
+- **The outcome may need to be discrete.** §3.6 shows the variation is a tranche
+  switching between a low price and a price-out level, not a continuous
+  markup. A linear β on the p50 deviation averages those switches. The better
+  object may be the probability that a given tranche is priced out in hour *h*,
+  set against X̃_fh. Decide this before building.
 
 ## 5. Threats, and how each is handled
 
@@ -194,10 +277,12 @@ X_fh = (q_fh − θ_fh) / |RD′_fh|,   tilde = deviation from the firm-day mean
    capacity ÷ turbine MW, i.e. hours of storage). **The prediction is that β is
    larger for large seasonal reservoirs**, where the constant-λ assumption
    holds. If β is larger for small ones, the constraint story wins.
-3. **Pumped storage is a different object.** La Muela and the Portuguese
-   bombagem units buy at midday. They are excluded from the main sample and are
-   a natural second object: pumping *demand* bids at midday should be the mirror
-   image.
+3. **Pumped storage is a different object.** La Muela's pumping leg and the
+   Portuguese bombagem units buy at midday, and are not in the sample. La
+   Muela's *turbine* leg (MUEL) is in the descriptive sample, but pumping refills
+   it, so its λ is tied to the pumping price rather than to a fixed daily water
+   budget: treat it separately in estimation. The pumping bids are a natural
+   second object, as the mirror image.
 4. **A firm's portfolio moves X.** Iberdrola's midday solar output raises
    `q_fh` exactly at noon. That is not a threat, because it is the incentive
    the FOC says matters. But it means the **(q−θ) term must be computed on the
@@ -218,6 +303,15 @@ X_fh = (q_fh − θ_fh) / |RD′_fh|,   tilde = deviation from the firm-day mean
    minimum-income term or an SCO (Scalable Complex Order) in 2019-07, 2024-04 or
    2026-04 (0 of 806, 900 and 894 unit-days). Storage hydro submits simple
    hourly offers.
+9. **Capacity held for another market.** Tajo pricing itself out of the
+   *evening* day-ahead peak (§3.6) fits neither competitive water-value bidding
+   nor midday market power. It fits capacity reserved elsewhere: the balancing
+   reserve band, the intraday sessions, or technical-constraint redispatch,
+   where hydro is a main provider. If so, day-ahead offers measure what is left
+   after that allocation, and an evening price-out is an opportunity cost, not
+   withholding. The intraday bids are on disk; reserve and redispatch
+   quantities are ESIOS data and need the token. This has to be checked before
+   any midday result is read as conduct.
 
 ## 6. What would kill it
 
@@ -232,13 +326,15 @@ X_fh = (q_fh − θ_fh) / |RD′_fh|,   tilde = deviation from the firm-day mean
 
 ## 7. Build order
 
-1. **Full-archive unit-hour offer panel** for storage hydro, 2018 → 2026-06:
-   quantile prices, a flat flag, offered volume and cleared volume. This
-   extends the probe and is cheap.
-2. **Descriptive first:** the flat share by firm and month, and when
-   Iberdrola's break happened. Run this before any regression, following the
-   lesson of the spill-window design: look at the event-time shape before
-   believing a coefficient.
+1. ~~**Full-archive unit-hour offer panel**~~ — done 2026-09-28,
+   `hydro_within_day_probe.py --all`, 2,115,754 unit-periods.
+2. ~~**Descriptive first:** the flat share by firm and year, and when
+   Iberdrola's break happened~~ — done 2026-09-28, §3.2 and §3.6. The answer
+   is a staggered rollout across units in 2024, not one date.
+2b. **Threat 9 before anything else.** Check whether Iberdrola's evening
+   price-outs coincide with intraday sales or reserve provision by the same
+   units. It decides whether the design survives, and it is cheaper than
+   anything below.
 3. **X_fh:** join the firm slope panel, and compute (q−θ) on the whole
    portfolio, with q from PDBF as in `hortacsu_puller_test.py`.
 4. **Storage-hours per unit**, from MITECO reservoir capacity. Needs a

@@ -3,8 +3,12 @@
 
     .venv/bin/python scripts/analysis/hydro_within_day_probe.py
     .venv/bin/python scripts/analysis/hydro_within_day_probe.py 202404 202504
+    .venv/bin/python scripts/analysis/hydro_within_day_probe.py --all
 
-Reproduces every number in `notes/rq-midday-hydro.md` §3 and threat 8.
+With no arguments, reproduces every number in `notes/rq-midday-hydro.md` §3
+and threat 8, on its 8 sample months. `--all` runs every month in the bid
+archive, reports by year instead of by month, and writes
+`hydro_within_day_probe_full.parquet` -- the input to `hydro_flat_break.py`.
 
 WHY THIS EXISTS
 
@@ -40,11 +44,13 @@ nothing more.
 """
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -56,6 +62,8 @@ GROUPS = DATA / "omie/registry/owner_groups.parquet"
 PRICES = DATA / "omie/prices/omie_day_ahead_prices.parquet"
 FIRM_SLOPE = ROOT / "outputs/tables/firm_residual_demand_full_owner.parquet"
 OUT = ROOT / "outputs/tables/hydro_within_day_probe.parquet"
+OUT_FULL = ROOT / "outputs/tables/hydro_within_day_probe_full.parquet"
+BIDS = DATA / "omie/bids/parquet"
 
 MONTHS = ["201901", "201907", "202104", "202204", "202404", "202407", "202504", "202604"]
 PROFILE_HOURS = [4, 9, 13, 16, 21]
@@ -77,8 +85,8 @@ def build(months: list[str], cap: pd.DataFrame) -> pd.DataFrame:
     prices["date"] = pd.to_datetime(prices["date"])
     rows = []
     for m in months:
-        t = pd.read_parquet(DATA / f"omie/bids/parquet/bids_{m}.parquet")
-        t = t[t.unit.isin(cap.unit) & (t.side == "V")]
+        t = pq.read_table(BIDS / f"bids_{m}.parquet",
+                          filters=[("unit", "in", list(cap.unit)), ("side", "==", "V")]).to_pandas()
         offered = t[t.status == "O"]
         q = quantile_prices(offered, cap)
         cleared = (t[t.status == "C"].groupby(["date", "period", "unit"]).power_mw.sum()
@@ -90,6 +98,7 @@ def build(months: list[str], cap: pd.DataFrame) -> pd.DataFrame:
         q = q.merge(prices, on=["date", "period"], how="left")
         q["month"] = m
         rows.append(q)
+        print(f"  {m}: {len(q):,} unit-periods", flush=True, file=sys.stderr)
     d = pd.concat(rows, ignore_index=True)
 
     g = d.groupby(["unit", "date"])
@@ -100,6 +109,8 @@ def build(months: list[str], cap: pd.DataFrame) -> pd.DataFrame:
     d["p50_censored"] = d.p50.isna()
     d["hh"] = d.hour.clip(upper=24)
     d["late"] = d.month >= "2024"
+    # Reports aggregate by month for a handful of months and by year otherwise.
+    d["key"] = d.month if d.month.nunique() <= 12 else d.month.str[:4]
     return d
 
 
@@ -110,26 +121,31 @@ def report(d: pd.DataFrame, cap: pd.DataFrame) -> None:
 
     # §3.1 -- flat share and dispersion, on unit-days with >= 20 defined periods
     for col in ("p25", "p50"):
-        ud = d.dropna(subset=[col]).groupby(["month", "unit", "date"])[col]
+        ud = d.dropna(subset=[col]).groupby(["key", "month", "unit", "date"])[col]
         stat = ud.agg(["std", "min", "max", "count"])
         stat = stat[stat["count"] >= 20]
         flat = (stat["max"] - stat["min"]) < 0.01
-        between = ud.mean().groupby(["month", "unit"]).std().groupby("month").median()
+        between = (ud.mean().groupby(["key", "month", "unit"]).std()
+                   .groupby("key").median())
         print(f"§3.1 {col}: flat unit-days and dispersion")
-        print(pd.DataFrame({"flat_share": flat.groupby("month").mean().round(3),
-                            "median_within_day_sd": stat["std"].groupby("month").median().round(2),
+        print(pd.DataFrame({"flat_share": flat.groupby("key").mean().round(3),
+                            "median_within_day_sd": stat["std"].groupby("key").median().round(2),
                             "median_between_day_sd": between.round(2),
-                            "unit_days": stat.groupby("month").size()}).to_string(), "\n")
+                            "unit_days": stat.groupby("key").size()}).to_string(), "\n")
 
     # §3.2 -- flat share by owner group, 2019-2022 against 2024-2026 months
     ud = d.drop_duplicates(["unit", "date"])
-    print("§3.2 flat share by group (late = 2024-2026 months)")
-    print(ud.groupby(["group", "late"]).flat.mean().unstack().round(2).to_string(), "\n")
+    if d.key.nunique() == d.month.nunique():
+        print("§3.2 flat share by group (late = 2024-2026 months)")
+        print(ud.groupby(["group", "late"]).flat.mean().unstack().round(2).to_string(), "\n")
+    else:
+        print("§3.2 flat share by group and year")
+        print(ud.groupby(["group", "key"]).flat.mean().unstack().round(2).to_string(), "\n")
 
     # §3.3 and §3.4 -- hour profiles
     nonflat = d[~d.flat & d.p50.notna()]
-    for m in sorted(d.month.unique()):
-        s, n = d[d.month == m], nonflat[nonflat.month == m]
+    for m in sorted(d.key.unique()):
+        s, n = d[d.key == m], nonflat[nonflat.key == m]
         prof = pd.DataFrame({
             "nonflat_p50_dev": n.groupby("hh").p50_dev.mean(),
             "offered_over_cap": s.groupby("hh").off_share.median(),
@@ -155,7 +171,7 @@ def slope_check(d: pd.DataFrame) -> None:
     for late, s in m.groupby("late"):
         b = np.polyfit(s.lslope_w, s.p50_w, 1)[0]
         r = s[["lslope_w", "p50_w"]].corr().iloc[0, 1]
-        print(f"  {'2024-2026' if late else '2019-2022'}: slope {b:.2f}, corr {r:.3f}, n {len(s):,}")
+        print(f"  {'2024 on' if late else 'before 2024'}: slope {b:.2f}, corr {r:.3f}, n {len(s):,}")
     print()
 
 
@@ -171,15 +187,23 @@ def complex_conditions(cap: pd.DataFrame, months=("201907", "202404", "202604"))
 
 
 def main() -> int:
-    months = sys.argv[1:] or MONTHS
+    ap = argparse.ArgumentParser()
+    ap.add_argument("months", nargs="*", help="YYYYMM; default the note's 8 months")
+    ap.add_argument("--all", action="store_true", help="every month in the bid archive")
+    args = ap.parse_args()
+    if args.all:
+        months = sorted(f.stem.split("_")[1] for f in BIDS.glob("bids_*.parquet"))
+    else:
+        months = args.months or MONTHS
     cap = storage_hydro()
     d = build(months, cap)
     report(d, cap)
     slope_check(d)
     complex_conditions(cap)
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    d.to_parquet(OUT, index=False)
-    print(f"\nwrote {OUT.relative_to(ROOT)}  ({len(d):,} unit-periods)")
+    out = OUT_FULL if args.all else OUT
+    out.parent.mkdir(parents=True, exist_ok=True)
+    d.to_parquet(out, index=False)
+    print(f"\nwrote {out.relative_to(ROOT)}  ({len(d):,} unit-periods)")
     return 0
 
 

@@ -424,10 +424,62 @@ hours where EDP is a net buyer, when market power would push its offers *down*.
 It coincides with the shift of pumping to midday, which is the more natural
 reading: a cascade that is pumping at noon has little reason to also generate.
 
+### 3.10 The solar instrument: offered solar survives, clear-sky does not
+
+`scripts/build/build_solar_instrument.py` →
+`outputs/tables/solar_instrument.parquet`, one row per day-ahead period, three
+candidates:
+
+- `z_clear` — clear-sky irradiance (Haurwitz model on its own solar geometry,
+  averaged over the four `solar` sites of `fetch_weather.py`) × installed solar
+  capacity.
+- `z_weather` — ERA5 surface irradiance at the same sites × capacity.
+- `z_offered` — solar volume offered in the day-ahead auction by the 1,526
+  solar-labelled supply units not owned by EDP. Solar-labelled units clear
+  88–96% of REE's realised Spanish solar, so the bids record the D−1 forecast
+  directly. Offered, not cleared, because clearing depends on the price.
+
+Checks: the ERA5 stamp is the mean over the preceding hour, tested against the
+clear-sky model rather than assumed (correlation 0.907, against 0.83–0.89 for
+shifted readings); correlations with realised solar 0.88, 0.92 and 0.95;
+capacity proxy — the running maximum of REE's peak solar output plus Portugal's
+published installed solar — 6.4 GW (2018) to 31.9 GW (2026), below published
+capacity as a peak-output proxy should be.
+
+**First stage** (`scripts/analysis/solar_first_stage.py`): EDP's X on each
+instrument, REE demand-forecast control, day or unit-day fixed effects, errors
+clustered on date. The trend test swaps hour × calendar-month fixed effects for
+hour × year-month, which absorb capacity growth at every hour.
+
+| | all EDP periods, F | | price-setting periods, F | |
+|---|---|---|---|---|
+| instrument | hour × month | **hour × year-month** | hour × month | **hour × year-month** |
+| `z_clear` | 257 | 19.6 | 85 | **3.2** ✗ |
+| `z_weather` | 375 | 97 | 103 | 10.0 |
+| **`z_offered`** | 587 | **180** (t = −13.4) | 122 | **26.4** (t = −5.1) |
+
+- **`z_clear` identified from the capacity trend** and collapses once it is
+  absorbed. Rejected.
+- **`z_offered` survives**: day-to-day solar weather moves X. One more GW of
+  offered solar lowers X by about 1.1–1.6 €/MWh, the direction expected when
+  more solar lowers midday residual demand where EDP is a net buyer. By era, on
+  all periods: F = 118, 44, 124. On the price-setting sample: 45, **5.1**
+  (2021–23, 2,838 observations — weak), 17.
+- **`z_weather` adds nothing once `z_offered` is in**, as expected if the
+  bidders' forecast is the channel.
+
+**Exclusion — what remains open.** (1) Heat: controlled with the demand
+forecast, not ruled out. (2) `z_offered` is a *bid* quantity; the large
+owners' solar offers are partly a choice and may respond to the same price
+expectations. Robustness: rebuild it from independent solar owners only. (3)
+Within-day solar shape should not move a storage plant's daily water value,
+which the day fixed effect absorbs; a daily-cycling reservoir (threat 2) is the
+exception.
+
 ## 4. Specification (to build)
 
 ```
-b_ih − b̄_i,d = β · X̃_fh + γ_i,hour-of-day + δ_hour × month + ε_ih
+b_ih − b̄_i,d = β · X̃_fh + γ_i,hour-of-day + δ_hour × year-month + ε_ih
 X_fh = net_fh / |RD′_fh|,   net = cleared sales − cleared purchases, all the firm's units
 tilde = deviation from the firm-day mean
 ```
@@ -439,13 +491,17 @@ tilde = deviation from the firm-day mean
   profiles: environmental minimum flows, habitual ramps, cascade coordination.
   After them, β is identified from **day-to-day changes in the shape of the
   day**, not from the average midday-versus-evening contrast.
-- **Instrument for X̃.** |RD′| is built from rivals' bids submitted at the
-  same time, so it is endogenous. Use the **clear-sky solar profile** (pure
-  astronomy, hour × day of year) × installed solar capacity. It shifts where
-  residual demand meets the rival stack, and so its slope. It needs no
-  forecast, which avoids the realised-weather flaw that sank the rain probes.
-  Installed capacity has no token-free Spanish source; use the monthly maximum
-  of REE's 5-minute solar output as a proxy.
+- **Instrument for X̃: day-ahead offered solar (`z_offered`), with hour ×
+  YEAR-month fixed effects — revised 2026-09-28, §3.10.** The first plan was
+  the clear-sky profile × installed capacity. Under the fixed effects that is
+  almost entirely absorbed, and what survives is capacity *growth* — a trend,
+  and a weak exclusion restriction. It fails the trend test (§3.10). The
+  instrument that survives is the solar volume offered in the day-ahead auction
+  by solar units other than EDP's: the D−1 forecast as bid, so it varies with
+  the weather day to day. Hour × year-month fixed effects (not hour × calendar
+  month) take out capacity growth at every hour. REE's day-ahead demand
+  forecast is a control throughout, because sunny days are hot and heat moves
+  prices through demand.
 - **Inference.** Cluster on date. There are only six firms, so any difference
   *between* firms is descriptive (the 32-firm ceiling, §7 of the descriptive
   note, binds harder here).
@@ -559,6 +615,12 @@ tilde = deviation from the firm-day mean
    decile of periods from 2023.
 4. **Storage-hours per unit**, from MITECO reservoir capacity. Needs a
    reservoir → OMIE unit match, which is new work.
-5. **Clear-sky instrument**, then the first stage.
+5. ~~**Clear-sky instrument**, then the first stage~~ — done 2026-09-28, §3.10.
+   The clear-sky version is rejected; `z_offered` is the instrument.
+5b. **Second stage** on the price-setting sample: p* on X̃ instrumented by
+   `z_offered`, unit-day and hour × year-month FE, demand-forecast control,
+   clustered on date. Report 2021–23 separately (first-stage F = 5.1 there).
+   Then robustness: `z_offered` from independent solar owners only, since the
+   big owners' offered volume is also a choice.
 6. **Estimate**, with placebos: run-of-river units (no daily λ, so they should
    be flat at about €0), and pumping units as the mirror image.

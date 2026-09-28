@@ -230,9 +230,51 @@ in periods 11–18, clearing in the two where the price reaches it (10.00 and
 21.62 €/MWh), and prices itself out in periods 20–23, when the clearing price
 is 68–134 €/MWh. That is the
 unit choosing its own hours rather than letting a flat water value choose them.
-It is also the *opposite* of what either competitive water-value bidding or
-midday market power predicts for a storage plant, which is what threat 9 is
-about.
+It looked like the *opposite* of what either competitive water-value bidding or
+midday market power predicts for a storage plant. §3.7 resolves it: in those
+evening hours Tajo was running at 1,403 MW on a bilateral contract.
+
+### 3.7 Where the energy goes: Iberdrola's auction offer is a residual
+
+`hydro_schedule_routes.py`, full archive, 1,506,249 unit-hours. Each storage
+unit's scheduled energy is split into three published routes: the physical
+bilateral contract schedule (PDBF role 4), day-ahead cleared volume, and net
+intraday volume. PDBF's own auction row matches the bid files' cleared volume
+to 0.00%.
+
+**The groups use completely different routes:**
+
+| group | bilateral share of scheduled energy | change |
+|---|---|---|
+| Iberdrola | 0.54–0.73 every year | none at the 2024 break |
+| Endesa | 0.77–0.93 to 2023 | **0.50, 0.38, 0.34 in 2024–2026** |
+| Naturgy | ~0.00 to 2021 | **0.80–0.97 from 2022** |
+| EDP, Movhera, Repsol | 0.00–0.07 | none |
+
+Intraday net volume is small everywhere (Iberdrola 0–8%), so priced-out
+capacity is not being moved to intraday.
+
+**At midday, almost none of Iberdrola's hydro clears in the auction.** A year
+either side of its break, the auction carries 18–19 MWh per unit-hour at
+midday against 154–172 MWh of bilateral schedule. The bilateral schedule does
+the within-day shaping: 344 MWh per unit-hour in the evening against 172 at
+midday.
+
+**The direct test: within a unit-day, priced-out hours are the hours the unit
+runs most.** In Iberdrola's 864 unit-days that contain both kinds of hour, the
+bilateral schedule sits **+166 MWh** above its unit-day mean in hours where the
+p50 offer is priced out (≥ 300 €/MWh and more than 100 above p*), against
+**−111** in the others. Total scheduled output is +154 against −104. For EDP
+(840 unit-days, no bilateral) and Naturgy (71), priced-out hours have *lower*
+output: EDP −27 against +36, Naturgy −47 against +80. Endesa has too few mixed
+days (56) to say.
+
+**So for Iberdrola a price-out marks capacity already committed on contract,
+not withholding, and its auction offers are the residual after the water has
+been allocated.** Iberdrola's 2024 break is a change in how it offers that
+residual, not in how it allocates water, since its bilateral share does not
+move. For EDP, Movhera and Repsol the auction offer *is* the allocation
+decision.
 
 ## 4. Specification (to build)
 
@@ -303,15 +345,15 @@ X_fh = (q_fh − θ_fh) / |RD′_fh|,   tilde = deviation from the firm-day mean
    minimum-income term or an SCO (Scalable Complex Order) in 2019-07, 2024-04 or
    2026-04 (0 of 806, 900 and 894 unit-days). Storage hydro submits simple
    hourly offers.
-9. **Capacity held for another market.** Tajo pricing itself out of the
-   *evening* day-ahead peak (§3.6) fits neither competitive water-value bidding
-   nor midday market power. It fits capacity reserved elsewhere: the balancing
-   reserve band, the intraday sessions, or technical-constraint redispatch,
-   where hydro is a main provider. If so, day-ahead offers measure what is left
-   after that allocation, and an evening price-out is an opportunity cost, not
-   withholding. The intraday bids are on disk; reserve and redispatch
-   quantities are ESIOS data and need the token. This has to be checked before
-   any midday result is read as conduct.
+9. **Capacity allocated through another route — confirmed for Iberdrola,
+   2026-09-28 (§3.7).** Its price-outs are hours already running on bilateral
+   contract, not withholding, and intraday is too small to matter. **The design
+   as written fails for Iberdrola, Endesa before 2024 and Naturgy from 2022**,
+   because their auction offers are residuals. It stands for EDP, Movhera and
+   Repsol, whose auction offers carry the allocation. What is still unseen is
+   reserve and redispatch after the intraday market (ESIOS, token required),
+   and when bilateral schedules are nominated relative to the auction, which
+   decides whether they can respond to day-ahead prices at all.
 
 ## 6. What would kill it
 
@@ -331,10 +373,16 @@ X_fh = (q_fh − θ_fh) / |RD′_fh|,   tilde = deviation from the firm-day mean
 2. ~~**Descriptive first:** the flat share by firm and year, and when
    Iberdrola's break happened~~ — done 2026-09-28, §3.2 and §3.6. The answer
    is a staggered rollout across units in 2024, not one date.
-2b. **Threat 9 before anything else.** Check whether Iberdrola's evening
-   price-outs coincide with intraday sales or reserve provision by the same
-   units. It decides whether the design survives, and it is cheaper than
-   anything below.
+2b. ~~**Threat 9 before anything else**~~ — done 2026-09-28, §3.7. It
+   changes the design; see 2c.
+2c. **Re-base the design on quantities, not offers.** The water allocation is
+   observable directly: each unit's total scheduled energy by hour, summed
+   across all three routes (`hydro_schedule_routes.parquet`). Testing whether
+   that hour profile tilts away from the hours where the firm's residual demand
+   is steepest is route-agnostic, so it covers Iberdrola too. The offer-based
+   test (§2, §4) survives as a second test on EDP, Movhera and Repsol. Before
+   building, establish from the market rules when bilateral schedules are
+   nominated relative to the day-ahead auction.
 3. **X_fh:** join the firm slope panel, and compute (q−θ) on the whole
    portfolio, with q from PDBF as in `hortacsu_puller_test.py`.
 4. **Storage-hours per unit**, from MITECO reservoir capacity. Needs a

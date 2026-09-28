@@ -95,7 +95,12 @@ def first_stage(df: pd.DataFrame, zs: list[str], fes: list[str], label: str) -> 
     print(f"  {label:34s} n={len(d):>8,}  F={wald / k:8.1f}   {terms}")
 
 
-def main() -> int:
+def load_edp_sample(panel_cols: tuple[str, ...] = ()) -> pd.DataFrame:
+    """EDP's unit-periods with the instruments, the demand forecast and FE keys.
+
+    Shared with `midday_hydro_iv.py`, so the first and second stage run on
+    exactly the same rows.
+    """
     s = pd.read_parquet(SOLAR)
     s["date"] = pd.to_datetime(s.date)
     fc = pd.read_parquet(DATA / "ree/ree_demand_forecast_5min.parquet",
@@ -107,20 +112,30 @@ def main() -> int:
         m = fc.set_index("ts").demand_forecast_mw.resample(f"{res}min").mean()
         parts.append(pd.Series(m.reindex(pd.DatetimeIndex(g.start)).to_numpy(), index=g.index))
     s["fcst"] = pd.concat(parts)
+    zcols = [c for c in s.columns if c.startswith("z_")]
 
-    p = pd.read_parquet(PANEL, columns=["unit", "date", "period", "hour", "group", "era", "X",
-                                        "marginal"])
+    cols = ["unit", "date", "period", "hour", "group", "era", "X", "marginal", *panel_cols]
+    p = pd.read_parquet(PANEL, columns=list(dict.fromkeys(cols)))
     p = p[p.group == "EDP"]
     p["date"] = pd.to_datetime(p.date)
-    p = p.merge(s[["date", "period", "fcst"] + INSTRUMENTS], on=["date", "period"], how="left")
+    p = p.merge(s[["date", "period", "fcst"] + zcols], on=["date", "period"], how="left")
     p["month"] = p.date.dt.month
     p["hm"] = p.hour.astype(str) + "_" + p.month.astype(str)
     p["hym"] = p.hour.astype(str) + "_" + p.date.dt.strftime("%Y%m")
     p["ud"] = p.unit + "_" + p.date.dt.strftime("%Y%m%d")
+    return p
 
-    firm = p.drop_duplicates(["date", "period"])
+
+def price_setting(p: pd.DataFrame) -> pd.DataFrame:
+    """Unit-periods whose top cleared step is the zone price, in unit-days with 2+."""
     mg = p[p.marginal]
-    mg = mg[mg.groupby("ud").period.transform("size") >= 2]
+    return mg[mg.groupby("ud").period.transform("size") >= 2]
+
+
+def main() -> int:
+    p = load_edp_sample()
+    firm = p.drop_duplicates(["date", "period"])
+    mg = price_setting(p)
 
     print("FIRST STAGE: X on each instrument (coefficient per GW), controls: demand forecast;")
     print("             FE: day (all periods) or unit-day (price-setting) + hour x month;")

@@ -476,6 +476,70 @@ Within-day solar shape should not move a storage plant's daily water value,
 which the day fixed effect absorbs; a daily-cycling reservoir (threat 2) is the
 exception.
 
+### 3.11 The second stage: EDP prices its water flat, except its top tranche from 2024
+
+`scripts/analysis/midday_hydro_iv.py`. X instrumented by `z_offered`; unit-day
+and hour × year-month fixed effects; REE demand-forecast control; errors
+clustered on date; Anderson–Rubin 95% sets in closed form (valid however weak
+the instrument; checked against grid inversion). β = 0 is price-taking, β = 1
+supply-function Nash. **[preliminary]**
+
+**The price-setting version (§2's original test) is invalid, and is kept on the
+record.** On periods where an EDP unit sets the price, 2SLS gives β = **3.6**
+(AR [2.52, 5.95]) — outside [0, 1], so the specification is broken, not the
+market. Two reasons. **Selection**: the sample keeps only price-setting periods,
+and the solar instrument changes which periods those are, so it conditions on
+an outcome of the instrument. **Movement along the unit's own stepped curve**:
+real — 1 GW more solar lowers the marginal unit's cleared volume by 16 MW
+(t = −6.0), and p* rises 0.013 €/MWh per MW of it within a unit-day — but that
+explains only about 5% of the −3.95 €/MWh per GW reduced form.
+
+**The test of record: where EDP's offer curve sits at fixed points**, over all
+550,883 EDP unit-periods. Demand cutting the curve elsewhere cannot move a fixed
+point, and nothing is conditioned on. Offered volume does not move with the
+instrument (−0.0002 of capacity per GW, t = −0.7), so the offered-volume points
+are not a composition artefact.
+
+| point on the curve | 2SLS β | AR 95% set |
+|---|---|---|
+| 25% of offered volume | 0.12 | [0.01, 0.23] |
+| **50% of offered volume** | **0.08** | **[−0.11, 0.27]** |
+| 75% of offered volume | 0.94 | [0.47, 1.45] |
+| 25% of capacity (fixed MW) | 0.14 | [−0.24, 0.56] |
+| 50% of capacity | −0.05 | [−0.65, 0.54] |
+| 75% of capacity | 0.94 | [0.09, 1.82] |
+
+By era, and robustness:
+
+| | 50% of offered | 75% of offered |
+|---|---|---|
+| 2018–20 | −0.05 [−0.63, 0.54] | −0.07 [−0.53, 0.39] |
+| 2021–23 | −0.02 [−0.20, 0.16] | 0.05 [−0.27, 0.37] |
+| **2024–26** | 0.11 [−0.16, 0.41] | **1.47 [0.75, 2.28]** |
+| independent-owner instrument | 0.10 [−0.10, 0.31] | 1.02 [0.53, 1.56] |
+| hour × calendar-month FE | −0.24 [−0.35, −0.13] | 0.48 [0.20, 0.77] |
+
+**What is established, preliminarily.**
+
+- **The bulk of EDP's storage hydro is offered at a flat water value.** At the
+  bottom and middle of the curve β ≈ 0 and β = 1 is rejected in every era and
+  every specification. The exact value in the middle depends on the fixed
+  effects — slightly negative under the calendar-month version that fails the
+  trend test — so read it as *rejects Nash*, not as *precisely zero*.
+- **From 2024 the top quarter of EDP's offered volume moves with its markup
+  term**, roughly one-for-one (β = 1.47, AR [0.75, 2.28]; zero rejected in every
+  specification pooled). Nothing like it before 2024. On sunny middays, when
+  EDP is a net buyer and X is low, those tranches come in cheaper — the
+  direction a net buyer with market power would choose.
+
+**What it cannot yet separate.** EDP's "units" are whole river cascades (Douro,
+Lima, Cávado …), each many plants with different reservoirs. The upper tranches
+may be the small-storage plants in a cascade, whose water cannot wait — a
+competitive within-day water value (threat 2) that would produce the same
+pattern. Only plant-level storage separates the two, and the offers are
+published per cascade, not per plant. The 2024 onset also coincides with EDP's
+pumping having moved to midday (§3.9).
+
 ## 4. Specification (to build)
 
 ```
@@ -617,10 +681,13 @@ tilde = deviation from the firm-day mean
    reservoir → OMIE unit match, which is new work.
 5. ~~**Clear-sky instrument**, then the first stage~~ — done 2026-09-28, §3.10.
    The clear-sky version is rejected; `z_offered` is the instrument.
-5b. **Second stage** on the price-setting sample: p* on X̃ instrumented by
-   `z_offered`, unit-day and hour × year-month FE, demand-forecast control,
-   clustered on date. Report 2021–23 separately (first-stage F = 5.1 there).
-   Then robustness: `z_offered` from independent solar owners only, since the
-   big owners' offered volume is also a choice.
+5b. ~~**Second stage**~~ — done 2026-09-28, §3.11. The price-setting version is
+   invalid (selection); the curve-position version is the test of record.
+6. **Separate the 2024 upper-tranche response from small-storage physics.**
+   Candidates: (a) which EDP cascades carry it — if it is the cascades with the
+   least storage per MW, physics is the better reading; (b) whether the
+   upper-tranche price tracks EDP's *net* position or only the solar shape —
+   the net position is what market power responds to; (c) the pumping legs'
+   own bids as the mirror image.
 6. **Estimate**, with placebos: run-of-river units (no daily λ, so they should
    be flat at about €0), and pumping units as the mirror image.

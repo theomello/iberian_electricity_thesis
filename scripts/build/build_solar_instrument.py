@@ -24,6 +24,10 @@ what should identify. So all three are built and the first stage decides:
                  units, EDP's own excluded. Solar offers at ~0 EUR/MWh, so the
                  offered volume is the D-1 forecast as bid. Offered, not
                  cleared, because clearing depends on the price.
+* `z_offered_indep` -- the same, from independent owners only: every large
+                 integrated group (MAJORS) excluded, since their solar offers
+                 are the most likely to be strategic rather than a forecast.
+                 The robustness version.
 
 Also carried: `kt`, the clearness index (ERA5 / clear-sky, sun above
 50 W/m^2), which is pure weather; and `solar_realised_mw` (REE Spain + REN
@@ -68,7 +72,12 @@ DATA = ROOT / "data"
 OUT = ROOT / "outputs/tables/solar_instrument.parquet"
 BIDS = DATA / "omie/bids/parquet"
 SUN_UP = 50.0   # W/m^2 of clear-sky irradiance below which kt is undefined
-EXCLUDE_OWNERS = {"EDP", "EDP COMERCIAL"}
+EXCLUDE_OWNERS = {"EDP", "EDP COMERCIAL", "EDP DISTRIBUCAO"}
+# Large integrated groups, as named in owner_groups.parquet. TotalEnergies is
+# split across two group names there. IBERDESA is NOT included: nothing checked
+# ties it to Iberdrola beyond the name.
+MAJORS = EXCLUDE_OWNERS | {"IBERDROLA", "ENDESA", "NATURGY", "REPSOL", "ACCIONA",
+                           "TOTAL", "TOTALENERGIES", "ENGIE", "CEPSA"}
 
 
 def clear_sky_ghi(ts_utc: pd.DatetimeIndex, lat: float, lon: float) -> np.ndarray:
@@ -163,15 +172,20 @@ def offered_solar() -> pd.DataFrame:
                         columns=["unit", "role", "tech", "tech_omie", "tech_omie_early", "agent_owner"])
     label = u.tech_omie.fillna(u.tech_omie_early).fillna(u.tech)
     own = u.agent_owner.map(owner_group)
-    keep = (label == "solar") & ~u.role.str.startswith("purchase") & ~own.isin(EXCLUDE_OWNERS)
-    units = sorted(u[keep].unit)
-    print(f"z_offered: {len(units)} solar-labelled supply units, EDP-owned excluded")
+    solar = (label == "solar") & ~u.role.str.startswith("purchase")
+    units = sorted(u[solar & ~own.isin(EXCLUDE_OWNERS)].unit)
+    indep = set(u[solar & ~own.isin(MAJORS)].unit)
+    print(f"z_offered: {len(units)} solar-labelled supply units, EDP-owned excluded; "
+          f"z_offered_indep: {len(indep)} with every major excluded")
     parts = []
     for f in sorted(BIDS.glob("bids_*.parquet")):
         b = pq.read_table(f, columns=["date", "period", "unit", "side", "status", "power_mw"],
                           filters=[("unit", "in", units), ("side", "==", "V"),
                                    ("status", "==", "O")]).to_pandas()
-        parts.append(b.groupby(["date", "period"]).power_mw.sum().rename("z_offered").reset_index())
+        b["indep_mw"] = b.power_mw.where(b.unit.isin(indep), 0.0)
+        g = b.groupby(["date", "period"])[["power_mw", "indep_mw"]].sum()
+        parts.append(g.rename(columns={"power_mw": "z_offered",
+                                       "indep_mw": "z_offered_indep"}).reset_index())
     d = pd.concat(parts, ignore_index=True)
     d["date"] = pd.to_datetime(d.date)
     return d
@@ -198,7 +212,7 @@ def main() -> int:
     d = d.merge(offered_solar(), on=["date", "period"], how="left")
 
     cols = ["date", "period", "resolution_min", "utc_timestamp", "cs", "ghi", "kt", "cap_mw",
-            "z_clear", "z_weather", "z_offered", "solar_realised_mw"]
+            "z_clear", "z_weather", "z_offered", "z_offered_indep", "solar_realised_mw"]
     d = d[cols]
     OUT.parent.mkdir(parents=True, exist_ok=True)
     d.to_parquet(OUT, index=False)
@@ -208,7 +222,7 @@ def main() -> int:
           f"z_offered defined {d.z_offered.notna().mean():.3f}")
     day = d[d.cs > SUN_UP]
     print("  correlation with realised solar, sun-up periods:")
-    for c in ("z_clear", "z_weather", "z_offered"):
+    for c in ("z_clear", "z_weather", "z_offered", "z_offered_indep"):
         ok = day[[c, "solar_realised_mw"]].dropna()
         print(f"    {c:10s} {np.corrcoef(ok[c], ok.solar_realised_mw)[0, 1]:.3f}")
     print("  capacity proxy, MW, June of each year:",

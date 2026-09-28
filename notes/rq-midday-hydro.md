@@ -5,8 +5,10 @@ Written 2026-09-28. **A sketch, not a spec.** It follows from §4.3, §4.4 and
 and it is built to avoid the thing that killed the eight earlier conduct designs:
 it needs **no marginal cost at all**, not even a water value.
 
-Probe: `scripts/analysis/hydro_within_day_probe.py`, 30 storage-hydro sell
-units, 30.2 GW. Run bare, it reproduces the 8-sample-month figures; `--all`
+Probe: `scripts/analysis/hydro_within_day_probe.py`, 25 storage-hydro sell
+units, 26.3 GW (stated as 30 units and 30.2 GW until 2026-09-28, when five
+Portuguese pumping legs were found in the sample; they submit no sell offers,
+so no offer figure below changed). Run bare, it reproduces the 8-sample-month figures; `--all`
 gives the full-archive figures (2018-01 → 2026-06). The break dating in §3.6 is
 `scripts/analysis/hydro_flat_break.py`. Every number below is **[preliminary]**.
 
@@ -25,8 +27,8 @@ Why this one:
   §4.3). Near-margin concentration rose as a step (§5.2). Combined-cycle gas
   left the margin and hydro took about three-quarters of resolved periods (§4.4).
   So the thin, concentrated midday margin is a *hydro* margin.
-- **Few firms own the hydro.** Storage hydro in the sample: EDP 11.7 GW,
-  Iberdrola 10.8 GW, Endesa 3.5 GW, Movhera 2.2 GW, Naturgy 1.7 GW, Repsol
+- **Few firms own the hydro.** Storage hydro in the sample: Iberdrola
+  10.8 GW, EDP 8.3 GW, Endesa 3.5 GW, Movhera 1.7 GW, Naturgy 1.7 GW, Repsol
   0.3 GW. Six groups. If market power lives anywhere at the midday margin, it
   lives here.
 
@@ -53,6 +55,14 @@ b_ih  =  λ_id  +  (q_fh − θ_fh) / |RD′_fh|
   role code 4
 - `|RD′_fh|`: the slope of the residual demand the *firm* faces, which is
   already computed in `firm_residual_demand_full_owner.parquet`
+
+**Measured, `q − θ` is the firm's net auction position**: cleared sales minus
+cleared purchases, over every unit it owns. Physical bilateral energy never
+enters the auction, so it drops out of both terms; and for a firm with a retail
+arm, the retail load bought in the auction is the fixed-price commitment that
+offsets its sales. It is **not** the firm panel's `(q − θ)`, which takes q from
+auction-cleared sales and θ from the bilateral schedule and so subtracts the
+contracts twice (§3.9, and the correction in the descriptive chapter's §4.5).
 
 **A unit × day fixed effect removes λ_id completely.** What remains is:
 
@@ -236,7 +246,9 @@ evening hours Tajo was running at 1,403 MW on a bilateral contract.
 
 ### 3.7 Where the energy goes: Iberdrola's auction offer is a residual
 
-`hydro_schedule_routes.py`, full archive, 1,506,249 unit-hours. Each storage
+`hydro_schedule_routes.py`, full archive, 1,469,205 unit-hours (rerun
+2026-09-28 without the pumping legs; the only material change is EDP's intraday
+share, now −0.10 to +0.03). Each storage
 unit's scheduled energy is split into three published routes: the physical
 bilateral contract schedule (PDBF role 4), day-ahead cleared volume, and net
 intraday volume. PDBF's own auction row matches the bid files' cleared volume
@@ -334,14 +346,90 @@ position: generation sold minus retail demand bought. The descriptive chapter
 already bounds Iberdrola as a net day-ahead **buyer** (§4.5 there). A net buyer
 gains from a *lower* price, so shifting its own water into the evening
 self-supply, and buying less in the auction then, is the direction a net buyer
-with market power would choose. It is also what a price-taker would do, since
+with market power would choose. (The chapter's evidence for that was the
+double-subtracted index; on the correct measure, §3.9, Iberdrola is still a net
+buyer in every year.) It is also what a price-taker would do, since
 evening prices are higher. Only a benchmark allocation separates the two.
+
+### 3.9 EDP: the auction-route panel, and the first look at the test
+
+`scripts/analysis/edp_hydro_panel.py` → `outputs/tables/edp_hydro_panel.parquet`,
+**811,913 unit-periods**, 2018-01-01 → 2026-06-29. EDP's seven storage units
+(8.3 GW: the Douro, Lima, Cávado, Guadiana, Mondego and Tejo-Mondego cascades in
+Portugal, and Hidrocantábrico's UGH in Spain) plus Movhera's Douro
+Internacional and Repsol's Viesgo. Per unit-period it carries the offer shape
+(price at 25/50/75% of capacity and of offered volume, steps, price-out share),
+cleared volume, the pumping twin's purchase, the unit's own-zone price, the
+owner's residual-demand slope, and the owner's net auction position.
+
+**Measurement.**
+
+- **Use offered-volume quantiles, not capacity quantiles, for EDP.** The price
+  at 50% of capacity is undefined on 31% of unit-periods, and for whole
+  unit-years (Lima 2018–23, Douro from 2022, Hidrocantábrico 2022–25), because
+  those units usually offer under half their capacity. The price at 50% of
+  offered volume (`o50`) is always defined.
+- **Six of EDP's seven units have a pumping twin.** Five by name (`…B`), and
+  `TANB` (Tanes bombeo) for Hidrocantábrico's `HCHI` by owner and plant, a hand
+  match. Only Tejo-Mondego has none.
+- Own-zone price defined on 96.9% of unit-periods (the rest is June 2026, which
+  has bids but no prices yet); firm slope on 81.5%.
+
+**What EDP's offers look like.**
+
+- **Flat days vary by unit.** Same set of step prices all day: Guadiana
+  0.88–0.94 to 2022, falling to 0.18 in 2025; Cávado 0.13–0.89; Douro 0.19–0.59;
+  Hidrocantábrico 0.00 to 2020, then 0.84–1.00 from 2022.
+- **Where it varies, it is mostly a smooth tilt, not price-outs.** On non-flat
+  unit-days the within-day range of `o50` is under 5 €/MWh on 36–60% of them and
+  over 100 €/MWh on at most about 20%. Unlike Iberdrola (§3.6), a continuous
+  outcome fits.
+- **The midday tilt came and went.** Mean `o50` deviation from the unit-day
+  mean, €/MWh: 2018–20 night +6.7, midday −4.9, evening −7.5; 2021–23 night +5,
+  midday +1.7 to +3.8, evening −6 to −8; 2024–26 within ±2 everywhere. EDP clears
+  least at midday in 2024–26 (−71 to −90 MW against the daily mean, zone price
+  6–14 €/MWh) and most in the evening (+139 MW).
+- **Pumping moved from night to midday.** Twins' cleared purchases, MW per
+  unit-period: 55–64 at 03:00–06:00 in 2018–20; 5–6 at night and 24–34 at
+  midday in 2024–26.
+
+**EDP is a net seller overall and a net buyer at midday.** Median net auction
+position of all EDP units (EDP Comercial, its Portuguese retailer, included):
++200 to +1,700 MW across the day in 2018–20; since 2021 **negative at midday**
+(−207 to −477 MW in 2021–23, −655 to −840 MW in 2024–26) and +400 to +1,450 MW in
+the other hours. So X = net / |RD′| is negative at midday and +2 to +7 €/MWh
+otherwise. With market power, EDP would want the midday
+price *lower*.
+
+**The first look at the test: not identified yet.**
+
+- **On the median offer, EDP looks price-taking.** Within a unit-day, X moves
+  about ±40 €/MWh across its deciles while `o50` moves about ±2, slightly
+  *negatively* in 2018–23 and not at all in 2024–26. β = 1 would mean swings of
+  about ±40. But the median offer is not the object the FOC is about.
+- **On price-setting periods, correctly signed and between 0 and 1.** Where an
+  EDP unit's top cleared step is the zone price (3.6% of unit-periods; 3,438
+  unit-days with 2+ such periods), the offer equals p*, so the FOC reads
+  p* = λ_day + X. Within unit-day slopes of p* on X: **0.32** (2018–20), **0.02**
+  (2021–23, outlier-driven; about 0.13 on quintile bins), **0.26** (2024–26;
+  about 0.5 on bins), monotone in every era.
+- **That relation is expected under price-taking too.** A price-taking hydro
+  unit sells more in high-price hours, which raises EDP's net position, and so
+  X, exactly when p* is high. The positive slope is mechanical until X is
+  instrumented. This is the job of the clear-sky instrument (§4); nothing here
+  is evidence of conduct yet.
+
+**The midday offer premium of 2021–23 is not EDP market power.** It sits in the
+hours where EDP is a net buyer, when market power would push its offers *down*.
+It coincides with the shift of pumping to midday, which is the more natural
+reading: a cascade that is pumping at noon has little reason to also generate.
 
 ## 4. Specification (to build)
 
 ```
 b_ih − b̄_i,d = β · X̃_fh + γ_i,hour-of-day + δ_hour × month + ε_ih
-X_fh = (q_fh − θ_fh) / |RD′_fh|,   tilde = deviation from the firm-day mean
+X_fh = net_fh / |RD′_fh|,   net = cleared sales − cleared purchases, all the firm's units
+tilde = deviation from the firm-day mean
 ```
 
 - **Outcome.** The offer price at fixed quantiles of *capacity* (p25, p50),
@@ -380,12 +468,16 @@ X_fh = (q_fh − θ_fh) / |RD′_fh|,   tilde = deviation from the firm-day mean
    capacity ÷ turbine MW, i.e. hours of storage). **The prediction is that β is
    larger for large seasonal reservoirs**, where the constant-λ assumption
    holds. If β is larger for small ones, the constraint story wins.
-3. **Pumped storage is a different object.** La Muela's pumping leg and the
-   Portuguese bombagem units buy at midday, and are not in the sample. La
-   Muela's *turbine* leg (MUEL) is in the descriptive sample, but pumping refills
-   it, so its λ is tied to the pumping price rather than to a fixed daily water
-   budget: treat it separately in estimation. The pumping bids are a natural
-   second object, as the mirror image.
+3. **Pumped storage: sharpened 2026-09-28.** Pumping alone does *not* break
+   the flat benchmark. A competitive pumped-storage plant still offers
+   generation at one daily water value λ and pumps whenever the price falls
+   below ηλ, so its turbine curve is still flat. What breaks it is a small upper
+   reservoir that fills and empties within the day, which makes λ vary by hour —
+   threat 2, not a separate threat. This matters for EDP, where six of seven
+   units have a pumping twin and pumping moved to midday (§3.9): split them by
+   upper-reservoir hours of storage, not by whether they pump. La Muela's
+   turbine leg (MUEL) is the extreme case of a daily-cycling plant. The pumping
+   bids themselves remain a natural second object.
 4. **A firm's portfolio moves X.** Iberdrola's midday solar output raises
    `q_fh` exactly at noon. That is not a threat, because it is the incentive
    the FOC says matters. But it means the **(q−θ) term must be computed on the
@@ -450,8 +542,13 @@ X_fh = (q_fh − θ_fh) / |RD′_fh|,   tilde = deviation from the firm-day mean
    part of it is unaccounted for. Still open: Iberdrola's other bilateral
    contracts (do they offset the hydro one hour by hour?), and the bilateral
    counterparties for Endesa before 2024 and Naturgy from 2022.
-3. **X_fh:** join the firm slope panel, and compute (q−θ) on the whole
-   portfolio, with q from PDBF as in `hortacsu_puller_test.py`.
+2e. ~~**EDP full-archive panel**~~ — done 2026-09-28, §3.9.
+3. ~~**X_fh**~~ — done for EDP, Movhera and Repsol in the panel (§3.9), on the
+   net auction position rather than `q − θ`.
+3b. **Check EDP's own demand bids near the margin.** The firm slope removes a
+   firm's own *sell* offers only. EDP buys at midday; if its demand bids sit
+   near p*, they belong outside its residual demand too, and |RD′| is
+   overstated.
 4. **Storage-hours per unit**, from MITECO reservoir capacity. Needs a
    reservoir → OMIE unit match, which is new work.
 5. **Clear-sky instrument**, then the first stage.

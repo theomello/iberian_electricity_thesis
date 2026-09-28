@@ -181,6 +181,13 @@ def compute_month(bids, px_m, agents, theta):
 
     out = out.merge(theta, on=KEY + ["firm"], how="left")
     out["theta_mw"] = out.theta_mw.fillna(0.0)
+    # MIS-SPECIFIED, found 2026-09-28 -- do not use `incentive_h*` until rebuilt.
+    # q_firm_mw is AUCTION-cleared sell volume and theta the BILATERAL schedule;
+    # bilateral energy never enters the auction, so q - theta subtracts contracts
+    # twice (the error hortacsu_puller_test.py caught in 6c900ec). The exposure
+    # to the auction price is the net auction position, cleared sales minus
+    # cleared purchases -- see analysis/firm_net_position.py and
+    # notes/rq-descriptive-price-formation.md §4.5.
     frac = ((out.q_firm_mw - out.theta_mw) / out.q_firm_mw).clip(lower=-5, upper=1)
     for h in BANDWIDTHS:
         out[f"incentive_h{h:g}"] = out[f"ability_h{h:g}"] * frac

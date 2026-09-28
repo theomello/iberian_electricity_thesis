@@ -76,7 +76,11 @@ def storage_hydro() -> pd.DataFrame:
     keep = (u.tech.eq("hydro_ugh")
             | (u.tech.eq("hydro") & u.country.eq("PT") & (u.max_power_mw >= 200))
             | u.unit.eq("MUEL"))
-    u = u[keep & u.role.isin(SUPPLY_ROLES) & (u.max_power_mw >= 50)]
+    # `pumping` is a supply role, so the Portuguese pumping legs (ACAVADB, ADOUROB,
+    # ALIMAB, GUADIAB, DOUSUPB: 3.9 GW) passed the filter until 2026-09-28. They
+    # submit no sell offers, so no offer measure was affected, but they netted
+    # their purchases against the route totals and inflated the stated capacity.
+    u = u[keep & u.role.isin(SUPPLY_ROLES) & ~u.role.eq("pumping") & (u.max_power_mw >= 50)]
     return u[["unit", "max_power_mw", "group", "tech"]].rename(columns={"max_power_mw": "cap"})
 
 

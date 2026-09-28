@@ -253,6 +253,44 @@ observable marginal cost.
 
 ### 4.5 Firm ability and incentive, and a contract-position sign flip
 
+> **Correction, 2026-09-28 — the incentive index double-subtracts contracts,
+> and Endesa never flips.** `incentive = ability · (q − θ)/q` takes q from the
+> firm's **auction-cleared** sell volume and θ from its **bilateral** schedule
+> (PDBF role 4). Bilateral energy never enters the auction, so it is subtracted
+> twice — the same error `hortacsu_puller_test.py` caught in its first pass
+> (`6c900ec`). θ > q means a firm sells more through contracts than through the
+> auction, **not** that it is a net buyer. Everything below that reads a sign or
+> a flip off `incentive` inherits this; `ability` does not.
+>
+> The right measure is the firm's **net auction position**: cleared sales minus
+> cleared purchases over all its units. `scripts/analysis/firm_net_position.py`,
+> TWh over Feb + Jun + Oct of each year:
+>
+> | firm | 2018 | 2020 | 2022 | 2023 | 2024 | 2025 | 2026 | panel `q − θ` says |
+> |---|---|---|---|---|---|---|---|---|
+> | Iberdrola | −4.32 | −3.38 | −3.99 | −3.65 | −1.97 | −1.63 | −2.18 | buyer, up to 4× too large |
+> | **Endesa** | −4.10 | −7.69 | −5.30 | −6.62 | **−8.00** | **−6.44** | **−5.27** | **seller from 2024** ✗ |
+> | Naturgy | −3.24 | −1.70 | −0.38 | −1.53 | −0.98 | −1.18 | −0.45 | buyer ✓ |
+> | Repsol | +1.42 | +0.93 | +1.09 | +0.97 | −0.66 | −0.53 | −0.54 | ≈ the same ✓ |
+> | EDP (+ EDP Comercial) | +1.92 | +2.50 | +0.26 | +1.26 | +2.11 | +0.76 | +0.38 | seller ✓ |
+>
+> - **Iberdrola, Naturgy and (from 2024) Repsol are net day-ahead buyers on the
+>   correct measure** — the sign survives, for the right reason now.
+> - **Endesa is a net buyer in every year, 2024–2026 included.** Its "flip"
+>   below — whether to +0.076 in 2024 on the chain tier or in 2025 on the owner
+>   tier — is an artefact: Endesa moved its storage hydro out of bilateral
+>   self-supply into the auction from 2024 (bilateral share 0.93 → 0.34,
+>   `notes/rq-midday-hydro.md` §3.7), so θ fell and q rose while its net
+>   position did not change. **Withdrawn.**
+> - **EDP is a net seller** throughout, but much less so once its Portuguese
+>   retailer EDP Comercial — a separate group in `owner_groups.parquet` — is
+>   counted (2022: +2.48 alone, +0.26 together). EDP Comercial's purchases vanish
+>   from 2025; unexplained, possibly an ownership change across snapshots.
+>
+> Not yet done: rebuilding the `incentive_h*` columns on the net position. Until
+> then treat every `incentive` figure in this section as superseded by the
+> table above.
+
 Median `ability_h5` and `incentive_h5` (€/MWh per 1% withheld), top firms by
 cleared volume:
 
@@ -756,8 +794,8 @@ not after.
 | band density fell ~2/3 | **established** | falls as a step 2020→2022, not a slide |
 | the collapse is an *evening ramp* phenomenon | **rejected** | it is a midday phenomenon (§4.3) |
 | gas left the margin, hydro took it | **bounded** | resolved periods only, 69–81% coverage |
-| Iberdrola is a net day-ahead buyer | **bounded** | robust to θ-coverage drift; so are Naturgy and (to 2023) Endesa |
-| Endesa's 2024 flip to a positive incentive | **confounded** | coincides with θ coverage falling 0.942 → 0.838 (§4.5) |
+| Iberdrola is a net day-ahead buyer | **established, on the net auction position** (corrected 2026-09-28) | so are Naturgy in every year, Endesa in every year, and Repsol from 2024. The earlier evidence, `incentive`'s `(q − θ)`, double-subtracted contracts (§4.5) |
+| Endesa's flip to a positive incentive | **withdrawn** (2026-09-28) | an artefact of the double subtraction: Endesa moved hydro from bilateral into the auction in 2024 and stayed a net buyer (§4.5) |
 | θ measures contract position | **bounded** | physical bilateral only; misses financial hedges |
 | any 2026 figure | **confounded** | 66.1% retention, selected against high-VRE hours |
 

@@ -756,6 +756,56 @@ at most small: none in four cascades, which offer an identical curve all day,
 and a response of a few percent of the Nash benchmark in the other three, from
 2024 only.
 
+### 3.15 Iberdrola by quantities: its water is allocated like a price-taker's
+
+`scripts/analysis/iberdrola_quantity_test.py`, spec §8.1. Iberdrola's offers are
+residuals (§3.7), so the test is on quantities: each unit-hour's scheduled
+energy over all routes (bilateral self-supply + auction + intraday net), with
+the unit-day's total E taken as given. **[preliminary]**
+
+**The benchmark.** A price-taker with a water value constant within the day
+(A1) holds its own minimum output of the day in every hour and puts the rest of
+E into the dearest hours, up to the day's own maximum. A first version filled
+to *nameplate* capacity instead and failed its validation — EDP's flat-bidding
+cascades only offer 50–70% of nameplate, so they spread the same energy over
+more hours — and is kept in the script for the record. With the day's own
+limits every unit's allocation overlaps the benchmark by 0.77–0.91.
+
+**Test 1 — which ranking of hours fits the allocation?** Rank hours by
+marginal revenue p − βX instead of price and measure the overlap with the
+actual allocation, for β on a grid. β = 0 is price-taking, β = 1
+supply-function Nash; Iberdrola is a net buyer (median X −3.2 €/MWh), so market
+power would move water towards the hours where X is most negative.
+
+| | best β, 2018–20 / 2021–23 / 2024–26 | overlap at β = 0 | overlap at β = 1 |
+|---|---|---|---|
+| EDP stable cascades (validation) | 0 / 0 / 0 | 0.828 / 0.829 / 0.832 | 0.771 / 0.761 / 0.796 |
+| **Iberdrola storage** | −0.75 / −0.25 / −0.5 | 0.830 / 0.836 / 0.824 | **0.799 / 0.713 / 0.685** |
+| La Muela | 0 / 0 / 0 | 0.890 / 0.879 / 0.903 | 0.837 / 0.766 / 0.799 |
+
+**The validation passes, and Iberdrola fits price-taking.** The fit is flat for
+β between −1 and 0 — X adds nothing — and falls clearly towards Nash, most of
+all from 2021. If anything the best β is slightly negative, the opposite of the
+market-power direction. Descriptive, not causal: prices and X are both
+equilibrium outcomes.
+
+**Test 2 — IV on the deviation from the benchmark: fails validation.** EDP's
+flat-bidding cascades come out at −0.31 pp of capacity per €/MWh of X (AR
+[−0.42, −0.21]) where price-taking predicts zero. The benchmark switches
+straight between the day's minimum and maximum; real plants ramp, and on sunny
+days the ramping leaves output in the midday shoulder, when X is low — a
+mechanical correlation between the instrument and the deviation. So it is read
+only relative to the validation group: Iberdrola's −0.14 (AR [−0.19, −0.09]) is
+**less** negative than the flat bidders', the opposite of what market power
+would add.
+
+**Iberdrola verdict.** On the within-day margin, Iberdrola's water is spread
+across the day as a price-taker's would be, and the supply-function Nash
+ranking fits clearly worse, in every era. That includes 2024–26, after its
+offer-curve break (§3.6) — consistent with §3.7: the break changed how it offers
+the residual, not how it allocates water. The across-day margin — the *level*
+of its water value — is untested.
+
 ## 4. Specification (to build)
 
 ```
@@ -912,5 +962,9 @@ tilde = deviation from the firm-day mean
    2026-09-29, §3.14: correctly signed from 2024, implied β 0.03–0.12.
 7. **Placebos**: run-of-river units (no daily λ, so they should be flat at about
    €0), and pumping units as the mirror image.
-8. **Iberdrola by quantities** (2c). The EDP test is done; the firm whose break
-   started this line of work has not been tested at all.
+8. ~~**Iberdrola by quantities**~~ — done 2026-09-29, §3.15. The allocation fits
+   price-taking; the IV version fails validation and is read only relatively.
+9. **Next decision:** the within-day margin is now tested for both firms and
+   shows at most small market power. What remains is the across-day margin (the
+   level of the water value, spec §4 and §8.2), the descriptive-chapter rebuild,
+   and the supervisor question in spec §9.

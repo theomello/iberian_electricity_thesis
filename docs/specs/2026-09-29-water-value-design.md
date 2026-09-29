@@ -121,6 +121,8 @@ is about the first margin only.
 | EDP: the middle of the curve is flat, rejecting Nash (§3.11) | A1, A2, A3, A4, A5 | **A2 fails in three cascades**: pooled estimate mixes identical-curve days with tranche reshaping |
 | EDP: the three reshaping cascades offer more below their median price when X is low, from 2024; implied β 0.03–0.12 (§3.14) | A1, A3, A4, A5 — **not A2** | correctly signed, far below Nash; A3 in doubt for Mondego and Tejo-Mondego |
 | EDP: 2024 top-tranche response (§3.12) | A3 fails in the two cascades that carry it | not interpreted as conduct |
+| Iberdrola: its hourly allocation fits price-taking, Nash fits worse (§3.15, test 1) | A1, A4 | preliminary: validated on EDP's flat bidders; descriptive |
+| Iberdrola: IV on the deviation from the benchmark (§3.15, test 2) | A1, A3, and a benchmark without ramping | **fails validation**: read only relative to EDP's flat bidders |
 | forward price passes through to λ at 0.94 (`hydro-water-value-design.md`) | M3 as built | **invalid until rebuilt** |
 
 ## 8. How it serves the research
@@ -144,7 +146,7 @@ In order, cheapest first:
 
 1. ~~**A2**~~ and 2. ~~**A1**~~ — done 2026-09-29 (§3.13).
 2b. ~~**Quantity-at-fixed-price test**~~ — done 2026-09-29 (§3.14).
-3. **Iberdrola quantity test** (§8.1), under A1.
+3. ~~**Iberdrola quantity test**~~ — done 2026-09-29 (§3.15).
 4. **Rebuild M3** on the net position without conditioning on price-setting
    periods; then decide whether the across-day margin (§8.2) is in scope.
 5. **APA IP whitelist**, only if the across-day margin is in scope for Portugal.

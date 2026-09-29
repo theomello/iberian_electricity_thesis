@@ -540,6 +540,61 @@ pattern. Only plant-level storage separates the two, and the offers are
 published per cascade, not per plant. The 2024 onset also coincides with EDP's
 pumping having moved to midday (§3.9).
 
+### 3.12 The cascade split: two neighbouring cascades, and a response too large to be a markup
+
+`scripts/analysis/edp_cascade_split.py`: the §3.11 regression one cascade at a
+time. Storage per MW is not available — Portugal's reservoir data is
+geo-blocked outside Portugal (`email-apa-reservoir-data.md`) — so the storage
+measure is a behavioural proxy, **predetermined** (2018–2023, before the
+effect): the share of a cascade's daily cleared energy that falls in the day's
+8 dearest hours. A plant that cannot shift water scores about 0.33; one that
+can, about 1. It ranks the cascades the way their layout suggests: the Douro
+main stem, largely run-of-river, low; the Guadiana, behind Alqueva, highest.
+
+Response of the price at 75% of offered volume, 2024–26 (first-stage F 114–124
+for every cascade):
+
+| cascade | storage proxy | β | AR 95% set |
+|---|---|---|---|
+| Hidrocantábrico (ES) | 0.46 | 0.00 | [0.00, 0.00] — its offers do not vary |
+| Douro | 0.54 | 1.58 | [−1.05, 4.50] |
+| **Tejo-Mondego** | 0.57 | **5.91** | **[2.29, 9.97]** |
+| Cávado | 0.74 | −0.03 | [−0.30, 0.25] |
+| **Mondego** | 0.79 | **3.77** | **[1.53, 6.09]** |
+| Lima | 0.81 | −0.01 | [−0.14, 0.12] |
+| Guadiana | 0.92 | −1.06 | [−2.81, 0.60] |
+
+The middle of the curve (price at 50% of offered volume) responds in none of
+them at 95%; Tejo-Mondego comes closest (0.84, AR [−0.01, 1.73]).
+
+**What it rules out.**
+
+- **The pooled 2024 result (β ≈ 1.5) is not EDP-wide.** It is an average of
+  about zero in five cascades and a large response in two neighbouring ones in
+  central Portugal, Tejo-Mondego and Mondego.
+- **It is not a markup.** Supply-function Nash puts β at 1 for any unit at the
+  margin; a strategic offer cannot move 3.8–5.9 € per € of its own markup term.
+  Something specific to those two cascades responds to sunny days directly —
+  which is a failure of the exclusion restriction *for those units*, not
+  evidence of conduct.
+- **Nor is it simply small storage.** The two cascades with the least
+  shiftable output — Hidrocantábrico and the Douro — show nothing significant,
+  and across the seven the correlation of β with the storage proxy is only
+  −0.32 (seven points, a description).
+
+**The likelier reading is local and operational.** Mondego has a pumping twin
+(`MONDEGB`, Aguieira), and both cascades share the Mondego/Zêzere system. A
+pumping schedule or a flow rule on those rivers that follows the solar profile
+would move their upper tranches directly. Not tested; the offers are published
+per cascade, not per plant.
+
+**Where this leaves the design, for EDP: no evidence of supply-function market
+power in how it offers its storage hydro within the day.** The bulk of the
+curve is flat in every cascade and era (§3.11), and the one signal against
+that is confined to two cascades and too large to be a markup. Preliminary,
+and specific to EDP: Iberdrola, the firm whose break started this line of
+work, allocates through self-supply and needs the quantity-based design (2c).
+
 ## 4. Specification (to build)
 
 ```
@@ -683,11 +738,12 @@ tilde = deviation from the firm-day mean
    The clear-sky version is rejected; `z_offered` is the instrument.
 5b. ~~**Second stage**~~ — done 2026-09-28, §3.11. The price-setting version is
    invalid (selection); the curve-position version is the test of record.
-6. **Separate the 2024 upper-tranche response from small-storage physics.**
-   Candidates: (a) which EDP cascades carry it — if it is the cascades with the
-   least storage per MW, physics is the better reading; (b) whether the
-   upper-tranche price tracks EDP's *net* position or only the solar shape —
-   the net position is what market power responds to; (c) the pumping legs'
-   own bids as the mirror image.
-6. **Estimate**, with placebos: run-of-river units (no daily λ, so they should
-   be flat at about €0), and pumping units as the mirror image.
+6. ~~**Separate the 2024 upper-tranche response from small-storage physics**~~
+   — (a) done 2026-09-29, §3.12: confined to Tejo-Mondego and Mondego, too
+   large to be a markup, not explained by the storage proxy. (b) and (c) are no
+   longer needed for the EDP verdict; (c), Mondego's pumping leg, would test
+   the local-operational reading if that ever matters.
+7. **Placebos**: run-of-river units (no daily λ, so they should be flat at about
+   €0), and pumping units as the mirror image.
+8. **Iberdrola by quantities** (2c). The EDP test is done; the firm whose break
+   started this line of work has not been tested at all.

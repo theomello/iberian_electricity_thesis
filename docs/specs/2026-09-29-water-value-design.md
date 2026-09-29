@@ -119,6 +119,7 @@ is about the first margin only.
 | Iberdrola's routes and self-supply (§3.7–3.8) | none: accounting | established |
 | EDP: four cascades offer an identical curve all day (§3.13) | none: descriptive | no within-day shaping there, whatever the incentive |
 | EDP: the middle of the curve is flat, rejecting Nash (§3.11) | A1, A2, A3, A4, A5 | **A2 fails in three cascades**: pooled estimate mixes identical-curve days with tranche reshaping |
+| EDP: the three reshaping cascades offer more below their median price when X is low, from 2024; implied β 0.03–0.12 (§3.14) | A1, A3, A4, A5 — **not A2** | correctly signed, far below Nash; A3 in doubt for Mondego and Tejo-Mondego |
 | EDP: 2024 top-tranche response (§3.12) | A3 fails in the two cascades that carry it | not interpreted as conduct |
 | forward price passes through to λ at 0.94 (`hydro-water-value-design.md`) | M3 as built | **invalid until rebuilt** |
 
@@ -142,7 +143,7 @@ is about the first margin only.
 In order, cheapest first:
 
 1. ~~**A2**~~ and 2. ~~**A1**~~ — done 2026-09-29 (§3.13).
-2b. **Quantity-at-fixed-price test** for the three cascades where A2 fails.
+2b. ~~**Quantity-at-fixed-price test**~~ — done 2026-09-29 (§3.14).
 3. **Iberdrola quantity test** (§8.1), under A1.
 4. **Rebuild M3** on the net position without conditioning on price-setting
    periods; then decide whether the across-day margin (§8.2) is in scope.

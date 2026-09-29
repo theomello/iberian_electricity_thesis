@@ -706,6 +706,56 @@ below a fixed price in each hour** — the supply curve read horizontally. It
 needs no A2, and under a constant water value and price-taking it too is flat
 within the day.
 
+### 3.14 Read horizontally: the reshaping cascades respond, correctly signed and small
+
+`scripts/analysis/edp_quantity_at_price.py`. Where A2 fails, the curve is read
+the other way: for each unit-period, the MW offered at or below a price p_k, as a
+share of capacity, with p_k the unit-*day*'s own volume-weighted 25th/50th/75th
+percentile offer price — fixed within the day, so the unit-day fixed effect still
+absorbs the water value, and no tranche needs to be the same across hours.
+Price-taking with a constant water value predicts no response; market power
+predicts a **negative** one (a higher X lifts the curve, so less sits below a
+fixed price). Same specification as §3.11. **[preliminary]**
+
+| sample (quantity at or below the day's median price) | coefficient, pp of capacity per €/MWh of X | AR 95% set | implied β |
+|---|---|---|---|
+| **reshaping cascades, 2024–26** | **−0.111** | **[−0.18, −0.05]** | 0.06 |
+| reshaping, 2018–20 | +0.169 | [−0.13, 0.48] | — |
+| reshaping, 2021–23 | +0.019 | [−0.01, 0.05] | — |
+| stable cascades, each era | −0.008 to +0.070 | all include 0 | ≈ 0 |
+| Douro, 2024–26 | −0.093 | [−0.16, −0.04] | 0.12 |
+| Mondego, 2024–26 | −0.066 | [−0.13, −0.01] | 0.03 |
+| Tejo-Mondego, 2024–26 | −0.175 | [−0.33, −0.04] | 0.06 |
+
+Pooled over all years the reshaping cascades give −0.074 at the 25th percentile
+and −0.064 at the median (AR [−0.11, −0.04] and [−0.11, −0.03]), and nothing at
+the 75th. "Implied β" divides by the curve's local density of offers around the
+reference price (±5 €/MWh), to put the response on the §2 scale; the curves are
+step functions, so it is a scale, not an estimate.
+
+**What it shows.**
+
+- **From 2024, and only in the three cascades that reshape their tranches, the
+  response has the market-power sign.** When X is low — sunny middays, when EDP
+  is a net buyer — they offer more capacity below their own median price.
+- **It is economically real and small against Nash.** A within-day swing in X
+  of about ±25 €/MWh moves about 2.8 pp of capacity (roughly 110 MW across the
+  three) — close to the whole within-day spread of the measure (2.9 pp) — but the
+  implied β is **0.03–0.12**, a few percent of the supply-function Nash response.
+- **The stable cascades show nothing**, as they must if their curve is the same
+  all day.
+
+**What it does not show.** A competitive reading fits the same pattern: water
+that has to be released, or pumping, on sunny days. For Mondego and Tejo-Mondego
+the instrument's exclusion is already in doubt (§3.12). So: a correctly signed,
+partial, post-2024 response in half of EDP's storage hydro, far below Nash — not
+proven conduct.
+
+**The EDP verdict, updated.** Within-day market power in EDP's storage hydro is
+at most small: none in four cascades, which offer an identical curve all day,
+and a response of a few percent of the Nash benchmark in the other three, from
+2024 only.
+
 ## 4. Specification (to build)
 
 ```
@@ -858,9 +908,8 @@ tilde = deviation from the firm-day mean
    the local-operational reading if that ever matters.
 6b. ~~**A2 and A1**~~ — done 2026-09-29, §3.13. A2 fails for Douro, Mondego and
    Tejo-Mondego; A1 is not rejected on weak proxies.
-6c. **Quantity-at-fixed-price test on the three reshaping cascades**: MW offered
-   at or below fixed prices (relative to the unit-day's own offer level) by
-   hour, on X instrumented. The outcome that does not need A2.
+6c. ~~**Quantity-at-fixed-price test on the three reshaping cascades**~~ — done
+   2026-09-29, §3.14: correctly signed from 2024, implied β 0.03–0.12.
 7. **Placebos**: run-of-river units (no daily λ, so they should be flat at about
    €0), and pumping units as the mirror image.
 8. **Iberdrola by quantities** (2c). The EDP test is done; the firm whose break

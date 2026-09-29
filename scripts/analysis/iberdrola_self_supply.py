@@ -78,8 +78,13 @@ def month_panel(ym: str, retail: list[str]) -> pd.DataFrame:
     p["hour"] = ((p.period - 1) * p.resolution_min // 60 + 1).astype(int)
     p["mwh"] = p.schedule_mw * p.resolution_min / 60
     hydro = p[p.unit.isin(HYDRO) & (p.mwh > 0)].groupby(keys).mwh.sum().rename("hydro_bil")
-    # Every bilateral receipt of the retail units: the buy legs, negative in PDBF.
-    recv = (-p[p.unit.isin(retail) & (p.mwh < 0)].groupby(keys).mwh.sum()).rename("recv_all")
+    # Net bilateral inflow into the retail set: buy legs (negative) minus sell
+    # legs (positive) over the retail units. Netting matters. Until 2022 IGESC01,
+    # itself one of the purchase units, bought in the auction and passed the
+    # energy on to the other retail units by bilateral contract
+    # (iberdrola_contract_trace.py). Counting only buy legs counted that energy
+    # twice -- as IGESC01's auction purchase and as the receiving unit's receipt.
+    recv = (-p[p.unit.isin(retail)].groupby(keys).mwh.sum()).rename("recv_all")
 
     cols = ["date", "hour", "resolution_min", "unit", "side", "status", "power_mw"]
     b = pq.read_table(DATA / f"omie/bids/parquet/bids_{ym}.parquet", columns=cols,
@@ -97,8 +102,8 @@ def month_panel(ym: str, retail: list[str]) -> pd.DataFrame:
     d = pd.concat([hydro, recv, bid, bought, intraday], axis=1).fillna(0.0).reset_index()
     d["date"] = pd.to_datetime(d.date)
     # The hydro contracts' buy legs sit on the retail units and equal the hydro
-    # sell legs exactly (§3.8), so what the retail units receive from every
-    # OTHER contract is the rest.
+    # sell legs exactly (§3.8), so the net inflow from every OTHER contract is
+    # the rest.
     d["other_bil"] = d.recv_all - d.hydro_bil
     d["total"] = d.bought + d.intraday + d.recv_all
     return d[d.hour <= 24]

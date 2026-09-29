@@ -339,16 +339,17 @@ less then with no anticipation at all. And since intraday does not absorb it,
 in most months. **The allocation is not shown to be committed at gate closure,
 and the net-position framing below rests on that.**
 
-**2026-09-29: the gap closes on Iberdrola's other bilateral contracts.** Adding
-every bilateral receipt of the ten retail units (PDBF role 4 buy legs), per
-1 MWh more hydro self-supply within a day:
+**2026-09-29: the gap closes on Iberdrola's other bilateral contracts.** The
+retail position below is the NET bilateral inflow into Iberdrola's ten purchase
+units (PDBF role 4, buy legs minus sell legs), so transfers between those units
+cancel; per 1 MWh more hydro self-supply within a day:
 
-| month | auction bought | other contracts' receipts | intraday | **total retail position** |
+| month | auction bought | net other contracts | intraday | **total retail position** |
 |---|---|---|---|---|
-| 2019-03 | −0.33 | −0.45 | −0.01 | +0.21 |
-| 2019-10 | −0.63 | −0.14 | 0.00 | +0.23 |
-| 2021-03 | −0.70 | −0.29 | +0.01 | +0.02 |
-| 2022-03 | −0.09 | −0.71 | 0.00 | +0.20 |
+| 2019-03 | −0.33 | −0.54 | −0.01 | +0.13 |
+| 2019-10 | −0.63 | −0.23 | 0.00 | +0.14 |
+| 2021-03 | −0.70 | −0.29 | +0.01 | +0.01 |
+| 2022-03 | −0.09 | −0.78 | 0.00 | +0.13 |
 | 2023-03 | −0.83 | −0.33 | +0.01 | −0.15 |
 | 2024-03 | −0.87 | −0.19 | −0.01 | −0.07 |
 | 2024-10 | −0.50 | −0.49 | 0.00 | +0.01 |
@@ -356,13 +357,37 @@ every bilateral receipt of the ten retail units (PDBF role 4 buy legs), per
 
 The hydro self-supply displaces **auction purchases and Iberdrola's other
 bilateral contracts together**, and the retail arm's total scheduled position
-barely moves — within ±0.07 in four months, at most +0.23 — which is what it
-should do once demand is controlled for. What remains is small enough for
-imbalances. So Iberdrola's within-day balance is **traceable in published
-data**; the quantity design (2c) does not rest on an unobserved residual. Who
-sells on those other contracts is the next thing to trace. Also new: the retail
-units' receipts from other contracts fell from about 9–10 GWh per hour in
-2019–22 to 1–4 in 2023–25, a large change in how Iberdrola contracts.
+moves by only −0.15 to +0.14 — which is what it should do once demand is
+controlled for. What remains is small enough for imbalances. So Iberdrola's
+within-day balance is **traceable in published data**; the quantity design (2c)
+does not rest on an unobserved residual.
+
+*A first version counted only buy legs and gave −0.15 to +0.23. It double-counted
+an internal pass-through (below) before 2023; netting tightened the result.*
+
+**Who sells on those contracts** (`iberdrola_contract_trace.py`, TWh over Feb,
+Jun and Oct of each year):
+
+- **Until 2022 the largest flow was internal routing, not generation.**
+  `IGESC01` "IBERDROLA GENERACION ESPAÑA C", itself one of Iberdrola's purchase
+  units, bought in the auction and passed the energy to the other retail units
+  by bilateral contract — 11–12.7 TWh a year over the sample months, **zero from
+  2023**. REE's rules allow exactly this: contracts between retailers can only
+  be nominated after the day-ahead market, once the energy has been bought. From
+  2023 the retail units buy directly, which is when `ICLIC01`'s auction bids jump
+  (11–143 MWh per hour before, about 5,700 after). An earlier claim here, that
+  Iberdrola's contracting "fell from 9–10 GWh per hour to 1–4" in 2023, was this
+  pass-through ending, and is **withdrawn**; the net outside inflow runs at about
+  3–4 GWh per hour in most sample months.
+- **The generation sold to Iberdrola retail is mostly nuclear.** Iberdrola's own
+  Cofrentes, Almaraz 2 and Vandellós II supply about 3.5 TWh a year over the
+  sample months; then wind (1.1–2.2), the storage hydro traced above (0.5–3.6),
+  solar from 2022 (up to 1.1) and cogeneration from 2023 (about 0.3).
+- **About 1.5–2 TWh comes from co-owned nuclear registered to Naturgy or Endesa**
+  (Almaraz 1, Trillo, Ascó 2). That is Iberdrola's share of plants whose OMIE
+  owner is another firm — an artefact of mapping a co-owned plant to a single
+  owner, not a third-party purchase. Any firm-level quantity built on the owner
+  mapping inherits it.
 
 **Why it matters for the design.** For a vertically integrated firm that
 self-supplies, the price incentive in an hour runs through its *net* auction
@@ -739,8 +764,10 @@ tilde = deviation from the firm-day mean
 2d. ~~**Check the self-supply inference**~~ — done 2026-09-28/29, §3.8. Cleared
    purchases fall with self-supply, bid volumes do not, and Iberdrola's other
    bilateral contracts close the rest: the retail total position moves by
-   −0.15 to +0.23. Still open: who sells on those other contracts, and the
-   bilateral counterparties for Endesa before 2024 and Naturgy from 2022.
+   −0.15 to +0.14. The other contracts are traced (mostly nuclear; an internal
+   pass-through via `IGESC01` until 2022). Still open: the bilateral
+   counterparties for Endesa before 2024 and Naturgy from 2022, and co-owned
+   nuclear in the owner mapping.
 2e. ~~**EDP full-archive panel**~~ — done 2026-09-28, §3.9.
 3. ~~**X_fh**~~ — done for EDP, Movhera and Repsol in the panel (§3.9), on the
    net auction position rather than `q − θ`.

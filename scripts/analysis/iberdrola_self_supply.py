@@ -49,7 +49,7 @@ DATA = ROOT / "data"
 
 HYDRO = ["DUER", "EBRA", "JUCA", "MUEL", "SIL", "TAJO"]
 MONTHS = ["201903", "201910", "202103", "202203", "202303", "202403", "202410", "202503"]
-OUTCOMES = ["bid", "bought", "intraday"]
+OUTCOMES = ["bid", "bought", "intraday", "other_bil", "total"]
 
 
 def iberdrola_purchase_units() -> list[str]:
@@ -73,10 +73,13 @@ def demand_forecast() -> pd.DataFrame:
 def month_panel(ym: str, retail: list[str]) -> pd.DataFrame:
     keys = ["date", "hour"]
     p = pq.read_table(DATA / f"omie/pdbf/parquet/pdbf_{ym}.parquet",
-                      filters=[("role_code", "==", "4"), ("unit", "in", HYDRO)]).to_pandas()
+                      filters=[("role_code", "==", "4"),
+                               ("unit", "in", HYDRO + retail)]).to_pandas()
     p["hour"] = ((p.period - 1) * p.resolution_min // 60 + 1).astype(int)
     p["mwh"] = p.schedule_mw * p.resolution_min / 60
-    hydro = p.groupby(keys).mwh.sum().rename("hydro_bil")
+    hydro = p[p.unit.isin(HYDRO) & (p.mwh > 0)].groupby(keys).mwh.sum().rename("hydro_bil")
+    # Every bilateral receipt of the retail units: the buy legs, negative in PDBF.
+    recv = (-p[p.unit.isin(retail) & (p.mwh < 0)].groupby(keys).mwh.sum()).rename("recv_all")
 
     cols = ["date", "hour", "resolution_min", "unit", "side", "status", "power_mw"]
     b = pq.read_table(DATA / f"omie/bids/parquet/bids_{ym}.parquet", columns=cols,
@@ -91,8 +94,13 @@ def month_panel(ym: str, retail: list[str]) -> pd.DataFrame:
     i["mwh"] = i.power_mw * i.resolution_min / 60 * sign
     intraday = i.groupby(keys).mwh.sum().rename("intraday")
 
-    d = pd.concat([hydro, bid, bought, intraday], axis=1).fillna(0.0).reset_index()
+    d = pd.concat([hydro, recv, bid, bought, intraday], axis=1).fillna(0.0).reset_index()
     d["date"] = pd.to_datetime(d.date)
+    # The hydro contracts' buy legs sit on the retail units and equal the hydro
+    # sell legs exactly (§3.8), so what the retail units receive from every
+    # OTHER contract is the rest.
+    d["other_bil"] = d.recv_all - d.hydro_bil
+    d["total"] = d.bought + d.intraday + d.recv_all
     return d[d.hour <= 24]
 
 
@@ -116,14 +124,17 @@ def main() -> int:
     print("Within-day coefficient on hydro self-supply (MWh per MWh), day-clustered se, "
           "controlling for REE's demand forecast")
     print(f"{'month':7s}" + "".join(f"{c:>18s}" for c in OUTCOMES)
-          + f"{'hydro_bil':>11s}{'bought':>9s}")
+          + f"{'hydro_bil':>11s}{'bought':>9s}{'other_bil':>11s}{'gap':>7s}")
     for ym in MONTHS:
         g = month_panel(ym, retail).merge(fc, on=["date", "hour"], how="inner")
         cells = []
         for y in OUTCOMES:
             b, se = within_day_ols(g, y)
             cells.append(f"{b:+.2f} ({se:.2f})".rjust(18))
-        print(f"{ym:7s}" + "".join(cells) + f"{g.hydro_bil.mean():11.0f}{g.bought.mean():9.0f}")
+        # gap: hydro receipts not matched by a hydro-leg sale -- should be 0
+        gap = (g.recv_all - g.other_bil - g.hydro_bil).abs().max()
+        print(f"{ym:7s}" + "".join(cells) + f"{g.hydro_bil.mean():11.0f}{g.bought.mean():9.0f}"
+              f"{g.other_bil.mean():11.0f}{gap:7.1f}")
     return 0
 
 

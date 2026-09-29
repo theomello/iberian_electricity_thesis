@@ -335,10 +335,34 @@ bidding for less. The cut runs through the price of its demand bids or through
 the market price itself, and the two cannot be separated here: self-supply
 peaks in the evening, when the price does, so a price-elastic demand bid clears
 less then with no anticipation at all. And since intraday does not absorb it,
-0.13–0.67 of each self-supplied MWh is unaccounted for by these three routes in
-most months. Iberdrola's other bilateral contracts, or imbalance settlement,
-are the remaining candidates. **The allocation is not shown to be committed at
-gate closure, and the net-position framing below rests on that.**
+0.13–0.67 of each self-supplied MWh looked unaccounted for by these three routes
+in most months. **The allocation is not shown to be committed at gate closure,
+and the net-position framing below rests on that.**
+
+**2026-09-29: the gap closes on Iberdrola's other bilateral contracts.** Adding
+every bilateral receipt of the ten retail units (PDBF role 4 buy legs), per
+1 MWh more hydro self-supply within a day:
+
+| month | auction bought | other contracts' receipts | intraday | **total retail position** |
+|---|---|---|---|---|
+| 2019-03 | −0.33 | −0.45 | −0.01 | +0.21 |
+| 2019-10 | −0.63 | −0.14 | 0.00 | +0.23 |
+| 2021-03 | −0.70 | −0.29 | +0.01 | +0.02 |
+| 2022-03 | −0.09 | −0.71 | 0.00 | +0.20 |
+| 2023-03 | −0.83 | −0.33 | +0.01 | −0.15 |
+| 2024-03 | −0.87 | −0.19 | −0.01 | −0.07 |
+| 2024-10 | −0.50 | −0.49 | 0.00 | +0.01 |
+| 2025-03 | −0.15 | −0.85 | −0.01 | −0.01 |
+
+The hydro self-supply displaces **auction purchases and Iberdrola's other
+bilateral contracts together**, and the retail arm's total scheduled position
+barely moves — within ±0.07 in four months, at most +0.23 — which is what it
+should do once demand is controlled for. What remains is small enough for
+imbalances. So Iberdrola's within-day balance is **traceable in published
+data**; the quantity design (2c) does not rest on an unobserved residual. Who
+sells on those other contracts is the next thing to trace. Also new: the retail
+units' receipts from other contracts fell from about 9–10 GWh per hour in
+2019–22 to 1–4 in 2023–25, a large change in how Iberdrola contracts.
 
 **Why it matters for the design.** For a vertically integrated firm that
 self-supplies, the price incentive in an hour runs through its *net* auction
@@ -712,11 +736,11 @@ tilde = deviation from the firm-day mean
    nomination rules are settled (§3.8). For Iberdrola the quantity to model is
    the **net** auction position, so it needs `ICLIC01`'s demand bids as well as
    the hydro schedule.
-2d. ~~**Check the self-supply inference**~~ — done 2026-09-28, §3.8. Partly
-   supported: cleared purchases fall with self-supply, bid volumes do not, and
-   part of it is unaccounted for. Still open: Iberdrola's other bilateral
-   contracts (do they offset the hydro one hour by hour?), and the bilateral
-   counterparties for Endesa before 2024 and Naturgy from 2022.
+2d. ~~**Check the self-supply inference**~~ — done 2026-09-28/29, §3.8. Cleared
+   purchases fall with self-supply, bid volumes do not, and Iberdrola's other
+   bilateral contracts close the rest: the retail total position moves by
+   −0.15 to +0.23. Still open: who sells on those other contracts, and the
+   bilateral counterparties for Endesa before 2024 and Naturgy from 2022.
 2e. ~~**EDP full-archive panel**~~ — done 2026-09-28, §3.9.
 3. ~~**X_fh**~~ — done for EDP, Movhera and Repsol in the panel (§3.9), on the
    net auction position rather than `q − θ`.

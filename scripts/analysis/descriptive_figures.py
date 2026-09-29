@@ -24,7 +24,10 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 FIGS = ROOT / "outputs" / "figures"
 
 ETA_PANEL = ROOT / "outputs" / "tables" / "residual_demand_slope_full.parquet"
-FIRM_PANEL = ROOT / "outputs" / "tables" / "firm_residual_demand_full.parquet"
+# The firm indices as rebuilt on 2026-09-29 (firm_incentive_rebuild.py): owner
+# tier, own demand removed from the slope, incentive on the net auction position.
+# The raw firm panel's incentive_h* subtracts contracts twice and is not plotted.
+FIRM_PANEL = ROOT / "outputs" / "tables" / "firm_incentive_net.parquet"
 CONC_PANEL = ROOT / "outputs" / "tables" / "concentration_panel.parquet"
 ANAT_PANEL = ROOT / "outputs" / "tables" / "supply_anatomy_panel.parquet"
 REQUIRED = [ETA_PANEL, FIRM_PANEL, CONC_PANEL, ANAT_PANEL]
@@ -205,32 +208,31 @@ def fig_eta_hour_year(eta: pd.DataFrame) -> None:
 
 
 def fig_firm_ability(firm: pd.DataFrame) -> None:
-    """ability_h5 and incentive_h5 by year for the six largest firms.
+    """ability_net_h5 and incentive_net_h5 by year for the six largest firms.
 
-    ability_h5 (BLUE) carries visual primacy -- it is the clean series.
-    incentive_h5 (ORANGE) is theta-adjusted and can turn negative for heavily
-    contracted firms. A companion strip shows theta_coverage, the market-wide
-    series that drifts and explains why incentive diverges from ability --
-    shown beside it, not instead of it.
+    ability (BLUE) is the firm's price impact: EUR/MWh per 1% of its output
+    withheld, with the firm's own offers -- sell AND buy -- taken out of the
+    slope. incentive (ORANGE) scales it by the firm's exposure to the auction
+    price, its net auction position (cleared sales minus purchases), so it turns
+    negative for a net buyer, who gains when the price falls. Both from
+    firm_incentive_rebuild.py; see notes/rq-descriptive-price-formation.md §4.5.
     """
     d = firm.copy()
     d["mwh"] = d.q_firm_mw * d.resolution_min / 60
     top6 = d.groupby("firm").mwh.sum().sort_values(ascending=False).head(6).index.tolist()
 
     d["year"] = d.date.dt.year
-    g = (d[d.firm.isin(top6)]
-         .groupby(["firm", "year"])[["ability_h5", "incentive_h5"]].median()
-         .reset_index())
-    cov = d.groupby("year").theta_coverage.median()
+    cols = ["ability_net_h5", "incentive_net_h5"]
+    g = d[d.firm.isin(top6)].groupby(["firm", "year"])[cols].median().reset_index()
+    buyer = (d[d.firm.isin(top6)].assign(b=lambda x: x.net_mw < 0)
+             .groupby("firm").b.mean())
 
-    lo = g[["ability_h5", "incentive_h5"]].min().min()
-    hi = g[["ability_h5", "incentive_h5"]].max().max()
+    lo, hi = g[cols].min().min(), g[cols].max().max()
     pad = (hi - lo) * 0.10
     ylim = (lo - pad, hi + pad)
 
-    fig = plt.figure(figsize=(13.6, 8.6))
-    gs = fig.add_gridspec(3, 3, height_ratios=[3, 3, 1.4], hspace=0.5, wspace=0.14)
-
+    fig = plt.figure(figsize=(13.6, 7.2))
+    gs = fig.add_gridspec(2, 3, hspace=0.35, wspace=0.14)
     axes = []
     for i, f in enumerate(top6):
         r, c = divmod(i, 3)
@@ -238,35 +240,23 @@ def fig_firm_ability(firm: pd.DataFrame) -> None:
         _frame(ax)
         dd = g[g.firm == f].sort_values("year")
         ax.axhline(0, color=GRID, lw=1.0, zorder=1)
-        # incentive drawn wider and underneath, ability narrower on top: where
-        # the two series are literally identical (a firm with theta ~ 0, see
-        # below) this leaves a visible orange edge rather than the orange
-        # series disappearing entirely under blue.
-        ax.plot(dd.year, dd.incentive_h5, color=ORANGE, lw=4.6, marker="o", ms=9,
+        # incentive drawn wider and underneath, so where the two coincide (a
+        # firm that never buys) the orange series stays visible at the edges.
+        ax.plot(dd.year, dd.incentive_net_h5, color=ORANGE, lw=4.6, marker="o", ms=9,
                 zorder=2, markeredgecolor=SURFACE, markeredgewidth=1.4,
-                label="Incentive (θ-adjusted)")
-        ax.plot(dd.year, dd.ability_h5, color=BLUE, lw=2.2, marker="o", ms=6,
+                label="Incentive (net auction position)")
+        ax.plot(dd.year, dd.ability_net_h5, color=BLUE, lw=2.2, marker="o", ms=6,
                 zorder=3, markeredgecolor=SURFACE, markeredgewidth=1.4,
-                label="Ability (own η)")
+                label="Ability (own offers removed)")
         ax.set_ylim(*ylim)
         ax.text(0.05, 0.92, f, transform=ax.transAxes, fontsize=13.5,
                 fontweight="bold", color=INK, va="top")
-
-        # Both conditions are read off the plotted series themselves, not
-        # hardcoded to a firm name, so they fire wherever the data shows the
-        # pattern rather than only for the firm that motivated adding them.
-        max_gap = (dd.ability_h5 - dd.incentive_h5).abs().max()
-        mean_incentive = dd.incentive_h5.mean()
-        # Placed on its own row directly under the firm-name label -- both
-        # ability and incentive stay well below this band for every firm the
-        # condition actually fires on, so it clears the data regardless of
-        # where in the year range a series happens to dip or peak.
-        if max_gap < 1e-3:
-            ax.text(0.05, 0.78, "θ ≈ 0: incentive = ability", transform=ax.transAxes,
-                    ha="left", va="top", fontsize=10.5, color=MUTED, style="italic")
-        elif mean_incentive < -0.05:
-            ax.text(0.05, 0.78, "net buyer: θ > cleared volume", transform=ax.transAxes,
-                    ha="left", va="top", fontsize=10.5, color=MUTED, style="italic")
+        # Read off the data, not a firm name: the note appears wherever the
+        # firm's incentive is negative on average.
+        if dd.incentive_net_h5.mean() < 0:
+            ax.text(0.05, 0.78, f"net buyer in {buyer[f]:.0%} of periods",
+                    transform=ax.transAxes, ha="left", va="top", fontsize=10.5,
+                    color=MUTED, style="italic")
         if c != 0:
             ax.tick_params(labelleft=False)
         else:
@@ -277,18 +267,7 @@ def fig_firm_ability(firm: pd.DataFrame) -> None:
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="upper center", ncol=2, frameon=False,
                bbox_to_anchor=(0.5, 1.0), fontsize=13)
-
-    axc = fig.add_subplot(gs[2, :])
-    _frame(axc)
-    axc.plot(cov.index, cov.values * 100, color=MUTED, lw=2.2, marker="o", ms=5, zorder=3)
-    axc.set_ylabel("θ coverage, %", fontsize=11)
-    axc.set_ylim(0, 100)
-    axc.tick_params(labelsize=11)
-    # theta_coverage is a different quantity (contract-position coverage) and
-    # does not stand in for the period-thinning note every other time-axis
-    # figure carries -- add it explicitly rather than relying on the strip.
-    axc.text(0.0, -0.32, THIN_NOTE, transform=axc.transAxes, fontsize=10.5, color=MUTED)
-
+    fig.text(0.125, 0.0, THIN_NOTE, fontsize=10.5, color=MUTED)
     fig.savefig(FIGS / "firm_ability.png", dpi=200, bbox_inches="tight")
     plt.close(fig)
 

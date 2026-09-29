@@ -181,7 +181,9 @@ def compute_month(bids, px_m, agents, theta):
 
     out = out.merge(theta, on=KEY + ["firm"], how="left")
     out["theta_mw"] = out.theta_mw.fillna(0.0)
-    # MIS-SPECIFIED, found 2026-09-28 -- do not use `incentive_h*` until rebuilt.
+    # MIS-SPECIFIED, found 2026-09-28 -- do not use `incentive_h*`. Corrected
+    # columns (incentive_net_h*, ability_net_h*) are built from this panel by
+    # analysis/firm_incentive_rebuild.py.
     # q_firm_mw is AUCTION-cleared sell volume and theta the BILATERAL schedule;
     # bilateral energy never enters the auction, so q - theta subtracts contracts
     # twice (the error hortacsu_puller_test.py caught in 6c900ec). The exposure

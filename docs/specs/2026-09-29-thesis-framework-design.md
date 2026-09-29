@@ -17,9 +17,10 @@ conduct estimate is null or wrong-signed; every precisely estimated result is
 merit order* (`rq-heat-demand-conduct.md` §8.3). The diagnosis was the **cost
 term**: a markup measured against an engineering fuel cost that omits operation
 and maintenance, part-load efficiency and start-ups cannot carry a conduct test.
-The descriptive chapter then found why the problem is structural. Since the gas
-crisis the marginal unit is usually **hydro**, whose cost is a water value that
-no invoice records (chapter §4.4, §7).
+The descriptive chapter then found why the problem is structural. Where the
+price-setting technology can be identified, **hydro** sets it in 51% of periods
+in 2019 and 76% in 2026, while combined cycle falls from 35% to 2.3% (chapter
+§4.4). Hydro's cost is a water value that no invoice records (§7).
 
 The framework below says, for each part of the market, how the cost term is
 handled: **observed**, **differenced out**, or **modelled**. That choice decides

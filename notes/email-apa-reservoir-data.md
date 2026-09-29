@@ -59,16 +59,18 @@ That confirms the 403 diagnosis in
 bot-fingerprinting. See that note for why the bulk export is still the better
 ask and the IP whitelist the fallback.
 
-**Blocking unknown before replying: do we actually have a static IP?** Home
-broadband is normally dynamic. Ask university IT for the institution's fixed
-egress address, or a VPN with a stable exit. Do not answer the email until that
-is confirmed — offering an address that rotates wastes their exception and
-fails silently later.
+**Blocking unknown before replying: do we actually have a static IP?**
+*Resolved 2026-09-29, see the section below: LMU's eduVPN exits at
+`194.95.236.6`, stable across a reconnect, but shared.* Home broadband is
+normally dynamic. Ask university IT for the institution's fixed egress address,
+or a VPN with a stable exit. Do not answer the email until that is confirmed —
+offering an address that rotates wastes their exception and fails silently
+later.
 
 **Do not route around the block with a Portuguese VPN.** They have explained it
 is a security control on a system they cannot patch.
 
-### Draft reply — Portuguese
+### Draft reply — Portuguese (superseded 2026-09-29, see below)
 
 **Assunto:** Re: Pedido de dados históricos de armazenamento de albufeiras (SNIRH)
 
@@ -124,6 +126,115 @@ station code (for example Alto Lindoso, 02H/01A).
 If the export is not feasible, I would gratefully take up the IP exception and
 will send the fixed address once my institution's IT services confirm it. In
 that case, could you confirm whether a single IPv4 address is sufficient?
+
+---
+
+## 2026-09-29 — a fixed address found; reply ready to send
+
+**The address.** Connected through LMU's eduVPN, this machine exits at
+**`194.95.236.6`** (`eduvpn1.eduvpn.de`, AS680, DFN — the German research
+network — Munich). It read the same on three checks and again after a disconnect
+and reconnect. SNIRH (`snirh.apambiente.pt` → `web1.apambiente.pt`,
+`193.136.235.19`) is IPv4-only, so one IPv4 address is all they need.
+The VPN's IPv6 exit (`2001:638:d:d000:2::238`) plays no part.
+
+**It is shared, and the reply says so.** It is the exit of DFN's eduVPN service,
+not a personal or LMU address, so whitelisting it would admit other users of that
+service. APA's security officer must be able to decide that knowingly. If they
+refuse, the fallback is a personal fixed address from LRZ (LMU's computing
+centre), or the export.
+
+**Still leads with the export**, for the reasons in
+[`hydro-water-value-design.md`](hydro-water-value-design.md): a static file is
+reproducible and cites cleanly, and it asks nothing of their security.
+
+**What we need, and why:** each reservoir's **total and useful capacity** turns
+the storage-hours floor (`rq-midday-hydro.md` §3.17) into a measurement, and
+its **stored volume over time** is the Portuguese cascades' own state variable
+for the water value, replacing the Spanish upstream-basin proxy (§3.16). The
+list covers the EDP and Movhera cascades that §3.17 maps.
+
+### Reply — Portuguese
+
+**Assunto:** Re: Pedido de dados históricos de armazenamento de albufeiras (SNIRH)
+
+Exmo. Senhor,
+
+Muito obrigado pela resposta e por explicar a razão da restrição de acesso ao
+SNIRH. Compreendo perfeitamente a preocupação de segurança.
+
+Proponho duas vias, pela ordem que me parece mais simples para a APA:
+
+1. **Uma exportação única**, em Excel ou CSV, que dispensa qualquer acesso ao
+   sistema: para cada albufeira da lista abaixo, a capacidade total e a
+   capacidade útil (hm³), e o volume armazenado (hm³ ou percentagem da
+   capacidade), com periodicidade diária ou semanal, de janeiro de 2018 até à
+   data. Um ficheiro estático é tudo o que o trabalho exige.
+
+2. **A exceção de IP** que teve a amabilidade de oferecer. O endereço seria o
+   **194.95.236.6** (apenas IPv4, uma vez que o SNIRH responde só em IPv4).
+   Devo, no entanto, ser transparente: trata-se do endereço de saída do serviço
+   eduVPN da rede académica alemã (DFN), através do qual me ligo a partir da
+   minha universidade, a LMU München. É um endereço fixo, que confirmei em
+   várias ligações, mas é partilhado por outros utilizadores desse serviço e não
+   é exclusivamente meu. Se isso não for aceitável, compreendo inteiramente, e
+   nesse caso a exportação seria a solução.
+
+Albufeiras de interesse, associadas aos aproveitamentos hidroelétricos:
+
+- **Lima:** Alto Lindoso, Touvedo
+- **Cávado, Rabagão e Homem:** Alto Rabagão, Paradela, Venda Nova, Vilarinho
+  das Furnas, Salamonde, Caniçada
+- **Douro:** Miranda, Picote, Bemposta, Baixo Sabor, Feiticeiro, Foz Tua,
+  Pocinho, Valeira, Régua, Carrapatelo, Crestuma-Lever, Vilar (Tabuaço),
+  Varosa, Torrão
+- **Tejo e Zêzere:** Cabril, Bouçã, Castelo do Bode, Santa Luzia, Pracana,
+  Fratel, Belver
+- **Mondego:** Aguieira, Raiva, Caldeirão
+- **Guadiana:** Alqueva, Pedrógão
+
+Os dados serão usados apenas para fins académicos, na minha tese de mestrado,
+com a APA e o SNIRH citados como fonte.
+
+Com os melhores cumprimentos,
+[Nome]
+Ludwig-Maximilians-Universität München
+[Orientador]
+
+### Reply — English (for reference)
+
+**Subject:** Re: Request for historical reservoir storage data (SNIRH)
+
+Dear Sir,
+
+Thank you for your reply, and for explaining the reason for restricting access
+to SNIRH. I fully understand the security concern.
+
+I would suggest two routes, in the order that seems simplest for APA:
+
+1. **A one-off export** in Excel or CSV, needing no access to the system: for
+   each reservoir listed below, the total and useful capacity (hm³) and the
+   stored volume (hm³ or percentage of capacity), daily or weekly, from January
+   2018 to date. A static file is all the work requires.
+
+2. **The IP exception** you kindly offered. The address would be
+   **194.95.236.6** (IPv4 only, since SNIRH answers only on IPv4). I should be
+   transparent, though: it is the exit address of the eduVPN service of the
+   German research network (DFN), through which I connect from my university,
+   LMU Munich. It is fixed, which I confirmed across several connections, but
+   it is shared by other users of that service and is not mine alone. If that
+   is not acceptable I entirely understand, and the export would then be the
+   solution.
+
+Reservoirs of interest, those of the hydroelectric schemes: [the list above].
+
+The data will be used for academic purposes only, in my master's thesis, with
+APA and SNIRH cited as the source.
+
+Kind regards,
+[Name]
+Ludwig-Maximilians-Universität München
+[Supervisor]
 
 ---
 

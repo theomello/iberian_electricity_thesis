@@ -140,9 +140,11 @@ The VPN's IPv6 exit (`2001:638:d:d000:2::238`) plays no part.
 
 **It is shared, and the reply says so.** It is the exit of DFN's eduVPN service,
 not a personal or LMU address, so whitelisting it would admit other users of that
-service. APA's security officer must be able to decide that knowingly. If they
-refuse, the fallback is a personal fixed address from LRZ (LMU's computing
-centre), or the export.
+service. APA's security officer must be able to decide that knowingly. The reply
+offers a dedicated address instead: a fixed IP from LRZ (LMU's computing centre),
+or a paid dedicated IP from a VPN provider, located anywhere, since APA
+whitelists the address and not the country. Switching eduVPN profiles does not
+help: both profiles tried exit at the same IPv4 address.
 
 **Still leads with the export**, for the reasons in
 [`hydro-water-value-design.md`](hydro-water-value-design.md): a static file is
@@ -177,8 +179,8 @@ Proponho duas vias, pela ordem que me parece mais simples para a APA:
    eduVPN da rede académica alemã (DFN), através do qual me ligo a partir da
    minha universidade, a LMU München. É um endereço fixo, que confirmei em
    várias ligações, mas é partilhado por outros utilizadores desse serviço e não
-   é exclusivamente meu. Se isso não for aceitável, compreendo inteiramente, e
-   nesse caso a exportação seria a solução.
+   é exclusivamente meu. Se preferir um endereço de uso exclusivo, posso obter
+   um endereço IPv4 fixo dedicado e enviar-lho de seguida.
 
 Albufeiras de interesse, associadas aos aproveitamentos hidroelétricos:
 
@@ -222,9 +224,9 @@ I would suggest two routes, in the order that seems simplest for APA:
    transparent, though: it is the exit address of the eduVPN service of the
    German research network (DFN), through which I connect from my university,
    LMU Munich. It is fixed, which I confirmed across several connections, but
-   it is shared by other users of that service and is not mine alone. If that
-   is not acceptable I entirely understand, and the export would then be the
-   solution.
+   it is shared by other users of that service and is not mine alone. If you
+   would prefer an address used only by me, I can obtain a dedicated fixed IPv4
+   address and send it to you straight away.
 
 Reservoirs of interest, those of the hydroelectric schemes: [the list above].
 

@@ -667,6 +667,9 @@ order, prices ignored; a unit-day is A2-stable when the signature never changes.
 | Cávado | 13–85% | 1–3 |
 | Hidrocantábrico | 0–2% to 2021, 84–100% from 2022 | 1 |
 
+(Lima and Cávado swap about 1,000 MW of plant in March 2024, §3.17, so their
+rows mix two plant sets. Both stay in the stable group either way.)
+
 **Where A2 holds, the curve does not move at all.** 97.8% of A2-stable unit-days
 also keep the same prices all day, so the whole curve is identical hour to hour.
 The near-exact zeros on A2-stable days (price at 50% of offered volume 0.013,
@@ -859,9 +862,11 @@ every year. What changed is the price distribution: solar has widened it (the
 Portuguese 70th percentile over the mean, 1.09 in 2018 and 1.40 in 2026; periods
 at ≤ 1 €/MWh, 0% and 25%), so a fixed high quantile rises against the mean. It
 also explains the steeper pass-through in 2024–26. **The rise against baseload
-is the price shape, not a rising markup.** Where the position falls
-(Tejo-Mondego and Lima in 2025–26), the water is being offered for more hours,
-which fits the wet years.
+is the price shape, not a rising markup.** Where the position falls, it is not
+one story: Tejo-Mondego's water is offered for more hours in 2025–26, which fits
+the wet years, but Lima's fall comes with a change of contents. About 1,000 MW
+moved from the Cávado unit into the Lima unit in March 2024 (§3.17), so Lima
+and Cávado from then on are different plant sets from before.
 
 **3. The reservoir proxy is weak.** The Spanish basin each cascade lies in or
 below (MITECO), as a deviation from its seasonal mean: fuller lowers λ̂₅₀ for the
@@ -897,6 +902,75 @@ inflow each cascade had. A stable position is **consistent with** no across-day
 withholding by EDP; it does not establish it. Separating the two needs either
 the inflows (M4, which needs Portugal's reservoir data) or a day-level conduct
 test (§7, item 10).
+
+### 3.17 Storage-hours: EDP's reshaping cascades are the small or run-of-river ones
+
+`scripts/fetch/fetch_jrc_hydro_database.py`, `scripts/build/build_storage_hours.py`,
+build-order item 4. **[preliminary]**
+
+**The measure.** Stored energy in a unit's reservoirs over its declared `cab`
+capacity: how many hours of full output the water behind its dams would supply.
+The energy comes from the JRC Hydro-power plants database (Joint Research
+Centre, CC-BY 4.0, 387 Spanish and Portuguese plants), which gives capacity,
+reservoir volume, dam height and a storage figure per plant. No source
+publishes which plants make up an OMIE cascade unit, so the mapping is by hand:
+a plant must lie on the unit's named river **and** the plants' capacities must
+sum to the unit's declared capacity. Douro 2022 gives 1,147 MW against cab's
+1,147, Lima 652 against 652, Movhera 1,684 against 1,709.
+
+**It is a lower bound, for two reasons.** The JRC storage figure is unusable for
+many pumped-storage plants: it looks like the pumping cycle alone, as with
+Alqueva at 5,800 MWh on a 4,150 hm³ reservoir. So each plant takes the larger of
+the JRC figure and volume × dam height × 2.316 (85% efficiency). The dam height
+understates the head of high-head plants and ignores the downstream plants the
+same water passes through. And Alto Rabagão, Cávado's largest reservoir, has no
+usable figure.
+
+| unit | spell | storage, GWh | hours | days |
+|---|---|---|---|---|
+| Guadiana (Alqueva) | 2018–26 | 923 | 1,816 | **76** |
+| Tejo-Mondego | 2018–26 | 628–660 | 893–939 | **37–39** |
+| Lima | 2018 → 2024-02 | 225 | 345 | **14** |
+| Cávado | 2018 → 2024-02 | ≥ 553 | ≥ 339 | **≥ 14** |
+| Cávado + Lima | 2024-03 → | ≥ 778 | ≥ 340 | **≥ 14** |
+| Mondego | 2018–26 | 51–83 | 117–191 | **5–8** |
+| Douro Internacional (Movhera) | 2022 → | 212 | 124 | **5** |
+| Douro | 2022 → | 126 | 107 | **4.5** |
+| Douro, with the Movhera plants | 2018–21 | 338 | 119 | **5** |
+
+Ranges carry five Mondego-basin plants (Caldeirão and four in the Serra da
+Estrela, 110 MW) that fit either Tejo-Mondego or Mondego. Even with them, both
+units come out 80–110 MW short of `cab`, so some plants are missing from the JRC
+list. The Douro's storage is almost all in one tributary reservoir, Vilar-Tabuaço
+on the Távora (116 of 126 GWh). Its five main-stem dams are run-of-river.
+Régua gets 9 GWh from its volume, and the other four none.
+
+**Two findings.**
+
+- **The Cávado and Lima units swapped about 1,000 MW of plant in March 2024.**
+  `cab` declares 1,632 → 632 MW for Cávado and 652 → 1,652 for Lima, and
+  offered volume moves the same way between February and April (Cávado 37.6 →
+  12.6 GWh a day, Lima 15.6 → 36.3). Which plants moved is not published.
+  Venda Nova III (780 MW) with Salamonde II (231) would leave 637 MW against
+  Cávado's 632, but nothing confirms it. So the per-unit Cávado and Lima results
+  in §3.13 and §3.16 mix two plant sets, and from March 2024 the pair is
+  measured together.
+- **The reshaping cascades are the small or run-of-river ones.** All three
+  stable cascades hold two weeks or more. Of the three that reshape their
+  tranches within the day (§3.13), Douro and Mondego hold about 5 days, the
+  least of any unit. Tejo-Mondego holds 37 days overall, but a third of its
+  capacity is run-of-river on the Tejo main stem (Fratel and Belver, 213 of
+  591 MW). Water that cannot be stored has to be released when it arrives, and
+  that shapes the offer within the day whatever the incentive. That favours the
+  competitive reading of §3.14's small, correctly signed response.
+
+**What it means for the assumptions.** A1 (a constant water value within the
+day) is safe for the large units: shifting a whole day's output moves 1–7% of
+their storage. It is weakest for Douro, Mondego and Movhera, where a day is
+an eighth to a fifth of storage, and fails for run-of-river plants, which have none.
+For the day-level test (§7, item 10) the competitive confounder is small where
+storage runs to weeks. Guadiana, Tejo-Mondego and the Cávado–Lima pair are
+where that test can be read; Douro and Mondego are where it cannot.
 
 ## 4. Specification (to build)
 
@@ -1037,8 +1111,9 @@ tilde = deviation from the firm-day mean
    periods). Nothing substantive changes (§3.9). **Iberdrola is the firm it
    matters for**: 4–13% of the band, and a slope overstated 2.1–2.5× in its worst
    decile of periods from 2023.
-4. **Storage-hours per unit**, from MITECO reservoir capacity. Needs a
-   reservoir → OMIE unit match, which is new work.
+4. ~~**Storage-hours per unit**~~ — done 2026-09-29 for the Portuguese
+   auction-route units, §3.17, from the JRC hydro database (MITECO has no
+   heads). Spain's are not built: the JRC figures cover too few Spanish plants.
 5. ~~**Clear-sky instrument**, then the first stage~~ — done 2026-09-28, §3.10.
    The clear-sky version is rejected; `z_offered` is the instrument.
 5b. ~~**Second stage**~~ — done 2026-09-28, §3.11. The price-setting version is

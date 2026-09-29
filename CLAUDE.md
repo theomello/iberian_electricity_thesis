@@ -87,6 +87,8 @@ scripts/
 | `fetch/fetch_ecb_fx.py` | ECB Statistical Data Warehouse | no | `data/ecb/ecb_usd_eur_daily.parquet` |
 | `build/build_jrc_cab_match.py` | JRC + `unit_agents` | no | `data/jrc_ppdb/jrc_cab_match.parquet` |
 | `build/build_implied_marginal_cost.py` | MIBGAS + EUA + the match | no | `data/jrc_ppdb/implied_marginal_cost_daily.parquet` |
+| `fetch/fetch_jrc_hydro_database.py` | JRC Hydro-power plants database (GitHub) | no | `data/jrc_hydro/jrc_hydro_plants.parquet` |
+| `build/build_storage_hours.py` | JRC hydro + `cab` + a hand plant→unit map | no | `data/jrc_hydro/storage_hours.parquet` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
 `lib/config.py` loads tokens from a gitignored `.env`.
@@ -942,6 +944,35 @@ amortisation, and uses static full-load efficiency, not the part-load
 figure a unit actually runs at) — API2 is the Rotterdam *import* benchmark,
 and some plants may have burned domestic Spanish coal at a different price
 before the mines closed.
+
+### JRC hydro plants and storage-hours — Portugal only, and a lower bound
+`data/jrc_hydro/jrc_hydro_plants.parquet`, fetched 2026-09-29, token-free: the
+JRC Hydro-power plants database (De Felice, CC-BY 4.0,
+`github.com/energy-modelling-toolkit/hydro-power-database`), **387 Spanish and
+Portuguese plants** with capacity, type (HDAM reservoir / HPHS pumped / HROR
+run-of-river), reservoir volume, dam height and a storage figure.
+
+**Its storage figure is not one quantity.** For high-head reservoir plants it
+reflects the true head (Alto Lindoso 224,600 MWh against 88,700 from dam
+height × volume); for many pumped-storage plants it looks like the pumping cycle
+alone (Alqueva 5,800 MWh on a 4,150 hm³ reservoir; Baixo Sabor 3,400 on 630 hm³).
+It is reported for 63–77% of Portuguese reservoir and pumped plants but only
+30–42% of Spanish ones.
+
+`build_storage_hours.py` turns it into hours of full output per OMIE cascade,
+for EDP's Portuguese units and Movhera, via a hand-checked plant→unit map (river
+plus a capacity sum matching `cab`). Every figure is a **lower bound**; see the
+script and `notes/rq-midday-hydro.md` §3.17. Spain is not built.
+
+### EDP moved ~1,000 MW from `ACAVADO` to `ALIMA` in March 2024
+`cab` max power goes 1,632 → 632 MW for `ACAVADO` ("CAVADO") and 652 → 1,652
+for `ALIMA` ("LIMA"), and offered volume moves between them from February to
+April 2024. The unit codes and names did not change, so **a per-unit series for
+either spans two plant sets**. Which plants moved is not published. The same
+thing happened to `ADOURO` in January 2022, when the dams sold to Movhera
+left it (2,849 → 1,147 MW) and became `DOUSUP`. A cascade unit's contents are
+not fixed; check `cab` max power for breaks before reading a unit's series
+across years.
 
 ### Population-weighted temperature — the demand-side weather index
 `data/weather/temperature_population_index.parquet`, fetched 2026-08-21,

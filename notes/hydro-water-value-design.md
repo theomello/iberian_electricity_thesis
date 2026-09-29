@@ -333,6 +333,16 @@ outcome itself — a bid that mixes genuine marginal offers with deliberately
 unclearable ones — is the more likely source) over a still-untried linear
 control fixing it.
 
+> **2026-09-29 — the structural model below is invalid until rebuilt.** Its
+> cost `c = p* − (q_i − Q_C_i)/|RD′_i|` takes `q_i` from auction-cleared volume
+> and `Q_C_i` from the bilateral schedule, so it subtracts contracts twice — and
+> Iberdrola's cascades, about 70% of its sample, carry the largest bilateral
+> schedules. It also conditions on price-setting periods, the selection problem
+> that invalidated the price-setting test in `rq-midday-hydro.md` §3.11. Every
+> coefficient in this section, including the 0.94 forward-price pass-through,
+> should be re-estimated on the net auction position before it is cited. See
+> [`docs/specs/2026-09-29-water-value-design.md`](../docs/specs/2026-09-29-water-value-design.md), M3.
+
 **2026-08-18, the structural model, first build:**
 `hydro_water_value_structural.py`. Scoped first (`hydro_marginal_hours.py`):
 12,470 marginal-hydro periods 2018-2026, present every month, but 70%

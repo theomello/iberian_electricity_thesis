@@ -1,6 +1,9 @@
 # Midday hydro: do the firms that set the price at solar noon price it strategically?
 
-Written 2026-09-28. **A sketch, not a spec.** It follows from §4.3, §4.4 and
+Written 2026-09-28. **A sketch, not a spec.** The water value itself — its
+definition, the two margins of market power, and the assumptions every result
+below rests on — is specified in
+[`docs/specs/2026-09-29-water-value-design.md`](../docs/specs/2026-09-29-water-value-design.md). It follows from §4.3, §4.4 and
 §7 of [`rq-descriptive-price-formation.md`](rq-descriptive-price-formation.md),
 and it is built to avoid the thing that killed the eight earlier conduct designs:
 it needs **no marginal cost at all**, not even a water value.

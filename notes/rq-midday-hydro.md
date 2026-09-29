@@ -647,6 +647,65 @@ that is confined to two cascades and too large to be a markup. Preliminary,
 and specific to EDP: Iberdrola, the firm whose break started this line of
 work, allocates through self-supply and needs the quantity-based design (2c).
 
+### 3.13 Assumptions A2 and A1: EDP's cascades come in two kinds
+
+`scripts/analysis/water_value_assumptions.py`, testing
+[`docs/specs/2026-09-29-water-value-design.md`](../docs/specs/2026-09-29-water-value-design.md)
+§5. **[preliminary]**
+
+**A2 — is a fixed point on the curve the same tranche all day?** Each
+unit-period's *quantity signature* is its step quantities (≥ 1 MW) in price
+order, prices ignored; a unit-day is A2-stable when the signature never changes.
+
+| cascade | A2-stable unit-days | distinct signatures per day, median 2024–26 |
+|---|---|---|
+| Douro | 0–2% | 16–24 |
+| Mondego | 0–15% | 14–24 |
+| Tejo-Mondego | 0–8% | 12–14 |
+| Lima | 60–95% | 1 |
+| Guadiana | 19–94% | 1–4 |
+| Cávado | 13–85% | 1–3 |
+| Hidrocantábrico | 0–2% to 2021, 84–100% from 2022 | 1 |
+
+**Where A2 holds, the curve does not move at all.** 97.8% of A2-stable unit-days
+also keep the same prices all day, so the whole curve is identical hour to hour.
+The near-exact zeros on A2-stable days (price at 50% of offered volume 0.013,
+AR [−0.02, 0.05]; at 75%, 0.006, [−0.02, 0.03]) are therefore mechanical. The
+genuinely informative subsample — fixed tranches, varying prices — is 1.8% of
+unit-periods (first-stage F = 10.8): 0.11 [−0.91, 1.32] in the middle,
+uninformative; **−0.10 [−0.69, 0.40] at the top, rejecting β = 1**, and the same
+for 2024–26 ([−0.58, 0.36]).
+
+**So EDP's within-day behaviour takes two forms, and §3.11 mixes them.**
+
+- **Lima, Guadiana, Cávado — and Hidrocantábrico from 2022 — mostly offer an
+  identical curve all day.** That rules out within-day shaping directly, for
+  any value of the incentive, without an instrument. It is the strongest EDP
+  evidence, and it is descriptive.
+- **Douro, Mondego and Tejo-Mondego (about 4 GW, half of EDP's storage hydro)
+  reshape their tranche quantities within the day on nearly every day, and far
+  more from 2024** (3–8 signatures a day before, 12–24 after). The price at a
+  fixed point is not the same tranche across hours there, so **the §3.11 and
+  §3.12 estimates are not valid curve-shift tests for these three**. The 2024
+  top-tranche signal came from them, and where tranches hold still the top does
+  not respond.
+
+**A1 — is the water value constant within the day? Not rejected, on weak
+proxies.** Flags for a binding storage bound are rare: forced release (≥ 80% of
+capacity in the day's 8 cheapest hours) at most 1.9% of unit-days (Tejo-Mondego),
+near-empty (offering < 10% of capacity in half the periods) 25% for
+Hidrocantábrico and none elsewhere, turbine at its limit in the dearest hours at
+most 3.6% (Lima). Dropping forced-release and near-empty days (4.5% of
+unit-periods) changes nothing: 0.08 in the middle, 0.96 at the top, 1.47 at the
+top in 2024–26. Without reservoir data per cascade this is a weak test.
+
+**What follows for the design.** Within-day strategy, if EDP has any, lives in
+the three reshaping cascades, and the price-at-fixed-point outcome cannot see it
+there. The natural outcome is its mirror image: **the quantity offered at or
+below a fixed price in each hour** — the supply curve read horizontally. It
+needs no A2, and under a constant water value and price-taking it too is flat
+within the day.
+
 ## 4. Specification (to build)
 
 ```
@@ -797,6 +856,11 @@ tilde = deviation from the firm-day mean
    large to be a markup, not explained by the storage proxy. (b) and (c) are no
    longer needed for the EDP verdict; (c), Mondego's pumping leg, would test
    the local-operational reading if that ever matters.
+6b. ~~**A2 and A1**~~ — done 2026-09-29, §3.13. A2 fails for Douro, Mondego and
+   Tejo-Mondego; A1 is not rejected on weak proxies.
+6c. **Quantity-at-fixed-price test on the three reshaping cascades**: MW offered
+   at or below fixed prices (relative to the unit-day's own offer level) by
+   hour, on X instrumented. The outcome that does not need A2.
 7. **Placebos**: run-of-river units (no daily λ, so they should be flat at about
    €0), and pumping units as the mirror image.
 8. **Iberdrola by quantities** (2c). The EDP test is done; the firm whose break

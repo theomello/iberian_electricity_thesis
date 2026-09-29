@@ -96,8 +96,8 @@ is about the first margin only.
 
 | # | assumption | what breaks it | test | status |
 |---|---|---|---|---|
-| **A1** | λ is constant across the hours of a unit-day | a storage bound, turbine limit, minimum flow or ramp binding *within* the day; small reservoirs that fill and empty daily | flag unit-days where output hits 0 or q̄ in dear hours, or where the storage proxy is low; rerun without them | **untested**; Mondego (§3.12) is a candidate violation |
-| **A2** | a cascade's offer curve stacks its plants' λs in the same order in every hour of the day, so a fixed point on the curve is the same plant all day | plants entering and leaving the cascade's offer within the day | stability of the step structure (count and quantities of steps) within a unit-day | **untested**; offers are published per cascade, not per plant |
+| **A1** | λ is constant across the hours of a unit-day | a storage bound, turbine limit, minimum flow or ramp binding *within* the day; small reservoirs that fill and empty daily | flag unit-days where output hits 0 or q̄ in dear hours, or where the storage proxy is low; rerun without them | **not rejected, on weak proxies** (§3.13): binding-bound flags are rare and dropping them changes nothing; no reservoir data per cascade |
+| **A2** | a cascade's offer curve stacks its plants' λs in the same order in every hour of the day, so a fixed point on the curve is the same plant all day | plants entering and leaving the cascade's offer within the day | stability of the step structure (count and quantities of steps) within a unit-day | **fails for Douro, Mondego, Tejo-Mondego** (half of EDP's storage hydro; §3.13); holds elsewhere, where the whole curve is usually identical all day |
 | **A3** | the instrument (offered solar) moves offers only through X, not through λ or the constraint multipliers | pumping or flow rules that follow the solar profile | cascade-by-cascade estimates (§3.12); β above 1 flags a failure | **fails** for Tejo-Mondego and Mondego; holds elsewhere as far as tested |
 | **A4** | the net auction position is the firm's exposure to the price | financial hedges (unobserved); co-owned plants mapped to one owner; separate retail groups | owner mapping checks | **partial**: EDP Comercial added to EDP; co-owned nuclear is a known artefact (§3.8); financial hedges unobservable |
 | **A5** | λ is set on D−1 information, when the offer is made | intraday re-optimisation feeding back into day-ahead offers | none needed for the day fixed effect | assumed |
@@ -117,7 +117,8 @@ is about the first margin only.
 | result | depends on | reading |
 |---|---|---|
 | Iberdrola's routes and self-supply (§3.7–3.8) | none: accounting | established |
-| EDP: the middle of the curve is flat, rejecting Nash (§3.11) | A1, A2, A3, A4, A5 | preliminary: within-day margin only |
+| EDP: four cascades offer an identical curve all day (§3.13) | none: descriptive | no within-day shaping there, whatever the incentive |
+| EDP: the middle of the curve is flat, rejecting Nash (§3.11) | A1, A2, A3, A4, A5 | **A2 fails in three cascades**: pooled estimate mixes identical-curve days with tranche reshaping |
 | EDP: 2024 top-tranche response (§3.12) | A3 fails in the two cascades that carry it | not interpreted as conduct |
 | forward price passes through to λ at 0.94 (`hydro-water-value-design.md`) | M3 as built | **invalid until rebuilt** |
 
@@ -140,11 +141,8 @@ is about the first margin only.
 
 In order, cheapest first:
 
-1. **A2** — step-structure stability within unit-days for EDP's cascades. If
-   the step count or quantities change within the day, a fixed point on the curve
-   is not one plant.
-2. **A1** — flag unit-days where turbine or zero-output limits bind in the
-   dearest hours; rerun §3.11 without them.
+1. ~~**A2**~~ and 2. ~~**A1**~~ — done 2026-09-29 (§3.13).
+2b. **Quantity-at-fixed-price test** for the three cascades where A2 fails.
 3. **Iberdrola quantity test** (§8.1), under A1.
 4. **Rebuild M3** on the net position without conditioning on price-setting
    periods; then decide whether the across-day margin (§8.2) is in scope.

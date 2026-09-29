@@ -107,8 +107,8 @@ is about the first margin only.
 | | method | gives | status |
 |---|---|---|---|
 | **M1** | **difference it out** (unit-day fixed effects) | the within-day conduct test, with no λ needed | done for EDP (§3.11); rests on A1–A5 |
-| **M2** | **reveal it from flat offers**: on a flat unit-day, the offer level is λ | a daily λ series, **if** the unit is price-taking within the day | cheap; defensible for EDP given §3.11; circular as a test of conduct on its own |
-| **M3** | **FOC-implied** (Arzhintar, Leslie, Neill and Wyrwoll 2025): λ̂ = p* − X at the firm's marginal offers, then regressed on the forward price, reservoir level and snowpack | λ's determinants, and a residual for the across-day margin | built in `hydro_water_value_structural.py`, **but invalid**: it subtracts contracts twice and conditions on price-setting periods (the §3.11 selection problem). Rebuild before reuse |
+| **M2** | **reveal it from the offers**: the unit-day's volume-weighted offer-price quantiles | a daily λ series, **if** the unit is price-taking within the day | **built** for EDP, Movhera and Repsol (`water_value_revealed.py`, §3.16); within-day markup bound ≤ 2 €/MWh at p90; circular as a test of conduct on its own |
+| **M3** | **FOC-implied** (Arzhintar, Leslie, Neill and Wyrwoll 2025): λ̂ = p* − X at the firm's marginal offers, then regressed on the forward price, reservoir level and snowpack | λ's determinants, and a residual for the across-day margin | first build (`hydro_water_value_structural.py`) invalid: contracts subtracted twice, price-setting periods only. **Rebuilt 2026-09-29** on M2's λ̂ over every day, with X subtracted as a bound (§3.16): pass-through of the forward 1.11 (EDP stable), 1.22 (reshaping), 0.95 (Repsol) |
 | **M4** | **structural dynamic program**: solve §2 with plant data | the competitive λ, the only true benchmark for the across-day margin | needs plant-level capacities, inflows and heads; Spain has basin-level reservoirs (MITECO), Portugal's data is geo-blocked (APA offered an IP whitelist) |
 | **M5** | **forward-price anchor**: λ ≈ the expected price in the hours the water will be used, from OMIP forwards | a benchmark for λ's level, without plant data | OMIP forwards on disk; not built |
 
@@ -123,7 +123,8 @@ is about the first margin only.
 | EDP: 2024 top-tranche response (§3.12) | A3 fails in the two cascades that carry it | not interpreted as conduct |
 | Iberdrola: its hourly allocation fits price-taking, Nash fits worse (§3.15, test 1) | A1, A4 | preliminary: validated on EDP's flat bidders; descriptive |
 | Iberdrola: IV on the deviation from the benchmark (§3.15, test 2) | A1, A3, and a benchmark without ramping | **fails validation**: read only relative to EDP's flat bidders |
-| forward price passes through to λ at 0.94 (`hydro-water-value-design.md`) | M3 as built | **invalid until rebuilt** |
+| forward price passes through to λ about one-for-one: 1.11 / 1.22 / 0.95 (§3.16) | M3 rebuilt: A1, A5, and a within-day β ≤ 0.12 | established for the λ as offered; the first build's 0.94 is superseded |
+| EDP's λ holds its quantile position in the month's price distribution, 2018–26; its rise against baseload is the price shape (§3.16) | M3 rebuilt | consistent with no across-day withholding; **not a test of it** — inflows unobserved |
 
 ## 8. How it serves the research
 
@@ -147,8 +148,10 @@ In order, cheapest first:
 1. ~~**A2**~~ and 2. ~~**A1**~~ — done 2026-09-29 (§3.13).
 2b. ~~**Quantity-at-fixed-price test**~~ — done 2026-09-29 (§3.14).
 3. ~~**Iberdrola quantity test**~~ — done 2026-09-29 (§3.15).
-4. **Rebuild M3** on the net position without conditioning on price-setting
-   periods; then decide whether the across-day margin (§8.2) is in scope.
+4. ~~**Rebuild M3**~~ — done 2026-09-29 (§3.16). Next: decide whether the
+   across-day margin (§8.2) is in scope. If it is, the cheapest test is the
+   day-level one (`rq-midday-hydro.md` §7, item 10), which needs storage-hours
+   per unit to split by reservoir size.
 5. **APA IP whitelist**, only if the across-day margin is in scope for Portugal.
 
 **Open question for the supervisor:** is the thesis about the within-day margin

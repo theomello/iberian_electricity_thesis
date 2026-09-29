@@ -342,6 +342,12 @@ control fixing it.
 > coefficient in this section, including the 0.94 forward-price pass-through,
 > should be re-estimated on the net auction position before it is cited. See
 > [`docs/specs/2026-09-29-water-value-design.md`](../docs/specs/2026-09-29-water-value-design.md), M3.
+>
+> **Rebuilt 2026-09-29** (`water_value_revealed.py`, `rq-midday-hydro.md`
+> §3.16), on every day's offers rather than price-setting periods, with no
+> contract term. The forward passes through at 1.11 (EDP's stable cascades),
+> 1.22 (its reshaping cascades) and 0.95 (Repsol), so the 0.94 below was of the
+> right size for the wrong reasons. Cite the rebuilt figures, not these.
 
 **2026-08-18, the structural model, first build:**
 `hydro_water_value_structural.py`. Scoped first (`hydro_marginal_hours.py`):

@@ -806,6 +806,98 @@ offer-curve break (§3.6) — consistent with §3.7: the break changed how it of
 the residual, not how it allocates water. The across-day margin — the *level*
 of its water value — is untested.
 
+### 3.16 The water value as offered: it tracks the forward, and holds its place in the price distribution
+
+`scripts/analysis/water_value_revealed.py`, step 4 of the spec's plan (M2 and
+M3 rebuilt). **[preliminary]**
+
+**The measure.** For every unit-day, λ̂ₖ is the k-th quantile (25/50/75) of the
+unit's offered sell prices, volume-weighted over all the day's periods. It uses
+every day, not only price-setting ones, so it avoids the old M3's selection; it
+needs no A2, since the quantile is over the whole day; and it has no contract
+term. Within-day markups are bounded rather than assumed away: subtracting
+0.12 × the day's mean X (the largest implied β in §3.14) moves λ̂₅₀ by a median
+0.39 €/MWh (p90 2.0), and changes no coefficient below. What remains in λ̂ is
+the water value **as offered**, including any day-level markup — the across-day
+margin, which this does not separate. Offers at or above 300 €/MWh are water
+withheld from the day; a quantile landing there is censored and dropped. It is
+rare for EDP (λ̂₅₀ 1–10% of unit-days) and not for Movhera (34%). 26,544
+unit-days, 2018-01 → 2026-06, for the auction-route owners: EDP's seven
+cascades, Movhera and Repsol.
+
+**1. It tracks the forward price about one-for-one.** OLS of λ̂₅₀ on OMIP's
+Spanish front-month baseload (the last settlement before the day), unit ×
+calendar-month fixed effects, errors clustered by year-month (102 clusters):
+
+| group | λ̂₅₀ on forward | 2018–20 | 2021–23 | 2024–26 |
+|---|---|---|---|---|
+| EDP stable cascades | **1.11** (0.04) | 0.64 | 1.08 | 1.55 |
+| EDP reshaping cascades | **1.22** (0.07) | 1.02 | 1.32 | 2.11 |
+| Repsol (Viesgo) | **0.95** (0.15) | 0.72 | 0.80 | 1.50 |
+| Movhera | 0.44 (0.15) | — | 0.71 | 2.39 |
+
+This is what a storage unit's water value should do: it is the expected price
+of the hours the water will be used (spec §2). The first M3's 0.94 was of the
+right size despite its defects. Gas adds little once the forward is in (EDP
+stable: forward 0.76, gas 0.70; reshaping: gas −0.08).
+
+**2. Its level rose against baseload from 2024, but not against the price
+distribution.** λ̂₅₀ / forward was 1.1–1.3 for EDP's cascades to 2021 and is
+1.2–2.3 in 2025–26. Its **quantile position** did not move: the share of the
+month's periods priced below λ̂₅₀ is
+
+| | 2018 | 2020 | 2022 | 2023 | 2024 | 2025 | 2026 |
+|---|---|---|---|---|---|---|---|
+| Cávado | 0.91 | 0.83 | 0.84 | 0.83 | 0.81 | 0.93 | 0.87 |
+| Lima | 0.87 | 0.92 | 0.90 | 0.94 | 0.91 | 0.73 | 0.75 |
+| Guadiana | 0.96 | 0.89 | 0.73 | 0.81 | 0.81 | 0.87 | 0.85 |
+| Mondego | 1.00 | 0.99 | 0.91 | 0.82 | 0.86 | 0.82 | 0.75 |
+| Tejo-Mondego | 1.00 | 1.00 | 1.00 | 0.98 | 0.90 | 0.62 | 0.77 |
+
+EDP offers its median MWh of water for roughly the dearest 10–20% of periods, in
+every year. What changed is the price distribution: solar has widened it (the
+Portuguese 70th percentile over the mean, 1.09 in 2018 and 1.40 in 2026; periods
+at ≤ 1 €/MWh, 0% and 25%), so a fixed high quantile rises against the mean. It
+also explains the steeper pass-through in 2024–26. **The rise against baseload
+is the price shape, not a rising markup.** Where the position falls
+(Tejo-Mondego and Lima in 2025–26), the water is being offered for more hours,
+which fits the wet years.
+
+**3. The reservoir proxy is weak.** The Spanish basin each cascade lies in or
+below (MITECO), as a deviation from its seasonal mean: fuller lowers λ̂₅₀ for the
+reshaping cascades (−1.2 €/MWh per percentage point of fill, se 0.27) and for
+Repsol (−2.3, se 0.72), the sign a water value should have. It does nothing for
+the stable cascades (+0.3, se 0.19), and Movhera has the wrong sign (+1.5). For
+the Portuguese cascades this is upstream hydrology, not their own storage.
+
+**Units to read with care.**
+
+- **Douro's λ̂₅₀ is run-of-river from 2025.** Its median offer is at about zero
+  (quantile position 0.01–0.07), because most of its offered volume is must-run
+  water. Read Douro at λ̂₇₅.
+- **Hidrocantábrico offered everything at zero until 2021**, so it reveals no
+  water value before 2022. That is the same regime change as its A2 break (§3.13).
+- **Movhera's median water is priced above almost every period** (quantile
+  position 0.92–1.00, a third of its λ̂₅₀ censored). Its cleared energy comes
+  from its lower tranches. Not explained here.
+- **Repsol's λ̂₅₀ / forward falls to 0.4–0.6 in 2025–26**, which would fit its
+  turn to net buyer (descriptive chapter §4.5). Its quantile position is as low
+  in 2019 and 2021 (0.29, 0.36), though, so that reading is not supported.
+
+**What it shows.** Rebuilt on every day, the water value as offered moves with
+the forward power price about one-for-one. Once measured against the price
+distribution rather than baseload, it holds its place in every year from 2018 to
+2026. That is the pattern a price-taking storage unit with a stable
+reservoir-to-turbine ratio would produce.
+
+**What it does not show.** It is not a test of the across-day margin. A firm
+withholding water across days would sell in fewer, dearer hours and push the
+quantile position up, but so would a dry year, and nothing here measures the
+inflow each cascade had. A stable position is **consistent with** no across-day
+withholding by EDP; it does not establish it. Separating the two needs either
+the inflows (M4, which needs Portugal's reservoir data) or a day-level conduct
+test (§7, item 10).
+
 ## 4. Specification (to build)
 
 ```
@@ -966,5 +1058,12 @@ tilde = deviation from the firm-day mean
    price-taking; the IV version fails validation and is read only relatively.
 9. **Next decision:** the within-day margin is now tested for both firms and
    shows at most small market power. What remains is the across-day margin (the
-   level of the water value, spec §4 and §8.2), the descriptive-chapter rebuild,
-   and the supervisor question in spec §9.
+   level of the water value, spec §4 and §8.2) and the supervisor question in
+   spec §9. The descriptive-chapter rebuild is done (§4.5 there, 2026-09-29), and
+   so is M3 (§3.16).
+10. **Day-level conduct test**, if the across-day margin is in scope. The stable
+   cascades set one curve per day, so if they exercise market power it is in the
+   day's level: λ̂₅₀ on the day's mean X, instrumented by the day's offered
+   solar, within unit × week. The competitive confounder has the same sign: a
+   sunny day leaves more water, which lowers a small reservoir's water value.
+   So it needs item 4 (storage-hours per unit) to split by reservoir size.

@@ -269,10 +269,13 @@ observable marginal cost.
 > | firm | 2018 | 2020 | 2022 | 2023 | 2024 | 2025 | 2026 | panel `q − θ` says |
 > |---|---|---|---|---|---|---|---|---|
 > | Iberdrola | −4.32 | −3.38 | −3.99 | −3.65 | −1.97 | −1.63 | −2.18 | buyer, up to 4× too large |
-> | **Endesa** | −4.10 | −7.69 | −5.30 | −6.62 | **−8.00** | **−6.44** | **−5.27** | **seller from 2024** ✗ |
+> | **Endesa** | −3.25 | −6.20 | −4.34 | −5.42 | **−6.31** | **−5.65** | **−4.03** | **seller from 2024** ✗ |
 > | Naturgy | −3.24 | −1.70 | −0.38 | −1.53 | −0.98 | −1.18 | −0.45 | buyer ✓ |
 > | Repsol | +1.42 | +0.93 | +1.09 | +0.97 | −0.66 | −0.53 | −0.54 | ≈ the same ✓ |
 > | EDP (+ EDP Comercial) | +1.92 | +2.50 | +0.26 | +1.26 | +2.11 | +0.76 | +0.38 | seller ✓ |
+>
+> Endesa includes Enel Green Power España since the merge of 2026-09-29 (below);
+> before it the row read −4.10, −7.69, −5.30, −6.62, −8.00, −6.44, −5.27.
 >
 > - **Iberdrola, Naturgy and (from 2024) Repsol are net day-ahead buyers on the
 >   correct measure** — the sign survives, for the right reason now.
@@ -304,7 +307,8 @@ observable marginal cost.
 
 **The indices rebuilt, 2026-09-29.** `scripts/analysis/firm_incentive_rebuild.py`
 reads the owner-tier firm panel and adds corrected columns beside the old ones
-(`outputs/tables/firm_incentive_net.parquet`, 5,499,066 firm-periods). Two
+(`outputs/tables/firm_incentive_net.parquet`, 5,524,288 firm-periods, to
+2026-05-31). Two
 changes: every unit a firm owns is mapped, so its own **buy** offers near p* are
 removed from its slope along with its sell offers (`slope_net`, `ability_net`);
 and the incentive uses the **net auction position**, `incentive_net = ability ×
@@ -317,28 +321,28 @@ Median `ability_net_h5`:
 
 | firm | 2018 | 2020 | 2022 | 2023 | 2024 | 2025 | 2026 |
 |---|---|---|---|---|---|---|---|
-| EDP | 0.101 | 0.109 | 0.444 | 0.216 | 0.200 | 0.218 | 0.184 |
-| IBERDROLA | 0.035 | 0.037 | 0.183 | 0.098 | 0.149 | 0.114 | 0.181 |
-| ENDESA | 0.033 | 0.011 | 0.123 | 0.046 | 0.077 | 0.108 | 0.087 |
+| EDP | 0.101 | 0.109 | 0.444 | 0.216 | 0.200 | 0.218 | 0.181 |
+| IBERDROLA | 0.035 | 0.037 | 0.183 | 0.098 | 0.149 | 0.114 | 0.195 |
+| ENDESA | 0.038 | 0.022 | 0.160 | 0.077 | 0.096 | 0.132 | 0.104 |
 | NATURGY | 0.028 | 0.034 | 0.120 | 0.023 | 0.015 | 0.034 | 0.023 |
-| ACCIONA | 0.023 | 0.021 | 0.098 | 0.056 | 0.053 | 0.063 | 0.052 |
-| AXPO | 0.025 | 0.035 | 0.167 | 0.093 | 0.077 | 0.077 | 0.053 |
-| REPSOL | 0.017 | 0.016 | 0.085 | 0.049 | 0.033 | 0.042 | 0.027 |
+| ACCIONA | 0.023 | 0.021 | 0.098 | 0.056 | 0.053 | 0.063 | 0.051 |
+| AXPO | 0.025 | 0.035 | 0.167 | 0.093 | 0.077 | 0.077 | 0.054 |
+| REPSOL | 0.017 | 0.016 | 0.085 | 0.049 | 0.033 | 0.042 | 0.028 |
 
 Removing own demand raises ability for EDP and Iberdrola only (Iberdrola 2024:
-0.121 → 0.149; 2026: 0.147 → 0.181); the rest move in the third decimal. **The
+0.121 → 0.149; 2026: 0.161 → 0.195); the rest move in the third decimal. **The
 ability results above stand, with Iberdrola's slightly higher from 2021.**
 
 Median `incentive_net_h5`, and the share of firm-periods as a net buyer:
 
 | firm | 2018 | 2020 | 2022 | 2023 | 2024 | 2025 | 2026 | net buyer, 2018 → 2026 |
 |---|---|---|---|---|---|---|---|---|
-| EDP | +0.019 | +0.018 | +0.166 | +0.131 | +0.045 | +0.031 | +0.024 | 14% → 27% (seller) |
-| IBERDROLA | −0.032 | −0.025 | −0.164 | −0.096 | −0.022 | −0.029 | 0.000 | **96% → 50%** |
-| ENDESA | −0.029 | −0.051 | −0.169 | −0.144 | −0.147 | −0.138 | −0.093 | **97% → 100%** |
-| NATURGY | −0.023 | −0.012 | −0.044 | −0.028 | −0.025 | −0.023 | −0.020 | 93% → 78% |
-| ACCIONA | +0.014 | +0.011 | +0.030 | +0.004 | +0.005 | +0.010 | +0.013 | 4% → 22% |
-| AXPO | +0.021 | +0.028 | +0.130 | +0.066 | +0.049 | +0.041 | +0.017 | 0% → 10% |
+| EDP | +0.019 | +0.018 | +0.166 | +0.131 | +0.045 | +0.031 | +0.020 | 14% → 31% (seller) |
+| IBERDROLA | −0.032 | −0.025 | −0.164 | −0.096 | −0.022 | −0.029 | +0.004 | **96% → 49%** |
+| ENDESA | −0.024 | −0.040 | −0.135 | −0.115 | −0.128 | −0.112 | −0.072 | **95% → 100%** |
+| NATURGY | −0.023 | −0.012 | −0.044 | −0.028 | −0.025 | −0.023 | −0.021 | 93% → 80% |
+| ACCIONA | +0.014 | +0.011 | +0.030 | +0.004 | +0.005 | +0.010 | +0.012 | 4% → 25% |
+| AXPO | +0.021 | +0.028 | +0.130 | +0.066 | +0.049 | +0.041 | +0.016 | 0% → 9% |
 | REPSOL | +0.008 | +0.005 | +0.024 | +0.007 | −0.010 | −0.013 | −0.017 | **1% → 90%** |
 
 What the rebuilt incentive says:
@@ -347,20 +351,34 @@ What the rebuilt incentive says:
   Axpo are sellers; Repsol becomes a buyer from 2024. The signs of the old index
   mostly survive, but its magnitudes did not: Iberdrola's 2022 value was
   −0.617 and is −0.164.
-- **Endesa never flips.** It is a net buyer in 97–100% of periods in every year;
+- **Endesa never flips.** It is a net buyer in 95–100% of periods in every year;
   the old index showed a flip to positive in 2024 (chain) or 2025 (owner) because
   Endesa moved its storage hydro from bilateral self-supply into the auction,
   which shrank θ and raised q without changing its net position.
 - **Iberdrola is drifting towards balance**: a net buyer in 96% of periods in
-  2018 and 50% in 2026 (a partial year), with the median incentive reaching zero.
+  2018 and 49% in 2026 (a partial year), with the median incentive reaching zero.
   New, and not yet explained.
 
-**A mapping issue this exposes.** `ENEL` (Enel Green Power España, 47 TWh of
-cleared sales in the panel) stands as a separate group from `ENDESA`, although it
-is Endesa's renewables subsidiary. It is a net seller in every period and would
-not change Endesa's sign, but Endesa's slope currently counts those offers as a
-rival's. `build_owner_groups.py` leaves it unmerged for want of evidence in the
-data; merging it would take a hand-verified case there.
+**`ENEL` merged into `ENDESA`, 2026-09-29.** Enel Green Power España (47 TWh of
+cleared sales in the panel) stood as a separate group, although Endesa
+Generación has owned all of it since 2016, so Endesa's slope counted its own
+renewables' offers as a rival's. `GROUP_MERGES` in `build_owner_groups.py` now
+folds it in (2 entities, 47 units, 2.1% of supply volume); the owner-tier θ panel,
+firm panel and indices were rebuilt on it. The tables above are the merged ones.
+For Endesa, 2018–2025, the change is the merge alone:
+
+- **ability rises** — 2020 0.011 → 0.022, 2022 0.123 → 0.160, 2025 0.108 →
+  0.132 — because its renewables join q and leave the rival band;
+- **the incentive shrinks but keeps its sign** — 2022 −0.169 → −0.135, 2024
+  −0.147 → −0.128 — because those renewables are net sellers; the net-buyer
+  share is 95–100% (was 97–100%), and the net position (box above) stays
+  negative in every year.
+
+The 2026 column moved for every firm for a second reason: the rebuilt panel runs
+to 2026-05-31 instead of 2026-05-08, since the bids were refreshed in between.
+Those shifts are in the third decimal except Iberdrola's ability (0.181 → 0.195).
+The inference-chain tier (`build_unit_agents.py`, `FIRM_TOKENS`) still keeps
+`ENEL` apart; only the owner tier is merged.
 
 Median `ability_h5` and `incentive_h5` (€/MWh per 1% withheld), top firms by
 cleared volume:
@@ -865,7 +883,7 @@ not after.
 | band density fell ~2/3 | **established** | falls as a step 2020→2022, not a slide |
 | the collapse is an *evening ramp* phenomenon | **rejected** | it is a midday phenomenon (§4.3) |
 | gas left the margin, hydro took it | **bounded** | resolved periods only, 69–81% coverage |
-| Iberdrola is a net day-ahead buyer | **established, on the net auction position** (rebuilt 2026-09-29) | so are Naturgy and Endesa in every year, and Repsol from 2024. Iberdrola's net-buyer share falls from 96% of periods (2018) to 50% (2026). The earlier evidence, `incentive`'s `(q − θ)`, double-subtracted contracts (§4.5) |
+| Iberdrola is a net day-ahead buyer | **established, on the net auction position** (rebuilt 2026-09-29) | so are Naturgy and Endesa in every year, and Repsol from 2024. Iberdrola's net-buyer share falls from 96% of periods (2018) to 49% (2026). The earlier evidence, `incentive`'s `(q − θ)`, double-subtracted contracts (§4.5) |
 | firm ability (price impact) rose across the window, peaking in 2022 | **established, rebuilt** | own demand now removed from the slope; changes only EDP and Iberdrola, upwards |
 | Endesa's flip to a positive incentive | **withdrawn** (2026-09-28) | an artefact of the double subtraction: Endesa moved hydro from bilateral into the auction in 2024 and stayed a net buyer (§4.5) |
 | θ measures contract position | **bounded** | physical bilateral only; misses financial hedges |

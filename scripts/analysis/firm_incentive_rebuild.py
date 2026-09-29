@@ -50,7 +50,7 @@ BIDS = DATA / "omie/bids/parquet"
 PANEL = ROOT / "outputs/tables/firm_residual_demand_full_owner.parquet"
 OUT = ROOT / "outputs/tables/firm_incentive_net.parquet"
 MIN_SLOPE = 5.0     # MW per EUR/MWh, as in edp_hydro_panel.py
-TABLE_FIRMS = ["EDP", "IBERDROLA", "ENDESA", "ENEL", "NATURGY", "ACCIONA", "AXPO", "REPSOL"]
+TABLE_FIRMS = ["EDP", "IBERDROLA", "ENDESA", "NATURGY", "ACCIONA", "AXPO", "REPSOL"]
 KEY = ["date", "period"]
 
 
@@ -129,10 +129,8 @@ def report(f: pd.DataFrame) -> None:
         print(f"  h={h:g}: slope_net below {MIN_SLOPE:g} on {(f[f'slope_net_h{h:g}'] < MIN_SLOPE).mean():.4f} "
               f"of firm-periods (index undefined there); median slope_net/slope_i "
               f"{(f[f'slope_net_h{h:g}'] / f[f'slope_i_h{h:g}']).median():.3f}")
-    s = f[f.firm.isin(["ENDESA", "ENEL"])].groupby("firm").agg(
-        periods=("q_firm_mw", "size"), cleared_twh=("q_firm_mw", lambda x: x.sum() / 1e6))
-    print("  ENDESA and ENEL stand as separate groups in the owner mapping:")
-    print(s.round(2).to_string())
+    # Enel Green Power Espana is Endesa's; build_owner_groups.GROUP_MERGES folds it in.
+    print(f"  firm-periods still labelled ENEL: {(f.firm == 'ENEL').sum():,} (0 expected)")
     print(f"\nwrote {OUT.relative_to(ROOT)}  ({len(f):,} firm-periods)")
 
 

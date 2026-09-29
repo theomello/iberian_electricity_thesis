@@ -127,6 +127,23 @@ MANUAL_GROUPS: dict[str, tuple[str, str]] = {
         "ENCE's biomass arm; ESIOS assigns 12/12 to ENCE"),
 }
 
+# Group-level merges: two group LABELS that are one corporate group. Needed when
+# layer 1 established a group from a legal NAME rather than from ownership --
+# the manual layer above only fills entities layer 1 left open, so it cannot
+# correct a layer-1 label. Applied after all three layers; each carries both
+# in-data evidence and the ownership fact.
+GROUP_MERGES: dict[str, tuple[str, str]] = {
+    "ENEL": ("ENDESA",
+        "Enel Green Power Espana is 100% owned by Endesa Generacion, which bought "
+        "the remaining 60% from Enel Green Power International in 2016 (Enel and "
+        "Endesa filings, July 2016) -- the whole window. In the data, two of the "
+        "entity's own units (ECY*) carry the ESIOS agent ENDESA COGENER Y "
+        "RENOVABLES, which the ESIOS chain assigns to ENDESA; ESIOS labels the "
+        "rest ENEL after the legal name. Standing apart, it made Endesa's "
+        "residual-demand slope count Endesa's own renewables as a rival's "
+        "(merged 2026-09-29)"),
+}
+
 
 def strip_accents(s: str) -> str:
     return "".join(c for c in unicodedata.normalize("NFKD", s)
@@ -208,6 +225,15 @@ def build(verbose: bool = True) -> pd.DataFrame:
     # because no rule found evidence to merge it into another. For a genuinely
     # standalone firm -- Shell, Statkraft, Movhera -- that is the right answer.
     e["source"] = e.source.fillna("self")
+
+    # Group-level merges, last, so they can join a label layer 1 established.
+    for src, (dst, _why) in GROUP_MERGES.items():
+        hit = e.group == src
+        e.loc[hit, "group"] = dst
+        e.loc[hit, "source"] = e.loc[hit, "source"] + "+merge"
+        if verbose:
+            print(f"  group merge {src} -> {dst}: {int(hit.sum())} entities, "
+                  f"{int(e.loc[hit, 'n_units'].sum())} units")
 
     if verbose:
         print(f"{len(e):,} distinct agent_owner strings -> "

@@ -351,11 +351,21 @@ below are wrong, and the `IGN` note is wrong in its reasoning even though it
 was right to reject Iberdrola.
 
 **`agent_owner` names legal entities; `build_owner_groups.py` rolls them up.**
-`data/omie/registry/owner_groups.parquet` maps **1,451 owner strings to 1,098
+`data/omie/registry/owner_groups.parquet` maps **1,451 owner strings to 1,097
 groups** on three evidence layers: the independent ESIOS chain's verdict on an
 entity's own units (**81.7%** of supply volume), a stem match onto a group that
 layer established (2.0%), seven hand-verified cases (0.3%), and **13.3% left
-standing as their own group** because no merge evidence was found. Without it
+standing as their own group** because no merge evidence was found.
+
+**One group-level merge, 2026-09-29: `ENEL` → `ENDESA`** (`GROUP_MERGES` in
+`build_owner_groups.py`; 2.1% of supply volume). Enel Green Power España is 100%
+owned by Endesa Generación, which bought the remaining 60% in 2016, so for the
+whole window. Layer 1 had grouped it as `ENEL` because ESIOS labels its agent
+after the legal name; two of the entity's own units (`ECY*`) carry the ESIOS
+agent "Endesa Cogener y Renovables", which the chain assigns to ENDESA. Standing
+apart, it made Endesa's residual-demand slope count Endesa's own renewables as a
+rival's. The manual layer could not do this: it only fills entities layer 1 left
+open, so a merge of two layer-1 *labels* needs its own mechanism. Without it
 `SU ELETRICIDADE` — 7.3% of supply volume, EDP's Portuguese regulated supplier —
 reads as a firm in its own right, and Repsol splits across nine entities.
 

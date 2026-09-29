@@ -124,7 +124,7 @@ spec §5.
 
 **Verdict: within-day market power in storage hydro is at most small.**
 
-### Leg B — hydro across days: cost modelled by the Euler equation. **Next.**
+### Leg B — hydro across days: cost modelled by the Euler equation. **First pass done.**
 
 EDP's stable cascades submit one curve per day, so any market power they
 exercise sits in the day's **level**. Within a unit-week, λ moves only with news
@@ -136,10 +136,15 @@ control.
   the same sign as market power. Its size falls with storage.
 - **Where it can be read.** Only on units holding two weeks or more: Guadiana,
   Tejo-Mondego and the Cávado–Lima pair (§3.17).
-- **What is already known.** λ̂ tracks the forward price one-for-one (1.11,
-  1.22, 0.95 by group) and holds its place in the month's price distribution
-  (§3.16). That is consistent with no across-day withholding, but it is not a
-  test.
+- **What was known before the test.** λ̂ tracks the forward price one-for-one
+  (1.11, 1.22, 0.95 by group) and holds its place in the month's price
+  distribution (§3.16).
+- **Result, 2026-09-29 (§3.18).** On the large reservoirs, β = 0.09, with an
+  Anderson–Rubin set of [−0.50, 0.79]. That rejects Nash and does not
+  distinguish small β from zero. It is robust across quantiles and to the
+  independent-owner instrument. 2024–26 alone cannot reject Nash (F = 12), and a
+  slow, weeks-long withholding is absorbed by the week fixed effect and left
+  untested.
 
 ### Leg C — thermal plant: cost observed. **To redo.**
 
@@ -220,7 +225,8 @@ archive and β̂.
 
 ## 8. Plan
 
-1. **Leg B** on the large-storage units. It is the cheapest and the open margin.
+1. ~~**Leg B**~~ — first pass done (§3.18). Strengthen 2024–26 by computing X
+   for the zero-price middays the firm panel drops.
 2. **Leg D**: offers either side of n = 0 within Iberdrola, Repsol and EDP.
 3. **Leg C**: rebuild the thermal test on the net position and the capped cost,
    with unit fixed effects, 2018–2022.

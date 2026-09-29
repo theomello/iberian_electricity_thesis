@@ -972,6 +972,79 @@ For the day-level test (§7, item 10) the competitive confounder is small where
 storage runs to weeks. Guadiana, Tejo-Mondego and the Cávado–Lima pair are
 where that test can be read; Douro and Mondego are where it cannot.
 
+### 3.18 Across days: the large reservoirs' daily water value does not follow the markup term
+
+`scripts/analysis/water_value_across_days.py`, leg B of
+[`docs/specs/2026-09-29-thesis-framework-design.md`](../docs/specs/2026-09-29-thesis-framework-design.md)
+and build-order item 10. **[preliminary]**
+
+**The test.** EDP's stable cascades submit one curve a day, so any market power
+they exercise is in the day's level:
+λ̂₅₀(u, d) = λ(u, d) + β · X̄(d). Here λ̂₅₀ is the unit-day's volume-weighted
+median offer price (§3.16) and X̄ is EDP's mean markup term over the day's
+periods.
+
+- **The water value is absorbed** by unit × week fixed effects, since between
+  its bounds it moves only with news.
+- **X̄ is instrumented** by the day's offered solar.
+- **Controls:** the forward price, gas, the day's mean demand forecast, 7-day
+  trailing rain over the four western basins, and day of week.
+- **Errors** are clustered by week, with closed-form Anderson–Rubin sets.
+- **Variation:** within a week, X̄ varies with a standard deviation of 6.5 €/MWh.
+  At β = 1, λ̂₅₀ would move by that much.
+
+**The confounder** has the market-power sign. A sunny day leaves water behind,
+which lowers the water value. So the test is read on units whose storage makes
+that small (§3.17), with the small ones as the contrast.
+
+| sample | first stage, per GW (F) | β | AR 95% | OLS |
+|---|---|---|---|---|
+| **large storage, λ̂₅₀** | −1.88 (27.9) | **+0.09** (0.31) | **[−0.50, 0.79]** | −0.22 |
+| large, λ̂₂₅ | −2.02 (28.7) | +0.14 | [−0.36, 0.73] | −0.20 |
+| large, λ̂₇₅ | −1.84 (27.8) | −0.11 | [−0.79, 0.59] | −0.23 |
+| large, independent-owner solar | −2.16 (30.6) | −0.00 | [−0.56, 0.63] | −0.22 |
+| large, 2018–20 | −0.68 (13.4) | −2.27 | [−7.27, 1.04] | −0.09 |
+| large, 2021–23 | −2.95 (27.8) | −0.00 | [−0.65, 0.64] | −0.07 |
+| large, 2024–26 | −1.69 (12.1) | +0.02 | [−0.84, 1.25] | −0.40 |
+| small storage, λ̂₅₀ | −1.91 (26.9) | +0.37 (0.36) | [−0.30, 1.25] | −0.17 |
+
+By unit (λ̂₅₀, pooled): Cávado −0.15 [−0.76, 0.50], Tejo-Mondego −0.18
+[−1.24, 0.84], Lima +0.11 [−0.71, 1.15], Guadiana +0.46 [−0.33, 1.47]; Douro
++0.35 [−0.26, 1.06], Mondego +0.45 [−0.69, 1.93].
+
+**What it shows.**
+
+- **On the large reservoirs, the day's water value does not follow the
+  instrumented markup term.** The estimates sit near zero at every quantile and
+  with either solar measure, and every pooled set **excludes β = 1**. The
+  supply-function Nash response across days is rejected, as it was within the
+  day.
+- **The small reservoirs sit higher** (+0.37 against +0.09), the direction the
+  water-saving confounder predicts, but the difference is well inside the
+  noise.
+- **OLS is negative everywhere.** Days with a high X̄ are dear days, when the
+  offer sits low relative to the price. The instrument removes that.
+
+**What it does not show.**
+
+- **It does not exclude a moderate β.** The pooled set runs to 0.79. The test
+  rules out full Nash, not market power at half its strength.
+- **2024–26, the solar era, cannot reject Nash** (upper bound 1.25). The first
+  stage is weaker there (F = 12), because the firm panel drops the zero-price
+  middays that solar creates.
+- **2018–20 is uninformative** (F = 13, set [−7.3, 1.0]): offered solar was
+  small and moved X̄ little.
+- **It tests the day-to-day margin**, whether the level tracks the day's X. It
+  does not test a slow withholding that lifts the water value for weeks at a
+  time. The week fixed effect absorbs that, along with everything else that is
+  slow.
+
+**Leg B verdict, first pass.** Across days, as within them, EDP's storage hydro
+shows no response of the size supply-function Nash predicts. The sharpest
+remaining gap is 2024–26. Recovering the zero-price middays would strengthen the
+first stage there: the firm panel drops them, but X can be computed for them
+from the bids.
+
 ## 4. Specification (to build)
 
 ```
@@ -1136,7 +1209,9 @@ tilde = deviation from the firm-day mean
    level of the water value, spec §4 and §8.2) and the supervisor question in
    spec §9. The descriptive-chapter rebuild is done (§4.5 there, 2026-09-29), and
    so is M3 (§3.16).
-10. **Day-level conduct test**, if the across-day margin is in scope. The stable
+10. ~~**Day-level conduct test**~~ — first pass done 2026-09-29, §3.18: β = 0.09,
+   AR [−0.50, 0.79] on the large reservoirs; Nash rejected except in 2024–26.
+   Next: recover X for the zero-price middays to strengthen 2024–26. The stable
    cascades set one curve per day, so if they exercise market power it is in the
    day's level: λ̂₅₀ on the day's mean X, instrumented by the day's offered
    solar, within unit × week. The competitive confounder has the same sign: a

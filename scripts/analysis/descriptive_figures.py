@@ -208,23 +208,24 @@ def fig_eta_hour_year(eta: pd.DataFrame) -> None:
 
 
 def fig_firm_ability(firm: pd.DataFrame) -> None:
-    """ability_net_h5 and incentive_net_h5 by year for the six largest firms.
+    """ability_exp_h5 and incentive_exp_h5 by year for the six largest firms.
 
     ability (BLUE) is the firm's price impact: EUR/MWh per 1% of its output
     withheld, with the firm's own offers -- sell AND buy -- taken out of the
     slope. incentive (ORANGE) scales it by the firm's exposure to the auction
-    price, its net auction position (cleared sales minus purchases), so it turns
+    price, its EXPOSED net auction position (cleared sales minus purchases,
+    regulated pass-through suppliers excluded), so it turns
     negative for a net buyer, who gains when the price falls. Both from
     firm_incentive_rebuild.py; see notes/rq-descriptive-price-formation.md §4.5.
     """
     d = firm.copy()
-    d["mwh"] = d.q_firm_mw * d.resolution_min / 60
+    d["mwh"] = d.q_exp_mw * d.resolution_min / 60
     top6 = d.groupby("firm").mwh.sum().sort_values(ascending=False).head(6).index.tolist()
 
     d["year"] = d.date.dt.year
-    cols = ["ability_net_h5", "incentive_net_h5"]
+    cols = ["ability_exp_h5", "incentive_exp_h5"]
     g = d[d.firm.isin(top6)].groupby(["firm", "year"])[cols].median().reset_index()
-    buyer = (d[d.firm.isin(top6)].assign(b=lambda x: x.net_mw < 0)
+    buyer = (d[d.firm.isin(top6)].assign(b=lambda x: x.net_exp_mw < 0)
              .groupby("firm").b.mean())
 
     lo, hi = g[cols].min().min(), g[cols].max().max()
@@ -242,10 +243,10 @@ def fig_firm_ability(firm: pd.DataFrame) -> None:
         ax.axhline(0, color=GRID, lw=1.0, zorder=1)
         # incentive drawn wider and underneath, so where the two coincide (a
         # firm that never buys) the orange series stays visible at the edges.
-        ax.plot(dd.year, dd.incentive_net_h5, color=ORANGE, lw=4.6, marker="o", ms=9,
+        ax.plot(dd.year, dd.incentive_exp_h5, color=ORANGE, lw=4.6, marker="o", ms=9,
                 zorder=2, markeredgecolor=SURFACE, markeredgewidth=1.4,
-                label="Incentive (net auction position)")
-        ax.plot(dd.year, dd.ability_net_h5, color=BLUE, lw=2.2, marker="o", ms=6,
+                label="Incentive (exposed net auction position)")
+        ax.plot(dd.year, dd.ability_exp_h5, color=BLUE, lw=2.2, marker="o", ms=6,
                 zorder=3, markeredgecolor=SURFACE, markeredgewidth=1.4,
                 label="Ability (own offers removed)")
         ax.set_ylim(*ylim)
@@ -253,7 +254,7 @@ def fig_firm_ability(firm: pd.DataFrame) -> None:
                 fontweight="bold", color=INK, va="top")
         # Read off the data, not a firm name: the note appears wherever the
         # firm's incentive is negative on average.
-        if dd.incentive_net_h5.mean() < 0:
+        if dd.incentive_exp_h5.mean() < 0:
             ax.text(0.05, 0.78, f"net buyer in {buyer[f]:.0%} of periods",
                     transform=ax.transAxes, ha="left", va="top", fontsize=10.5,
                     color=MUTED, style="italic")

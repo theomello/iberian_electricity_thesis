@@ -278,7 +278,12 @@ hourly level and daily inflow, turbined, pumped, spilled and outflow series.
 That is more than the export we asked for. `scripts/fetch/fetch_snirh_reservoirs.py`
 pulls 39 stations, one request each, 5 s apart.
 
-### Thank-you reply — Portuguese (draft, not sent)
+### Thank-you reply — Portuguese
+
+**Sent 2026-09-30**, in the same thread, to Marco Orlando, cc
+`maria.saramago@apambiente.pt`, `snirh@apambiente.pt` and the LMU address, from
+the Gmail address. Nothing further is owed; the correspondence is closed unless
+a refresh needs the whitelist again.
 
 **Assunto:** Re: Pedido de dados históricos de armazenamento de albufeiras (SNIRH) — bacia do Mondego
 

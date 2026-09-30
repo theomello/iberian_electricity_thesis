@@ -124,7 +124,7 @@ spec §5.
 
 **Verdict: within-day market power in storage hydro is at most small.**
 
-### Leg B — hydro across days: cost modelled by the Euler equation. **First pass done.**
+### Leg B — hydro across days: cost modelled by the Euler equation. **Done; 2024–26 open.**
 
 EDP's stable cascades submit one curve per day, so any market power they
 exercise sits in the day's **level**. Within a unit-week, λ moves only with news
@@ -145,6 +145,13 @@ control.
   independent-owner instrument. 2024–26 alone cannot reject Nash (F = 12), and a
   slow, weeks-long withholding is absorbed by the week fixed effect and left
   untested.
+- **Second pass, 2026-09-30 (§3.19): zero-price middays included.** X is
+  rebuilt from the bids for every clean period and reproduces the panel's X
+  exactly where the panel has it. At a zero price, X ≈ 0: rivals' slope is nine
+  times flatter and EDP is a net buyer half the time. Pooled large-storage β =
+  0.13, AR [−0.43, 0.77], F = 35: a firmer rejection of Nash. 2024–26 gains 73
+  days and F rises to 16, but the set [−0.72, 1.13] still contains β = 1. The
+  solar era needs a stronger instrument, not more periods.
 
 ### Leg C — thermal plant: cost observed. **To redo.**
 
@@ -225,8 +232,8 @@ archive and β̂.
 
 ## 8. Plan
 
-1. ~~**Leg B**~~ — first pass done (§3.18). Strengthen 2024–26 by computing X
-   for the zero-price middays the firm panel drops.
+1. ~~**Leg B**~~ — done (§3.18–3.19). Zero-price middays recovered; pooled
+   Nash rejection firmer, 2024–26 still open (F = 16, set to 1.13).
 2. **Leg D**: offers either side of n = 0 within Iberdrola, Repsol and EDP.
 3. **Leg C**: rebuild the thermal test on the net position and the capped cost,
    with unit fixed effects, 2018–2022.

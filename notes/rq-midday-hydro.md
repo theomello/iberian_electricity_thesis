@@ -1043,7 +1043,70 @@ By unit (λ̂₅₀, pooled): Cávado −0.15 [−0.76, 0.50], Tejo-Mondego −0
 shows no response of the size supply-function Nash predicts. The sharpest
 remaining gap is 2024–26. Recovering the zero-price middays would strengthen the
 first stage there: the firm panel drops them, but X can be computed for them
-from the bids.
+from the bids. Done in §3.19; it helps less than hoped.
+
+### 3.19 Leg B with the zero-price middays: a firmer pooled result, 2024–26 still open
+
+`scripts/analysis/edp_x_all_periods.py` builds EDP's X for every period from
+the bids, with the panel's definitions (net position over all owned units, ±5
+€/MWh band, rivals only, slope floor 5 MW per €/MWh). `water_value_across_days.py`
+now reports both versions of X̄. **[preliminary]**
+
+**The rebuild reproduces the panel.** On the 78,964 periods the panel keeps,
+the correlation with the panel's X is 1.000000 and 98% of periods agree exactly
+(net position 100%, slope 69% exactly, p99 difference 0.0001). The zero-price
+periods are therefore measured on the same basis as the rest.
+
+**At a zero price X is close to zero, and that is the first-order condition
+working, not a defect.** Across 2024–26 clean periods:
+
+| | zero-price (12.5%) | priced |
+|---|---|---|
+| rivals' slope, MW per €/MWh (median) | 1,905 | 207 |
+| EDP net position, MW (median) | −234 | +744 |
+| EDP a net buyer | 55% | 28% |
+
+Residual demand is about nine times flatter at a zero price, where the band
+catches the mass of renewable offers, and EDP is as often buying as selling. So
+X ≈ 0 in those periods: the firm has no markup term to exercise. Dropping them,
+as the panel does, raised the day's mean X on exactly the sunniest days.
+
+**Result.** Clean periods only (no split, clearing identity holds); days with
+under half their periods carrying X are dropped.
+
+| sample, λ̂₅₀ | X̄ from | first stage, per GW (F) | β | AR 95% |
+|---|---|---|---|---|
+| large, pooled | panel | −1.88 (27.9) | +0.09 | [−0.50, 0.79] |
+| large, pooled | **all periods** | −1.93 (**34.5**) | **+0.13** | **[−0.43, 0.77]** |
+| large, independent-owner solar | all periods | −2.18 (37.1) | +0.04 | [−0.49, 0.63] |
+| large, 2024–26 | panel | −1.69 (12.1) | +0.02 | [−0.84, 1.25] |
+| large, 2024–26 | **all periods** | −1.71 (**15.6**) | **+0.09** | **[−0.72, 1.13]** |
+| small, pooled | all periods | −1.96 (33.2) | +0.42 | [−0.20, 1.18] |
+| small, 2024–26 | all periods | −1.72 (15.7) | +0.28 | [−0.58, 1.38] |
+
+2018–20 is identical in both versions (no zero-price periods then), which is the
+check that nothing else moved.
+
+**What it shows.**
+
+- **The pooled rejection of Nash is firmer.** F rises from 28 to 35 and the
+  large-storage set tightens to [−0.43, 0.77]. It excludes β = 1 at every
+  quantile and with either solar measure.
+- **2024–26 gains 73 days** (788 → 861 of 911) and F rises from 12 to 16. The
+  set narrows to [−0.72, 1.13] but **still contains β = 1**.
+- **The first-stage slope barely moves** (−1.69 → −1.71 per GW). The gain comes
+  from the days recovered, not from a sharper response of X̄ to solar.
+
+**Why 2024–26 stays open.** Zero-price periods are only 12.5% of clean periods
+in the era, so recovering them adds sample but little new variation. The other
+50 days lost in 2024–26 fail the clean-period rule (market splitting, or the
+2025 clearing-identity cluster). Those cannot be recovered: X needs one price
+and a clearing identity that holds.
+
+**Leg B verdict, second pass.** Pooled over 2018–2026, the large reservoirs'
+daily water value rejects the supply-function Nash response (β ≤ 0.77). The
+solar era on its own cannot yet tell β = 0 from β = 1. More precision there
+needs a stronger instrument, not more periods.
 
 ## 4. Specification (to build)
 
@@ -1211,7 +1274,8 @@ tilde = deviation from the firm-day mean
    so is M3 (§3.16).
 10. ~~**Day-level conduct test**~~ — first pass done 2026-09-29, §3.18: β = 0.09,
    AR [−0.50, 0.79] on the large reservoirs; Nash rejected except in 2024–26.
-   Next: recover X for the zero-price middays to strengthen 2024–26. The stable
+   Zero-price middays recovered 2026-09-30, §3.19: pooled β = 0.13, AR
+   [−0.43, 0.77], F 35; 2024–26 F 12 → 16, set [−0.72, 1.13], still open. The stable
    cascades set one curve per day, so if they exercise market power it is in the
    day's level: λ̂₅₀ on the day's mean X, instrumented by the day's offered
    solar, within unit × week. The competitive confounder has the same sign: a

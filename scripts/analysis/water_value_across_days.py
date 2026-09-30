@@ -44,11 +44,13 @@ demand forecast, 7-day trailing precipitation over the four western basins, and
 day-of-week dummies. Errors clustered by week. Anderson-Rubin sets in closed
 form, as in `midday_hydro_iv.py`.
 
-Xbar averages the periods the firm panel keeps. It drops periods priced at or
-below 1 EUR/MWh, which are sunny middays, so on the sunniest days Xbar is an
-average over fewer, dearer periods -- a weaker first stage, not a biased one
-unless the dropped periods would move the level. Days where under half the
-periods carry X are dropped.
+TWO VERSIONS OF Xbar. `X_bar` averages the periods the firm panel keeps; it
+drops periods priced at or below 1 EUR/MWh, the sunny middays, so on the sunniest
+days it is an average over fewer, dearer periods and the first stage weakens
+exactly where solar should act (2024-26, F = 12). `X_bar_all` averages every
+clean period (no split, clearing identity holds), zero-price ones included, from
+`edp_x_all_periods.py`, which reproduces the panel's X where the panel has it.
+Days where under half the periods carry X are dropped, per version.
 """
 from __future__ import annotations
 
@@ -67,6 +69,7 @@ DATA = ROOT / "data"
 LAMBDA = ROOT / "outputs/tables/water_value_revealed.parquet"
 PANEL = ROOT / "outputs/tables/edp_hydro_panel.parquet"
 SOLAR = ROOT / "outputs/tables/solar_instrument.parquet"
+X_ALL = ROOT / "outputs/tables/edp_x_all_periods.parquet"   # edp_x_all_periods.py
 PRICE_OUT = 300.0
 LARGE = ["GUADIA", "TEMON", "ACAVADO", "ALIMA"]   # >= 2 weeks of storage (§3.17)
 SMALL = ["ADOURO", "MONDEGO"]                     # ~5 days
@@ -80,6 +83,14 @@ def daily_x() -> pd.DataFrame:
     p = p[p.group == "EDP"].drop_duplicates(["date", "period"])
     p["date"] = pd.to_datetime(p.date)
     return p.groupby("date").agg(X_bar=("X", "mean"), x_cover=("X", lambda s: s.notna().mean())).reset_index()
+
+
+def daily_x_all() -> pd.DataFrame:
+    x = pd.read_parquet(X_ALL, columns=["date", "period", "X", "clean"])
+    x["date"] = pd.to_datetime(x.date)
+    x["Xc"] = x.X.where(x.clean)
+    return x.groupby("date").agg(X_bar_all=("Xc", "mean"),
+                                 x_cover_all=("Xc", lambda s: s.notna().mean())).reset_index()
 
 
 def daily_solar() -> pd.DataFrame:
@@ -111,9 +122,10 @@ def sample() -> pd.DataFrame:
     for k in ("lambda25", "lambda50", "lambda75"):
         d.loc[d[k] >= PRICE_OUT, k] = np.nan
     d = d[d.unit.isin(LARGE + SMALL)]
-    for f in (daily_x(), daily_solar(), daily_forecast(), daily_rain()):
+    for f in (daily_x(), daily_x_all(), daily_solar(), daily_forecast(), daily_rain()):
         d = d.merge(f, on="date", how="left")
-    d = d[d.x_cover >= 0.5]
+    d.loc[d.x_cover < 0.5, "X_bar"] = np.nan
+    d.loc[d.x_cover_all < 0.5, "X_bar_all"] = np.nan
     wk = d.date.dt.isocalendar()
     d["uw"] = d.unit + "_" + wk.year.astype(str) + "_" + wk.week.astype(str)
     d["cl"] = (wk.year * 100 + wk.week).astype(int).to_numpy()
@@ -123,15 +135,15 @@ def sample() -> pd.DataFrame:
     return d
 
 
-def iv_row(d: pd.DataFrame, y: str, label: str, z: str = "z_offered") -> None:
-    cols = [y, "X_bar", z] + CONTROLS
+def iv_row(d: pd.DataFrame, y: str, label: str, z: str = "z_offered", x: str = "X_bar") -> None:
+    cols = [y, x, z] + CONTROLS
     d = d.dropna(subset=cols)
     if len(d) < 300:
         print(f"    {label:34s} too few ({len(d)})")
         return
     w = demean(d, cols, ["uw"])
     cl = d.cl.to_numpy()
-    Y, X, Z = w[y].to_numpy(), w["X_bar"].to_numpy(), w[z].to_numpy()
+    Y, X, Z = w[y].to_numpy(), w[x].to_numpy(), w[z].to_numpy()
     W = w[CONTROLS].to_numpy()
     b_fs, se_fs = ols(X, np.column_stack([Z, W]), cl)
     b, se = tsls(Y, X, Z, W, cl)
@@ -142,28 +154,36 @@ def iv_row(d: pd.DataFrame, y: str, label: str, z: str = "z_offered") -> None:
           f"beta {b:+.3f} ({se:.3f})  AR95 {ar:16s}  OLS {b_ols[0]:+.3f} ({se_ols[0]:.3f})")
 
 
-def main() -> int:
-    d = sample()
-    print("LEG B: unit-day water value (volume-weighted offer-price quantile) on EDP's day-mean X,")
-    print("instrumented by the day's offered solar. Unit x week FE; forward, gas, demand forecast,")
-    print("trailing rain and day-of-week controls; clustered by week. beta: 0 price-taking, 1 Nash.\n")
-    sd = d.groupby("uw").X_bar.transform(lambda s: s - s.mean())
-    print(f"  within-week sd of X_bar: {sd.std():.2f} EUR/MWh;  of lambda50: "
-          f"{d.groupby('uw').lambda50.transform(lambda s: s - s.mean()).std():.2f}\n")
+def section(d: pd.DataFrame, x: str) -> None:
     for name, us in (("LARGE STORAGE (>= 2 weeks): Guadiana, Tejo-Mondego, Cavado, Lima", LARGE),
                      ("SMALL STORAGE (~5 days): Douro, Mondego -- the confounder's contrast", SMALL)):
         print(name)
         g = d[d.unit.isin(us)]
         for y in ("lambda25", "lambda50", "lambda75"):
-            iv_row(g, y, f"{y}, pooled")
-        iv_row(g, "lambda50", "lambda50, independent-owner solar", z="z_offered_indep")
+            iv_row(g, y, f"{y}, pooled", x=x)
+        iv_row(g, "lambda50", "lambda50, independent-owner solar", z="z_offered_indep", x=x)
         for era, (lo, hi) in {"2018-20": (2018, 2020), "2021-23": (2021, 2023),
                               "2024-26": (2024, 2026)}.items():
-            iv_row(g[g.year.between(lo, hi)], "lambda50", f"lambda50, {era}")
+            iv_row(g[g.year.between(lo, hi)], "lambda50", f"lambda50, {era}", x=x)
         print()
     print("BY UNIT, lambda50, pooled")
     for u, g in d.groupby("unit"):
-        iv_row(g, "lambda50", u)
+        iv_row(g, "lambda50", u, x=x)
+
+
+def main() -> int:
+    d = sample()
+    print("LEG B: unit-day water value (volume-weighted offer-price quantile) on EDP's day-mean X,")
+    print("instrumented by the day's offered solar. Unit x week FE; forward, gas, demand forecast,")
+    print("trailing rain and day-of-week controls; clustered by week. beta: 0 price-taking, 1 Nash.\n")
+    for x, lab in (("X_bar", "X_bar: FIRM-PANEL PERIODS ONLY (zero-price middays dropped)"),
+                   ("X_bar_all", "X_bar_all: EVERY CLEAN PERIOD (zero-price middays included)")):
+        sd = d.groupby("uw")[x].transform(lambda s: s - s.mean())
+        print("=" * 100)
+        print(f"{lab}   within-week sd {sd.std():.2f} EUR/MWh")
+        print("=" * 100)
+        section(d, x)
+        print()
     return 0
 
 

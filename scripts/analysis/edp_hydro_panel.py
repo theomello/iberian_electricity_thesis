@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Full-archive offer panel for the storage hydro that sells through the auction.
 
+    .venv/bin/python scripts/analysis/firm_x.py                   # input (net position, X)
     .venv/bin/python scripts/analysis/edp_hydro_panel.py          # build + report
+    .venv/bin/python scripts/analysis/edp_hydro_panel.py --attach-x  # re-attach X only
     .venv/bin/python scripts/analysis/edp_hydro_panel.py --report # report only
 
 WHY THESE UNITS
@@ -217,6 +219,9 @@ def add_firm(d: pd.DataFrame) -> pd.DataFrame:
 
 
 def build() -> pd.DataFrame:
+    # attach_x needs it at the end of a long run over every bid month: fail first.
+    if not FIRM_X.exists():
+        raise SystemExit(f"{FIRM_X} missing -- run scripts/analysis/firm_x.py first")
     cap = storage_hydro()
     u = pd.read_parquet(DATA / "omie/registry/unit_agents.parquet", columns=["unit", "country"])
     cap = cap[cap.group.isin(GROUPS)].merge(u, on="unit")

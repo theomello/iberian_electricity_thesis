@@ -2,7 +2,7 @@
 """Within-day test by quantities: does Iberdrola allocate its water like a price-taker?
 
     .venv/bin/python scripts/analysis/hydro_schedule_routes.py   # input (hourly energy)
-    .venv/bin/python scripts/analysis/own_demand_in_band.py      # input (firm slope)
+    .venv/bin/python scripts/analysis/firm_x.py                  # input (net position, X)
     .venv/bin/python scripts/build/build_solar_instrument.py     # input (instrument)
     .venv/bin/python scripts/analysis/iberdrola_quantity_test.py
 

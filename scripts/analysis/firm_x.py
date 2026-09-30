@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """The five large firms' markup term X for every period, as built and exposed.
 
+    .venv/bin/python scripts/analysis/firm_incentive_rebuild.py   # input (validation)
     .venv/bin/python scripts/analysis/firm_x.py            # build + validate
     .venv/bin/python scripts/analysis/firm_x.py --report   # validate only
 

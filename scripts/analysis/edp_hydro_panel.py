@@ -29,12 +29,12 @@ the hourly route split in `hydro_schedule_routes.parquet`.
 * outcome -- day-ahead cleared MW, and the pumping twin's cleared purchase.
 * price -- the price of the unit's OWN zone. Six of EDP's seven units are
   Portuguese, and a Portuguese unit is paid `price_pt` when the market splits.
-* incentive -- the owner's residual-demand slope from
-  `firm_residual_demand_full_owner.parquet` (on the periods that panel keeps:
-  p* > 0, no splitting), and the owner's NET AUCTION POSITION, cleared sales
-  minus cleared purchases over every unit it owns, computed here. The design's
-  term is `X = net_mw / slope_i_h5`, the Hortacsu-Puller markup with the firm's
-  exposure to the auction price in the numerator.
+* incentive -- the owner's NET AUCTION POSITION and X come from `firm_x.py`,
+  on the exposed position (framework spec §2.4): regulated pass-through
+  suppliers such as SU Eletricidade are left out. `X_built` keeps the as-built
+  value. Both are defined on the firm panel's periods only (clean, p* above
+  1 EUR/MWh). The design's term is `X = net_mw / slope_net`, the Hortacsu-Puller
+  markup with the firm's exposure to the auction price in the numerator.
 
   NOT the panel's `incentive_h*`, which multiplies by `(q - theta)/q` with q the
   auction-cleared sell volume and theta the BILATERAL schedule. Bilateral energy
@@ -43,9 +43,8 @@ the hourly route split in `hydro_schedule_routes.parquet`.
   `notes/rq-descriptive-price-formation.md` §4.5.
 
   The slope in X is `slope_net`: the firm's own DEMAND bids near p* are removed
-  too, not only its sell offers (`own_demand_in_band.py`, which must be run
-  first). For EDP that is mostly its pumping legs, and it matters in a tail of
-  periods, not the median. `X_gross` keeps the firm panel's slope for comparison.
+  too, not only its sell offers. For EDP that is mostly its pumping legs, and it
+  matters in a tail of periods, not the median.
 
   EDP COMERCIAL (EDP's Portuguese retailer) is merged into EDP in
   `owner_groups.parquet` (GROUP_MERGES, 2026-09-30). It offers essentially no
@@ -79,11 +78,10 @@ from hydro_within_day_probe import BIDS, storage_hydro  # noqa: E402
 DATA = ROOT / "data"
 PRICES = DATA / "omie/prices/omie_day_ahead_prices.parquet"
 FIRM_SLOPE = ROOT / "outputs/tables/firm_residual_demand_full_owner.parquet"
-OWN_DEMAND = ROOT / "outputs/tables/own_demand_in_band.parquet"   # own_demand_in_band.py
+FIRM_X = ROOT / "outputs/tables/firm_x.parquet"   # firm_x.py
 OUT = ROOT / "outputs/tables/edp_hydro_panel.parquet"
 
 GROUPS = ("EDP", "MOVHERA", "REPSOL")
-NET_OWNERS = {"EDP": ("EDP", "EDP COMERCIAL"), "MOVHERA": ("MOVHERA",), "REPSOL": ("REPSOL",)}
 PRICE_OUT = 300.0     # EUR/MWh, as in hydro_schedule_routes.py
 # X is undefined below this slope. A band that the firm's own demand nearly
 # fills leaves a slope just above zero and an X up to 2.8e8 EUR/MWh -- a division
@@ -185,27 +183,19 @@ def month_panel(ym: str, cap: pd.DataFrame, prices: pd.DataFrame) -> pd.DataFram
     return d
 
 
-def owner_units() -> dict[str, list[str]]:
-    sys.path.insert(0, str(ROOT / "scripts" / "lib"))
-    from omie_owner import owner_group
-    u = pd.read_parquet(DATA / "omie/registry/unit_agents.parquet", columns=["unit", "agent_owner"])
-    u["owner"] = u.agent_owner.map(owner_group)
-    return {g: sorted(u[u.owner.isin(members)].unit) for g, members in NET_OWNERS.items()}
-
-
-def month_net(ym: str, owners: dict[str, list[str]]) -> pd.DataFrame:
-    """Cleared sell minus cleared buy MW per owner-period, over all its units."""
-    allu = sorted({x for us in owners.values() for x in us})
-    b = pq.read_table(BIDS / f"bids_{ym}.parquet", columns=["date", "period", "unit", "side",
-                                                             "status", "power_mw"],
-                      filters=[("status", "==", "C"), ("unit", "in", allu)]).to_pandas()
-    b["date"] = pd.to_datetime(b.date)
-    b["signed"] = b.power_mw * b.side.astype(str).map({"V": 1.0, "C": -1.0}).astype(float)
-    out = []
-    for g, us in owners.items():
-        n = b[b.unit.isin(us)].groupby(["date", "period"]).signed.sum().rename("net_mw")
-        out.append(n.reset_index().assign(group=g))
-    return pd.concat(out, ignore_index=True)
+def attach_x(d: pd.DataFrame) -> pd.DataFrame:
+    """Net position and X per owner-period from firm_x.py, on the firm panel's
+    periods (clean, p* above ZERO_PRICE) so the sample is unchanged. `X` and
+    `net_mw` are the EXPOSED position (framework spec §2.4); `X_built` and
+    `net_built_mw` as built. MOVHERA is not in firm_x and gets NaN, as before."""
+    drop = [c for c in ("net_mw", "net_built_mw", "slope_net", "X", "X_built", "X_gross")
+            if c in d.columns]
+    x = pd.read_parquet(FIRM_X, columns=["date", "period", "firm", "clean", "zero_price", "net_mw",
+                                         "net_built_mw", "slope_net", "X", "X_built"])
+    x = x[x.firm.isin(GROUPS) & x.clean & ~x.zero_price].drop(columns=["clean", "zero_price"])
+    x = x.rename(columns={"firm": "group"})
+    x["date"] = pd.to_datetime(x.date)
+    return d.drop(columns=drop).merge(x, on=["date", "period", "group"], how="left")
 
 
 def add_flatness(d: pd.DataFrame) -> pd.DataFrame:
@@ -233,19 +223,12 @@ def build() -> pd.DataFrame:
     prices = pd.read_parquet(PRICES, columns=["date", "period", "price_es", "price_pt"])
     prices["date"] = pd.to_datetime(prices.date)
     months = sorted(f.stem.split("_")[1] for f in BIDS.glob("bids_*.parquet"))
-    owners = owner_units()
-    parts, nets = [], []
+    parts = []
     for m in months:
         parts.append(month_panel(m, cap, prices))
-        nets.append(month_net(m, owners))
         print(f"  {m}", flush=True, file=sys.stderr)
     d = pd.concat([p for p in parts if not p.empty], ignore_index=True)
-    d = add_firm(add_flatness(d))
-    d = d.merge(pd.concat(nets, ignore_index=True), on=["date", "period", "group"], how="left")
-    own = pd.read_parquet(OWN_DEMAND, columns=["date", "period", "firm", "slope_net"])
-    d = d.merge(own.rename(columns={"firm": "group"}), on=["date", "period", "group"], how="left")
-    d["X_gross"] = np.where(d.slope_i_h5 >= MIN_SLOPE, d.net_mw / d.slope_i_h5, np.nan)
-    d["X"] = np.where(d.slope_net >= MIN_SLOPE, d.net_mw / d.slope_net, np.nan)
+    d = attach_x(add_firm(add_flatness(d)))
     d["year"] = d.date.dt.year
     d["era"] = pd.cut(d.year, [2017, 2020, 2023, 2026], labels=list(ERAS))
     OUT.parent.mkdir(parents=True, exist_ok=True)
@@ -342,10 +325,10 @@ def report(d: pd.DataFrame) -> None:
         g = g.assign(bin=pd.qcut(g.X_w, 5, labels=False, duplicates="drop"))
         t = g.groupby("bin").agg(X_w=("X_w", "mean"), p_w=("p_zone_w", "mean"), n=("X_w", "size"))
         b = np.polyfit(g.X_w, g.p_zone_w, 1)[0]
-        gg = g.dropna(subset=["X_gross"])
-        xg = gg.X_gross - gg.groupby(["unit", "date"]).X_gross.transform("mean")
+        gg = g.dropna(subset=["X_built"])
+        xg = gg.X_built - gg.groupby(["unit", "date"]).X_built.transform("mean")
         bg = np.polyfit(xg, gg.p_zone_w, 1)[0]
-        print(f"  {era}: within unit-day slope of p* on X = {b:.3f} (on X_gross {bg:.3f}; "
+        print(f"  {era}: within unit-day slope of p* on X = {b:.3f} (on X as built {bg:.3f}; "
               "supply-function Nash predicts 1, price-taking 0)")
         print(t.round(2).T.to_string())
 
@@ -358,8 +341,24 @@ def report(d: pd.DataFrame) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--report", action="store_true", help="report on the saved panel only")
+    ap.add_argument("--attach-x", action="store_true",
+                    help="re-attach X from firm_x.parquet to the saved panel, without re-reading bids")
     args = ap.parse_args()
-    d = pd.read_parquet(OUT) if args.report else build()
+    if args.attach_x:
+        old = pd.read_parquet(OUT)
+        d = attach_x(old)
+        m = old[["date", "period", "unit", "X"]].merge(d[["date", "period", "unit", "X_built"]],
+                                                       on=["date", "period", "unit"]).dropna()
+        diff = (m.X - m.X_built).abs()
+        print(f"old X vs new X_built: corr {m.X.corr(m.X_built):.6f}, median |diff| {diff.median():.4f}, "
+              f"exact (<1e-3) {(diff < 1e-3).mean():.3f} over {len(m):,} unit-periods")
+        if not (m.X.corr(m.X_built) > 0.9999):
+            print("FAIL: as-built X does not reproduce the saved panel's X; not overwriting")
+            return 1
+        d.to_parquet(OUT, index=False)
+        print(f"wrote {OUT.relative_to(ROOT)}")
+    else:
+        d = pd.read_parquet(OUT) if args.report else build()
     report(d)
     return 0
 

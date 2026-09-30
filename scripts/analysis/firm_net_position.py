@@ -22,6 +22,9 @@ drops out of both sides.
 Three sample months a year (Feb, Jun, Oct), all periods. The panel column is
 over the periods the firm panel keeps (p* > 0, no splitting), so the two are
 comparable in sign, not in level.
+
+Describes the AS-BUILT net position. The exposed position (regulated
+pass-through suppliers excluded, framework spec §2.4) is computed in firm_x.py.
 """
 from __future__ import annotations
 

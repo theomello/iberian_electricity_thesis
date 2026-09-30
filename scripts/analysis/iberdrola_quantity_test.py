@@ -78,26 +78,23 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pyarrow.parquet as pq
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
-from hydro_within_day_probe import BIDS, storage_hydro  # noqa: E402
+from hydro_within_day_probe import storage_hydro  # noqa: E402
 from midday_hydro_iv import ar_closed, ols, tsls  # noqa: E402
-from omie_owner import owner_group  # noqa: E402
 from solar_first_stage import demean  # noqa: E402
 
 DATA = ROOT / "data"
 ROUTES = ROOT / "outputs/tables/hydro_schedule_routes.parquet"
-OWN = ROOT / "outputs/tables/own_demand_in_band.parquet"
+FIRM_X = ROOT / "outputs/tables/firm_x.parquet"   # firm_x.py
 SOLAR = ROOT / "outputs/tables/solar_instrument.parquet"
 OUT = ROOT / "outputs/tables/iberdrola_quantity_test.parquet"
 
 IBERDROLA = ["DUER", "EBRA", "JUCA", "SIL", "TAJO", "TAMEGA"]
 PUMPED = ["MUEL"]
 EDP_STABLE = ["ACAVADO", "ALIMA", "GUADIA", "HCHI"]
-MIN_SLOPE = 5.0          # as in edp_hydro_panel.py
 BETAS = np.round(np.arange(-1.0, 3.01, 0.25), 2)
 
 
@@ -129,26 +126,13 @@ def hourly_market() -> pd.DataFrame:
     return a.join(b).reset_index()
 
 
-def firm_x(firm: str, members: tuple[str, ...]) -> pd.DataFrame:
-    """Hourly X = net auction position / |RD'| for one owner group."""
-    u = pd.read_parquet(DATA / "omie/registry/unit_agents.parquet", columns=["unit", "agent_owner"])
-    units = sorted(u[u.agent_owner.map(owner_group).isin(members)].unit)
-    parts = []
-    for f in sorted(BIDS.glob("bids_*.parquet")):
-        b = pq.read_table(f, columns=["date", "period", "unit", "side", "status", "power_mw"],
-                          filters=[("status", "==", "C"), ("unit", "in", units)]).to_pandas()
-        b["signed"] = b.power_mw * b.side.astype(str).map({"V": 1.0, "C": -1.0}).astype(float)
-        parts.append(b.groupby(["date", "period"]).signed.sum().rename("net_mw").reset_index())
-    n = pd.concat(parts, ignore_index=True)
-    n["date"] = pd.to_datetime(n.date)
-    sl = pd.read_parquet(OWN, columns=["date", "period", "firm", "slope_net"])
-    sl = sl[sl.firm == firm].drop(columns="firm")
-    sl["date"] = pd.to_datetime(sl.date)
-    px = pd.read_parquet(DATA / "omie/prices/omie_day_ahead_prices.parquet",
-                         columns=["date", "period", "resolution_min"])
-    px["date"] = pd.to_datetime(px.date)
-    d = n.merge(sl, on=["date", "period"]).merge(px, on=["date", "period"])
-    d["X"] = np.where(d.slope_net >= MIN_SLOPE, d.net_mw / d.slope_net, np.nan)
+def firm_x(firm: str) -> pd.DataFrame:
+    """Hourly X = exposed net position / |RD'| for one firm (firm_x.py; framework
+    spec §2.4), on the firm panel's periods: clean and priced above ZERO_PRICE."""
+    d = pd.read_parquet(FIRM_X, columns=["date", "period", "resolution_min", "firm", "net_mw", "X",
+                                         "clean", "zero_price"])
+    d = d[(d.firm == firm) & d.clean & ~d.zero_price].copy()
+    d["date"] = pd.to_datetime(d.date)
     d["hour"] = to_hour(d.period, d.resolution_min)
     return d.groupby(["date", "hour"])[["X", "net_mw"]].mean().reset_index()
 
@@ -204,8 +188,8 @@ def build() -> pd.DataFrame:
     m = hourly_market()
     r = r.merge(m, on=["date", "hour"], how="left")
     r["p"] = np.where(r.unit.map(country).eq("PT"), r.price_pt, r.price_es)
-    xs = pd.concat([firm_x("IBERDROLA", ("IBERDROLA",)).assign(group="IBERDROLA"),
-                    firm_x("EDP", ("EDP", "EDP COMERCIAL")).assign(group="EDP")])
+    xs = pd.concat([firm_x("IBERDROLA").assign(group="IBERDROLA"),
+                    firm_x("EDP").assign(group="EDP")])
     r = r.merge(xs, on=["date", "hour", "group"], how="left")
     r["zero"] = 0.0
     r["q_lo"] = r.groupby(["unit", "date"]).q.transform("min")

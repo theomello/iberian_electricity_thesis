@@ -26,6 +26,9 @@ with EDP, as in `edp_hydro_panel.py`. The band is h = 5 EUR/MWh around the
 Spanish price, as in the firm panel, on the periods that panel keeps.
 
     slope_net = slope_i - own_buy_in_band / 2h
+
+Describes the AS-BUILT net position. The exposed position (regulated
+pass-through suppliers excluded, framework spec §2.4) is computed in firm_x.py.
 """
 from __future__ import annotations
 

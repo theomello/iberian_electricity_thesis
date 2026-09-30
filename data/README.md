@@ -156,6 +156,17 @@ directly (+0.16) and so violates the exclusion restriction.
 Representative sites, not capacity-weighted; a capacity-weighted index needs
 installed capacity by province, which this project still lacks.
 
+## `snirh/` — Portuguese reservoirs (APA)
+
+| path | what |
+|---|---|
+| `snirh_reservoir_series.parquet` | 1,765,828 rows, 39 reservoir gauges, 2018-01 → 2026-09: weekly volume, hourly level, daily inflow/turbined/pumped/spilled/outflow, with a `suspect` flag |
+| `raw/<code>.csv` | 39 SNIRH CSV exports, one per station — **not re-fetchable from an arbitrary network** |
+| `reservoirs_wayback.parquet` | the earlier, sparse Wayback Machine reconstruction (`fetch_snirh_reservoirs_wayback.py`) |
+
+**The exception to "fully re-fetchable".** SNIRH answers only APA's whitelisted
+address, LMU eduVPN's exit 194.95.236.6, so `raw/` must be kept. See CLAUDE.md.
+
 ## `entsoe/` — empty
 
 **Token-gated** and nothing fetched. The only series still missing anywhere in

@@ -89,6 +89,7 @@ scripts/
 | `build/build_implied_marginal_cost.py` | MIBGAS + EUA + the match | no | `data/jrc_ppdb/implied_marginal_cost_daily.parquet` |
 | `fetch/fetch_jrc_hydro_database.py` | JRC Hydro-power plants database (GitHub) | no | `data/jrc_hydro/jrc_hydro_plants.parquet` |
 | `build/build_storage_hours.py` | JRC hydro + `cab` + a hand plant→unit map | no | `data/jrc_hydro/storage_hours.parquet` |
+| `fetch/fetch_snirh_reservoirs.py` | APA SNIRH *dados de base* | no, but **LMU eduVPN only** | `data/snirh/snirh_reservoir_series.parquet` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
 `lib/config.py` loads tokens from a gitignored `.env`.
@@ -978,6 +979,60 @@ for EDP's Portuguese units and Movhera, via a hand-checked plant→unit map (riv
 plus a capacity sum matching `cab`). Every figure is a **lower bound**; see the
 script and `notes/rq-midday-hydro.md` §3.17. Spain is not built.
 
+### SNIRH — Portuguese reservoirs: weekly volume, hourly level, daily flows
+`data/snirh/snirh_reservoir_series.parquet`, fetched 2026-09-30 by
+`fetch/fetch_snirh_reservoirs.py`: **1,765,828 rows, 39 reservoir gauges,
+2018-01-01 → 2026-09-30**, long format (`station_code, site_id, station, basin,
+parameter, time_local, time_utc, date, value, suspect`). The stations are EDP's
+and Movhera's cascades plus Iberdrola's Tâmega scheme. SNIRH is APA's
+water-resources system, the Portuguese counterpart of MITECO's bulletin.
+
+**It runs from one address only.** SNIRH blocks every request from outside
+Portugal (a security control on software APA cannot patch). On 2026-09-30 APA
+whitelisted **194.95.236.6**, the exit of LMU's eduVPN, after being told it is
+shared (`notes/email-apa-reservoir-data.md`). The fetcher checks the exit
+address and refuses to run from any other; it sends one request per station,
+5 s apart. **Keep `data/snirh/raw/` (39 CSVs, 54 MB)**: unlike the rest of
+`data/`, it cannot be re-fetched from an arbitrary network. Never route around
+the block with a Portuguese VPN.
+
+Per station, eight parameters, each as the station reports it:
+
+| parameter | resolution | note |
+|---|---|---|
+| `volume_dam3` | weekly | dam³ = 10³ m³; stamped 23:00 |
+| `volume_month_end_dam3` | monthly | matches SNIRH's monthly bulletin to a median 0.009 hm³ |
+| `level_m` | hourly in some years | the bulk of the rows |
+| `inflow_m3s`, `turbined_m3s`, `pumped_m3s`, `spilled_m3s`, `outflow_m3s` | daily | outflow = turbined + spilled on 99.4% of station-days |
+
+Validated against the market: daily turbined flow correlates **0.86** with
+PDBF scheduled energy of `ALIMA` (Alto Lindoso) and **0.88** of `TEMON` (Castelo
+do Bode), and energy per m³ at Alto Lindoso implies a **284 m** head, that
+plant's real head. `GUADIA` against Alqueva is weaker (0.42).
+
+**Inflow is computed, not measured, and carries source glitches.** It is never
+negative and exactly zero on 10–34% of days at several stations, which suggests
+SNIRH derives it from the water balance and clips it at zero; that clipping
+biases it slightly upward. `suspect` flags two faults found on the first fetch;
+values are never changed, following ResOpsUS (Steyaert et al. 2022):
+
+- **Pumped flow in the wrong units**: about 1,000× too large at Alto Rabagão,
+  Venda Nova, Torrão and Aguieira on 2023-04-01 → 08-01 and in January 2026,
+  with every other flow at those stations reading 0. All flows on those
+  station-days are flagged.
+- **One-day inflow spikes**: 15 above 500 m³/s, e.g. Castelo do Bode
+  2022-01-20 at 5,497 m³/s from a single hourly level reading of 79.00 m in a
+  series at ~107.2 m. A spike that passes through the dam (outflow ≥ half of
+  inflow) is a real flood and is not flagged.
+
+**How to use it.** Weekly volume is the water value's state variable; use it as
+is. Turbined flow as is. Inflow: drop `suspect`, and use it weekly, not daily;
+a cleaner weekly inflow is outflow plus the change in weekly volume. Pumped
+flow: missing in the two windows, and not to be rescaled by 1,000 without a
+check against OMIE pumping schedules. Timestamps are **Lisbon** local time; the
+autumn repeated hour appears once. Pumped flow is recorded at only five of the
+pumped-storage stations (not Baixo Sabor, Foz Tua, Frades II or Gouvães).
+
 ### EDP moved ~1,000 MW from `ACAVADO` to `ALIMA` in March 2024
 `cab` max power goes 1,632 → 632 MW for `ACAVADO` ("CAVADO") and 652 → 1,652
 for `ALIMA` ("LIMA"), and offered volume moves between them from February to
@@ -1627,5 +1682,7 @@ a month, and a timestamp column silently full of NaT.
 - Fetchers are resumable — they skip what is already on disk.
   **Exception: `fetch_eua_carbon_price.py` and `fetch_coal_price.py`** —
   see the trap above.
+  `fetch_snirh_reservoirs.py` is resumable but runs **only through LMU
+  eduVPN**, the one address APA whitelisted; see the SNIRH section.
 - Commit messages: imperative, present tense, ≤72-char subject.
 - Never commit `.env` or anything under `data/`.

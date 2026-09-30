@@ -272,6 +272,39 @@ but they offered it as the fallback.
 - Once the data is in hand, reply to thank them and say whether the site was
   enough.
 
+**Access confirmed the same evening.** Through eduVPN, SNIRH returned 200, and
+the "dados de base" CSV export gives each reservoir gauge's weekly volume,
+hourly level and daily inflow, turbined, pumped, spilled and outflow series.
+That is more than the export we asked for. `scripts/fetch/fetch_snirh_reservoirs.py`
+pulls 39 stations, one request each, 5 s apart.
+
+### Thank-you reply — Portuguese (draft, not sent)
+
+**Assunto:** Re: Pedido de dados históricos de armazenamento de albufeiras (SNIRH) — bacia do Mondego
+
+Exmo. Senhor Marco Orlando,
+
+Muito obrigado pela rapidez. O acesso funciona: através do endereço autorizado
+consegui descarregar, a partir dos dados de base do SNIRH, as séries de que
+necessito para as albufeiras da lista, pelo que não será preciso enviarem-me
+qualquer ficheiro. Fiz um número reduzido de pedidos, um por estação e
+espaçados no tempo, tendo em conta a preocupação que referiu com o sistema.
+
+A APA e o SNIRH serão citados como fonte na tese.
+
+Com os melhores cumprimentos,
+Theodoro Mello
+Ludwig-Maximilians-Universität
+
+### English (for reference)
+
+Thank you for acting so quickly. Access works: through the authorised address I
+was able to download, from SNIRH's base data, the series I need for the
+reservoirs on the list, so there is no need to send me a file. I made only a
+small number of requests, one per station and spaced out, given the concern you
+mentioned about the system. APA and SNIRH will be cited as the source in the
+thesis.
+
 ---
 
 ## Norte — arhn.geral@apambiente.pt

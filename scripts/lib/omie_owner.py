@@ -83,3 +83,41 @@ def owner_group(name: str | None) -> str | None:
     if name in m:
         return m[name]
     return _fallback(name)
+
+
+# Regulated last-resort suppliers. Their auction purchases and sales are passed
+# through to regulated tariffs, so the day-ahead price does not reach their
+# group's profit on that volume (framework spec §2.4). SU Eletricidade resells
+# Portugal's feed-in renewables and buys for regulated customers; Curenergia
+# buys for Spain's regulated household tariff and sells renewables it represents
+# as representative of last resort. Matched on the normalised owner name, so a
+# renamed entity (EDP SERVICO UNIVERSAL -> SU ELETRICIDADE, 2021) is caught
+# under either name. scripts/qa/check_exposed_position.py pins what it matches.
+PASS_THROUGH_MARKERS = (
+    "ULTIMO RECURSO", "COMERCIALIZADORA DE REFERENCIA", "COMERCIALIZADOR DE REFERENCIA",
+    "COMERCIALIZADORA REGULADA", "SERVICO UNIVERSAL", "SU ELETRICIDADE", "CURENERGIA",
+    "ENDESA ENERGIA XXI", "ENERGIA XXI COMERCIALIZADORA", "REGSITI",
+)
+
+
+def _norm(name: str) -> str:
+    s = "".join(c for c in unicodedata.normalize("NFKD", name) if not unicodedata.combining(c))
+    return " ".join(re.sub(r"[^A-Z0-9 ]", " ", s.upper()).split())
+
+
+def is_pass_through(name: str | None) -> bool:
+    """True for a regulated supplier whose auction volume is passed through to tariffs."""
+    if not isinstance(name, str) or not name.strip():
+        return False
+    n = _norm(name)
+    return any(k in n for k in PASS_THROUGH_MARKERS)
+
+
+def exposed_group(name: str | None) -> str | None:
+    """The group whose PROFIT an owner's auction volume reaches, or None.
+
+    As owner_group, except that a regulated pass-through supplier belongs to no
+    group: its volume is left out of the net position, and its offers count as
+    a rival's in the residual-demand slope.
+    """
+    return None if is_pass_through(name) else owner_group(name)

@@ -17,7 +17,8 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "analysis"))
-from iv_two_endog import ar_common_set, ar_test, fmt_set, sw_f, tsls_k  # noqa: E402
+from iv_two_endog import (ar_common_exact, ar_common_set, ar_projection, ar_test,  # noqa: E402
+                          fmt_intervals, fmt_set, sw_f, tsls_k)
 from midday_hydro_iv import ols, tsls  # noqa: E402
 
 GRID = np.round(np.arange(-3.0, 3.0001, 0.005), 4)
@@ -59,6 +60,31 @@ def main() -> int:
         else:
             check(len(keep) > 0 and keep.min() <= -0.5 <= keep.max(), "symmetric: set covers -0.5")
 
+    # Exact common-slope set (L = 2): no grid, so a narrow set cannot fall between points.
+    y, X, Z, W, cl = dgp(-0.5, -0.5, seed=11)
+    ex = ar_common_exact(y, X, Z, W, cl)
+    print(f"symmetric, exact common set {fmt_intervals(ex['intervals'])}, "
+          f"min AR p {ex['p_min']:.3f} at {ex['c_min']:+.4f}")
+    iv = ex["intervals"]
+    check(len(iv) == 1 and iv[0][0] < -0.5 < iv[0][1], "symmetric: exact set is one interval around -0.5")
+    grid_keep = ar_common_set(y, X, Z, W, cl, GRID)
+    check(abs(iv[0][0] - grid_keep.min()) < 0.006 and abs(iv[0][1] - grid_keep.max()) < 0.006,
+          "symmetric: exact endpoints agree with the grid set")
+    for c in iv[0]:
+        p_end = ar_test(y, X, Z, W, cl, [c, c])[1]
+        check(abs(p_end - 0.05) < 1e-4, f"endpoint {c:+.4f}: AR p = 0.05 ({p_end:.5f})")
+    coarse = np.array([-0.55, -0.45])
+    check(ar_common_set(y, X, Z, W, cl, coarse).size == 0,
+          "a coarse grid misses the set (the artefact the exact version removes)")
+    y, X, Z, W, cl = dgp(-0.5, 0.5, seed=11)
+    ex = ar_common_exact(y, X, Z, W, cl)
+    check(ex["intervals"] == [] and ex["p_min"] < 0.05, "asymmetric: exact set empty, min AR p < 0.05")
+    pm = ar_projection(y, X, Z, W, cl, 1, GRID)
+    pp = ar_projection(y, X, Z, W, cl, 0, GRID)
+    print(f"asymmetric, AR projection: g+ {fmt_set(pp, GRID)}, g- {fmt_set(pm, GRID)}")
+    check(len(pm) > 0 and pm.min() > 0 and pm.min() < 0.5 < pm.max(), "projection: g- set positive, covers 0.5")
+    check(len(pp) > 0 and pp.max() < 0 and pp.min() < -0.5 < pp.max(), "projection: g+ set negative, covers -0.5")
+
     y, X, Z, W, cl = dgp(-0.5, -0.5, seed=3)
     x1 = X.sum(axis=1)
     b1, V1 = tsls_k(y, x1[:, None], Z[:, :1], W, cl)
@@ -75,6 +101,7 @@ def main() -> int:
     check(bool(np.isnan(sw_f(X, Z, W, cl, 0))), "never a seller: sw_f returns NaN")
     check(bool(np.isnan(ar_test(y, X, Z, W, cl, [0.0, 0.0])[1])), "never a seller: ar_test NaN")
     check(ar_common_set(y, X, Z, W, cl, GRID).size == 0, "never a seller: empty common set")
+    check(ar_common_exact(y, X, Z, W, cl) is None, "never a seller: exact set is None (not identified)")
 
     y, X, Z, W, cl = dgp(-0.5, -0.5, seed=5, share_seller=0.02)
     fp, fm = sw_f(X, Z, W, cl, 0), sw_f(X, Z, W, cl, 1)

@@ -377,6 +377,38 @@ For Endesa, 2018–2025, the change is the merge alone:
 The 2026 column moved for every firm for a second reason: the rebuilt panel runs
 to 2026-05-31 instead of 2026-05-08, since the bids were refreshed in between.
 Those shifts are in the third decimal except Iberdrola's ability (0.181 → 0.195).
+
+**The exposed net position, 2026-09-30** (framework spec §2.4). The table
+above is **as built**. It includes two regulated last-resort suppliers whose
+auction volume is passed through to tariffs, so its revenue does not reach the
+parent's profit:
+
+- **SU Eletricidade**, in EDP, resells Portugal's feed-in renewables: 1,810 MW
+  of mean net sales.
+- **Curenergía**, in Iberdrola, buys for Spain's regulated household tariff:
+  790 MW of mean net purchases.
+
+The exposed columns (`*_exp_*` in `firm_incentive_rebuild.py`) leave them out
+of n and q and give their offers back to the rivals. EDP Comercial, EDP's
+Portuguese retailer, is also merged into EDP (`GROUP_MERGES`); it was a separate
+group, so EDP's retail load was missing. Only EDP and Iberdrola change:
+
+| firm | 2018 | 2020 | 2022 | 2023 | 2024 | 2025 | 2026 | net buyer, 2018 → 2026 |
+|---|---|---|---|---|---|---|---|---|
+| EDP, exposed | −0.015 | −0.024 | −0.065 | −0.059 | −0.036 | −0.032 | −0.028 | **79% → 85%** (72–89% by year) |
+| IBERDROLA, exposed | −0.017 | −0.009 | −0.087 | −0.055 | +0.002 | +0.002 | +0.046 | **83% → 35%** |
+
+- **EDP is a net buyer, not a seller.** Its liberalised retail load exceeds its
+  own generation. What made it look like a seller was SU Eletricidade's
+  pass-through feed-in sales.
+- **Iberdrola's drift towards balance is stronger than the as-built figure
+  showed.** Without Curenergía's purchases it is a net buyer in 83% of periods
+  in 2018 and 35% in 2026, with a positive median incentive from 2024.
+- **So the net buyers are Endesa, Naturgy and EDP throughout, Repsol from 2024,
+  and Iberdrola in most periods until 2023.**
+
+The figure (`descriptive_figures.py`, `firm_ability.png`) now plots the exposed
+indices.
 The inference-chain tier (`build_unit_agents.py`, `FIRM_TOKENS`) still keeps
 `ENEL` apart; only the owner tier is merged.
 
@@ -883,7 +915,7 @@ not after.
 | band density fell ~2/3 | **established** | falls as a step 2020→2022, not a slide |
 | the collapse is an *evening ramp* phenomenon | **rejected** | it is a midday phenomenon (§4.3) |
 | gas left the margin, hydro took it | **bounded** | resolved periods only, 69–81% coverage |
-| Iberdrola is a net day-ahead buyer | **established, on the net auction position** (rebuilt 2026-09-29) | so are Naturgy and Endesa in every year, and Repsol from 2024. Iberdrola's net-buyer share falls from 96% of periods (2018) to 49% (2026). The earlier evidence, `incentive`'s `(q − θ)`, double-subtracted contracts (§4.5) |
+| Iberdrola is a net day-ahead buyer | **established, on the exposed net auction position** (2026-09-30) | so are Naturgy, Endesa and EDP in every year, and Repsol from 2024. On the exposed position (regulated pass-through suppliers excluded) Iberdrola's net-buyer share falls from 83% of periods (2018) to 35% (2026); as built it was 96% → 49%. EDP read as a seller until SU Eletricidade's pass-through sales were removed. The earlier evidence, `incentive`'s `(q − θ)`, double-subtracted contracts (§4.5) |
 | firm ability (price impact) rose across the window, peaking in 2022 | **established, rebuilt** | own demand now removed from the slope; changes only EDP and Iberdrola, upwards |
 | Endesa's flip to a positive incentive | **withdrawn** (2026-09-28) | an artefact of the double subtraction: Endesa moved hydro from bilateral into the auction in 2024 and stayed a net buyer (§4.5) |
 | θ measures contract position | **bounded** | physical bilateral only; misses financial hedges |

@@ -3,8 +3,9 @@
 **Status: proposed 2026-09-29, for the supervisor.** It proposes a candidate
 research question; none is adopted in `CLAUDE.md` until one is agreed.
 
-**Revised 2026-09-30:** n is the price-exposed position (§2.4), which sends legs A
-and B back for a rerun; legs C and D are designed (§4) and the plan reordered (§8).
+**Revised 2026-09-30:** n is the price-exposed position (§2.4). On it leg A
+holds and leg B's first pass is withdrawn for want of a first stage (§4);
+legs C and D are designed (§4) and the plan reordered (§8).
 
 It connects the descriptive chapter
 ([`rq-descriptive-price-formation.md`](../../notes/rq-descriptive-price-formation.md)),
@@ -117,18 +118,20 @@ Regulada), Repsol (Regsiti) and Baser already stand as their own groups, so the
 rule changes nothing for them. It is one rule, applied by every computation of
 n. **To confirm against ERSE and CNMC texts** before the thesis relies on it.
 
-It matters for EDP above all. Over five sample months (2019-02 to 2026-02, all
-periods):
+It matters for EDP above all. Net-buyer share of clean periods by year,
+2018–2026 (`firm_x.py`; EDP includes EDP Comercial, merged 2026-09-30):
 
-| | median n, as built → exposed | net-buyer share of periods |
-|---|---|---|
-| EDP | −108 to +1,466 MW → **−739 to −1,769** | 20–53% → **80–98%** |
-| Iberdrola | −1,214 to −2,293 → −707 to −1,210 | 67–100% → 58–91% |
+| | as built | exposed | mean pass-through net volume |
+|---|---|---|---|
+| EDP | 14–43% | **72–89%** | SU Eletricidade, +1,810 MW |
+| Iberdrola | 60–97% | 49–85% | Curenergía, −790 MW |
 
-EDP, read as a mostly net seller in legs A and B, is a net buyer almost always:
-its liberalised retail load in Portugal and Spain exceeds its own generation.
-Legs A and B, and the chapter's net-buyer shares (§4.5), are rerun on the
-exposed position (§8).
+EDP, read as a mostly net seller in legs A and B, is a net buyer in most
+periods: its liberalised retail load in Portugal and Spain exceeds its own
+generation. Its median X is negative in every hour, most of all at midday
+(about −10 €/MWh from 2021). Legs A and B and the chapter's net-buyer shares
+(§4.5) were rerun on the exposed position on 2026-09-30 (§4, and
+`rq-midday-hydro.md` §3.20).
 
 ## 3. Measurement: every term is built
 
@@ -148,11 +151,11 @@ exposed position (§8).
 Each leg uses a different source of variation and handles the cost term
 differently. The first gives a result; the rest are tests with a plan.
 
-### Leg A — hydro within the day: cost differenced out. **Done; to rerun on the exposed position.**
+### Leg A — hydro within the day: cost differenced out. **Done; holds on the exposed position.**
 
-Both results below used n with the regulated supplier inside (§2.4): SU
-Eletricidade for EDP, Curenergía for Iberdrola. They are rerun before being
-cited.
+Rerun 2026-09-30 on the exposed position (§2.4; `rq-midday-hydro.md` §3.20).
+Within the day the exposed X keeps nearly the as-built shape, so every
+conclusion below stands. The figures quoted are the exposed ones.
 
 Under A1, λ is constant across a unit-day, so a unit-day fixed effect removes it
 and the curve's movement across hours identifies β. X varies within the day
@@ -161,7 +164,8 @@ spec §5.
 
 - **EDP.** Four cascades offer an identical curve all day, which rules out
   within-day shaping for any incentive (§3.13). The three that reshape respond
-  with the market-power sign from 2024, at an implied β of 0.03–0.12 (§3.14).
+  with the market-power sign from 2024, at an implied β of 0.03–0.14 (§3.14,
+  §3.20).
   They are also the small or partly run-of-river ones (§3.17), which favours a
   physical reading.
 - **Iberdrola.** It sells storage hydro mainly through bilateral self-supply, so
@@ -170,10 +174,17 @@ spec §5.
 
 **Verdict: within-day market power in storage hydro is at most small.**
 
-### Leg B — hydro across days: cost modelled by the Euler equation. **Done; 2024–26 open; to rerun on the exposed position.**
+### Leg B — hydro across days: cost modelled by the Euler equation. **First pass withdrawn; untested.**
 
-X̄ below includes SU Eletricidade's feed-in sales, which move with the weather
-day to day (§2.4). Rerun before being cited.
+**Withdrawn 2026-09-30** (`rq-midday-hydro.md` §3.20). On the exposed position
+the day's offered solar has no first stage for EDP's day-mean X (F 0.4–1.9 in
+every sample; every Anderson–Rubin set is the whole line). The earlier first
+stage came from SU Eletricidade: its pass-through sales fall by 334 MW per GW of
+rivals' solar (t −9.1), while EDP's own exposed position does not move with the
+day's solar. So the results below tested a regulated supplier's weather-driven
+volume, not EDP's incentive. **The across-day margin is untested** and needs an
+instrument that moves EDP's day-level exposed X. The design and the history are
+kept below.
 
 EDP's stable cascades submit one curve per day, so any market power they
 exercise sits in the day's **level**. Within a unit-week, λ moves only with news
@@ -188,13 +199,13 @@ control.
 - **What was known before the test.** λ̂ tracks the forward price one-for-one
   (1.11, 1.22, 0.95 by group) and holds its place in the month's price
   distribution (§3.16).
-- **Result, 2026-09-29 (§3.18).** On the large reservoirs, β = 0.09, with an
+- **Result, 2026-09-29 (§3.18) — withdrawn, see above.** On the large reservoirs, β = 0.09, with an
   Anderson–Rubin set of [−0.50, 0.79]. That rejects Nash and does not
   distinguish small β from zero. It is robust across quantiles and to the
   independent-owner instrument. 2024–26 alone cannot reject Nash (F = 12), and a
   slow, weeks-long withholding is absorbed by the week fixed effect and left
   untested.
-- **Second pass, 2026-09-30 (§3.19): zero-price middays included.** X is
+- **Second pass, 2026-09-30 (§3.19): zero-price middays included — withdrawn with the first.** X is
   rebuilt from the bids for every clean period and reproduces the panel's X
   exactly where the panel has it. At a zero price, X ≈ 0: rivals' slope is nine
   times flatter and EDP is a net buyer half the time. Pooled large-storage β =
@@ -313,7 +324,7 @@ thermal plant. Firm-days with both signs carry the kink; the rest identify γ⁺
 | the thinning is at midday | \|RD′\| by hour | where solar acts; motivates legs A and B |
 | gas → hydro at the margin | c | why fuel-cost markups failed; why λ is the cost to model |
 | firm ability peaked in 2022 | \|RD′_f\| | established, rebuilt |
-| Iberdrola, Endesa and Naturgy net buyers; Repsol from 2024 | n | the sign in leg D; EDP joins them once regulated pass-through is excluded (§2.4) |
+| Endesa, Naturgy and EDP net buyers; Iberdrola in most periods to 2023; Repsol from 2024 | n (exposed) | the sign in leg D (§2.4) |
 | Endesa's 2024 "flip" | n | withdrawn: contracts subtracted twice |
 | EDP flat curves; small β in reshaping cascades | leg A | β_within ≈ 0 |
 | Iberdrola's allocation is price-taking | leg A | β_within ≈ 0 |
@@ -353,15 +364,17 @@ archive and β̂.
 
 ## 8. Plan
 
-1. ~~**Leg B**~~ — done (§3.18–3.19). Zero-price middays recovered; pooled
-   Nash rejection firmer, 2024–26 still open (F = 16, set to 1.13).
-2. **The exposed position** (§2.4): one pass-through rule in
-   `lib/omie_owner.py`, applied in every script that computes n
-   (`firm_incentive_rebuild.py`, `edp_hydro_panel.py`, `edp_x_all_periods.py`,
-   `iberdrola_quantity_test.py`, `firm_net_position.py`,
-   `own_demand_in_band.py`).
-3. **Rerun legs A and B** on it, and the chapter's net-buyer shares (§4.5).
-   Record what changes, including if a result reverses.
+1. ~~**Leg B**~~ — first and second passes done 2026-09-29/30 (§3.18–3.19),
+   then **withdrawn** on the exposed position (§3.20): no first stage.
+2. ~~**The exposed position**~~ (§2.4) — done 2026-09-30. The rule is
+   `is_pass_through` / `exposed_group` in `lib/omie_owner.py`, pinned by
+   `qa/check_exposed_position.py`. n is computed in `firm_x.py` (the five large
+   firms, every period) and `firm_incentive_rebuild.py` (all firms, the
+   chapter), which agree to a correlation of 1.000000. The hydro panels read
+   `firm_x`; `own_demand_in_band.py` and `firm_net_position.py` remain as
+   diagnostics of the as-built measure. EDP Comercial merged into EDP.
+3. ~~**Rerun legs A and B**~~ — done 2026-09-30 (§3.20; chapter §4.5). Leg A
+   holds; leg B's first pass is withdrawn.
 4. **Leg D** as designed above, hydro and thermal units together.
 5. **Rivals' offered wind**, built as `z_offered` is, then **leg C** route 2
    with route 3 as its check, 2018–2023.
@@ -369,4 +382,5 @@ archive and β̂.
 
 **For the supervisor.** Is the thesis the within-day margin alone (done,
 publishable as a null against Nash), or all four legs with the counterfactual?
-Leg B is what decides whether the across-day margin is worth the full effort.
+Leg B was to decide whether the across-day margin is worth the full effort;
+it now needs a new instrument first (§3.20).

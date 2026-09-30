@@ -1063,7 +1063,7 @@ from the bids. Done in §3.19; it helps less than hoped.
 
 > **Rerun on the exposed net position in §3.20** — the figures below use n with the regulated supplier inside.
 
-`scripts/analysis/edp_x_all_periods.py` builds EDP's X for every period from
+`scripts/analysis/edp_x_all_periods.py` (since renamed `firm_x.py`) builds EDP's X for every period from
 the bids, with the panel's definitions (net position over all owned units, ±5
 €/MWh band, rivals only, slope floor 5 MW per €/MWh). `water_value_across_days.py`
 now reports both versions of X̄. **[preliminary]**

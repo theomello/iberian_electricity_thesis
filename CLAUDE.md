@@ -375,6 +375,16 @@ EDP's net position and the firm panel did not. Without the roll-up
 `SU ELETRICIDADE` — 7.3% of supply volume, EDP's Portuguese regulated supplier —
 reads as a firm in its own right, and Repsol splits across nine entities.
 
+**Regulated pass-through suppliers are excluded from every firm's net position**
+(`is_pass_through` / `exposed_group` in `lib/omie_owner.py`, pinned by
+`qa/check_exposed_position.py`). SU Eletricidade (in EDP) and Curenergía (in
+Iberdrola) buy and sell volume whose cost is passed through to regulated
+tariffs. Left in, they made EDP look like a net seller when it is a net buyer in
+72–89% of periods, and they carried the first stage of the withdrawn leg B
+(`notes/rq-midday-hydro.md` §3.20). `analysis/firm_x.py` is the one place X is
+computed for the five large firms; `firm_incentive_rebuild.py` computes the same
+correction for all firms, and the two agree exactly.
+
 Two gates in that script are load-bearing, both learned from real failures.
 Layer 1 refuses a modal ESIOS firm supported by too few of an entity's own units
 (`GALP ENERGÍA`: 41 units, **one** carrying a firm, reading IGNIS). Layer 2 sets

@@ -84,6 +84,26 @@ def main() -> int:
         want7 = (wk_ago.groupby("hour").net_mw.mean() > 0).astype(float).reindex(p.index)
         check(bool((p.s_prev7 == want7).all()), f"{firm} {day.date()}: s_prev7 is the sign 7 days before")
 
+    # A period without an offer inside a present unit-day scores 0; it is not dropped.
+    fh = x[x.clean & x.X.notna()].copy()
+    fh["hour"] = (fh.period - 1) // (60 // fh.resolution_min)
+    firm_hours = fh.groupby(["firm", "date"]).hour.nunique().rename("firm_hours").reset_index()
+    uh = five.groupby(["unit", "firm", "date"]).size().rename("unit_hours").reset_index()
+    uh = uh.merge(firm_hours, on=["firm", "date"], how="left")
+    gap = float((uh.unit_hours != uh.firm_hours).mean())
+    check(gap < 0.001, f"every unit-day covers all its firm's clean hours ({gap:.4f} do not)")
+
+    # Ownership as listed on the date, not one static owner.
+    check(not ((five.firm == "REPSOL") & (five.date < pd.Timestamp("2018-11-02"))).any(),
+          "no REPSOL rows before Repsol bought Viesgo (2018-11-02)")
+    ct = h[h.unit.isin(["CTJON1", "CTJON3"])]
+    check(ct.empty or ct.date.min() >= pd.Timestamp("2022-02-08"),
+          "Castejon (EDP's until sold) enters FRINGE only once listed under its new owner")
+    pv = h[h.unit == "PVENT1"]
+    check(pv.empty or pv.date.min() >= pd.Timestamp("2019-07-18"), "PVENT1 only once listed under Naturgy")
+    al = h[h.unit == "ALL1"]
+    check(al.empty or (al.firm == "NATURGY").all(), "a co-owned unit follows its majority owner (ALL1: Naturgy 2/3)")
+
     r = pd.read_parquet(RIVAL)
     r["date"] = pd.to_datetime(r.date)
     r = r[r.date == HOURLY_DAY].set_index("period").z_rival_EDP / 1000

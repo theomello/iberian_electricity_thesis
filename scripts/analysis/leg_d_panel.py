@@ -15,10 +15,19 @@ supply roles, sell offers only. `firm` is the unit's exposed group
 (`omie_owner.exposed_group`) when it is one of the five; any other owner is
 `FRINGE`, kept only at FRINGE_MIN_MW or more, for the placebo.
 
+OWNERS. A unit-day is kept only when the OMIE listing in force that day (nearest
+preceding snapshot) puts the unit in the firm X is built for: `firm_x` uses one
+static owner per unit, and Castejon (EDP's until sold) and PVENT1 (Alpiq's to
+2018) would otherwise carry another firm's X. A co-owned unit follows its majority
+owner. REPSOL rows
+before its purchase of Viesgo (REPSOL_VIESGO) are dropped: the roll-up maps Viesgo
+to Repsol on every date, so REPSOL's X adds two firms together before it.
+
 OUTCOME. The §3.14 measure from `edp_quantity_at_price.month_outcomes`: MW
 offered at or below the unit-DAY's volume-weighted 25/50/75% offer price, and
 the offer density within +/-5 EUR/MWh of it, divided here by the unit-day's
-capacity (`cab` max power that day; the registry's when `cab` has none).
+capacity (`cab` max power that day; the registry's when `cab` has none). In a
+unit-day the unit is present in, a period with no offer scores 0.
 
 FIRM TERMS. X, the exposed net position and `clean` from `firm_x.parquet`.
 Periods kept: clean (no market split, clearing identity holds) and, for the
@@ -65,6 +74,11 @@ FIRMS = ("EDP", "IBERDROLA", "ENDESA", "NATURGY", "REPSOL")
 CLASSES = {"hydro": "hydro", "pumped storage": "pumped", "gas CCGT": "ccgt", "coal": "coal"}
 SUPPLY_ROLES = ["generation", "generation_large", "storage_mixed", "pumping"]
 FRINGE_MIN_MW = 50.0
+LISTS = DATA / "omie/registry/omie_unit_lists.parquet"
+# Repsol completed its purchase of Viesgo's generation on this date (public record, to
+# verify). The owner roll-up maps Viesgo to Repsol on every date, so before it REPSOL's
+# X adds two firms together and its rows are dropped.
+REPSOL_VIESGO = pd.Timestamp("2018-11-02")
 OVER_CAP = 1.02
 KEY = ["date", "period"]
 OUTC = ["s25", "s50", "s75", "d25", "d50", "d75"]
@@ -163,9 +177,35 @@ def instrument(months: list[str]) -> pd.DataFrame:
     return pd.concat(long, ignore_index=True)
 
 
+def listed_firm(units: list[str]) -> pd.DataFrame:
+    """unit, snapshot, dfirm: each unit's group (one of the five, or FRINGE) in every OMIE listing.
+
+    A co-owned unit is listed once per owner; it follows its majority owner (ALL1,
+    Anllares: Naturgy 2/3, Endesa 1/3 -> Naturgy).
+    """
+    lst = pd.read_parquet(LISTS, columns=["snapshot", "unit", "agent_owner", "ownership_pct"])
+    lst = lst[lst.unit.isin(units)].sort_values("ownership_pct", ascending=False)
+    lst = lst.drop_duplicates(["snapshot", "unit"]).copy()
+    lst["snapshot"] = pd.to_datetime(lst.snapshot)
+    g = lst.agent_owner.map(exposed_group)
+    lst["dfirm"] = g.where(g.isin(FIRMS), "FRINGE")
+    return lst[["unit", "snapshot", "dfirm"]].sort_values("snapshot")
+
+
+def owned_as_assigned(ud: pd.DataFrame, lists: pd.DataFrame) -> pd.DataFrame:
+    """unit, date -> keep: the listing in force that day (nearest preceding snapshot) agrees
+    with the static firm X is built for. Units never listed keep their firm."""
+    left = ud.assign(date=ud.date.astype("datetime64[us]")).sort_values("date")
+    right = lists.rename(columns={"snapshot": "date"})
+    right = right.assign(date=right.date.astype("datetime64[us]"))
+    a = pd.merge_asof(left, right, on="date", by="unit", direction="backward")
+    keep = (a.dfirm.isna() | (a.dfirm == a.firm)) & ~((a.firm == "REPSOL") & (a.date < REPSOL_VIESGO))
+    return a[["unit", "date"]].assign(keep=keep.to_numpy())
+
+
 def hourly(o: pd.DataFrame, off: pd.DataFrame, u: pd.DataFrame, cap: pd.DataFrame,
-           per: pd.DataFrame, x: pd.DataFrame, clean: pd.DataFrame,
-           z: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+           per: pd.DataFrame, x: pd.DataFrame, clean: pd.DataFrame, z: pd.DataFrame,
+           lists: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """One month of unit-period outcomes -> unit-hours with X, the instrument and controls.
 
     Also returns the unit-days dropped because the unit offered more than
@@ -174,7 +214,17 @@ def hourly(o: pd.DataFrame, off: pd.DataFrame, u: pd.DataFrame, cap: pd.DataFram
     capacity share is undefined that day.
     """
     o["date"] = pd.to_datetime(o.date)
+    # Every period of a unit-day the unit is present in: a period with no offer scores 0
+    # (nothing offered at or below the reference price), not a missing row -- whether a
+    # unit offers at all moves with the hour, so dropping those periods selects.
+    grid = o[["unit", "date"]].drop_duplicates().merge(per[KEY], on="date")
+    o = grid.merge(o, on=["unit", "date", "period"], how="left")
+    o[OUTC] = o[OUTC].fillna(0.0)
     o = o.merge(u, on="unit").merge(cap, on=["unit", "date"], how="left")
+    own = owned_as_assigned(o[["unit", "date", "firm"]].drop_duplicates(), lists)
+    o = o.merge(own, on=["unit", "date"])
+    moved = o[~o.keep].drop_duplicates(["unit", "date"])[["unit", "firm", "date"]]
+    o = o[o.keep].drop(columns="keep")
     o["cap_mw"] = o.cap_mw.where(o.cap_mw > 0, o.reg_mw)
     o = o.merge(off, on=["unit", "date", "period"], how="left")
     bad = (o.off_mw > OVER_CAP * o.cap_mw).groupby([o.unit, o.date]).transform("any")
@@ -189,7 +239,7 @@ def hourly(o: pd.DataFrame, off: pd.DataFrame, u: pd.DataFrame, cap: pd.DataFram
     agg = {c: "mean" for c in OUTC + ["X", "Xp", "Xm", "z", "fcst"]}
     agg.update(cap_mw="first", zero_price="max", period="size", cls="first")
     h = o.groupby(["unit", "firm", "date", "hour"]).agg(agg)
-    return h.rename(columns={"period": "n_per"}).reset_index(), dropped
+    return h.rename(columns={"period": "n_per"}).reset_index(), dropped, moved
 
 
 def build(months: list[str] | None) -> pd.DataFrame:
@@ -203,17 +253,20 @@ def build(months: list[str] | None) -> pd.DataFrame:
     one = pd.Series(1.0, index=units)
     per, x, z = period_frame(span(months)), firm_terms(span(months)), instrument(months)
     clean = x[x.firm == FIRMS[0]][KEY + ["clean", "zero_price"]]
-    parts, drops = [], []
+    lists = listed_firm(units)
+    parts, drops, moves = [], [], []
     for f, ym in zip(files, months):
         o = month_outcomes(f, units, one)
         if not o.empty:
-            h_m, d_m = hourly(o, offered_total(f, units), u, unit_day_capacity(units, [ym]),
-                              per, x, clean, z)
+            h_m, d_m, m_m = hourly(o, offered_total(f, units), u, unit_day_capacity(units, [ym]),
+                                   per, x, clean, z, lists)
             parts.append(h_m)
             drops.append(d_m)
+            moves.append(m_m)
         print(f"  {f.stem}", file=sys.stderr, flush=True)
     h = pd.concat(parts, ignore_index=True)
     dropped = pd.concat(drops, ignore_index=True)
+    moved = pd.concat(moves, ignore_index=True)
     for days, name in ((1, "s_prev"), (7, "s_prev7")):
         h = h.merge(seller_lagged(x, per, days, name), on=["firm", "date", "hour"], how="left")
         h.loc[h.firm == "FRINGE", name] = np.nan
@@ -225,12 +278,15 @@ def build(months: list[str] | None) -> pd.DataFrame:
     h[f32] = h[f32].astype("float32")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     h.to_parquet(OUT, index=False)
-    report(h, dropped)
+    report(h, dropped, moved)
     return h
 
 
-def report(h: pd.DataFrame, dropped: pd.DataFrame) -> None:
+def report(h: pd.DataFrame, dropped: pd.DataFrame, moved: pd.DataFrame) -> None:
     print(f"\nwrote {OUT.relative_to(ROOT)}  ({len(h):,} unit-hours)")
+    print("\nUNIT-DAYS DROPPED, owner that day is not the firm X is built for (listing / Viesgo):")
+    print(moved.groupby(["firm", moved.date.dt.year]).size().unstack(fill_value=0).to_string()
+          if len(moved) else "  none")
     print("\nUNIT-DAYS DROPPED, offered volume above capacity (alternative complex orders):")
     print(dropped.groupby(["cls", dropped.date.dt.year]).size().unstack(fill_value=0).to_string()
           if len(dropped) else "  none")

@@ -49,7 +49,8 @@ drops periods priced at or below 1 EUR/MWh, the sunny middays, so on the sunnies
 days it is an average over fewer, dearer periods and the first stage weakens
 exactly where solar should act (2024-26, F = 12). `X_bar_all` averages every
 clean period (no split, clearing identity holds), zero-price ones included, from
-`edp_x_all_periods.py`, which reproduces the panel's X where the panel has it.
+`firm_x.py`, which reproduces the panel's X where the panel has it. Both use
+EDP's exposed net position (framework spec §2.4).
 Days where under half the periods carry X are dropped, per version.
 """
 from __future__ import annotations
@@ -69,7 +70,7 @@ DATA = ROOT / "data"
 LAMBDA = ROOT / "outputs/tables/water_value_revealed.parquet"
 PANEL = ROOT / "outputs/tables/edp_hydro_panel.parquet"
 SOLAR = ROOT / "outputs/tables/solar_instrument.parquet"
-X_ALL = ROOT / "outputs/tables/edp_x_all_periods.parquet"   # edp_x_all_periods.py
+X_ALL = ROOT / "outputs/tables/firm_x.parquet"   # firm_x.py
 PRICE_OUT = 300.0
 LARGE = ["GUADIA", "TEMON", "ACAVADO", "ALIMA"]   # >= 2 weeks of storage (§3.17)
 SMALL = ["ADOURO", "MONDEGO"]                     # ~5 days
@@ -86,7 +87,8 @@ def daily_x() -> pd.DataFrame:
 
 
 def daily_x_all() -> pd.DataFrame:
-    x = pd.read_parquet(X_ALL, columns=["date", "period", "X", "clean"])
+    x = pd.read_parquet(X_ALL, columns=["date", "period", "firm", "X", "clean"])
+    x = x[x.firm == "EDP"]
     x["date"] = pd.to_datetime(x.date)
     x["Xc"] = x.X.where(x.clean)
     return x.groupby("date").agg(X_bar_all=("Xc", "mean"),

@@ -3,6 +3,9 @@
 **Status: proposed 2026-09-29, for the supervisor.** It proposes a candidate
 research question; none is adopted in `CLAUDE.md` until one is agreed.
 
+**Revised 2026-09-30:** n is the price-exposed position (§2.4), which sends legs A
+and B back for a rerun; legs C and D are designed (§4) and the plan reordered (§8).
+
 It connects the descriptive chapter
 ([`rq-descriptive-price-formation.md`](../../notes/rq-descriptive-price-formation.md)),
 the midday-hydro work ([`rq-midday-hydro.md`](../../notes/rq-midday-hydro.md)), the
@@ -43,7 +46,7 @@ p_t − c_ft  =  β · n_ft / |RD′_ft(p_t)|  ≡  β · X_ft
 |---|---|
 | p_t | the day-ahead clearing price in period t |
 | c_ft | the opportunity cost of the firm's marginal MWh: fuel and carbon for thermal plant, the **water value** λ for storage hydro, about zero for wind and solar |
-| n_ft | net auction position. Physical bilateral contracts never enter the auction, so they drop out of both sales and purchases. Financial hedges would enter it and are unobserved |
+| n_ft | **price-exposed** net auction position (§2.4). Physical bilateral contracts never enter the auction, so they drop out of both sales and purchases. Regulated suppliers' pass-through volumes are excluded. Financial hedges would enter it and are unobserved |
 | RD′_ft | slope of the demand left to the firm after every rival's offers, measured as the density of rivals' offers within ±h €/MWh of p_t |
 | β | conduct: **0** price-taking, **1** the supply-function Nash benchmark |
 
@@ -88,13 +91,52 @@ So the natural question is: **does solar change how Iberian firms use market
 power, and on which margin?** Solar shifts X; the four tests below ask whether β
 lets that shift reach the price.
 
+### 2.4 Which position is exposed
+
+n is the position whose revenue moves with p. Auction volume a firm's group
+clears but whose cost or revenue is passed through to a regulated tariff does
+not move its profit, so it is excluded. Added 2026-09-30, after the first
+passes of legs A and B.
+
+**Two such entities sit inside the five large groups**, found by owner name in
+`unit_agents.agent_owner`:
+
+- **SU Eletricidade** (EDP; 4 units). Portugal's last-resort supplier. It sells
+  the feed-in renewable output it is obliged to buy (`EDPSVD1` "VENTA RE",
+  6,500 MW declared), the 2019 solar-auction plants on the fixed tariff
+  (`EDPSVD3`), and buys for regulated customers (`EDPUC2`). The cost of
+  feed-in output above its market value is recovered through regulated
+  tariffs, so the market price does not reach EDP's profit on these volumes.
+- **Curenergía** (Iberdrola; 11 units). The last-resort supplier for Spain's
+  regulated household tariff, which passes the day-ahead price through
+  (`IBCUC01`), and the seller of renewables it represents as representative of
+  last resort (`ICUVD*`), whose revenue belongs to the plant owners.
+
+The equivalent entities of Endesa (Energía XXI), Naturgy (Comercializadora
+Regulada), Repsol (Regsiti) and Baser already stand as their own groups, so the
+rule changes nothing for them. It is one rule, applied by every computation of
+n. **To confirm against ERSE and CNMC texts** before the thesis relies on it.
+
+It matters for EDP above all. Over five sample months (2019-02 to 2026-02, all
+periods):
+
+| | median n, as built → exposed | net-buyer share of periods |
+|---|---|---|
+| EDP | −108 to +1,466 MW → **−739 to −1,769** | 20–53% → **80–98%** |
+| Iberdrola | −1,214 to −2,293 → −707 to −1,210 | 67–100% → 58–91% |
+
+EDP, read as a mostly net seller in legs A and B, is a net buyer almost always:
+its liberalised retail load in Portugal and Spain exceeds its own generation.
+Legs A and B, and the chapter's net-buyer shares (§4.5), are rerun on the
+exposed position (§8).
+
 ## 3. Measurement: every term is built
 
 | term | object | where | status |
 |---|---|---|---|
 | p_t | Spanish or Portuguese clearing price, by the unit's zone | `omie_day_ahead_prices.parquet` | complete 2018–2026 |
 | \|RD′_ft\| | rivals' offer density within ±h of p, own sell **and** buy offers removed | `firm_residual_demand_full_owner.parquet`, `firm_incentive_net.parquet` | built, 5.5 M firm-periods |
-| n_ft | cleared sales − purchases over every unit a firm owns | `firm_incentive_rebuild.py`, `firm_net_position.py` | built. Ownership groups from OMIE's published owner (Enel Green Power merged into Endesa, 2026-09-29) |
+| n_ft | cleared sales − purchases over every unit a firm owns | `firm_incentive_rebuild.py`, `firm_net_position.py` | built. Ownership groups from OMIE's published owner (Enel Green Power merged into Endesa, 2026-09-29). **To rebuild on the exposed position (§2.4)** |
 | c, thermal | gas or coal / efficiency + carbon, gas-cap adjusted | `implied_marginal_cost_daily.parquet` | built for 68 plant-specific units. **Omits O&M and start-ups** |
 | c, thermal, bound | the minimum-income condition plants declare | `cab` | 2017 → 2025-03-18 on one basis |
 | c, hydro (λ) | the unit-day's volume-weighted offer-price quantiles | `water_value_revealed.parquet` (§3.16) | built for the auction-route owners (EDP, Movhera, Repsol) |
@@ -106,7 +148,11 @@ lets that shift reach the price.
 Each leg uses a different source of variation and handles the cost term
 differently. The first gives a result; the rest are tests with a plan.
 
-### Leg A — hydro within the day: cost differenced out. **Done.**
+### Leg A — hydro within the day: cost differenced out. **Done; to rerun on the exposed position.**
+
+Both results below used n with the regulated supplier inside (§2.4): SU
+Eletricidade for EDP, Curenergía for Iberdrola. They are rerun before being
+cited.
 
 Under A1, λ is constant across a unit-day, so a unit-day fixed effect removes it
 and the curve's movement across hours identifies β. X varies within the day
@@ -124,7 +170,10 @@ spec §5.
 
 **Verdict: within-day market power in storage hydro is at most small.**
 
-### Leg B — hydro across days: cost modelled by the Euler equation. **Done; 2024–26 open.**
+### Leg B — hydro across days: cost modelled by the Euler equation. **Done; 2024–26 open; to rerun on the exposed position.**
+
+X̄ below includes SU Eletricidade's feed-in sales, which move with the weather
+day to day (§2.4). Rerun before being cited.
 
 EDP's stable cascades submit one curve per day, so any market power they
 exercise sits in the day's **level**. Within a unit-week, λ moves only with news
@@ -153,39 +202,107 @@ control.
   days and F rises to 16, but the set [−0.72, 1.13] still contains β = 1. The
   solar era needs a stronger instrument, not more periods.
 
-### Leg C — thermal plant: cost observed. **To redo.**
+### Leg C — thermal plant: cost observed. **Designed 2026-09-30; to build.**
 
-For a gas or coal unit c is measured, so β comes directly from the condition at
-the firm's thermal offers.
+For a gas or coal unit c is measured, so the condition can be tested in
+**levels**, which no other leg can do. The design is route 2 of three
+considered; route 3 is its robustness check and route 1 is folded into leg D.
 
-- **Why the earlier attempts failed.** They compared offer levels with a
-  cost that omits O&M and start-ups.
-- **The fix.** Unit fixed effects absorb the constant part of the omitted cost,
-  leaving the response of (offer − c) to X over time. The declared
-  minimum-income condition bounds start-ups up to 2025-03-18.
-- **What must change in the old test.** `hortacsu_puller_test.py` inverts the
-  condition for an implied cost, and found that imposing contracts moves those
-  costs toward plausible values. It has to move to the net auction position and
-  the gas-capped cost before it is reused.
-- **Where it is informative.** Combined cycle set the price in 35% of resolved
-  periods in 2022 and 2.3% in 2026. So this leg speaks mostly to 2018–2022.
+**Why the earlier attempts failed** (`markdown_contract_test.py`, verdict "not
+identified"). Four reasons, each now handled:
 
-### Leg D — the sign of n: cost common, prediction reversed. **To build.**
+| failure | handling here |
+|---|---|
+| simultaneity: a unit that marks down clears more, which raises measured n | X instrumented by rivals' offered wind and solar |
+| n persistent within a firm, so fixed effects absorbed it | X varies by period with rivals' slope, not only with n |
+| efficiency error, multiplicative, growing with the gas price | unit-specific fuel-cost slope, with JRC efficiency as validation |
+| start-up costs priced into cheap first tranches | only periods with the unit online the period before and after |
+
+**Sample.** Firm-periods in which one of the firm's gas or coal units is
+**partly dispatched**: some of its offered volume cleared and some did not, so p
+lies within that unit's curve and its cost is the firm's marginal cost. The unit
+must also be cleared in t−1 and t+1, so any start-up is sunk. Each such unit-period
+is one observation; a firm with two units at its margin contributes both. Firms: every
+group owning matched thermal plant (`jrc_cab_match.parquet`, 77 units). Years
+2018–2023; from 2022-06-15 the gas-capped cost (`marginal_cost_capped_eur_mwh`).
+Combined cycle set the price in 35% of resolved periods in 2022 and 2.3% in
+2026, so later years add little.
+
+**Two specifications.**
+
+1. **Cost imposed.** p_t − c_ut = a_u + β · X_ft + ε, with c from JRC
+   efficiency. a_u absorbs O&M and any constant bias.
+2. **Heat rate estimated.** p_t = a_u + h_u · (gas_t + 0.202 · co2_t) + β · X_ft
+   + ε. The unit-specific slope h_u absorbs a multiplicative efficiency error.
+   **Validation:** ĥ_u must sit near 1/eff for the 46 gas units with a
+   plant-specific JRC efficiency. If it does not, specification 1 is not
+   trusted.
+
+X uses the exposed n (§2.4) and rivals' slope within ±5 €/MWh, own offers
+removed. Instruments: rivals' offered wind and solar, built as `z_offered` is
+(§3.10) from units the firm does not own. Wind is the main one here, since
+offered solar was small before 2022. Errors clustered by week, Anderson–Rubin
+sets.
+
+**The markdown, seen directly.** For a net buyer X < 0, so the condition
+predicts p < c at the firm's thermal margin. Tabulate p − c by the sign of X
+alongside the regression: a price below observed cost when the firm is buying,
+and above it when selling, is the sign prediction of leg D in levels.
+
+**Route 3, the check.** Replace c with the declared minimum-income variable
+term (`cab`, declaring units, to 2025-03-18). It is a strategic declaration, so
+it bounds rather than measures. `markdown_contract_test.py` found the median
+declaring unit's 75th-percentile tranche exactly at it.
+
+### Leg D — the sign of n: cost common, prediction reversed. **Designed 2026-09-30; to build.**
 
 The condition predicts a markup for a net seller and a **markdown** for a net
 buyer, with the same β. The identifying variation is **within a firm**, because
 only 32 parent firms own dispatchable plant.
 
-- **Iberdrola** is a net buyer in 96% of periods in 2018 and 49% in 2026.
-- **Repsol** turns from seller (1%) to buyer (90%).
-- **EDP** is a buyer in 1–35% of periods, by year.
+**Step 0 is the exposed position (§2.4).** On it, the firms whose n changes sign
+within a day are the sample. Before the fix: Iberdrola 1,759 firm-days,
+EDP 1,614, Repsol 1,139, Naturgy 1,035, Endesa 137. They are recounted after it;
+EDP will have fewer. Endesa, a net buyer almost throughout, is the check.
 
-Periods where the same firm switches sign test whether offers move with X
-through zero. This is the sharpest prediction the theory makes. It needs no cost
-level, only a cost that is constant within the day (A1 for hydro, the day's fuel
-price for thermal), because it compares the same units' offers either side of
-n = 0 within a day. In that sense it is legs A and C read at the sign change:
-the same regression, with the question put where the prediction is sharpest.
+**Units.** Each firm's storage hydro, pumped-storage turbines, combined cycle
+and coal. Not nuclear, wind or solar, which offer at or near zero.
+
+**Outcome.** The §3.14 measure: the share of capacity a unit offers at or below
+the unit-*day*'s own median offer price. The reference price is fixed within the
+day, so no tranche needs to be the same across hours. Units whose curve is
+identical all day give no variation; they are uninformative, not biasing.
+
+**Model.**
+
+```
+y_ut  =  α_ud  +  γ⁺ · X⁺_ft  +  γ⁻ · X⁻_ft  +  ε_ut        X⁺ = max(X, 0),  X⁻ = min(X, 0)
+```
+
+α_ud is a unit × day fixed effect, which removes the water value (A1) or the
+day's fuel price. Errors clustered by week.
+
+**Instruments.** Rivals' offered solar z_t, and z_t × s_f, where s_f = 1 if the
+firm was a net seller in the same period the day before. s_f is fixed when the
+offer is made.
+
+**Predictions.** A higher X lifts the curve, so less capacity sits below a fixed
+price: γ < 0 is the market-power sign.
+
+| conduct | γ⁺ | γ⁻ |
+|---|---|---|
+| price-taking | 0 | 0 |
+| supply-function Nash on n | < 0 | **equal to γ⁺** |
+| market power on output q, ignoring purchases | < 0 | **> 0** |
+
+The last row is the alternative leg D exists to reject: a firm that acts on its
+output marks up even while it is a net buyer, so thinner rivals raise its offers
+whatever the sign of n. The test is γ⁺ = γ⁻, with the sign of γ⁻. γ is put on
+the β scale by the curve's local offer density, as in §3.14.
+
+**Limits.** Flat-offering units make it a test on the reshaping units and on
+thermal plant. Firm-days with both signs carry the kink; the rest identify γ⁺ or
+γ⁻ alone.
 
 ## 5. What each existing result becomes
 
@@ -196,7 +313,7 @@ the same regression, with the question put where the prediction is sharpest.
 | the thinning is at midday | \|RD′\| by hour | where solar acts; motivates legs A and B |
 | gas → hydro at the margin | c | why fuel-cost markups failed; why λ is the cost to model |
 | firm ability peaked in 2022 | \|RD′_f\| | established, rebuilt |
-| Iberdrola, Endesa and Naturgy net buyers; Repsol from 2024 | n | the sign in leg D |
+| Iberdrola, Endesa and Naturgy net buyers; Repsol from 2024 | n | the sign in leg D; EDP joins them once regulated pass-through is excluded (§2.4) |
 | Endesa's 2024 "flip" | n | withdrawn: contracts subtracted twice |
 | EDP flat curves; small β in reshaping cascades | leg A | β_within ≈ 0 |
 | Iberdrola's allocation is price-taking | leg A | β_within ≈ 0 |
@@ -209,6 +326,10 @@ the same regression, with the question put where the prediction is sharpest.
 - **Financial hedges are unobserved.** n captures physical positions only, so X
   is measured with error, most for firms that hedge on OMIP. Bound it; do not
   claim to measure it.
+- **Representation is visible only where the owner says so.** Regulated
+  suppliers are excluded by name (§2.4). Third-party plants a large firm sells
+  as an ordinary representative, under its own entity name, stay in its n and
+  cannot be separated.
 - **Few firms.** β has to be identified within firms over time, never across
   32 firms.
 - **Selection.** The firm panel drops market splitting (6.7% of periods),
@@ -234,10 +355,17 @@ archive and β̂.
 
 1. ~~**Leg B**~~ — done (§3.18–3.19). Zero-price middays recovered; pooled
    Nash rejection firmer, 2024–26 still open (F = 16, set to 1.13).
-2. **Leg D**: offers either side of n = 0 within Iberdrola, Repsol and EDP.
-3. **Leg C**: rebuild the thermal test on the net position and the capped cost,
-   with unit fixed effects, 2018–2022.
-4. **The counterfactual price** (§7), once one β is credible.
+2. **The exposed position** (§2.4): one pass-through rule in
+   `lib/omie_owner.py`, applied in every script that computes n
+   (`firm_incentive_rebuild.py`, `edp_hydro_panel.py`, `edp_x_all_periods.py`,
+   `iberdrola_quantity_test.py`, `firm_net_position.py`,
+   `own_demand_in_band.py`).
+3. **Rerun legs A and B** on it, and the chapter's net-buyer shares (§4.5).
+   Record what changes, including if a result reverses.
+4. **Leg D** as designed above, hydro and thermal units together.
+5. **Rivals' offered wind**, built as `z_offered` is, then **leg C** route 2
+   with route 3 as its check, 2018–2023.
+6. **The counterfactual price** (§7), once one β is credible.
 
 **For the supervisor.** Is the thesis the within-day margin alone (done,
 publishable as a null against Nash), or all four legs with the counterfactual?

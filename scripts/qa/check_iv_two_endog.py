@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""The two-endogenous-regressor IV estimator recovers known coefficients on simulated data.
+
+    .venv/bin/python scripts/qa/check_iv_two_endog.py
+
+Framework spec §4, leg D. The data mimic the design: a firm is a seller (s = 1)
+or a buyer, X's sign follows s, rivals' solar z moves X with a sign that
+depends on s, and an unobserved shock v enters both X and y (so OLS is biased).
+Exits non-zero on any failure.
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import numpy as np
+
+ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(ROOT / "scripts" / "analysis"))
+from iv_two_endog import ar_common_set, ar_test, fmt_set, sw_f, tsls_k  # noqa: E402
+from midday_hydro_iv import ols, tsls  # noqa: E402
+
+GRID = np.round(np.arange(-3.0, 3.0001, 0.005), 4)
+
+
+def dgp(gp, gm, seed, n=20000, groups=400, share_seller=0.5):
+    r = np.random.default_rng(seed)
+    cl = r.integers(0, groups, n)
+    s = (r.random(n) < share_seller).astype(float)
+    z, w, v = r.normal(size=n), r.normal(size=n), r.normal(size=n)
+    x = np.where(s == 1, 2.0, -2.0) + z * np.where(s == 1, 1.0, -0.8) + 0.3 * w + v
+    xp, xm = np.maximum(x, 0), np.minimum(x, 0)
+    y = gp * xp + gm * xm + 0.2 * w + 0.7 * v + r.normal(size=n)
+    return y, np.column_stack([xp, xm]), np.column_stack([z, z * s]), w[:, None], cl
+
+
+def main() -> int:
+    fails: list[str] = []
+
+    def check(ok: bool, what: str) -> None:
+        print(f"  {'ok  ' if ok else 'FAIL'} {what}")
+        if not ok:
+            fails.append(what)
+
+    for name, truth in (("asymmetric", (-0.5, 0.5)), ("symmetric", (-0.5, -0.5))):
+        y, X, Z, W, cl = dgp(*truth, seed=11)
+        b, V = tsls_k(y, X, Z, W, cl)
+        se = np.sqrt(np.diag(V))
+        dev = np.abs(b - truth) / se
+        print(f"{name}: b {b.round(3)} se {se.round(3)}")
+        check(bool((dev < 3).all()), f"{name}: 2SLS within 3 se of {truth}")
+        check(min(sw_f(X, Z, W, cl, 0), sw_f(X, Z, W, cl, 1)) > 100, f"{name}: strong first stages")
+        check(ar_test(y, X, Z, W, cl, truth)[1] > 0.05, f"{name}: AR does not reject the truth")
+        check(ar_test(y, X, Z, W, cl, [0.0, 0.0])[1] < 1e-6, f"{name}: AR rejects (0, 0)")
+        keep = ar_common_set(y, X, Z, W, cl, GRID)
+        print(f"  common-slope set {fmt_set(keep, GRID)}")
+        if name == "asymmetric":
+            check(len(keep) == 0, "asymmetric: no common slope fits")
+        else:
+            check(len(keep) > 0 and keep.min() <= -0.5 <= keep.max(), "symmetric: set covers -0.5")
+
+    y, X, Z, W, cl = dgp(-0.5, -0.5, seed=3)
+    x1 = X.sum(axis=1)
+    b1, V1 = tsls_k(y, x1[:, None], Z[:, :1], W, cl)
+    b0, se0 = tsls(y, x1, Z[:, 0], W, cl)
+    check(abs(b1[0] - b0) < 1e-10 and abs(np.sqrt(V1[0, 0]) - se0) < 1e-10,
+          "one regressor: tsls_k equals midday_hydro_iv.tsls")
+    bf, sef = ols(x1, np.column_stack([Z[:, 0], W]), cl)
+    check(abs(sw_f(x1[:, None], Z[:, :1], W, cl, 0) - (bf[0] / sef[0]) ** 2) < 1e-8,
+          "one regressor: sw_f equals the first-stage F")
+
+    y, X, Z, W, cl = dgp(-0.5, -0.5, seed=5, share_seller=0.0)
+    b, _ = tsls_k(y, X, Z, W, cl)
+    check(bool(np.isnan(b).all()), "never a seller: tsls_k returns NaN, not an error")
+    check(bool(np.isnan(sw_f(X, Z, W, cl, 0))), "never a seller: sw_f returns NaN")
+    check(bool(np.isnan(ar_test(y, X, Z, W, cl, [0.0, 0.0])[1])), "never a seller: ar_test NaN")
+    check(ar_common_set(y, X, Z, W, cl, GRID).size == 0, "never a seller: empty common set")
+
+    y, X, Z, W, cl = dgp(-0.5, -0.5, seed=5, share_seller=0.02)
+    fp, fm = sw_f(X, Z, W, cl, 0), sw_f(X, Z, W, cl, 1)
+    print(f"rarely a seller: SW F {fp:.1f} / {fm:.1f}")
+    check(fp < fm, "rarely a seller: X+ has the weaker first stage")
+
+    print("OK" if not fails else f"{len(fails)} failure(s)")
+    return 1 if fails else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

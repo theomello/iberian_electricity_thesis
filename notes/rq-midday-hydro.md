@@ -478,6 +478,8 @@ reading: a cascade that is pumping at noon has little reason to also generate.
 
 ### 3.10 The solar instrument: offered solar survives, clear-sky does not
 
+> **Rerun on the exposed net position in §3.20** — the figures below use n with the regulated supplier inside.
+
 `scripts/build/build_solar_instrument.py` →
 `outputs/tables/solar_instrument.parquet`, one row per day-ahead period, three
 candidates:
@@ -529,6 +531,8 @@ which the day fixed effect absorbs; a daily-cycling reservoir (threat 2) is the
 exception.
 
 ### 3.11 The second stage: EDP prices its water flat, except its top tranche from 2024
+
+> **Rerun on the exposed net position in §3.20** — the figures below use n with the regulated supplier inside.
 
 `scripts/analysis/midday_hydro_iv.py`. X instrumented by `z_offered`; unit-day
 and hour × year-month fixed effects; REE demand-forecast control; errors
@@ -593,6 +597,8 @@ published per cascade, not per plant. The 2024 onset also coincides with EDP's
 pumping having moved to midday (§3.9).
 
 ### 3.12 The cascade split: two neighbouring cascades, and a response too large to be a markup
+
+> **Rerun on the exposed net position in §3.20** — the figures below use n with the regulated supplier inside.
 
 `scripts/analysis/edp_cascade_split.py`: the §3.11 regression one cascade at a
 time. Storage per MW is not available — Portugal's reservoir data is
@@ -711,6 +717,8 @@ within the day.
 
 ### 3.14 Read horizontally: the reshaping cascades respond, correctly signed and small
 
+> **Rerun on the exposed net position in §3.20** — the figures below use n with the regulated supplier inside.
+
 `scripts/analysis/edp_quantity_at_price.py`. Where A2 fails, the curve is read
 the other way: for each unit-period, the MW offered at or below a price p_k, as a
 share of capacity, with p_k the unit-*day*'s own volume-weighted 25th/50th/75th
@@ -761,6 +769,8 @@ and a response of a few percent of the Nash benchmark in the other three, from
 
 ### 3.15 Iberdrola by quantities: its water is allocated like a price-taker's
 
+> **Rerun on the exposed net position in §3.20** — the figures below use n with the regulated supplier inside.
+
 `scripts/analysis/iberdrola_quantity_test.py`, spec §8.1. Iberdrola's offers are
 residuals (§3.7), so the test is on quantities: each unit-hour's scheduled
 energy over all routes (bilateral self-supply + auction + intraday net), with
@@ -810,6 +820,8 @@ the residual, not how it allocates water. The across-day margin — the *level*
 of its water value — is untested.
 
 ### 3.16 The water value as offered: it tracks the forward, and holds its place in the price distribution
+
+> **Rerun on the exposed net position in §3.20** — the figures below use n with the regulated supplier inside.
 
 `scripts/analysis/water_value_revealed.py`, step 4 of the spec's plan (M2 and
 M3 rebuilt). **[preliminary]**
@@ -974,6 +986,8 @@ where that test can be read; Douro and Mondego are where it cannot.
 
 ### 3.18 Across days: the large reservoirs' daily water value does not follow the markup term
 
+> **Rerun on the exposed net position in §3.20** — the figures below use n with the regulated supplier inside.
+
 `scripts/analysis/water_value_across_days.py`, leg B of
 [`docs/specs/2026-09-29-thesis-framework-design.md`](../docs/specs/2026-09-29-thesis-framework-design.md)
 and build-order item 10. **[preliminary]**
@@ -1047,6 +1061,8 @@ from the bids. Done in §3.19; it helps less than hoped.
 
 ### 3.19 Leg B with the zero-price middays: a firmer pooled result, 2024–26 still open
 
+> **Rerun on the exposed net position in §3.20** — the figures below use n with the regulated supplier inside.
+
 `scripts/analysis/edp_x_all_periods.py` builds EDP's X for every period from
 the bids, with the panel's definitions (net position over all owned units, ±5
 €/MWh band, rivals only, slope floor 5 MW per €/MWh). `water_value_across_days.py`
@@ -1107,6 +1123,79 @@ and a clearing identity that holds.
 daily water value rejects the supply-function Nash response (β ≤ 0.77). The
 solar era on its own cannot yet tell β = 0 from β = 1. More precision there
 needs a stronger instrument, not more periods.
+
+### 3.20 The exposed net position: leg A holds, leg B's first pass is withdrawn
+
+`scripts/analysis/firm_x.py`; framework spec §2.4. Rerun 2026-09-30.
+**[preliminary]**
+
+**What was wrong.** EDP's n included SU Eletricidade, Portugal's last-resort
+supplier. It resells feed-in renewables (1,810 MW mean net sales) and its costs
+pass through to regulated tariffs. Iberdrola's n included Curenergía's purchases
+for the regulated household tariff (790 MW). The revenue on neither volume moves
+the parent's profit, so both are now excluded. EDP Comercial, EDP's Portuguese
+retailer, is merged into EDP everywhere; these panels already counted it.
+
+X is rebuilt from the bids in both versions. The as-built one reproduces the old
+panel's X exactly (629,939 unit-periods). The exposed one matches an independent
+computation in the firm panel (correlation 1.000000).
+
+**EDP is a net buyer in 72–89% of clean periods by year, and its X is negative
+in every hour.** Median X, €/MWh:
+
+| era | 03:00 | 12:00 | 14:00 | 19:00 | 21:00 |
+|---|---|---|---|---|---|
+| 2018–20, as built → exposed | 1.2 → −4.9 | 1.5 → −1.8 | 0.9 → −2.2 | 1.5 → −1.7 | 2.0 → −0.9 |
+| 2021–23 | 6.0 → −5.8 | −0.6 → −9.5 | −2.1 → −10.6 | 2.6 → −5.3 | 5.9 → −1.4 |
+| 2024–26 | 3.5 → −3.0 | −0.3 → −9.0 | −1.4 → −10.3 | 1.7 → −2.5 | 4.0 → −1.6 |
+
+**Every result that uses X, as built → exposed:**
+
+| result | section | as built | exposed |
+|---|---|---|---|
+| first stage, all EDP periods, hour × year-month FE (F) | §3.10 | 180 | 92.5 |
+| first stage, price-setting periods (F) | §3.10 | 26.4 | 31.3 |
+| within-day β at 50% of offered volume, pooled | §3.11 | 0.08 [−0.11, 0.27] | 0.09 [−0.13, 0.33] |
+| within-day β at 75% of offered volume, 2024–26 | §3.11 | 1.47 [0.75, 2.28] | 2.29 [1.29, 3.69] |
+| top tranche, Tejo-Mondego / Mondego, 2024–26 | §3.12 | 5.91 / 3.77 | 7.87 / 6.44 |
+| reshaping cascades, quantity at the median, 2024–26 | §3.14 | −0.111 [−0.18, −0.05], β 0.06 | −0.141 [−0.25, −0.06], β 0.08 |
+| Iberdrola, best β by era; overlap at β = 1 | §3.15 | −0.75/−0.25/−0.5; 0.799/0.713/0.685 | same; 0.801/0.709/0.683 |
+| within-day markup bound on λ̂₅₀, median (p90) | §3.16 | 0.39 (2.0) | 0.50 (1.75) |
+| leg B, large storage, panel periods: F; β; AR | §3.18 | 27.9; +0.09; [−0.50, 0.79] | 0.4; −0.62; (−∞, +∞) |
+| leg B, large storage, all clean periods | §3.19 | 34.5; +0.13; [−0.43, 0.77] | 1.3; −0.82; (−∞, +∞) |
+| leg B, large storage, 2024–26, all clean periods | §3.19 | 15.6; +0.09; [−0.72, 1.13] | 1.9; −0.42; (−∞, +∞) |
+
+**What it shows.**
+
+- **Leg A holds.** Within the day the exposed X keeps nearly the as-built
+  shape; the pass-through volume moves its level more than its hourly profile.
+  So every within-day conclusion stands:
+  - β ≈ 0 at the bottom and middle of EDP's curve, with Nash rejected;
+  - the top tranche responds from 2024, now more strongly;
+  - the reshaping cascades respond at 3–14% of Nash;
+  - Iberdrola's water is allocated like a price-taker's.
+- **Leg B's first pass is withdrawn.** Its first stage came from SU
+  Eletricidade, not from EDP:
+  - SU's net sales fall by 334 MW per GW of rivals' offered solar (t −9.1).
+    That carried the as-built day-mean X (−2.1 per GW, t −5.5).
+  - EDP's own exposed position does not move with the day's solar (+37 MW per
+    GW, t 1.5), and a flatter slope on sunny days shrinks |X|.
+  - The exposed day-mean X therefore has no first stage: +0.03 per GW, t 0.1.
+    Day-mean X as built and exposed correlate at 0.11.
+
+  The rejection of Nash across days (§3.18–3.19) rested on a regulated
+  supplier's weather-driven volume, not on EDP's incentive.
+- **The across-day margin is therefore untested.** It did not pass a test.
+  Offered solar identifies within-day variation in X, where it thins the midday
+  band, but not day-to-day variation in EDP's mean X.
+- **The descriptive price-setting check moves toward Nash** (edp_hydro_panel
+  report, not instrumented). The within-unit-day slope of p* on X is
+  0.80 / 0.32 / 0.70 by era, against 0.26 / 0.04 / 0.27 as built. That is OLS on
+  price-setting periods, the specification §3.11 found invalid, so it is
+  recorded, not read.
+
+**Next.** Leg B needs an instrument that moves EDP's day-level exposed X.
+Offered solar is not one.
 
 ## 4. Specification (to build)
 
@@ -1272,7 +1361,12 @@ tilde = deviation from the firm-day mean
    level of the water value, spec §4 and §8.2) and the supervisor question in
    spec §9. The descriptive-chapter rebuild is done (§4.5 there, 2026-09-29), and
    so is M3 (§3.16).
-10. ~~**Day-level conduct test**~~ — first pass done 2026-09-29, §3.18: β = 0.09,
+   Rerun on the exposed net position 2026-09-30 (§3.20): the within-day results
+   hold.
+10. **Day-level conduct test — reopened 2026-09-30 (§3.20).** On the exposed net
+   position offered solar has no first stage for EDP's day-mean X (F ≈ 1); the
+   earlier rejection of Nash rested on SU Eletricidade's pass-through volume.
+   Needs an instrument for the day's exposed X. History: first pass 2026-09-29, §3.18: β = 0.09,
    AR [−0.50, 0.79] on the large reservoirs; Nash rejected except in 2024–26.
    Zero-price middays recovered 2026-09-30, §3.19: pooled β = 0.13, AR
    [−0.43, 0.77], F 35; 2024–26 F 12 → 16, set [−0.72, 1.13], still open. The stable

@@ -47,10 +47,9 @@ the hourly route split in `hydro_schedule_routes.parquet`.
   first). For EDP that is mostly its pumping legs, and it matters in a tail of
   periods, not the median. `X_gross` keeps the firm panel's slope for comparison.
 
-  EDP COMERCIAL (EDP's Portuguese retailer) stands as its own group in
-  `owner_groups.parquet` for want of merge evidence. It offers essentially no
-  supply, so the slope is unaffected, but it buys 1.6-4.7 TWh a year in
-  2022-2024, so it is counted in EDP's net position here.
+  EDP COMERCIAL (EDP's Portuguese retailer) is merged into EDP in
+  `owner_groups.parquet` (GROUP_MERGES, 2026-09-30). It offers essentially no
+  supply but buys 1.6-4.7 TWh a year in 2022-2024.
 * flatness -- per unit-day: `flat_p50` (the capacity-p50 is identical in every
   period, scored when defined in at least half of them) and `same_prices` (the
   same set of step prices, >= MIN_STEP_MW, in every period).

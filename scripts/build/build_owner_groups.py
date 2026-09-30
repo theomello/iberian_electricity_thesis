@@ -142,6 +142,15 @@ GROUP_MERGES: dict[str, tuple[str, str]] = {
         "rest ENEL after the legal name. Standing apart, it made Endesa's "
         "residual-demand slope count Endesa's own renewables as a rival's "
         "(merged 2026-09-29)"),
+    "EDP COMERCIAL": ("EDP",
+        "EDP Comercial - Comercializacao de Energia, S.A. is EDP's Portuguese "
+        "liberalised retailer, a full subsidiary of EDP - Energias de Portugal "
+        "(EDP Integrated Annual Report 2024, Part IV, Annex I: 100% of capital and "
+        "voting rights; a direct equity investment of EDP S.A., note on "
+        "investments in subsidiaries). It stood alone for want of merge evidence "
+        "in the ESIOS chain. The midday-hydro panels already counted it in EDP's "
+        "net position; the firm panel did not, so EDP's retail load was missing "
+        "from the chapter's net-buyer shares (merged 2026-09-30)"),
 }
 
 

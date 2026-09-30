@@ -359,15 +359,19 @@ entity's own units (**81.7%** of supply volume), a stem match onto a group that
 layer established (2.0%), seven hand-verified cases (0.3%), and **13.3% left
 standing as their own group** because no merge evidence was found.
 
-**One group-level merge, 2026-09-29: `ENEL` → `ENDESA`** (`GROUP_MERGES` in
-`build_owner_groups.py`; 2.1% of supply volume). Enel Green Power España is 100%
+**Two group-level merges: `ENEL` → `ENDESA` (2026-09-29) and `EDP COMERCIAL` →
+`EDP` (2026-09-30)** (`GROUP_MERGES` in `build_owner_groups.py`; Enel is 2.1%
+of supply volume). Enel Green Power España is 100%
 owned by Endesa Generación, which bought the remaining 60% in 2016, so for the
 whole window. Layer 1 had grouped it as `ENEL` because ESIOS labels its agent
 after the legal name; two of the entity's own units (`ECY*`) carry the ESIOS
 agent "Endesa Cogener y Renovables", which the chain assigns to ENDESA. Standing
 apart, it made Endesa's residual-demand slope count Endesa's own renewables as a
 rival's. The manual layer could not do this: it only fills entities layer 1 left
-open, so a merge of two layer-1 *labels* needs its own mechanism. Without it
+open, so a merge of two layer-1 *labels* needs its own mechanism. EDP Comercial,
+EDP's Portuguese liberalised retailer (100% EDP, Integrated Annual Report 2024),
+is merged on the same mechanism; the midday-hydro panels already counted it in
+EDP's net position and the firm panel did not. Without the roll-up
 `SU ELETRICIDADE` — 7.3% of supply volume, EDP's Portuguese regulated supplier —
 reads as a firm in its own right, and Repsol splits across nine entities.
 

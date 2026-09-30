@@ -74,6 +74,11 @@ def main() -> int:
     for s in sorted(EXPECTED - got):
         fails.append(f"expected string absent from owner_groups: {s!r}")
 
+    for s in ("EDP COMERCIAL COMERCIALIZACAO DE ENERGIA SA",
+              "EDP COMERCIAL-COMERCIALIZAÇÃO DE ENERGIA"):
+        if owner_group(s) != "EDP":
+            fails.append(f"EDP Comercial should group as EDP: {s!r} -> {owner_group(s)!r}")
+
     print(f"pass-through strings matched in owner_groups: {len(got)} (expected {len(EXPECTED)})")
     for f in fails:
         print(f"  FAIL {f}")

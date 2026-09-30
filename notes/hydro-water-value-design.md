@@ -677,6 +677,14 @@ stated concern — exposes SNIRH less than opening a hole in it. Pursue both,
 but lead with the export; take the IP whitelist as the fallback, and only once
 a genuinely static address is confirmed to exist.
 
+**2026-09-30: whitelisted.** APA authorised LMU eduVPN's exit, 194.95.236.6.
+They were told it is shared, and they also offered to send the data as a file
+if the site is too laborious to export from. Details and the rules for using
+the access are in
+[`email-apa-reservoir-data.md`](email-apa-reservoir-data.md#2026-09-30--apa-whitelisted-the-eduvpn-address).
+The portability point above still stands. If the site needs more than a
+handful of requests, prefer their file.
+
 Institutional fit, briefly: SHL is one operator with de facto market power
 over its region, so its FOC-with-market-power framing suits Spain's handful
 of large hydro-owning firms (Iberdrola, Endesa) far better than the 44

@@ -247,6 +247,33 @@ Ludwig-Maximilians-Universität München
 
 ---
 
+## 2026-09-30 — APA whitelisted the eduVPN address
+
+Marco Orlando replied the same day (17:06 UTC, to the Gmail address, same cc
+list): **194.95.236.6 is authorised**. He asks us to check whether access works,
+and adds that if the site does not give the information, or makes it very
+laborious to export, we should say so and **they will find a way to send it**.
+
+So APA accepted the shared address knowingly, since the reply had said it was
+DFN's eduVPN exit and not ours alone. They did not take up the export first,
+but they offered it as the fallback.
+
+**How to use it:**
+- Access works only through LMU eduVPN. Check that the exit reads 194.95.236.6
+  before any request. From home broadband (77.11.167.92 on 2026-09-30) SNIRH
+  still returns 403, as it should.
+- Keep requests few and sequential. The security officer called the system
+  1990s technology that cannot be patched, and the exception was granted on
+  trust.
+- If per-reservoir export turns out to mean hundreds of page loads, take up
+  the offer of a file. A file is reproducible and cites cleanly, which a fetcher
+  that runs from only one network is not
+  ([`hydro-water-value-design.md`](hydro-water-value-design.md), 2026-09-03).
+- Once the data is in hand, reply to thank them and say whether the site was
+  enough.
+
+---
+
 ## Norte — arhn.geral@apambiente.pt
 
 **Assunto:** Pedido de dados históricos de armazenamento de albufeiras (SNIRH) — bacias do Douro, Lima, Cávado e Tâmega

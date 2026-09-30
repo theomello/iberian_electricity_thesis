@@ -131,6 +131,13 @@ that case, could you confirm whether a single IPv4 address is sufficient?
 
 ## 2026-09-29 — a fixed address found; reply ready to send
 
+**Sent 2026-09-30**, as a reply in the Mondego thread to Marco Orlando
+(`marco.orlando@apambiente.pt`, APA's head of IT), cc `maria.saramago@apambiente.pt`,
+`snirh@apambiente.pt` and the LMU address. It went from `theodormello@gmail.com`
+(the connector's account), not from `T.Igel@campus.lmu.de` which sent the
+original, so the body says so. Signed "Theodoro Mello, Ludwig-Maximilians-Universität",
+as the original was; no supervisor line.
+
 **The address.** Connected through LMU's eduVPN, this machine exits at
 **`194.95.236.6`** (`eduvpn1.eduvpn.de`, AS680, DFN — the German research
 network — Munich). It read the same on three checks and again after a disconnect

@@ -13,13 +13,38 @@ from pathlib import Path
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(ROOT / "scripts" / "build"))
 OUT = ROOT / "outputs/tables/rival_solar.parquet"
 SOLAR = ROOT / "outputs/tables/solar_instrument.parquet"
 FIRMS = ("EDP", "IBERDROLA", "ENDESA", "NATURGY", "REPSOL")
 KEY = ["date", "period"]
 
 
+def partial_month_kept_out() -> list[str]:
+    """A priced day with no bid rows (a partial frontier zip) must be absent, not zero."""
+    from build_rival_solar import align
+    px = pd.DataFrame({"date": pd.to_datetime(["2026-05-01"] * 2 + ["2026-05-02"] * 2),
+                       "period": [1, 2, 1, 2]})
+    d = pd.DataFrame({"date": pd.to_datetime(["2026-05-01"]), "period": [2], "z_all": [5.0]}
+                     | {f"own_{f}": [1.0] for f in FIRMS})
+    a = align(d, px)
+    fails = []
+    if set(a.date) != {pd.Timestamp("2026-05-01")}:
+        fails.append("a priced day with no bids was kept (would read as zero solar)")
+    if len(a) != 2 or a.loc[a.period == 1, "z_all"].iloc[0] != 0.0:
+        fails.append("a period without solar rows inside a bid day must carry 0")
+    if (a.z_rival_EDP != a.z_all - a.own_EDP).any():
+        fails.append("align: z_rival_EDP != z_all - own_EDP")
+    return fails
+
+
 def main() -> int:
+    unit = partial_month_kept_out()
+    print("align on a synthetic partial month:", "ok" if not unit else "; ".join(unit))
+    if unit:
+        for f_ in unit:
+            print(f"  FAIL {f_}")
+        return 1
     if not OUT.exists():
         print(f"  FAIL {OUT.relative_to(ROOT)} missing -- run scripts/build/build_rival_solar.py")
         return 1

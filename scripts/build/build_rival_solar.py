@@ -15,8 +15,9 @@ status O, solar-labelled units outside the purchase roles), once for each of the
 five firms instead of for EDP alone. A firm's own solar is every unit whose
 owner rolls up to it under `owner_group` -- pass-through entities included, so
 no volume the firm's group bids enters its own instrument. For EDP this
-reproduces `z_offered`; `scripts/qa/check_rival_solar.py` checks it. Periods
-with no solar offer (night) carry 0, not a gap.
+reproduces `z_offered`; `scripts/qa/check_rival_solar.py` checks it. Only days
+the bid files cover are kept, so a partial frontier month cannot read as zero
+solar; within a covered day a period with no solar row carries 0.
 """
 from __future__ import annotations
 
@@ -59,6 +60,21 @@ def month(f: Path, grp: pd.Series) -> pd.DataFrame:
     return pd.concat(parts, axis=1).reset_index()
 
 
+def align(d: pd.DataFrame, px: pd.DataFrame) -> pd.DataFrame:
+    """Solar sums onto the priced periods of the days the bid files cover.
+
+    Only days with bid rows are kept: a frontier month's zip can be partial
+    (CLAUDE.md), and a priced day with no bids must be missing, not zero solar.
+    Within a covered day, a period with no solar row carries 0.
+    """
+    d = px[px.date.isin(set(d.date))].merge(d, on=KEY, how="left")
+    num = [c for c in d.columns if c not in KEY]
+    d[num] = d[num].fillna(0.0)
+    for firm in FIRMS:
+        d[f"z_rival_{firm}"] = d.z_all - d[f"own_{firm}"]
+    return d
+
+
 def build(months: list[str] | None) -> pd.DataFrame:
     grp = solar_units()
     print(f"{len(grp)} solar-labelled supply units; the five firms own "
@@ -74,13 +90,7 @@ def build(months: list[str] | None) -> pd.DataFrame:
     d["date"] = pd.to_datetime(d.date)
     px = pd.read_parquet(DATA / "omie/prices/omie_day_ahead_prices.parquet", columns=KEY)
     px["date"] = pd.to_datetime(px.date)
-    ym = {f.stem.split("_")[1] for f in files}
-    px = px[px.date.dt.strftime("%Y%m").isin(ym)]
-    d = px.merge(d, on=KEY, how="left")
-    num = [c for c in d.columns if c not in KEY]
-    d[num] = d[num].fillna(0.0)
-    for firm in FIRMS:
-        d[f"z_rival_{firm}"] = d.z_all - d[f"own_{firm}"]
+    d = align(d, px)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     d.to_parquet(OUT, index=False)
     print(f"wrote {OUT.relative_to(ROOT)}  ({len(d):,} periods)")

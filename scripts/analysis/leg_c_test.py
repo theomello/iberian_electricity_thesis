@@ -49,6 +49,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from iv_two_endog import ar_set_k1, ar_set_one, ar_test, fmt_intervals, sw_f, tsls_k  # noqa: E402
+from midday_hydro_iv import ols  # noqa: E402
 from solar_first_stage import demean  # noqa: E402
 
 PANEL = ROOT / "outputs/tables/leg_c_panel.parquet"
@@ -143,7 +144,8 @@ def iv(d: pd.DataFrame, y: str, label: str, spec: str, heat: bool = False, x: st
 def x_parts(d: pd.DataFrame) -> pd.DataFrame:
     """The rows with X's two parts: the exposed net position n and rivals' slope."""
     x = pd.read_parquet(ROOT / "outputs/tables/firm_incentive_net.parquet",
-                        columns=["date", "period", "firm", "net_exp_mw", "slope_exp_h5"],
+                        columns=["date", "period", "firm", "net_exp_mw",
+                                 *[f"slope_exp_h{h}" for h in (1, 2, 5, 10)]],
                         filters=[("firm", "in", sorted(d.firm.unique())), ("year", ">=", 2018),
                                  ("year", "<=", 2023)])
     x["date"] = pd.to_datetime(x.date).astype("datetime64[us]")
@@ -177,8 +179,21 @@ def diagnostics(d: pd.DataFrame, s1: pd.DataFrame) -> list[dict]:
         rows.append(iv(s1[s1.date.dt.year == yr], "pc", str(yr), "spec 1"))
     rows.append(iv(s1.assign(ym=s1.date.dt.strftime("%Y%m")), "pc", "unit + year-month effects", "spec 1",
                    fes=("unit", "ym")))
-    print("  X's slope floor, and its two parts:")
     xp = x_parts(s1)
+    print("  reduced forms on rivals' wind and solar, per GW (unit effects, week clusters):")
+    for y in ("p", "pc", "X", "net_exp_mw", "slope_exp_h5"):
+        w = demean(xp, [y, "zw", "zs"], ["unit"])
+        b, se = ols(w[y].to_numpy(), w[["zw", "zs"]].to_numpy(), xp.wk.to_numpy())
+        rows.append({"sample": f"reduced form: {y}", "spec": "spec 1", "n": len(xp), "rf_zw": b[0],
+                     "rf_zw_se": se[0], "rf_zs": b[1], "rf_zs_se": se[1]})
+        print(f"    {y:14s} zw {b[0]:+9.3f} ({se[0]:.3f})  zs {b[1]:+9.3f} ({se[1]:.3f})")
+    print(f"    median rivals' slope {xp.slope_exp_h5.median():.1f} MW per EUR/MWh: 1 GW at that slope "
+          f"moves p by {1000 / xp.slope_exp_h5.median():.2f}")
+    print("  X at other half-widths of rivals' slope (+-1, 2, 10 EUR/MWh):")
+    for h in (1, 2, 10):
+        xh = xp.assign(X_h=(xp.net_exp_mw / xp[f"slope_exp_h{h}"]).where(xp[f"slope_exp_h{h}"] >= MIN_SLOPE))
+        rows.append(iv(xh, "pc", f"X at +-{h} EUR/MWh", "spec 1", x="X_h"))
+    print("  X's slope floor, and its two parts:")
     for fl in (20, 50, 100):
         rows.append(iv(xp[xp.slope_exp_h5 >= fl], "pc", f"slope >= {fl}", "spec 1"))
     xp["X_n"] = xp.net_exp_mw / xp.slope_exp_h5.median()

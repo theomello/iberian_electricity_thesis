@@ -168,7 +168,17 @@ def diagnostics(d: pd.DataFrame, s1: pd.DataFrame) -> list[dict]:
     own = s1[s1.p_top <= OWN_STEP]
     print(f"  the unit's own step at p (p - top <= {OWN_STEP}), selected on p:")
     rows.append(iv(own, "pc", "own step at p (selected on p)", "spec 1"))
-    rows.append(iv(own, "pc", "own step at p, solar alone (selected on p)", "spec 1", z=("zs",)))
+    r = iv(own, "pc", "own step at p, solar alone (selected on p)", "spec 1", z=("zs",))
+    # In levels: what the unit effects absorb at that beta, and p - c by the sign of X.
+    a_u = (own.pc - r["beta"] * own.X).groupby(own.unit).mean()
+    q = a_u.quantile([0.25, 0.5, 0.75])
+    r |= {"own_step_unit_effect_median": float(q[0.5]), "own_step_unit_effect_p25": float(q[0.25]),
+          "own_step_unit_effect_p75": float(q[0.75])}
+    rows.append(r)
+    print(f"    in levels: unit effects at beta {r['beta']:.3f} have median {q[0.5]:+.2f} EUR/MWh "
+          f"(IQR {q[0.25]:+.2f} to {q[0.75]:+.2f}, {len(a_u)} units)")
+    for lab, g in (("X < 0", own[own.X < 0]), ("X > 0", own[own.X > 0])):
+        print(f"    {lab}: n={len(g):,}  median X {g.X.median():+.2f}  median p - c {g.pc.median():+.2f}")
     print("  each instrument alone:")
     for z, lab in ((("zw",), "wind alone"), (("zs",), "solar alone")):
         rows.append(iv(s1, "pc", f"pooled, {lab}", "spec 1", z=z))
@@ -188,7 +198,8 @@ def diagnostics(d: pd.DataFrame, s1: pd.DataFrame) -> list[dict]:
                      "rf_zw_se": se[0], "rf_zs": b[1], "rf_zs_se": se[1]})
         print(f"    {y:14s} zw {b[0]:+9.3f} ({se[0]:.3f})  zs {b[1]:+9.3f} ({se[1]:.3f})")
     print(f"    median rivals' slope {xp.slope_exp_h5.median():.1f} MW per EUR/MWh: 1 GW at that slope "
-          f"moves p by {1000 / xp.slope_exp_h5.median():.2f}")
+          f"moves p by {1000 / xp.slope_exp_h5.median():.2f}; mean of 1000/slope {(1000 / xp.slope_exp_h5).mean():.2f}, "
+          f"1000/mean slope {1000 / xp.slope_exp_h5.mean():.2f}")
     print("  X at other half-widths of rivals' slope (+-1, 2, 10 EUR/MWh):")
     for h in (1, 2, 10):
         xh = xp.assign(X_h=(xp.net_exp_mw / xp[f"slope_exp_h{h}"]).where(xp[f"slope_exp_h{h}"] >= MIN_SLOPE))
@@ -210,9 +221,11 @@ def markdown(d: pd.DataFrame) -> list[dict]:
         m, top = g.p - g.c, g.top_cleared_eur - g.c
         rows.append({"sample": "markdown table", "spec": "levels", "sign": sign, "n": len(g),
                      "median_p_minus_c": float(m.median()), "share_below_cost": float((m < 0).mean()),
+                     "median_X": float(g.X.median()),
                      "median_p_minus_top": float((g.p - g.top_cleared_eur).median()),
                      "median_top_minus_c": float(top.median()), "share_top_below_cost": float((top < 0).mean())})
-        print(f"  {sign:22s} n={len(g):>8,}  median p - c {m.median():+.2f}  share below cost {(m < 0).mean():.3f}"
+        print(f"  {sign:22s} n={len(g):>8,}  median X {g.X.median():+.2f}  median p - c {m.median():+.2f}  "
+              f"share below cost {(m < 0).mean():.3f}"
               f"  | median p - top {(g.p - g.top_cleared_eur).median():+.2f}, top - c {top.median():+.2f}, "
               f"share top below cost {(top < 0).mean():.3f}")
     return rows

@@ -8,9 +8,10 @@ holds and leg B's first pass is withdrawn for want of a first stage (§4);
 legs C and D are designed (§4) and the plan reordered (§8).
 
 **Revised 2026-10-01:** leg D is run and inconclusive: price-taking is rejected,
-conduct is not separated (§4). Leg C is run: in levels β ≈ 3 measures where the
-price sits in the gaps of stepped offers, not conduct (§4); an estimator on the
-offer steps is proposed (§8 step 5b).
+conduct is not separated (§4). Leg C is run: in levels β ≈ 3, which rejects a
+joint hypothesis rather than conduct alone; the leading candidate is that the
+price sits in the gaps of stepped offers (§4). An estimator on the offer steps is
+proposed (§8 step 5b).
 
 It connects the descriptive chapter
 ([`rq-descriptive-price-formation.md`](../../notes/rq-descriptive-price-formation.md)),
@@ -218,7 +219,7 @@ control.
   days and F rises to 16, but the set [−0.72, 1.13] still contains β = 1. The
   solar era needs a stronger instrument, not more periods.
 
-### Leg C — thermal plant: cost observed. **Run 2026-10-01; β ≈ 3 reflects step gaps.**
+### Leg C — thermal plant: cost observed. **Run 2026-10-01; β ≈ 3, not read as conduct.**
 
 For a gas or coal unit c is measured, so the condition can be tested in
 **levels**, which no other leg can do. The design is route 2 of three
@@ -273,12 +274,14 @@ declaring unit's 75th-percentile tranche exactly at it.
 **Result, 2026-10-01** ([`rq-leg-c-thermal-cost.md`](../../notes/rq-leg-c-thermal-cost.md)).
 In levels β is 3.10 (Anderson–Rubin set [2.59, 3.67], first-stage F 70; 3.06 with
 the heat rate estimated, 3.05 with declared cost), so price-taking and full Nash
-are both rejected, but β is not conduct: units offer in steps, the price sits on
-the unit's own step in 1.4% of rows, and 2.25 of the 3.10 is the price's distance
-above the unit's highest accepted offer, which rivals' renewables move directly.
-Where the unit's own step sets the price, β is 0.87–0.89 and full Nash is not
-rejected with solar alone (set [0.55, 1.52]), but those rows are selected on the
-price. An estimate needs the condition written for step offers (§8 step 5b).
+are both rejected, but the joint hypothesis fails rather than conduct alone: β
+moves with which part of X moves, with the slope floor and across years, and the
+price sits on the unit's own offer step in 1.4% of rows, where a step bidder's
+condition holds only in expectation. Where the unit's own step sets the price,
+both instruments give an empty set and solar alone gives β 0.89 without
+rejecting β = 1, but those rows are selected on the price and sit about 8 €/MWh
+above the condition in levels. An estimate needs the conditions of a step bidder
+(§8 step 5b).
 
 ### Leg D — the sign of n: cost common, prediction reversed. **Run 2026-10-01; inconclusive, price-taking rejected.**
 
@@ -402,20 +405,34 @@ archive and β̂.
 4. ~~**Leg D**~~ — run 2026-10-01; inconclusive: price-taking rejected, conduct not separated (`rq-leg-d-sign-of-n.md`).
 5. ~~**Rivals' offered wind**, then **leg C**~~ — run 2026-10-01; β ≈ 3 reflects step
    gaps, not conduct (`rq-leg-c-thermal-cost.md`).
-5b. **Leg C on the offer steps: an estimate, not a diagnostic.** Each step a unit
-   offers is chosen before the auction, at a price b_k observed whether or not the
-   price lands on it. A step bidder's condition holds in expectation:
-   b_k − c = β · E[X | step k sets the price] (Wolak 2007; Reguant 2014, on this
-   market). The expectation is built by resampling: draw residual-demand curves
-   from rivals' actual offers on comparable periods, clear each against the firm's
-   own offer, and record which step sets the price and X there. Every step of every
-   unit-period enters, so nothing is selected on the price, and the regressor is
-   what the firm could expect, not what happened. The same estimator with a
-   unit-day effect in place of c is leg A on the step scale, and split by the sign
-   of n it is leg D, so it gives **one β across legs**, whose equality is itself a
-   test. The ex-post optimal bid (`rq-gas-cap-conduct.md`, 2026-08-18) is its
-   one-draw case; the gas cap's statutory cost (2022-06-15 to 2023-12-31) is its
-   sharpest window.
+5b. **Leg C on the offer steps: an estimate, not a diagnostic.** *Proposed
+   2026-10-01, after the user asked for an estimate rather than the selected
+   own-step rows; to be confirmed before it is built.* Each step a unit offers is
+   chosen before the auction, at a price b_k and a length, observed whether or not
+   the price lands on it. A step bidder's conditions hold in expectation over the
+   residual demand it could face (Wolak 2007; Kastl 2011; Reguant 2014, on this
+   market):
+   - **price of step k**, over the periods in which k sets the price:
+     E[1{k sets p} · ((b_k − c) · |RD′| − β · n)] = 0, so
+     b_k − c = β · E[n | k] / E[|RD′| | k], a slope-weighted mean of X (not
+     E[X | k], which the convexity of 1/|RD′| inflates);
+   - **length of step k**, over the periods in which p falls in the gap above it:
+     E[(p − c − β · X) · 1{p in the gap above k}] = 0.
+
+   The expectations are built by resampling: draw residual-demand curves from
+   rivals' actual offers on comparable periods, smooth them as Wolak and Reguant
+   do, clear each against the firm's own offer, and record which step sets the
+   price, n and |RD′| there. The unconditional moments weight each step by its
+   probability of setting the price, so nothing is selected on the realised
+   price; steps that never set it (minimum-load tranches, withholding blocks)
+   give inequalities only. Reguant also puts the minimum-income condition and
+   start-up costs into the bidder's problem, which this market's offers carry
+   (`cab`). **One β across legs** follows with two qualifications: units that
+   submit one curve per day (EDP's flat cascades) need a day-level condition
+   summed over hours, and leg D's split is by the sign of E[n | k], since a
+   step's price-setting periods can mix signs. The ex-post optimal bid
+   (`rq-gas-cap-conduct.md`, 2026-08-18) is the one-draw case; the gas cap's
+   statutory cost (2022-06-15 to 2023-12-31) is its sharpest window.
 6. **A spatial weather instrument**, for legs C and D. Offered renewable volume is
    partly a choice, so a firm's own offered renewables are not an instrument. In a
    scratch probe (2026-10-01, not committed; corrected for an hour misalignment by

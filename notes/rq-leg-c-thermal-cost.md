@@ -6,11 +6,14 @@ Scripts: `build/build_rival_solar.py` (`--tech wind` and `--tech solar`),
 checks in `qa/` (`check_rival_solar.py`, `check_iv_two_endog.py`,
 `check_leg_c_panel.py`). Results: `outputs/tables/leg_c_results.csv`.
 
-**In one line.** The condition in levels gives β ≈ 3, three times full Nash,
-but that number measures where the price sits inside the gaps of a unit's
-stepped offer curve, not conduct. Where the unit's own offer step sets the
-price, β is 0.7–0.9 and full Nash (β = 1) is not rejected; those rows are
-selected on the price, so this is a diagnostic, not a result.
+**In one line.** The condition in levels gives β ≈ 3, three times full Nash.
+That rejects a joint hypothesis, not conduct alone, and the leading candidate
+for the failure is that the price sits inside the gaps of the units' stepped
+offers, where the smooth condition need not hold period by period. Where the
+unit's own step sets the price, solar alone gives β 0.89 and does not reject
+β = 1, but both instruments together give an empty set, those rows are
+selected on the price, and in levels they sit about 8 €/MWh above what β ≈ 0.9
+predicts. Leg C has no estimate of β yet.
 
 ## 1. Design, as run
 
@@ -57,6 +60,9 @@ p_t − c_ut = a_u + β · X_ft + ε_ut
 409,426 unit-periods on 71 units and 311 weeks; 347,223 outside minimum-load
 gaps. Specification 1: 335,545 unit-periods on 67 units (45 gas, 22 coal).
 
+The full panel by year and fuel (minimum-load and generic-efficiency rows
+included):
+
 | year | coal | gas |
 |---|---|---|
 | 2018 | 64,018 | 18,922 |
@@ -89,7 +95,7 @@ Bizkaia 10,777; RWE 6,454; Axpo 2,470; Cogen 8.
 | coal | 1 | 77,884 | 1.362 (0.320) | 51.8 | 5·10⁻⁶ | 0.003 | empty (min p 0.008) | ok |
 | 2018–2021 | 1 | 218,500 | 2.054 (0.298) | 35.3 | 2·10⁻⁷ | 0.003 | [1.326, 2.442] | ok |
 | 2022–2023 | 1 | 117,045 | 3.354 (0.265) | 57.8 | 2·10⁻³⁹ | 5·10⁻²⁴ | [2.833, 4.088] | ok |
-| five firms | 1 | 262,825 | 2.314 (0.190) | 72.6 | 2·10⁻²⁶ | 6·10⁻¹³ | [2.110, 2.749] | ok |
+| five firms | 1 | 262,825 | 2.314 (0.190) | 72.6 | 2·10⁻²⁶ | 5·10⁻¹³ | [2.110, 2.749] | ok |
 | other owners | 1 | 72,720 | −17.7 (10.6) | 3.1 | 2·10⁻²¹ | 4·10⁻²² | [98.7, 268.2] | weak |
 | without Axpo, Engie | 1 | 314,389 | 2.799 (0.213) | 69.7 | 8·10⁻²⁷ | 3·10⁻¹⁵ | [2.407, 3.347] | ok |
 | without static-X misfits | 1 | 308,332 | 3.173 (0.216) | 66.6 | 4·10⁻²⁹ | 5·10⁻¹⁸ | [2.677, 3.751] | ok |
@@ -119,30 +125,44 @@ highest cleared offer step ("top"):
 | at minimum-load gaps, X < 0 | 32,403 | +4.33 | 0.351 | +54.01 | −55.16 | 1.000 |
 | at minimum-load gaps, X > 0 | 21,840 | +10.43 | 0.180 | +57.28 | −47.51 | 1.000 |
 
-### 3.2 Why β ≈ 3: the price sits in a gap of the unit's step curve
+### 3.2 The leading candidate for β ≈ 3: the price sits in a gap of the unit's step curve
 
-The unit offers in steps. At a partly dispatched unit, p should be on the
-unit's own offer, but it rarely is:
+The unit offers in steps. At a partly dispatched unit, p rarely sits on the
+unit's own offer:
 
 - **p is within 0.005 €/MWh of the unit's top cleared step in 1.4% of rows.**
-  The median p − top is 13.41 €/MWh. In July 2019 (the Task 4 review, one month
-  of offer steps), 1.1% of rows have volume offered at p, the median gap from
+  The median p − top is 13.41 €/MWh. In July 2019 (the Task 4 review's scratch
+  script, not committed; one month of offer steps), 1.1% of rows have volume
+  offered at p, the median gap from
   the top cleared step to the next offered step is 123.9 €/MWh, and p sits a
   tenth of the way up it.
 - **β splits exactly** (p − c = (p − top) + (top − c), same first stage):
   2.251 from p − top (AR set [2.101, 3.040]) and 0.853 from top − c (AR set
   empty). Three quarters of β is the price's distance above the unit's own
-  accepted offers.
-- **Why that loads on X.** Reduced forms, per GW of rivals' solar (unit
-  effects): p falls 2.09 €/MWh (se 0.46), close to 1,000 / 470.5 = 2.13, where
-  470.5 MW per €/MWh is the median rivals' slope. The price slides along
-  rivals' curve as if the firm's supply were vertical. X falls only 0.64 €/MWh
-  (se 0.06), because the firm's exposed n absorbs 91 MW of the GW (9%), and
-  p − c falls 2.00: 2.00 / 0.64 ≈ 3.1. Wind gives the same n (−91 MW) and
-  X (−0.68). With a step curve the unit's quantity does not respond until
-  p reaches its next step, so rivals' renewables move p − c directly: the
-  exclusion fails by construction, and the over-identification test cannot see
-  it, because wind and solar act through the same channel.
+  accepted offers. The split is an identity, and "top" is itself a function of
+  p, so it shows where β sits, not why.
+- **What moves.** Reduced forms, per GW of rivals' solar (unit effects): p falls
+  2.09 €/MWh (se 0.46) and p − c 2.00; the firm's exposed n falls 91 MW, and X
+  only 0.64 €/MWh (se 0.06), so 2.00 / 0.64 ≈ 3.1. Wind gives the same n
+  (−91 MW) and X (−0.68). X's movement comes mostly from the low-slope tail:
+  91 MW over the median rivals' slope (470.5 MW per €/MWh) is only 0.19, while
+  the mean of 1,000 / slope is 5.12 against 1,000 / median slope 2.13. That
+  convexity is also why β rises with the slope floor (§3.3).
+- **Why this need not be conduct, and why it need not be exclusion failure
+  either.** A step bidder chooses each step's length as well as its price. In
+  the periods where p falls in the gap above step k, the optimal length
+  satisfies the smooth condition in expectation (Kastl 2011):
+  E[(p − c − β · X) · 1{p in the gap above k} | information at bidding] = 0. So
+  instruments the firm knew when it bid, as rivals' offered renewables largely
+  are (they are submitted at the same noon deadline), remain valid over the gap
+  periods. The condition breaks for the unforeseen part of the instruments, for
+  step lengths fixed by technology (minimum load, capacity), and where the unit
+  is in a gap but the **firm** is not: the condition is the firm's, and in July
+  2019 another unit of the same firm offers within ±0.5 €/MWh of p in 42.1% of
+  panel rows (final review's scratch script, not committed). The step gap is the
+  leading candidate, not an established cause. β ≈ 3 rejects the joint
+  hypothesis: Nash, freely chosen step lengths, foreseen instruments, X and c
+  measured correctly, and the unit being the firm's marginal unit.
 - **Where the unit's own step is at p** (p − top ≤ 0.5 €/MWh, 13,515 rows):
 
   | instruments | β (se) | F | AR p(β=1) | AR set |
@@ -150,9 +170,16 @@ unit's own offer, but it rarely is:
   | wind and solar | 0.869 (0.215) | 15.9 | 8·10⁻⁶ | empty (min p 0.0003) |
   | solar alone | 0.894 (0.219) | 29.0 | 0.651 | [0.554, 1.517] |
 
-  Full Nash is not rejected with solar alone. With both instruments the AR set
-  is empty: wind has little first stage here, and it disagrees with solar. The rows are selected on p, the outcome, so this is a
-  diagnostic, not an estimate.
+  With both instruments, the specification the plan defines, the AR set is
+  empty and β = 1 is rejected. Solar alone was run after that set came back
+  empty; it does not reject β = 1. Wind alone has no first stage here (F 1.2)
+  and its AR set excludes solar's estimate (final review's scratch script). The
+  rows are selected on p, the outcome, so this is a diagnostic, not an
+  estimate. **In levels**, at solar's β of 0.894 the unit effects absorb a
+  median +8.31 €/MWh (interquartile range +4.82 to +14.61, 63 units): the rows
+  sit about 8 €/MWh above the condition's prediction, unless the omitted costs
+  (operation and maintenance, part-load efficiency, start-ups) are that large.
+  β ≈ 0.9 there is a within-unit slope, not a fit in levels.
 
 ### 3.3 What else moves β
 
@@ -182,13 +209,13 @@ unit's own offer, but it rarely is:
   different βs.
 - **β is not a stable parameter of X.** It rises with the slope floor (the
   low-slope tail, where X is largest, pulls it down), it is about 10 when only n
-  moves, and negative and weak when only the slope moves. That is what a
-  ratio of rivals' slope to the firm's own (near-vertical) supply slope would
-  do, not a conduct parameter.
+  moves, and negative and weak when only the slope moves. A conduct parameter
+  would not depend on which part of X moves.
 - **Not the half-width of rivals' slope.** At ±1, ±2, ±5 and ±10 €/MWh β is
   3.03, 3.04, 3.10 and 3.21.
 - **Time effects raise β** rather than lower it. Clustering by month instead of
-  week lowers F to 36.6 and widens the AR set to [2.34, 3.81] (Task 4 review).
+  week lowers F to 36.6 and widens the AR set to [2.34, 3.81] (Task 4 review's
+  scratch script, not committed).
 
 ## 4. Verdict
 
@@ -205,32 +232,43 @@ The plan's rules (Task 5, Step 1), applied to the pooled rows:
 | 7. Route 3 agrees (AR sets overlap)? | no: route 3's AR set is empty |
 
 **Read mechanically, leg C rejects both price-taking and full Nash, with β
-above 1. That reading is not available.** The condition p − c = β · X is the
-first-order condition of a firm that chooses a smooth supply function. These
-units offer steps, and the price sits inside a step's gap, above the unit's
-own accepted offers, in nearly every row. Rivals' renewables then move p − c
-without moving the unit's quantity, so the instruments are excluded only if
-the unit's offer is smooth at p, which it almost never is. β ≈ 3 is the price's
-slide along rivals' curve, three times the movement in X.
+above 1. In conduct terms β > 1 is the more-than-Nash region: firms acting as
+if their residual demand were steeper than it is, which is how coordination
+would show (Puller 2007 reads θ > 1 the same way). That reading is set aside
+here, not adopted, for three reasons.** β is not stable to which part of X
+moves (10.5 with n alone, negative with the slope alone), to the slope floor
+(3.1 to 5.4) or across years (AR sets empty in 2018–2020); wind and solar give
+different βs for coal and route 3; and the price sits inside a gap of the
+unit's step curve in nearly every row, where the smooth condition holds only in
+expectation over gap periods and fails for unforeseen shocks and fixed step
+lengths. β ≈ 3 rejects the joint hypothesis, not Nash conduct by itself.
 
-**What leg C says about β.** At the few rows where the unit's own step sets the
-price, β is 0.87–0.89 and full Nash is not rejected with solar alone. The
-markdown in levels shows the same: at the unit's own top step the median
-markup is +2.87 €/MWh for net buyers and +1.00 for net sellers, and over 40% of
-those offers lie below the measured cost. Nothing here shows that net buyers
-price below cost; nothing rules it out either.
+**What leg C says about β: nothing yet that is an estimate.** At the rows where
+the unit's own step sets the price, β is 0.87 with both instruments (AR set
+empty, β = 1 rejected) and 0.89 with solar alone (β = 1 not rejected), but those
+rows are selected on p and sit about 8 €/MWh above the condition in levels. The
+markdown in levels runs against the prediction: at the unit's own top step the
+median markup is +2.87 €/MWh for net buyers (median X −2.37) and +1.00 for net
+sellers (median X +1.53), and sellers' top steps lie below the measured cost
+more often (48% against 41%). Net buyers are not seen pricing below cost; with
+an engineering cost that omits operation and maintenance, part-load efficiency
+and start-ups, that is not evidence against it either.
 
-**What it would take.** A condition written for step offers: either the
-expected first-order condition of a step bidder (each step's price equals cost
-plus β times the expected X over the residual-demand realisations at which
-that step sets the price; Wolak 2007, Reguant 2014), or bounds, from the unit's
-top cleared step below p and its next offered step above. Both use the offer
-steps rather than p, which also makes leg C a test on offers, like leg D.
+**What it would take.** The conditions of a step bidder, estimated on the offer
+steps rather than on p (spec §8 step 5b): for each step's price, the moment
+E[1{step k sets the price} · ((b_k − c) · |RD′| − β · n)] = 0, so that
+b_k − c = β · E[n | k] / E[|RD′| | k], a slope-weighted mean of X; and for each
+step's length, Kastl's moment over the gap periods above. The expectations come
+from resampling residual demand (Wolak 2007; Reguant 2014, who also puts the
+minimum-income condition and start-up costs into the bidder's problem, as this
+market's offers do). Steps that never set the price, minimum-load tranches and
+withholding blocks, give inequalities only.
 
 ## 5. Limits
 
 - **The condition is for smooth supply functions; the offers are steps** (§3.2).
-  This is the binding limit, and it applies to every row above.
+  It holds over the gap periods only in expectation, so every row above tests
+  it jointly with foreseen instruments and freely chosen step lengths.
 - **X is built on static unit owners** (`firm_incentive_net`). Unit-periods
   outside their firm's X are dropped, but each firm's X itself still counts
   sold or bought units on one owner: EDP's X excludes Castejón (sold

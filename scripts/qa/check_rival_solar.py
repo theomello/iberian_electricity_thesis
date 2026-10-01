@@ -96,6 +96,12 @@ def main() -> int:
         for f in ("EDP", "IBERDROLA", "ENDESA"):
             if not d[f"own_{f}"].mean() > 100:
                 fails.append(f"own_{f} wind averages {d[f'own_{f}'].mean():.0f} MW (expected > 100)")
+        # EDP's parks bid as NATVD11-15 until 2020-08-31 and as HCGVD11-14 after: a static
+        # owner taken from a listing after their life hands 2018-2020 to TotalEnergies.
+        yearly = d[d.date.dt.year.between(2018, 2023)].groupby(d.date.dt.year).own_EDP.mean()
+        print("EDP own offered wind by year, MW:", yearly.round().to_dict())
+        if not (yearly > 200).all():
+            fails.append(f"own_EDP wind falls below 200 MW in {list(yearly[yearly <= 200].index)}")
     print(f"mean own offered {tech}, MW:", {f: round(d[f"own_{f}"].mean()) for f in FIRMS},
           f"of z_all {d.z_all.mean():.0f}")
     for f_ in fails:

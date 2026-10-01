@@ -42,6 +42,14 @@ TABLES = ROOT / "outputs/tables"
 FIRMS = ("EDP", "IBERDROLA", "ENDESA", "NATURGY", "REPSOL")
 KEY = ["date", "period"]
 MATCH = DATA / "jrc_ppdb/jrc_cab_match.parquet"
+# Units whose only OMIE listing postdates their bidding life, so the static owner is
+# wrong for all of it. NATVD11-15 are EDP's wind parks ("U.O. PARQUES NO HABILITADOS",
+# "... HABILITADOS S.A.", "... EOLICA LA BRUJULA", "... ZONA REGULACION", "... SANTA
+# QUITERIA") sold through EDP Comercializadora from 2018-01-01 to 2020-08-31; from
+# 2020-09-01 the same parks bid as HCGVD11-14 (EDP Espana). Their one listing
+# (2022-02-08) names EDP Comercializadora, which TotalEnergies had bought on
+# 2020-12-01 (EDP market notification), so `owner_group` rolls them up to TOTALENERGIES.
+OWNER_FIX = {f"NATVD1{i}": "EDP" for i in range(1, 6)}
 LISTS = DATA / "omie/registry/omie_unit_lists.parquet"
 
 
@@ -60,7 +68,10 @@ def tech_units(tech: str = "solar") -> pd.Series:
                         columns=["unit", "role", "tech", "tech_omie", "tech_omie_early", "agent_owner"])
     label = u.tech_omie.fillna(u.tech_omie_early).fillna(u.tech)
     s = u[(label == tech) & ~u.role.str.startswith("purchase")]
-    return pd.Series(s.agent_owner.map(owner_group).to_numpy(), index=s.unit.astype(str).to_numpy())
+    g = pd.Series(s.agent_owner.map(owner_group).to_numpy(), index=s.unit.astype(str).to_numpy())
+    fix = g.index.isin(list(OWNER_FIX))
+    g[fix] = [OWNER_FIX[u] for u in g.index[fix]]
+    return g
 
 
 def month(f: Path, grp: pd.Series, groups: tuple[str, ...] = FIRMS) -> pd.DataFrame:

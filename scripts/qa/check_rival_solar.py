@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
-"""Rivals' offered solar: one row per period, the identity, and EDP's z_offered reproduced.
+"""Rivals' offered solar (or wind): one row per period, the identity, and for solar
+EDP's z_offered reproduced; for wind, the three wind-owning firms own some.
 
-    .venv/bin/python scripts/qa/check_rival_solar.py
+    .venv/bin/python scripts/qa/check_rival_solar.py [--tech wind]
 
 Framework spec §4, leg D. Exits non-zero on any failure.
 """
 from __future__ import annotations
 
 import sys
+from argparse import ArgumentParser
 from pathlib import Path
 
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "build"))
-OUT = ROOT / "outputs/tables/rival_solar.parquet"
 SOLAR = ROOT / "outputs/tables/solar_instrument.parquet"
 FIRMS = ("EDP", "IBERDROLA", "ENDESA", "NATURGY", "REPSOL")
 KEY = ["date", "period"]
@@ -39,6 +40,10 @@ def partial_month_kept_out() -> list[str]:
 
 
 def main() -> int:
+    ap = ArgumentParser(description=__doc__)
+    ap.add_argument("--tech", choices=("solar", "wind"), default="solar")
+    tech = ap.parse_args().tech
+    OUT = ROOT / f"outputs/tables/rival_{tech}.parquet"
     unit = partial_month_kept_out()
     print("align on a synthetic partial month:", "ok" if not unit else "; ".join(unit))
     if unit:
@@ -46,7 +51,7 @@ def main() -> int:
             print(f"  FAIL {f_}")
         return 1
     if not OUT.exists():
-        print(f"  FAIL {OUT.relative_to(ROOT)} missing -- run scripts/build/build_rival_solar.py")
+        print(f"  FAIL {OUT.relative_to(ROOT)} missing -- run scripts/build/build_rival_solar.py --tech {tech}")
         return 1
     fails: list[str] = []
     d = pd.read_parquet(OUT)
@@ -68,15 +73,22 @@ def main() -> int:
     print(f"priced periods in the covered months: {len(px):,}; missing here: {missing}")
     if missing:
         fails.append(f"{missing} priced periods missing (night periods must carry z, not be dropped)")
-    s = pd.read_parquet(SOLAR, columns=KEY + ["z_offered"])
-    s["date"] = pd.to_datetime(s.date)
-    m = d.merge(s, on=KEY).dropna(subset=["z_offered"])
-    corr = m.z_rival_EDP.corr(m.z_offered)
-    med = (m.z_rival_EDP - m.z_offered).abs().median()
-    print(f"EDP's rival solar vs z_offered: {len(m):,} periods, corr {corr:.6f}, median |diff| {med:.3f} MW")
-    if not (corr > 0.999 and med < 1.0):
-        fails.append("z_rival_EDP does not reproduce z_offered")
-    print("mean own offered solar, MW:", {f: round(d[f"own_{f}"].mean()) for f in FIRMS},
+    if tech == "solar":
+        s = pd.read_parquet(SOLAR, columns=KEY + ["z_offered"])
+        s["date"] = pd.to_datetime(s.date)
+        m = d.merge(s, on=KEY).dropna(subset=["z_offered"])
+        corr = m.z_rival_EDP.corr(m.z_offered)
+        med = (m.z_rival_EDP - m.z_offered).abs().median()
+        print(f"EDP's rival solar vs z_offered: {len(m):,} periods, corr {corr:.6f}, median |diff| {med:.3f} MW")
+        if not (corr > 0.999 and med < 1.0):
+            fails.append("z_rival_EDP does not reproduce z_offered")
+    else:
+        # EDP Espana's parks, Iberdrola's IBEVD11 and Enel Green Power (Endesa) are wind
+        # portfolios of several GW: an ownership mapping that loses them gives zero here.
+        for f in ("EDP", "IBERDROLA", "ENDESA"):
+            if not d[f"own_{f}"].mean() > 100:
+                fails.append(f"own_{f} wind averages {d[f'own_{f}'].mean():.0f} MW (expected > 100)")
+    print(f"mean own offered {tech}, MW:", {f: round(d[f"own_{f}"].mean()) for f in FIRMS},
           f"of z_all {d.z_all.mean():.0f}")
     for f_ in fails:
         print(f"  FAIL {f_}")

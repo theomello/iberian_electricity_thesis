@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Rivals' offered solar, per firm and period: the leg D instrument.
+"""Rivals' offered solar (or wind), per firm and period: the leg D instruments.
 
-    .venv/bin/python scripts/build/build_rival_solar.py [--months 202406 ...]
+    .venv/bin/python scripts/build/build_rival_solar.py [--tech wind] [--months 202406 ...]
 
-Writes outputs/tables/rival_solar.parquet, one row per day-ahead period that has
-a price and a bid file:
+Writes outputs/tables/rival_solar.parquet (rival_wind.parquet with --tech wind), one
+row per day-ahead period that has a price and a bid file. The columns keep the same
+names for both technologies:
 
     z_all            MW of solar offered day-ahead by every solar-labelled supply unit
     own_<FIRM>       the part offered by units whose owner group is FIRM
@@ -15,7 +16,10 @@ status O, solar-labelled units outside the purchase roles), once for each of the
 five firms instead of for EDP alone. A firm's own solar is every unit whose
 owner rolls up to it under `owner_group` -- pass-through entities included, so
 no volume the firm's group bids enters its own instrument. For EDP this
-reproduces `z_offered`; `scripts/qa/check_rival_solar.py` checks it. Only days
+reproduces `z_offered`; `scripts/qa/check_rival_solar.py` checks it. Wind is built
+the same way from wind-labelled units. Neither total holds EDPSVD1 ("VENTA RE"),
+SU Eletricidade's sale of Portugal's feed-in renewables, which carries no technology
+label and is pass-through, not EDP's own. Only days
 the bid files cover are kept, so a partial frontier month cannot read as zero
 solar; within a covered day a period with no solar row carries 0.
 """
@@ -34,17 +38,17 @@ from omie_owner import owner_group  # noqa: E402
 
 DATA = ROOT / "data"
 BIDS = DATA / "omie/bids/parquet"
-OUT = ROOT / "outputs/tables/rival_solar.parquet"
+TABLES = ROOT / "outputs/tables"
 FIRMS = ("EDP", "IBERDROLA", "ENDESA", "NATURGY", "REPSOL")
 KEY = ["date", "period"]
 
 
-def solar_units() -> pd.Series:
-    """unit -> owner group, for the solar-labelled supply units z_offered uses."""
+def tech_units(tech: str = "solar") -> pd.Series:
+    """unit -> owner group, for the supply units labelled `tech` (solar: those z_offered uses)."""
     u = pd.read_parquet(DATA / "omie/registry/unit_agents.parquet",
                         columns=["unit", "role", "tech", "tech_omie", "tech_omie_early", "agent_owner"])
     label = u.tech_omie.fillna(u.tech_omie_early).fillna(u.tech)
-    s = u[(label == "solar") & ~u.role.str.startswith("purchase")]
+    s = u[(label == tech) & ~u.role.str.startswith("purchase")]
     return pd.Series(s.agent_owner.map(owner_group).to_numpy(), index=s.unit.astype(str).to_numpy())
 
 
@@ -75,9 +79,10 @@ def align(d: pd.DataFrame, px: pd.DataFrame) -> pd.DataFrame:
     return d
 
 
-def build(months: list[str] | None) -> pd.DataFrame:
-    grp = solar_units()
-    print(f"{len(grp)} solar-labelled supply units; the five firms own "
+def build(months: list[str] | None, tech: str = "solar") -> pd.DataFrame:
+    grp = tech_units(tech)
+    out = TABLES / f"rival_{tech}.parquet"
+    print(f"{len(grp)} {tech}-labelled supply units; the five firms own "
           + ", ".join(f"{f} {(grp == f).sum()}" for f in FIRMS))
     files = sorted(BIDS.glob("bids_*.parquet"))
     if months:
@@ -91,16 +96,18 @@ def build(months: list[str] | None) -> pd.DataFrame:
     px = pd.read_parquet(DATA / "omie/prices/omie_day_ahead_prices.parquet", columns=KEY)
     px["date"] = pd.to_datetime(px.date)
     d = align(d, px)
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    d.to_parquet(OUT, index=False)
-    print(f"wrote {OUT.relative_to(ROOT)}  ({len(d):,} periods)")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    d.to_parquet(out, index=False)
+    print(f"wrote {out.relative_to(ROOT)}  ({len(d):,} periods)")
     return d
 
 
 def main() -> int:
     ap = ArgumentParser(description=__doc__)
     ap.add_argument("--months", nargs="*", help="YYYYMM months only (for checks)")
-    build(ap.parse_args().months)
+    ap.add_argument("--tech", choices=("solar", "wind"), default="solar")
+    a = ap.parse_args()
+    build(a.months, a.tech)
     return 0
 
 

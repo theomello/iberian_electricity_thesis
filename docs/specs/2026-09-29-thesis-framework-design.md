@@ -385,9 +385,19 @@ archive and β̂.
 3. ~~**Rerun legs A and B**~~ — done 2026-09-30 (§3.20; chapter §4.5). Leg A
    holds; leg B's first pass is withdrawn.
 4. ~~**Leg D**~~ — run 2026-10-01; inconclusive: price-taking rejected, conduct not separated (`rq-leg-d-sign-of-n.md`).
-5. **Rivals' offered wind**, built as `z_offered` is, then **leg C** route 2
-   with route 3 as its check, 2018–2023.
-6. **The counterfactual price** (§7), once one β is credible.
+5. **Rivals' offered wind** — built 2026-10-01 (`build_rival_solar.py --tech wind`,
+   `outputs/tables/rival_wind.parquet`). Then **leg C** route 2 with route 3 as its
+   check, 2018–2023.
+6. **A spatial weather instrument**, for legs C and D. Offered renewable volume is
+   partly a choice: a firm's own offered wind moved X with the wrong sign in a
+   2026-10-01 probe, and rivals' offered wind carries a milder version of the same
+   doubt. Weather at each farm's own site times capacity fixed in advance cannot
+   respond to strategy, and it differs by firm because fleets sit in different
+   regions. Needs farm locations and owners (MITECO's RAIPEE register, OpenStreetMap,
+   or Global Energy Monitor's tracker) matched to OMIE units, then ERA5 at each site.
+   OMIE's interconnection capacity (fetched 2026-10-01) was tried in the same probe
+   and fails: it barely moves X, and the fringe's offers respond to it as much.
+7. **The counterfactual price** (§7), once one β is credible.
 
 **For the supervisor.** Is the thesis the within-day margin alone (done,
 publishable as a null against Nash), or all four legs with the counterfactual?

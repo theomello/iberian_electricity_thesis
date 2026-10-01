@@ -6,10 +6,10 @@ Scripts: `build/build_rival_solar.py`, `analysis/iv_two_endog.py`,
 (`check_rival_solar.py`, `check_iv_two_endog.py`, `check_leg_d_panel.py`).
 Results: `outputs/tables/leg_d_results.csv`.
 
-**In one line.** Offers respond to X, but not as either model of conduct says:
-no common slope fits, and where the instruments are strong the two slopes have
-opposite signs, γ⁺ > 0 > γ⁻. For hydro the response is the fringe's, so it is
-cost, not conduct.
+**In one line.** With these instruments leg D cannot tell the conduct models
+apart. Price-taking is rejected in every specification. Whether one slope fits
+both signs of n, and which sign it has, depend on how two things are handled:
+solar's direct effect on offers, and yesterday's sign of n.
 
 ## 1. Design, as run
 
@@ -23,33 +23,40 @@ y_uh = α_ud + α_hym + γ⁺ · X⁺_fh + γ⁻ · X⁻_fh + c · fcst_h + ε_u
 - **y** is the §3.14 measure: the share of the unit's capacity offered at or
   below the unit-*day*'s volume-weighted median offer price, in percentage
   points (s50; s25 and s75 as robustness). Capacity is `cab` max power that day.
-- **X⁺, X⁻** are the hourly means of max(X, 0) and min(X, 0), where X = n/|RD′|
-  is the firm's exposed net position over rivals' residual-demand slope, in
-  €/MWh (`firm_x.parquet`). γ is in pp of capacity per €/MWh of X.
+- **X⁺, X⁻** are the hourly means of max(X, 0) and min(X, 0). X = n/|RD′| is the
+  firm's exposed net position over rivals' residual-demand slope, in €/MWh
+  (`firm_x.parquet`). γ is in pp of capacity per €/MWh of X; γ < 0 is the
+  market-power sign.
 - **α_ud** is a unit × day effect (it removes the water value or the day's fuel
   price). **α_hym** is an hour × year-month effect (it removes the solar
   profile's growth). **fcst** is REE's day-ahead demand forecast, in GW.
 - **Instruments**: z, rivals' offered solar for the firm, in GW; and z · s_prev,
   where s_prev = 1 if the firm was a net seller in the same hour the day before.
   The model is just identified (two instruments, two regressors).
+- **As planned, s_prev itself is not a control.** An interaction instrument
+  normally comes with its main effect, so the lagged sign also acts as an
+  instrument here. §3.2 adds it.
 - **Errors** are clustered by ISO week (439 weeks).
 
 **Inference that survives weak instruments.** 2SLS (two-stage least squares)
 is read only when both Sanderson–Windmeijer conditional first-stage F statistics
 are at least 10 (status `ok`); otherwise the row is `weak`. The following are
-valid however weak the instruments:
+valid however weak the instruments, but not if an instrument has a direct
+effect on offers:
 
 - the Anderson–Rubin (AR) test of γ⁺ = γ⁻ = 0, which is price-taking;
 - the exact AR set of common slopes c with γ⁺ = γ⁻ = c, the roots of a
-  quartic; empty means no common slope fits, which rejects supply-function
-  Nash;
+  quartic; empty means no common slope fits;
 - each coefficient's AR projection, whose sign is the robust sign test. It
-  separates Nash (γ⁻ < 0) from output-based conduct (γ⁻ > 0).
+  separates Nash (γ⁻ < 0) from output-based conduct (γ⁻ > 0). The projection
+  searches a grid: uniform on ±5 (step 0.005), log-spaced to ±10⁴, and dense
+  around the 2SLS estimate.
 
 **β scale.** Nash is symmetric in β, and γ = −β × the curve's offer density at
-the reference price. So β⁺ and β⁻ divide γ by the mean density in seller and
-buyer hours separately (§3.14 scale: β = 1 is full Nash). Their equality and
-their common-value AR set are reported beside the γ ones.
+the reference price. So β = −γ / mean density, with β⁺ and β⁻ dividing by the
+mean density in seller and buyer hours separately (§3.14 scale: β = 1 is full
+Nash). Their equality and their common-value AR set are reported beside the γ
+ones.
 
 **Rules added in implementation** (each recorded in the plan's ledger):
 
@@ -61,27 +68,37 @@ their common-value AR set are reported beside the γ ones.
    instrument's hours: Endesa's pumped storage offers at midday on 28% of
    unit-days against 90% in the evening.
 3. **Over-capacity drop.** A unit-day is dropped if its offered volume exceeds
-   1.02 × capacity. From 2025-04 these are combined-cycle alternative complex
-   orders (C04), for which the capacity share is undefined.
+   1.02 × capacity, for which the capacity share is undefined. These start on
+   2025-03-19, the date of OMIE's new offer typology (the scalable complex
+   order), and are combined-cycle alternative complex orders.
 4. **Dated ownership.** A unit-day is kept only when the OMIE listing in force
    that day (the nearest preceding snapshot; a co-owned unit follows its
    majority owner) puts the unit in the firm X is built for. Repsol is dropped
    before 2018-11-02, the date of its Viesgo purchase.
-5. **Fringe placebo.** Units owned outside the five, of 50 MW or more
-   (`FRINGE`), have small X. Their reduced form estimates how solar reshapes
-   offers through cost alone. It is read against the five firms by technology.
+5. **Fringe placebo.** Units of 50 MW or more owned outside the five
+   (`FRINGE`) are read as having little stake in the price; their X is not
+   computed. Their reduced form estimates how solar reshapes offers through cost
+   alone. It is read against the five firms by technology.
 6. **Flags.** `WEAK` marks a conditional F below 10. `FEW-WEEKS` marks
    s_prev = 1 or 0 in fewer than 100 weeks, where AR over-rejects (28% at 3
    weeks, 6% at 100, in the Task 2 review's simulation).
-7. **A seven-day lag.** s_prev is a lagged outcome, so a robustness row uses
-   the sign seven days before (zs7).
+7. **A seven-day lag.** s_prev is a lagged outcome, so robustness rows use the
+   sign seven days before (zs7).
+8. **After review**, rows test whether the design's conclusions survive:
+   - s_prev controlled, with and without s_prev × the hour's mean solar;
+   - offers net of the fringe's solar response;
+   - one common slope with a solar slope per firm;
+   - without Endesa;
+   - a demand-forecast slope per era.
 
 ## 2. Sample
 
 Panel `outputs/tables/leg_d_panel.parquet`: **8,083,768 unit-hours**,
 2018-01-02 → 2026-05-31. The estimation sample is the five firms' 5,954,775
-unit-hours on 134 units, after dropping rows with no s_prev (DST days and the
-days after them).
+unit-hours on 134 units. It excludes the 64,324 unit-hours with no s_prev: the
+17 days of 23 or 25 hours, and the 17 days after them.
+
+Unit-hours in the panel, before that drop:
 
 | firm | unit-hours | share on firm-days with both signs of X |
 |---|---|---|
@@ -139,9 +156,11 @@ whose s50 moves within the day (sd > 0.5 pp):
 
 ## 3. Results
 
-γ in pp of capacity per €/MWh of X; robust sign from the AR projection
-("both signs, 0 out": a set of two pieces, one on each side of 0, which
-excludes 0 and leaves the sign open); β on the §3.14 scale.
+### 3.1 As designed
+
+γ is in pp of capacity per €/MWh of X. The robust sign comes from the AR
+projection; "both signs, 0 out" means a set of two pieces, one on each side of
+0, which excludes 0 and leaves the sign open. β is on the §3.14 scale.
 
 | sample | n | γ⁺ (se) | γ⁻ (se) | p(γ⁺=γ⁻) | SW F⁺/F⁻ | AR p(0,0) | AR common γ | robust sign γ⁺ / γ⁻ | β⁺ / β⁻ | status |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -159,7 +178,7 @@ excludes 0 and leaves the sign open); β on the §3.14 scale.
 | 2022–2023 | 1,351,505 | +8.120 (8.656) | −0.528 (0.412) | 0.334 | **1.3**/18.7 | 0.000 | empty (0.000) | both, 0 out / 0 inside | −2.24/+0.15 | weak |
 | 2024–2026 | 1,448,027 | +3.889 (8.219) | +0.819 (3.113) | 0.560 | **0.2/0.2** | 0.000 | [−∞, −0.371] ∪ [122.6, +∞] (0.489) | 0 inside / 0 inside | −0.85/−0.19 | weak |
 | **firm-days with both signs** | 2,508,556 | +4.724 (3.006) | −1.416 (0.572) | 0.081 | 3.2/5.6 | 0.000 | empty (0.000) | both, 0 out / both, 0 out | −1.17/+0.35 | weak |
-| **no zero-price hours** | 5,775,173 | +5.036 (1.526) | −0.981 (0.234) | 0.000 | 22.0/176.5 | 0.000 | empty (0.000) | **+ / −** | −1.23/+0.27 | **ok** |
+| no zero-price hours | 5,775,173 | +5.036 (1.526) | −0.981 (0.234) | 0.000 | 22.0/176.5 | 0.000 | empty (0.000) | + / − | −1.23/+0.27 | ok |
 | pooled, sign 7 days before | 5,945,332 | +3.489 (1.906) | −1.328 (0.266) | 0.012 | 8.5/144.8 | 0.000 | empty (0.010) | 0 inside / − | −0.85/+0.36 | weak |
 
 The AR projections behind the signs:
@@ -170,31 +189,85 @@ The AR projections behind the signs:
 - **no zero-price hours**: γ⁺ [2.680, 15.385], γ⁻ [−2.100, −0.520];
 - **seven-day lag**: γ⁻ [−2.905, −0.380].
 
-The β-scale common set is empty in every row except Endesa ([−0.093, 0.869])
-and the unbounded weak rows (Naturgy, 2024–2026).
+The printed endpoints are the last grid point inside the set, so the sets are
+slightly wider than shown.
 
 **What the table says.**
 
-- **Price-taking is rejected in every sample but Endesa.** Endesa is a net
-  buyer in all but 58 weeks, and its row is flagged weak and few-weeks.
-- **No common slope fits** in any row but Endesa's (whose set contains 0) and
+- **Price-taking is rejected in every row but Endesa's.** Endesa was a net
+  seller in at least one hour of only 58 of 439 weeks (s_prev = 1 in 1.1% of
+  its unit-hours), and its row is flagged weak and few-weeks.
+- **No common slope fits in any row but Endesa's** (whose set contains 0) and
   the two unbounded weak rows (Naturgy, 2024–2026). That holds in the γ scale
   and in the β scale.
-- **The pattern is the same in the two rows with strong instruments**
-  (Iberdrola, and the pooled sample without zero-price hours): γ⁺ > 0 > γ⁻,
-  each sign robust.
-  - A buyer offers more capacity cheap the more it buys: the markdown, at
-    β⁻ = 0.12–0.27 of Nash.
-  - A seller *also* offers more capacity cheap the more it sells: β⁺ < 0, the
-    opposite of a markup.
-  - Read together, s50 rises with |X| on both sides of n = 0.
-- **The seller first stage does not survive splitting by era** (F⁺ 1.1, 1.3,
-  0.2). In 2024–2026 neither first stage exists (0.2/0.2). The pooled F⁺ of
-  8.9 is far more than the three eras' 2.6 together, so most of the seller
-  first stage comes from differences between eras that the hour × year-month
-  effects do not absorb.
-- **The zero-price filter matters.** Dropping the 3.0% of unit-hours with a
-  zero price lifts the first stage from 8.9/25.0 to 22.0/176.5.
+- **γ⁻'s negative sign is robust only in the pooled s25, s50 and seven-day
+  rows.** It is not robust at s75, in hydro or in thermal.
+- **Iberdrola, the one row with strong instruments in its own sample, gives
+  γ⁺ > 0 > γ⁻, each sign robust.**
+  - γ⁻ has the sign of a markdown (β⁻ 0.12).
+  - γ⁺ has the sign opposite to a markup (β⁺ −0.17).
+- **The no-zero-price row shows the same pattern, but it is a robustness row,
+  not a second sample.** It drops hours on the price, an outcome of the offers,
+  and those are the sunniest hours: mean rival solar 12.1 GW against 3.0 in the
+  rest, and 11% of 2024's and 25% of 2026's unit-hours. Its β⁺ of −1.23
+  exceeds full Nash in size with the wrong sign, which argues against reading
+  these slopes as conduct.
+- **Within each era the two first stages are nearly collinear** (conditional
+  F⁺ 1.1, 1.3, 0.2), and in different directions.
+  - γ⁺ is separated from γ⁻ only by pooling eras whose first stages differ,
+    which assumes both slopes are the same in every era.
+  - The pooled F⁺ (8.9) is weak and fragile: letting the forecast slope vary by
+    era lowers it to 5.9 (§3.2).
+
+### 3.2 What survives
+
+The empty common set is an over-identification failure between z and z · s_prev
+for one slope. So it rejects Nash only if neither instrument moves offers
+except through X. Two exclusions are in doubt:
+
+- **z.** The placebo says solar moves offers directly (§4).
+- **z · s_prev.** Within the fixed effects, z · s_prev varies mostly as s_prev
+  times the hour's mean solar, so the lagged sign itself instruments.
+
+Pooled rows, s50:
+
+| specification | SW F⁺/F⁻ | AR p(0,0) | AR common γ (min p) | AR common β | robust sign γ⁺ / γ⁻ |
+|---|---|---|---|---|---|
+| as designed | 8.9/25.0 | 4·10⁻⁷⁰ | empty (0.023) | empty | 0 inside / − |
+| s_prev controlled | 4.0/2.8 | 3·10⁻⁷⁵ | [−∞, −1008] ∪ [4.535, +∞] (0.224) | [−7.40, −1.02] | 0 inside / 0 inside |
+| s_prev and s_prev × mean solar controlled | 8.8/1.3 | 5·10⁻¹⁵ | [0.647, 4.181] (0.864) | [−0.98, −0.16] | 0 inside / 0 inside |
+| 7 days, s_prev7 controlled | 10.7/5.7 | 2·10⁻⁴⁹ | empty (0.047) | empty | 0 inside / 0 inside |
+| 7 days, s_prev7 and s_prev7 × mean solar controlled | 9.2/2.3 | 6·10⁻⁷ | [0.298, 1.366] (1.000) | [−0.34, −0.08] | 0 inside / 0 inside |
+| net of the fringe's solar response | 8.9/25.0 | 3·10⁻⁶³ | [−2.152, −1.594] (0.083) | [0.45, 0.58] | 0 inside / − |
+| net of the fringe's solar response, s_prev and s_prev × mean solar controlled | 8.8/1.3 | 1·10⁻⁶ | [0.487, 3.363] (0.493) | [−0.78, −0.12] | 0 inside / 0 inside |
+| without Endesa | 6.0/44.7 | 1·10⁻⁸⁵ | empty (0.000) | empty | both, 0 out / both, 0 out |
+| forecast slope by era | 5.9/16.7 | 4·10⁻⁷² | empty (0.010) | empty | both, 0 out / 0 inside |
+
+"Mean solar" is the hour × year-month mean of z. "Net of the fringe's solar
+response" subtracts the like-for-like fringe reduced form (§4) times z from y.
+
+**One common slope**, c on X = X⁺ + X⁻, instrumented by z · s_prev alone, with z
+as a control. This imposes Nash's equality and asks what the slope is:
+
+| solar control | c (se) | F | AR p(c = 0) | AR set | β |
+|---|---|---|---|---|---|
+| one slope for all firms | −1.793 (0.262) | 60.2 | 9·10⁻⁶⁴ | [−2.466, −1.373] | 0.48 |
+| one slope per firm | −1.831 (0.725) | 10.0 | 2·10⁻¹⁰ | [−5.405, −0.912] | 0.49 |
+
+The slope keeps its value when each firm gets its own solar slope, but the
+first stage falls from F 60 to F 10. Most of z · s_prev's variation is
+differences between firms in how solar reshapes their offers. Those differences
+correlate with how often a firm sells (Repsol was a net seller in about three
+quarters of its hours, Endesa in 1%).
+
+**Sensitivity to the second exclusion.** Suppose z · s_prev has a direct effect
+δ (pp per GW), for example because a firm's units, running after a selling day,
+respond to solar differently for cost reasons. Then δ moves the pooled 2SLS by
+Δγ⁺ = −2.99 δ and Δγ⁻ = +1.88 δ (Iberdrola −4.27 δ and +2.59 δ).
+
+- A negative δ pushes γ⁺ up and γ⁻ down: the opposite-sign pattern of §3.1.
+- A δ as large as z · s_prev's whole reduced form (−0.78 pp per GW, measured in
+  the Task 4 review) would leave γ⁻ near 0 and γ⁺ near +1.
 
 ## 4. Placebo
 
@@ -209,76 +282,99 @@ control:
 | FRINGE, thermal | 942,893 | −0.119 (0.057) |
 | five firms, thermal | 3,270,127 | −0.289 (0.059) |
 
-- **Hydro.** The five firms' reduced form equals the fringe's: a difference of
-  0.012, well inside two standard errors. By the plan's rule, solar reshapes
-  hydro offers through cost alone, and the five firms' hydro rows say nothing
-  about conduct.
+- **Hydro.** The five firms' reduced form cannot be told apart from the
+  fringe's (difference 0.012, se ≈ 0.040). The placebo covers z only: hydro's
+  γ's and its AR rejection come from z · s_prev, which the fringe cannot speak
+  to. 12% of the fringe's hydro hours are pass-through units classed as hydro
+  (ICUVD05, E21VD03, GNSUVD3). The hydro rows carry no evidence of conduct.
 - **Thermal.** The five firms respond 2.4 times as strongly as the fringe. The
   difference of 0.169 is 2.9 of the five firms' standard errors, or 2.1 of the
-  difference's own (treating the two as independent; they share weeks). So the
-  thermal response is not cost alone, but only just.
+  difference's own (treating the two as independent; they share weeks). That
+  is either conduct or a cost response that differs between the fleets:
+  - coal is 20.9% of the five firms' thermal hours against 9.4% of the
+    fringe's;
+  - REN Trading's legacy-contract units are 23.6% of the fringe's thermal hours
+    and 74% of its coal.
 
-The placebo bounds the z channel only. It says nothing about z · s_prev, the
-instrument that separates γ⁺ from γ⁻ (§6).
+  The placebo does not separate the two.
 
 ## 5. Verdict
 
-The plan's rules (Task 5, Step 1), applied mechanically:
+The plan's rules (Task 5, Step 1), applied mechanically to the design as
+planned:
 
 | rule | pooled | firm-days with both signs |
 |---|---|---|
 | 1. 2SLS readable (both F ≥ 10)? | no: F⁺ 8.9; read AR only | no: F 3.2/5.6; read AR only |
 | 2. Price-taking not rejected (AR p(0,0) ≥ 0.05)? | rejected (0.000) | rejected (0.000) |
 | 3. Nash on n (common set non-empty with negatives)? | fails: set empty, smallest AR p 0.023 | fails: set empty, smallest AR p 0.000 |
-| 4. Output conduct (readable, γ⁻/se > 1.96, γ⁺ < 0)? | fails: not readable; γ⁻'s robust set is negative, [−2.545, −0.340], which excludes the γ⁻ > 0 it predicts | fails: not readable; γ⁻'s robust set (−∞, −0.705] ∪ [1.290, +∞) leaves its sign open |
+| 4. Output conduct (readable, γ⁻/se > 1.96, γ⁺ < 0)? | fails: not readable; γ⁻'s robust set [−2.545, −0.340] excludes the γ⁻ > 0 it predicts | fails: not readable; γ⁻'s robust set (−∞, −0.705] ∪ [1.290, +∞) leaves its sign open |
 | verdict | inconclusive by rule 5 | inconclusive by rule 5 |
 
-**Pooled.** Rule 5's "inconclusive", but not for lack of power: each of the
-three predictions is rejected by a test that holds under weak instruments.
+**Pooled: inconclusive, and the rules' failures do not survive §3.2.**
 
-- Price-taking is rejected by AR at p = 0.000.
-- Nash on n is rejected by the empty common set. That test is a conservative
-  χ²(2) projection, so the rejection is, if anything, understated.
-- Output conduct is rejected by γ⁻'s robust negative sign.
+- **Price-taking is rejected** (AR p = 0.000) in every specification of §3.2.
+- **Nash's equal slopes are rejected only as designed.**
+  - Net of the fringe's solar response, a common Nash-signed slope fits
+    (β 0.45–0.58).
+  - With s_prev and s_prev × mean solar controlled, a common slope fits with
+    the wrong sign (β −0.98 to −0.16). Netting the fringe's response as well
+    leaves it there (β −0.78 to −0.12).
+  - With s_prev alone controlled, nothing is determined.
+- **γ⁻'s robust negative sign excludes output conduct as designed.** It does
+  not survive controlling s_prev, or dropping Endesa.
+- **The common-set test is a χ²(2) projection**, conservative for a
+  one-parameter slope. But AR over-rejects with a one-day lagged outcome, so
+  the two errors run in opposite directions.
 
 **Firm-days with both signs** (the kink sample). Price-taking and the common
 slope are rejected. The instruments are too weak (F 3.2/5.6) to sign γ⁻, so
-output conduct can be neither accepted nor rejected here.
+output conduct can be neither accepted nor rejected.
 
-**What leg D says about conduct on the net position.** The five firms' offers
-respond to X, but in a way neither model predicts: a markdown when buying and
-the opposite of a markup when selling. For hydro, that response is the
-fringe's, so it is cost. Only thermal plant responds beyond the fringe, at two
-standard errors. Leg D therefore gives no support to supply-function Nash on
-n, and none to market power on output either. The result to carry is
-"price-taking rejected; neither conduct model fits; hydro's response is cost".
+**What leg D says about conduct on the net position.** With rivals' solar and
+yesterday's sign as instruments, leg D rejects price-taking and nothing more.
+
+- **Even that rejection rests on z · s_prev moving offers only through X**,
+  which fails if units running after a selling day respond to solar
+  differently for cost reasons (§3.2).
+- **For hydro**, the response to solar alone is the fringe's.
+- **Separating Nash from output conduct needs a different instrument**: one
+  for the sign of n that is not a lagged outcome, or a cost measure that rules
+  out the operating-state channel (leg C's thermal costs).
 
 ## 6. Limits
 
 **Identification**
 
-- **Flat-offering units carry no information.** Iberdrola's and Naturgy's
-  pumped storage, Naturgy's CCGTs from 2023 (0.27 → 0.00), Repsol's hydro
-  (0.11–0.38) and Repsol's CCGTs in 2018 and 2026 sit near 0 in the variation
-  table. The test runs on the units that reshape.
-- **Exclusion restriction, thermal.** Rival solar moves cycling and start-up
-  costs. The placebo bounds that for z, but not for z · s_prev: a firm that
-  sold yesterday has units running, and solar's cost effect on a running unit
-  differs. That channel would load on γ⁺ and γ⁻ with opposite signs, which is
-  the pattern found. It is the leading alternative reading, untested here.
-- **Era instability.** γ⁺ is identified mainly by differences between eras
-  (seller F ≤ 1.3 within each). From 2024 there is no first stage at all.
+- **The sign instrument is a lagged outcome.** z · s_prev carries s_prev's
+  own variation unless s_prev is controlled, and with s_prev controlled the
+  first stages are weak (F 4.0/2.8).
+- **Solar's direct effect.** The fringe responds to solar. Netting its
+  response changes the common-slope verdict, so the verdict depends on how
+  comparable the fringe is (§4).
+- **Between-firm variation.** Most of z · s_prev's first stage is differences
+  between firms (§3.2), while the spec meant the identifying variation to be
+  within a firm.
+- **Endesa carries the pooled γ⁻ sign.** Without Endesa both projections
+  split into two pieces and the sign is open.
+- **Era instability.** γ⁺ is identified by pooling eras whose first stages
+  point in different directions (seller F ≤ 1.3 within each). From 2024 there
+  is no first stage at all.
+- **Flat-offering units carry no information.** These sit near 0 in the
+  variation table:
+  - Iberdrola's pumped storage to 2022 (0.00–0.03);
+  - Naturgy's pumped storage throughout;
+  - Naturgy's CCGTs from 2024 (0.00–0.04);
+  - Repsol's CCGTs in 2018 and 2026.
+
+  Repsol's hydro is low (0.11–0.38). The test runs on the units that reshape.
 
 **Inference**
 
-- **s_prev is a lagged outcome.** With errors persistent across days, a one-day
-  lag over-rejects AR (Task 2 review: 11/40 against 5/40). The seven-day-lag
-  row gives the same picture (AR p 0.000, common set empty at min p 0.010,
-  γ⁻ robust negative).
-- **The empty-set test is a χ²(2) projection**, conservative for a
-  one-parameter common slope.
-- **Endesa is flagged few-weeks** (58 seller weeks). Its non-rejection of
-  price-taking is not evidence for it.
+- **AR over-rejects with a one-day lagged outcome** (Task 2 review: 11/40
+  against 5/40). The seven-day rows give the same as-designed picture.
+- **Endesa is flagged few-weeks.** Its non-rejection of price-taking is not
+  evidence for it.
 
 **Data**
 
@@ -288,15 +384,16 @@ n, and none to market power on output either. The result to carry is
   Dating `firm_x` (separate task) requires rebuilding this panel and rerunning.
 - **The Repsol–Viesgo date** (2018-11-02) is from the public record, not yet
   verified against a filing.
-- **Combined cycle from 2025-04 is thinned** by the over-capacity drop (1,904
-  unit-days). Repsol's ALG3 and ECT3 lose 93.8% of their unit-days from 2025-03;
-  the 55 kept days are a selected remainder.
+- **Combined cycle from 2025-03-19 is thinned** by the over-capacity drop
+  (1,904 unit-days). Repsol's ALG3 and ECT3 lose 93.8% of their unit-days from
+  2025-03; the 55 kept days are a selected remainder.
 - **The FRINGE placebo includes pass-through and legacy-contract units**
-  (ICUVD05 Curenergía, E21VD03, GNSUVD3, REN Trading RPG01/02, RTG01–03),
-  whose offers are not cost-driven in the usual sense.
-- **On the ~34 days of 23 or 25 hours**, `hour` is not the clock hour after
-  02:00. This affects only the hour × year-month effects.
+  (ICUVD05 Curenergía, E21VD03, GNSUVD3, REN Trading RPG01/02, RTG01–03). They
+  are 12% of its hydro hours and 24% of its thermal hours.
+- **On the 17 days of 23 or 25 hours**, `hour` is not the clock hour after
+  02:00. Those days and the days after them have no s_prev, so they are outside
+  every IV row; the mislabelled hour affects only the placebo reduced forms.
 - **s_prev is built from all periods**, including the ~63 days on which the
-  clearing identity fails (fine by definition; optionally NaN after them).
+  clearing identity fails.
 - **Financial hedges are unobserved** (spec §6), so X overstates the exposed
   position of a firm hedged financially.

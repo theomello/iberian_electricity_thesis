@@ -265,7 +265,7 @@ term (`cab`, declaring units, to 2025-03-18). It is a strategic declaration, so
 it bounds rather than measures. `markdown_contract_test.py` found the median
 declaring unit's 75th-percentile tranche exactly at it.
 
-### Leg D — the sign of n: cost common, prediction reversed. **Run 2026-10-01; neither conduct model fits.**
+### Leg D — the sign of n: cost common, prediction reversed. **Run 2026-10-01; inconclusive, price-taking rejected.**
 
 The condition predicts a markup for a net seller and a **markdown** for a net
 buyer, with the same β. The identifying variation is **within a firm**, because
@@ -316,17 +316,13 @@ thermal plant. Firm-days with both signs carry the kink; the rest identify γ⁺
 γ⁻ alone.
 
 **Result, 2026-10-01** ([`rq-leg-d-sign-of-n.md`](../../notes/rq-leg-d-sign-of-n.md)).
-Pooled over 5.95 M unit-hours, every prediction in the table is rejected by a
-weak-instrument-robust test. Price-taking is rejected (Anderson–Rubin p = 0.000)
-and no common slope γ⁺ = γ⁻ fits (empty set, smallest p 0.023). γ⁻'s robust set
-is negative ([−2.55, −0.34]), against the γ⁻ > 0 of output conduct. Where the
-instruments are strong (Iberdrola, F 15; no zero-price hours, F 22/177), the
-slopes have opposite signs, γ⁺ > 0 > γ⁻: a markdown when buying (β⁻ 0.12–0.27)
-and the reverse of a markup when selling. For hydro the reduced form equals the
-fringe's (−0.096 against −0.084 pp per GW of rival solar), so that response is
-cost. Thermal plant responds 2.4 times as strongly as the fringe, a difference
-of about two standard errors. The seller first stage holds only when the eras
-are pooled.
+Price-taking is rejected in every specification (Anderson–Rubin p < 10⁻⁶ over
+5.95 M unit-hours), and nothing else survives. As designed, no common slope fits
+and γ⁻ < 0. But netting the fringe's response to solar out of offers lets a
+Nash-signed common slope fit (β 0.45–0.58), and controlling yesterday's sign,
+the interaction instrument's own main effect, leaves either nothing determined
+or a common slope of the wrong sign, with or without that netting. Separating Nash from output conduct needs
+an instrument for the sign of n that is not a lagged outcome.
 
 ## 5. What each existing result becomes
 
@@ -388,7 +384,7 @@ archive and β̂.
    diagnostics of the as-built measure. EDP Comercial merged into EDP.
 3. ~~**Rerun legs A and B**~~ — done 2026-09-30 (§3.20; chapter §4.5). Leg A
    holds; leg B's first pass is withdrawn.
-4. ~~**Leg D**~~ — run 2026-10-01; neither conduct model fits (`rq-leg-d-sign-of-n.md`).
+4. ~~**Leg D**~~ — run 2026-10-01; inconclusive: price-taking rejected, conduct not separated (`rq-leg-d-sign-of-n.md`).
 5. **Rivals' offered wind**, built as `z_offered` is, then **leg C** route 2
    with route 3 as its check, 2018–2023.
 6. **The counterfactual price** (§7), once one β is credible.

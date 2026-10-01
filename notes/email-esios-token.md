@@ -1,6 +1,8 @@
 # Email to REE requesting an ESIOS API token
 
-Draft, 2026-08-21. **Address: `consultasios@ree.es`**
+Draft, 2026-08-21; purpose updated 2026-10-01 for the framework's instruments
+(day-ahead forecasts as variation exogenous to the firms; spec §8 steps 5b–6).
+**Address: `consultasios@ree.es`**
 
 Spanish first, since that is a Spanish-language support desk and the OMIE
 request in this repo was also sent in Spanish. An English version follows if you
@@ -38,8 +40,8 @@ Estimado equipo de ESIOS:
 Le escribo para solicitar un token personal de acceso a la API de ESIOS.
 
 Soy estudiante de máster y estoy realizando mi tesis sobre el mercado eléctrico
-ibérico (MIBEL) en el período 2018–2026. El trabajo analiza la relación entre el
-mercado diario y los mercados intradiarios, utilizando datos públicos de OMIE
+ibérico (MIBEL) en el período 2018–2026. El trabajo analiza el comportamiento de
+oferta de los agentes en el mercado diario, utilizando datos públicos de OMIE
 (curvas de oferta y casación a nivel de unidad) junto con datos de generación y
 demanda de REE.
 
@@ -50,10 +52,13 @@ REE**, en particular:
 - **Indicador 542** — previsión de producción solar
 - Los indicadores de **previsión de demanda** correspondientes
 
-Estas series son necesarias para distinguir la parte anticipada de la no
-anticipada de la producción renovable en el momento del cierre del mercado
-diario. Sin ellas no es posible separar el error de previsión del comportamiento
-de los agentes, que es precisamente el objeto del estudio.
+Estas previsiones recogen la información disponible para los agentes al cierre
+del mercado diario y no dependen de sus decisiones, por lo que son la fuente de
+variación adecuada para analizar cómo responden sus ofertas. Las series
+observadas de producción no sirven para ello, porque incluyen tanto el error de
+previsión como las propias decisiones de oferta. Si fuera posible, agradecería
+un acceso general a la API, ya que otros indicadores (por ejemplo, los programas
+por unidad de programación) podrían ser útiles en fases posteriores.
 
 El uso sería exclusivamente académico y sin ánimo de lucro, y por supuesto citaré
 a Red Eléctrica de España y a ESIOS como fuente en la tesis y en cualquier
@@ -67,7 +72,7 @@ Muchas gracias por su tiempo y su ayuda.
 Atentamente,
 
 Theodor Mello
-[institución]
+Ludwig-Maximilians-Universität München (LMU)
 theodormello@gmail.com
 
 ---
@@ -82,9 +87,9 @@ Dear ESIOS team,
 I am writing to request a personal API token for ESIOS.
 
 I am a master's student writing a thesis on the Iberian electricity market
-(MIBEL) over 2018–2026. The work analyses the relationship between the day-ahead
-and intraday markets, using OMIE's public unit-level bid and clearing data
-alongside REE's generation and demand series.
+(MIBEL) over 2018–2026. The work analyses how market participants bid in the
+day-ahead market, using OMIE's public unit-level bid and clearing data alongside
+REE's generation and demand series.
 
 To complete the analysis I need access to the **forecast series REE publishes**,
 specifically:
@@ -93,10 +98,12 @@ specifically:
 - **Indicator 542** — solar generation forecast
 - The corresponding **demand forecast** indicators
 
-These are needed to separate the anticipated from the unanticipated component of
-renewable output at day-ahead gate closure. Without them it is not possible to
-distinguish forecast error from participants' behaviour, which is precisely what
-the study is about.
+These forecasts capture the information available to participants at day-ahead
+gate closure and do not depend on their decisions, so they are the right source
+of variation for studying how offers respond. Realised output does not serve,
+because it mixes forecast error with the bidding decisions themselves. If
+possible, I would be grateful for general API access, since other indicators
+(for example, the programmes by programming unit) may be useful later.
 
 The use is purely academic and non-commercial, and I will of course cite Red
 Eléctrica de España and ESIOS as the source in the thesis and any resulting
@@ -110,7 +117,7 @@ Thank you for your time and help.
 Kind regards,
 
 Theodor Mello
-[institution]
+Ludwig-Maximilians-Universität München (LMU)
 theodormello@gmail.com
 
 ---

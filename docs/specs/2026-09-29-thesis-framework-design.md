@@ -8,7 +8,9 @@ holds and leg B's first pass is withdrawn for want of a first stage (§4);
 legs C and D are designed (§4) and the plan reordered (§8).
 
 **Revised 2026-10-01:** leg D is run and inconclusive: price-taking is rejected,
-conduct is not separated (§4). Leg C is under way on branch `leg-c`.
+conduct is not separated (§4). Leg C is run: in levels β ≈ 3 measures where the
+price sits in the gaps of stepped offers, not conduct (§4); an estimator on the
+offer steps is proposed (§8 step 5b).
 
 It connects the descriptive chapter
 ([`rq-descriptive-price-formation.md`](../../notes/rq-descriptive-price-formation.md)),
@@ -216,7 +218,7 @@ control.
   days and F rises to 16, but the set [−0.72, 1.13] still contains β = 1. The
   solar era needs a stronger instrument, not more periods.
 
-### Leg C — thermal plant: cost observed. **Designed 2026-09-30; to build.**
+### Leg C — thermal plant: cost observed. **Run 2026-10-01; β ≈ 3 reflects step gaps.**
 
 For a gas or coal unit c is measured, so the condition can be tested in
 **levels**, which no other leg can do. The design is route 2 of three
@@ -267,6 +269,16 @@ and above it when selling, is the sign prediction of leg D in levels.
 term (`cab`, declaring units, to 2025-03-18). It is a strategic declaration, so
 it bounds rather than measures. `markdown_contract_test.py` found the median
 declaring unit's 75th-percentile tranche exactly at it.
+
+**Result, 2026-10-01** ([`rq-leg-c-thermal-cost.md`](../../notes/rq-leg-c-thermal-cost.md)).
+In levels β is 3.10 (Anderson–Rubin set [2.59, 3.67], first-stage F 70; 3.06 with
+the heat rate estimated, 3.05 with declared cost), so price-taking and full Nash
+are both rejected, but β is not conduct: units offer in steps, the price sits on
+the unit's own step in 1.4% of rows, and 2.25 of the 3.10 is the price's distance
+above the unit's highest accepted offer, which rivals' renewables move directly.
+Where the unit's own step sets the price, β is 0.87–0.89 and full Nash is not
+rejected with solar alone (set [0.55, 1.52]), but those rows are selected on the
+price. An estimate needs the condition written for step offers (§8 step 5b).
 
 ### Leg D — the sign of n: cost common, prediction reversed. **Run 2026-10-01; inconclusive, price-taking rejected.**
 
@@ -388,9 +400,22 @@ archive and β̂.
 3. ~~**Rerun legs A and B**~~ — done 2026-09-30 (§3.20; chapter §4.5). Leg A
    holds; leg B's first pass is withdrawn.
 4. ~~**Leg D**~~ — run 2026-10-01; inconclusive: price-taking rejected, conduct not separated (`rq-leg-d-sign-of-n.md`).
-5. **Rivals' offered wind** — built 2026-10-01 (`build_rival_solar.py --tech wind`,
-   `outputs/tables/rival_wind.parquet`). Then **leg C** route 2 with route 3 as its
-   check, 2018–2023.
+5. ~~**Rivals' offered wind**, then **leg C**~~ — run 2026-10-01; β ≈ 3 reflects step
+   gaps, not conduct (`rq-leg-c-thermal-cost.md`).
+5b. **Leg C on the offer steps: an estimate, not a diagnostic.** Each step a unit
+   offers is chosen before the auction, at a price b_k observed whether or not the
+   price lands on it. A step bidder's condition holds in expectation:
+   b_k − c = β · E[X | step k sets the price] (Wolak 2007; Reguant 2014, on this
+   market). The expectation is built by resampling: draw residual-demand curves
+   from rivals' actual offers on comparable periods, clear each against the firm's
+   own offer, and record which step sets the price and X there. Every step of every
+   unit-period enters, so nothing is selected on the price, and the regressor is
+   what the firm could expect, not what happened. The same estimator with a
+   unit-day effect in place of c is leg A on the step scale, and split by the sign
+   of n it is leg D, so it gives **one β across legs**, whose equality is itself a
+   test. The ex-post optimal bid (`rq-gas-cap-conduct.md`, 2026-08-18) is its
+   one-draw case; the gas cap's statutory cost (2022-06-15 to 2023-12-31) is its
+   sharpest window.
 6. **A spatial weather instrument**, for legs C and D. Offered renewable volume is
    partly a choice, so a firm's own offered renewables are not an instrument. In a
    scratch probe (2026-10-01, not committed; corrected for an hour misalignment by

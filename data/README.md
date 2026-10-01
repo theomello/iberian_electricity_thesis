@@ -84,6 +84,16 @@ technology and capacity the registry lacks, and the complex-bid condition that
 drives whole-day unit withdrawals. Covers 2017-01, a year before the rest of
 the window.
 
+### `omie/interconnection/` — border capacity after the day-ahead market
+| path | what |
+|---|---|
+| `raw/capacidad_inter_pbc_YYYYMMDD.<rev>` | 3,073 daily files (2018-2022 extracted from the yearly zips beside `raw/`) |
+| `omie_interconnection_capacity.parquet` | 365,276 rows, one per date × period × border (PT, FR, MA, AD) |
+
+Fetched by `scripts/fetch/fetch_omie_interconnection.py`. Import and export
+capacity, occupation and free capacity per border; import figures negative as
+published. Border codes were identified from measured flows (see CLAUDE.md).
+
 ---
 
 ## `ree/` — Red Eléctrica, the Spanish TSO
@@ -180,8 +190,9 @@ above. Note ESIOS above no longer needs a token for the unit registry, though
 
 | dataset | ends |
 |---|---|
-| day-ahead bids | **2026-05-08** |
-| intraday bids | **2026-05-11** |
+| day-ahead bids | **2026-06-29** (refreshed 2026-09-28) |
+| intraday bids | **2026-06-29** (refreshed 2026-09-28) |
+| interconnection capacity | fetched to 2026-05-31; published to the day after the fetch |
 | everything else | 2026-05-31 |
 
 OMIE publishes unit-level offers on a **~3-month lag** because they are

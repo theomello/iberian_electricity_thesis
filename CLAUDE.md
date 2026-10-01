@@ -78,6 +78,7 @@ scripts/
 | `fetch/fetch_hydro_precipitation.py` | Open-Meteo ERA5 | no | `data/weather/precipitation_basins_daily.parquet` |
 | `fetch/fetch_population_temperature.py` | Open-Meteo ERA5 | no | `data/weather/temperature_population_index.parquet` |
 | `fetch/fetch_omie_unavailability.py` | OMIE `indisp` | no | `data/omie/indisp/parquet/indisp_YYYYMM.parquet` |
+| `fetch/fetch_omie_interconnection.py` | OMIE `capacidad_inter_pbc` | no | `data/omie/interconnection/omie_interconnection_capacity.parquet` |
 | `fetch/fetch_omip_forwards.py` | OMIP | no | `data/omip/parquet/omip_forwards_{zone}_{YYYY}.parquet` |
 | `fetch/fetch_hydro_reservoirs.py` | MITECO Boletín Hidrológico | no | `data/miteco/embalses_historico.parquet` |
 | `fetch/fetch_jrc_ppdb_efficiency.py` | JRC-PPDB-OPEN (Zenodo) | no | `data/jrc_ppdb/jrc_spain_units.parquet` |
@@ -755,6 +756,12 @@ technology (PV and thermal solar separately), batteries, pumped storage, and
 **bilateral** flows with France, Portugal, Morocco and Andorra. Units are
 **MW** (instantaneous power), not MWh.
 
+**The per-country flow fields are empty before 2024**, found 2026-10-01:
+`export_*` and `import_*` are zero on every instant 2018-2023 and filled only on
+part of 2024-2026 (`interconnection_balance`, the total, is filled throughout).
+For border flows before 2024 use REN's `Import`/`Export` (Portugal) or OMIE's
+scheduled interconnection occupation (below). REE records exports as negative.
+
 Records per day: 288 normally, 276 on the 9 spring DST days, 300 on the 8
 autumn ones — matching the transitions in the window exactly.
 
@@ -1125,6 +1132,40 @@ every version timestamped, token required).
 the trap below. And **`indisppt` does not exist**: checked against OMIE, it and
 two spelling variants return a valid page with zero zips. The
 `pdbc`/`pdbcpt` analogy does not extend here.
+
+### OMIE interconnection capacity — what each border could carry after the day-ahead market
+`data/omie/interconnection/omie_interconnection_capacity.parquet`, fetched
+2026-10-01 by `fetch/fetch_omie_interconnection.py`, token-free. **365,276 rows,
+all 3,073 days 2018-01-01 → 2026-05-31, four borders every day.** Source: OMIE
+`capacidad_inter_pbc` ("tras la casación del mercado diario"); 2018-2022 as yearly
+zips, daily files from 2023. A day's file is published the day before delivery, so
+there is **no publication lag** (the listing runs to the day after the fetch).
+
+Columns: `date, period, resolution_min, border, import_capacity_mw,
+import_occupied_mw, import_free_mw, export_capacity_mw, export_occupied_mw,
+export_free_mw`. **Import figures are negative, as published.** Free capacity nets
+the counter-flow (a scheduled export frees import room), so free import can exceed
+the import capacity.
+
+**The border codes are not documented in the file; they were identified from the
+data.** OMIE's `Frontera` 2 is Portugal: its scheduled net export correlates 0.904
+with REN's measured Portuguese net import (January 2024) and 0.908 with REE's flow
+(November 2025). 3 is France (0.884), 5 Morocco (0.985), 4 Andorra (by elimination,
+about 135 MW). The check `qa/check_omie_interconnection.py` confirms it a second way:
+in **all 6,111 periods where the Spanish and Portuguese prices differ, the Portugal
+link has no free capacity left in one direction** (100.00%).
+
+**Three layouts, and the header does not tell the resolution — the period labels
+do.** `Hora` 1..25 to 2025-03-18; `Periodo` with integer hours from 2025-03-19
+(OMIE's platform migration); `Periodo` with `HhQq` labels from 2025-10-01, when the
+day-ahead market went quarter-hourly. **One file inside the hourly era, 2025-07-15,
+is published in quarter-hours (96 periods)** and is kept as published: average its
+quarters to hours before joining it to hourly data on `(date, period)`, or the join
+pairs prices with the wrong quarter.
+
+Exists to give leg D an instrument that moves the elasticity of each firm's residual
+demand (|RD′|) for grid reasons: capacity is set by the system operators before the
+auction. Occupation is an auction outcome and is not exogenous.
 
 ---
 

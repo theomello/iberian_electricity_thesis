@@ -19,7 +19,7 @@ from scipy import stats
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "analysis"))
 from iv_two_endog import (ar_common_exact, ar_common_set, ar_projection, ar_test,  # noqa: E402
-                          ar_set_one, fmt_intervals, fmt_set, projection_grid, projection_sign,
+                          ar_set_k1, ar_set_one, fmt_intervals, fmt_set, projection_grid, projection_sign,
                           sw_f, tsls_k)
 from midday_hydro_iv import ols, tsls  # noqa: E402
 
@@ -135,6 +135,22 @@ def main() -> int:
         bounded = len(iv_w) == 1 and np.isfinite(iv_w[0]).all()
         rule.append(bounded == (sw_f(x1[:, None], zw, W, cl, 0) > stats.chi2.ppf(0.95, 1)))
     check(all(rule), "one regressor, noise instruments: AR set bounded iff first-stage F > 3.84")
+
+    # One regressor, two instruments (leg C): the AR set of the single slope.
+    y, X, Z, W, cl = dgp(-0.5, -0.5, seed=11)
+    x1 = X.sum(axis=1)
+    k1 = ar_set_k1(y, x1, Z, W, cl)
+    print(f"one regressor, two instruments: AR set {fmt_intervals(k1['intervals'])}")
+    iv = k1["intervals"]
+    check(len(iv) == 1 and iv[0][0] < -0.5 < iv[0][1], "k = 1, L = 2: one interval around -0.5")
+    for c in iv[0]:
+        p_end = ar_test(y, x1[:, None], Z, W, cl, [c])[1]
+        check(abs(p_end - 0.05) < 1e-4, f"k = 1, L = 2: endpoint {c:+.4f} has AR p = 0.05 ({p_end:.5f})")
+    W0 = np.zeros((len(y), 0))
+    b0, _ = tsls_k(y, x1[:, None], Z, W0, cl)
+    k0 = ar_set_k1(y, x1, Z, W0, cl)
+    check(abs(b0[0] + 0.5) < 0.05 and k0 is not None and np.isfinite(sw_f(x1[:, None], Z, W0, cl, 0)),
+          "no controls: tsls_k, sw_f and ar_set_k1 accept a W with zero columns")
 
     y, X, Z, W, cl = dgp(-0.5, -0.5, seed=5, share_seller=0.0)
     b, _ = tsls_k(y, X, Z, W, cl)

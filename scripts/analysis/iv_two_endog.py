@@ -302,6 +302,16 @@ def ar_set_one(y, x, Z, W, cl, level=0.95):
     return [[-np.inf, c0]] if b > 0 else [[c0, np.inf]]
 
 
+def ar_set_k1(y, x, Z, W, cl, level=0.95):
+    """Exact AR set for one regressor x with two instruments.
+
+    y - c*x = y - c*(x/2 + x/2), so this is ar_common_exact on the two equal halves
+    of x: the same quartic, the same chi2(2) critical value. Returns its dict
+    (intervals, q_min, p_min, c_min), or None if not identified.
+    """
+    return ar_common_exact(y, np.column_stack([x / 2, x / 2]), Z, W, cl, level)
+
+
 def projection_grid(center=None, scale=None, fine=5.0, step=0.005, far=1e4, n_tail=400):
     """Grid for ar_projection: uniform on [-fine, fine], log-spaced out to +-far, and
     dense (scale / 20) within 4 scales of `center`, the 2SLS estimate. A just-identified

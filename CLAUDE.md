@@ -1140,7 +1140,7 @@ two spelling variants return a valid page with zero zips. The
 
 ### OMIE interconnection capacity — what each border could carry after the day-ahead market
 `data/omie/interconnection/omie_interconnection_capacity.parquet`, fetched
-2026-10-01 by `fetch/fetch_omie_interconnection.py`, token-free. **365,276 rows,
+2026-10-01 by `fetch/fetch_omie_interconnection.py`, token-free. **364,988 rows,
 all 3,073 days 2018-01-01 → 2026-05-31, four borders every day.** Source: OMIE
 `capacidad_inter_pbc` ("tras la casación del mercado diario"); 2018-2022 as yearly
 zips, daily files from 2023. A day's file is published the day before delivery, so
@@ -1156,7 +1156,9 @@ the import capacity.
 data.** OMIE's `Frontera` 2 is Portugal: its scheduled net export correlates 0.904
 with REN's measured Portuguese net import (January 2024) and 0.908 with REE's flow
 (November 2025). 3 is France (0.884), 5 Morocco (0.985), 4 Andorra (by elimination,
-about 135 MW). The check `qa/check_omie_interconnection.py` confirms it a second way:
+about 135 MW). These correlations come from a one-week scratch check, not a committed
+script; an independent rebuild on November 2025 gave 0.925 / 0.932 / 0.971 — the
+mapping holds, the exact figures depend on the week and the aggregation. The check `qa/check_omie_interconnection.py` confirms it a second way:
 in **all 6,111 periods where the Spanish and Portuguese prices differ, the Portugal
 link has no free capacity left in one direction** (100.00%).
 
@@ -1164,9 +1166,11 @@ link has no free capacity left in one direction** (100.00%).
 do.** `Hora` 1..25 to 2025-03-18; `Periodo` with integer hours from 2025-03-19
 (OMIE's platform migration); `Periodo` with `HhQq` labels from 2025-10-01, when the
 day-ahead market went quarter-hourly. **One file inside the hourly era, 2025-07-15,
-is published in quarter-hours (96 periods)** and is kept as published: average its
-quarters to hours before joining it to hourly data on `(date, period)`, or the join
-pairs prices with the wrong quarter.
+is published in quarter-hours (96 periods)**: OMIE re-emitted it on 18/12/2025 in the
+new format, and its four quarters are identical within each hour. The fetcher
+collapses it to hours (`to_market_resolution`, which raises if quarters ever differ),
+so every row joins prices on `(date, period)` at the market's own resolution; the
+check confirms all 91,247 priced periods join.
 
 Exists to give leg D an instrument that moves the elasticity of each firm's residual
 demand (|RD′|) for grid reasons: capacity is set by the system operators before the
@@ -1499,8 +1503,8 @@ label→code map in its sidebar, reachable as::
 Codes worth knowing beyond the ones already fetched: `pdbc`/`pdbcpt`/`pdbce`
 (cleared schedule: Spanish / Portuguese / by company), `indisp`
 (unit unavailability — **`indisppt` does not exist**, see below),
-`capacidad_inter_*` (interconnection capacity and
-occupation), `trades`/`orders`/`precios_pibcic` (continuous intraday),
+`capacidad_inter_*` (interconnection capacity and occupation; `capacidad_inter_pbc`
+is now fetched, see the inventory), `trades`/`orders`/`precios_pibcic` (continuous intraday),
 `cab`/`det` (offer header and detail).
 
 ### JRC's `eff` is not one kind of number — most of it is a class average, not a measurement

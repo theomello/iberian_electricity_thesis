@@ -7,6 +7,9 @@ research question; none is adopted in `CLAUDE.md` until one is agreed.
 holds and leg B's first pass is withdrawn for want of a first stage (§4);
 legs C and D are designed (§4) and the plan reordered (§8).
 
+**Revised 2026-10-01:** leg D is run and inconclusive: price-taking is rejected,
+conduct is not separated (§4). Leg C is under way on branch `leg-c`.
+
 It connects the descriptive chapter
 ([`rq-descriptive-price-formation.md`](../../notes/rq-descriptive-price-formation.md)),
 the midday-hydro work ([`rq-midday-hydro.md`](../../notes/rq-midday-hydro.md)), the
@@ -316,13 +319,13 @@ thermal plant. Firm-days with both signs carry the kink; the rest identify γ⁺
 γ⁻ alone.
 
 **Result, 2026-10-01** ([`rq-leg-d-sign-of-n.md`](../../notes/rq-leg-d-sign-of-n.md)).
-Price-taking is rejected in every specification (Anderson–Rubin p < 10⁻⁶ over
-5.95 M unit-hours), and nothing else survives. As designed, no common slope fits
-and γ⁻ < 0. But netting the fringe's response to solar out of offers lets a
-Nash-signed common slope fit (β 0.45–0.58), and controlling yesterday's sign,
-the interaction instrument's own main effect, leaves either nothing determined
-or a common slope of the wrong sign, with or without that netting. Separating Nash from output conduct needs
-an instrument for the sign of n that is not a lagged outcome.
+Price-taking is rejected in every pooled specification (Anderson–Rubin p ≤
+1.1·10⁻⁶ over 5.95 M unit-hours); Endesa alone, with 58 seller weeks, does not
+reject it. A Nash-signed common slope fits only where yesterday's sign of n, the
+interaction instrument's own main effect, is left uncontrolled (β 0.45–0.58);
+with it controlled the common slope is undetermined, absent or of the wrong
+sign, on weak first stages. Separating Nash from output conduct needs an
+instrument for the sign of n that is not a lagged outcome.
 
 ## 5. What each existing result becomes
 
@@ -389,14 +392,18 @@ archive and β̂.
    `outputs/tables/rival_wind.parquet`). Then **leg C** route 2 with route 3 as its
    check, 2018–2023.
 6. **A spatial weather instrument**, for legs C and D. Offered renewable volume is
-   partly a choice: a firm's own offered wind moved X with the wrong sign in a
-   2026-10-01 probe, and rivals' offered wind carries a milder version of the same
-   doubt. Weather at each farm's own site times capacity fixed in advance cannot
+   partly a choice, so a firm's own offered renewables are not an instrument. In a
+   scratch probe (2026-10-01, not committed; corrected for an hour misalignment by
+   the final review) a firm's own offered solar and wind moved X down on both sides
+   of n = 0 (X⁺ −0.85, X⁻ −1.33 €/MWh per GW), where more own supply should raise
+   n; own wind alone moved X⁻ down (t −2.4) and X⁺ not at all. Rivals' offered wind
+   carries a milder version of the same doubt. Weather at each farm's own site times capacity fixed in advance cannot
    respond to strategy, and it differs by firm because fleets sit in different
    regions. Needs farm locations and owners (MITECO's RAIPEE register, OpenStreetMap,
    or Global Energy Monitor's tracker) matched to OMIE units, then ERA5 at each site.
-   OMIE's interconnection capacity (fetched 2026-10-01) was tried in the same probe
-   and fails: it barely moves X, and the fringe's offers respond to it as much.
+   OMIE's interconnection capacity (fetched 2026-10-01) looked no better in the same
+   probe: it barely moved X (|t| ≤ 1.3), and the fringe's offers responded to it about
+   as much. The probe's hour alignment was off, so that is a lead, not a result.
 7. **The counterfactual price** (§7), once one β is credible.
 
 **For the supervisor.** Is the thesis the within-day margin alone (done,

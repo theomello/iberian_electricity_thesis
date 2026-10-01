@@ -6,10 +6,17 @@ Scripts: `build/build_rival_solar.py`, `analysis/iv_two_endog.py`,
 (`check_rival_solar.py`, `check_iv_two_endog.py`, `check_leg_d_panel.py`).
 Results: `outputs/tables/leg_d_results.csv`.
 
-**In one line.** With these instruments leg D cannot tell the conduct models
-apart. Price-taking is rejected in every specification. Whether one slope fits
-both signs of n, and which sign it has, depend on how two things are handled:
-solar's direct effect on offers, and yesterday's sign of n.
+*Supersedes the first version of this note (commit `4289880`), whose verdict,
+"neither conduct model fits", was withdrawn on 2026-10-01: its rejection of
+Nash rested on rivals' solar moving offers only through X, which the placebo
+(§4) contradicts.*
+
+**In one line.** With these instruments leg D rejects price-taking in every
+pooled specification and cannot tell the conduct models apart. A Nash-signed
+common slope fits only where yesterday's sign of n, the interaction
+instrument's own main effect, is left uncontrolled. With it controlled, the
+common slope is undetermined, absent or of the wrong sign, on weak first
+stages.
 
 ## 1. Design, as run
 
@@ -200,8 +207,9 @@ slightly wider than shown.
 - **No common slope fits in any row but Endesa's** (whose set contains 0) and
   the two unbounded weak rows (Naturgy, 2024–2026). That holds in the γ scale
   and in the β scale.
-- **γ⁻'s negative sign is robust only in the pooled s25, s50 and seven-day
-  rows.** It is not robust at s75, in hydro or in thermal.
+- **γ⁻'s negative sign is robust in the pooled s25, s50 and seven-day rows,
+  in Iberdrola's and in the no-zero-price row.** It is not robust at s75, in
+  hydro, in thermal, or in any other firm's or era's row.
 - **Iberdrola, the one row with strong instruments in its own sample, gives
   γ⁺ > 0 > γ⁻, each sign robust.**
   - γ⁻ has the sign of a markdown (β⁻ 0.12).
@@ -249,13 +257,22 @@ response" subtracts the like-for-like fringe reduced form (§4) times z from y.
 **One common slope**, c on X = X⁺ + X⁻, instrumented by z · s_prev alone, with z
 as a control. This imposes Nash's equality and asks what the slope is:
 
-| solar control | c (se) | F | AR p(c = 0) | AR set | β |
+| controls | c (se) | F | AR p(c = 0) | AR set | β |
 |---|---|---|---|---|---|
-| one slope for all firms | −1.793 (0.262) | 60.2 | 9·10⁻⁶⁴ | [−2.466, −1.373] | 0.48 |
-| one slope per firm | −1.831 (0.725) | 10.0 | 2·10⁻¹⁰ | [−5.405, −0.912] | 0.49 |
+| z, one slope for all firms | −1.793 (0.262) | 60.2 | 9·10⁻⁶⁴ | [−2.466, −1.373] | 0.48 |
+| z, one slope per firm | −1.831 (0.725) | 9.99, weak | 2·10⁻¹⁰ | [−5.405, −0.912] | 0.49 |
+| z and s_prev | +12.564 (10.212) | 1.5, weak | 2·10⁻⁷⁰ | (−∞, −21.799] ∪ [4.777, +∞) | −3.35 |
+| z, s_prev and s_prev × mean solar | +1.695 (0.980) | 4.0, weak | 4·10⁻⁵ | [0.625, 73.441] | −0.45 |
+
+**The Nash sign does not survive controlling s_prev.** The first two rows
+leave it out, so the lagged sign instruments too. With s_prev controlled the
+first stage all but vanishes (F 1.5) and the AR set is two unbounded pieces,
+one on each side of 0. Adding s_prev × mean solar leaves a set of the wrong
+sign, [0.625, 73.4], on a weak first stage (F 4.0). Price-taking stays
+rejected in both.
 
 The slope keeps its value when each firm gets its own solar slope, but the
-first stage falls from F 60 to F 10. Most of z · s_prev's variation is
+first stage falls from F 60 to F 9.99, just below the weak threshold. Most of z · s_prev's variation is
 differences between firms in how solar reshapes their offers. Those differences
 correlate with how often a firm sells (Repsol was a net seller in about three
 quarters of its hours, Endesa in 1%).
@@ -313,14 +330,24 @@ planned:
 
 **Pooled: inconclusive, and the rules' failures do not survive §3.2.**
 
-- **Price-taking is rejected** (AR p = 0.000) in every specification of §3.2.
-- **Nash's equal slopes are rejected only as designed.**
-  - Net of the fringe's solar response, a common Nash-signed slope fits
-    (β 0.45–0.58).
+- **Price-taking is rejected** in every specification of §3.2 (AR p ≤ 1.1·10⁻⁶;
+  one slope, p ≤ 4·10⁻⁵).
+- **Nash's equal slopes are rejected only as designed, and a Nash-signed fit
+  appears only where s_prev is uncontrolled.**
+  - Uncontrolled: net of the fringe's solar response a common Nash-signed slope
+    fits (β 0.45–0.58), and so does one slope instrumented by z · s_prev alone
+    (β 0.48, F 60).
   - With s_prev and s_prev × mean solar controlled, a common slope fits with
-    the wrong sign (β −0.98 to −0.16). Netting the fringe's response as well
-    leaves it there (β −0.78 to −0.12).
-  - With s_prev alone controlled, nothing is determined.
+    the wrong sign (β −0.98 to −0.16), as two slopes and as one (AR set
+    [0.625, 73.4]). Netting the fringe's response as well leaves it there
+    (β −0.78 to −0.12).
+  - With s_prev alone controlled, nothing is determined, as two slopes or one.
+  - Every controlled row has at least one weak first stage (its smaller F is
+    1.3–5.7).
+  - **The netted rows use a generated outcome.** y minus the fringe's reduced
+    form times z treats that coefficient as known; its standard error (0.057
+    for thermal, 0.035 for hydro) is not carried into their inference, so their
+    sets are too narrow.
 - **γ⁻'s robust negative sign excludes output conduct as designed.** It does
   not survive controlling s_prev, or dropping Endesa.
 - **The common-set test is a χ²(2) projection**, conservative for a
@@ -348,7 +375,8 @@ yesterday's sign as instruments, leg D rejects price-taking and nothing more.
 
 - **The sign instrument is a lagged outcome.** z · s_prev carries s_prev's
   own variation unless s_prev is controlled, and with s_prev controlled the
-  first stages are weak (F 4.0/2.8).
+  first stages are weak (F 4.0/2.8; one slope, F 1.5). Every Nash-signed fit
+  in this note leaves s_prev uncontrolled.
 - **Solar's direct effect.** The fringe responds to solar. Netting its
   response changes the common-slope verdict, so the verdict depends on how
   comparable the fringe is (§4).

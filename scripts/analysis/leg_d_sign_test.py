@@ -153,7 +153,7 @@ def estimate(d: pd.DataFrame, label: str, y: str = "y50", dens: str = "dd50",
     return row
 
 
-def common_slope(d: pd.DataFrame, label: str, firm_solar: bool) -> dict:
+def common_slope(d: pd.DataFrame, label: str, firm_solar: bool, extra: tuple = ()) -> dict:
     """One slope c on X = X+ + X-, instrumented by zs alone, z entering as a control.
 
     With firm_solar, each firm gets its own solar slope (z x firm), so only variation
@@ -161,12 +161,13 @@ def common_slope(d: pd.DataFrame, label: str, firm_solar: bool) -> dict:
     longer pass for a response to the sign of n. g+ and g- are then not separately
     identified. c < 0 is Nash's common slope; the AR set is exact (one instrument).
     """
-    d = d.dropna(subset=["y50", "X", "z", "zs", "fcst"]).copy()
+    d = d.dropna(subset=["y50", "X", "z", "zs", "fcst", *extra]).copy()
     ctrl = ["z"]
     if firm_solar:
         ctrl = [f"z_{f}" for f in sorted(d.firm.unique())]
         for f, c in zip(sorted(d.firm.unique()), ctrl):
             d[c] = d.z.where(d.firm == f, 0.0)
+    ctrl += list(extra)
     cols = ["y50", "X", "zs", "fcst", *ctrl]
     w = demean(d, cols, ["ud", "hym"])
     Y, x, Z = w.y50.to_numpy(), w.X.to_numpy(), w[["zs"]].to_numpy()
@@ -258,6 +259,11 @@ def main() -> int:
                          y="y50_net", controls=("fcst", "s_prev", "s_zbar")))
     rows.append(common_slope(five, "pooled, one slope, z common", firm_solar=False))
     rows.append(common_slope(five, "pooled, one slope, z by firm", firm_solar=True))
+    # The one-slope rows above leave s_prev uncontrolled, so the lagged sign also instruments.
+    rows.append(common_slope(five, "pooled, one slope, z common, s_prev controlled",
+                             firm_solar=False, extra=("s_prev",)))
+    rows.append(common_slope(five, "pooled, one slope, z common, s_prev and s_prev x mean solar controlled",
+                             firm_solar=False, extra=("s_prev", "s_zbar")))
     pd.DataFrame(rows).to_csv(OUT, index=False)
     print(f"\nwrote {OUT.relative_to(ROOT)}")
     # Exit 1 only if the pooled test could not be computed at all.

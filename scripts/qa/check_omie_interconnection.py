@@ -21,7 +21,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "fetch"))
-from fetch_omie_interconnection import OUT, parse_text  # noqa: E402
+from fetch_omie_interconnection import OUT, parse_text, to_market_resolution  # noqa: E402
 
 PRICES = ROOT / "data/omie/prices/omie_day_ahead_prices.parquet"
 HEAD = ("OMIE - Mercado de electricidad;Fecha Emisión :14/01/2024 - 13:29;;15/01/2024;"
@@ -65,6 +65,20 @@ def main() -> int:
     ph = parse_text(PERIODO_HOURLY)
     check(list(ph.period) == [1, 24] and set(ph.resolution_min) == {60} and list(ph.border) == ["PT", "AD"],
           "Periodo header with integer labels (2025-03-19 on): hourly, code 4 -> AD")
+    # A quarter-hour file inside the hourly era (2025-07-15, re-emitted in the new format)
+    # holds hourly data with four identical quarters: it must come out hourly.
+    rows = "".join(f"H{h}Q{k};15/07/2025;2;-3.000,0;0;-3.000,0;{2700 + h},0;0;{2700 + h},0;\r\n"
+                   for h in (1, 2) for k in (1, 2, 3, 4))
+    qh = to_market_resolution(parse_text(HEAD.replace("MWh", "MW") + "Periodo;Fecha;Frontera;" + COLS + rows))
+    check(list(qh.period) == [1, 2] and set(qh.resolution_min) == {60} and list(qh.export_capacity_mw) == [2701.0, 2702.0],
+          "a quarter-hour file before 2025-10-01 collapses to hours")
+    try:
+        to_market_resolution(parse_text(HEAD.replace("MWh", "MW") + "Periodo;Fecha;Frontera;" + COLS
+                                        + rows.replace("H2Q4;15/07/2025;2;-3.000,0;0;-3.000,0;2702,0",
+                                                       "H2Q4;15/07/2025;2;-3.000,0;0;-3.000,0;2999,0")))
+        check(False, "quarters that differ within an hour raise")
+    except ValueError:
+        check(True, "quarters that differ within an hour raise")
     try:
         parse_text(HOURLY.replace(";15/01/2024;3;", ";15/01/2024;9;"))
         check(False, "an unknown border code raises")
@@ -83,20 +97,19 @@ def main() -> int:
     missing = days.difference(pd.DatetimeIndex(d.date.unique()))
     check(len(missing) == 0, f"every day from 2018-01-01 present (missing {len(missing)}: {list(missing[:5].date)})")
     per_day = d.groupby(["date", "border"]).agg(n=("period", "size"), res=("resolution_min", "first"))
-    # 2025-07-15 alone was published in quarter-hours inside the hourly era (kept as published).
-    q15 = ((per_day.index.get_level_values("date") >= "2025-10-01")
-           | (per_day.index.get_level_values("date") == "2025-07-15"))
+    q15 = per_day.index.get_level_values("date") >= "2025-10-01"
     check(per_day.loc[~q15, "n"].isin([23, 24, 25]).all() and (per_day.loc[~q15, "res"] == 60).all(),
           "before 2025-10-01: 23-25 hourly periods per border")
     check(per_day.loc[q15, "n"].isin([92, 96, 100]).all() and (per_day.loc[q15, "res"] == 15).all(),
-          "from 2025-10-01 (and 2025-07-15): 92-100 quarter-hour periods per border")
+          "from 2025-10-01: 92-100 quarter-hour periods per border")
     nb = d.groupby("date").border.nunique()
     check((nb == 4).all(), f"four borders every day (days with fewer: {(nb < 4).sum()})")
 
     if PRICES.exists():
-        p = pd.read_parquet(PRICES, columns=["date", "period", "price_pt", "price_es"])
+        p = pd.read_parquet(PRICES, columns=["date", "period", "resolution_min", "price_pt", "price_es"])
         p["date"] = pd.to_datetime(p.date)
-        pt = d[d.border == "PT"].merge(p, on=["date", "period"])
+        pt = d[d.border == "PT"].merge(p, on=["date", "period", "resolution_min"])
+        check(len(pt) == len(p), f"every priced period joins at its own resolution ({len(pt):,} of {len(p):,})")
         split = pt[(pt.price_es - pt.price_pt).abs() > 0.005]
         full = (split.export_free_mw.abs() <= 1.0) | (split.import_free_mw.abs() <= 1.0)
         print(f"split periods: {len(split):,} of {len(pt):,}; Portugal link full in one direction in "

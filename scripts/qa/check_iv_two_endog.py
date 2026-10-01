@@ -14,11 +14,13 @@ import sys
 from pathlib import Path
 
 import numpy as np
+from scipy import stats
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "analysis"))
 from iv_two_endog import (ar_common_exact, ar_common_set, ar_projection, ar_test,  # noqa: E402
-                          fmt_intervals, fmt_set, projection_grid, projection_sign, sw_f, tsls_k)
+                          ar_set_one, fmt_intervals, fmt_set, projection_grid, projection_sign,
+                          sw_f, tsls_k)
 from midday_hydro_iv import ols, tsls  # noqa: E402
 
 GRID = np.round(np.arange(-3.0, 3.0001, 0.005), 4)
@@ -118,6 +120,21 @@ def main() -> int:
     bf, sef = ols(x1, np.column_stack([Z[:, 0], W]), cl)
     check(abs(sw_f(x1[:, None], Z[:, :1], W, cl, 0) - (bf[0] / sef[0]) ** 2) < 1e-8,
           "one regressor: sw_f equals the first-stage F")
+    iv1 = ar_set_one(y, x1, Z[:, :1], W, cl)
+    print(f"one regressor, exact AR set {fmt_intervals(iv1)}")
+    check(len(iv1) == 1 and iv1[0][0] < -0.5 < iv1[0][1], "one regressor: exact AR set is one interval around -0.5")
+    for c in iv1[0]:
+        p_end = ar_test(y, x1[:, None], Z[:, :1], W, cl, [c])[1]
+        check(abs(p_end - 0.05) < 1e-4, f"one regressor: endpoint {c:+.4f} has AR p = 0.05 ({p_end:.5f})")
+    # Just identified, the AR set is bounded exactly when the first-stage F exceeds the
+    # chi2(1) critical value; irrelevant instruments (noise) mostly give an unbounded set.
+    rule = []
+    for s in range(1, 8):
+        zw = np.random.default_rng(s).normal(size=len(y))[:, None]
+        iv_w = ar_set_one(y, x1, zw, W, cl)
+        bounded = len(iv_w) == 1 and np.isfinite(iv_w[0]).all()
+        rule.append(bounded == (sw_f(x1[:, None], zw, W, cl, 0) > stats.chi2.ppf(0.95, 1)))
+    check(all(rule), "one regressor, noise instruments: AR set bounded iff first-stage F > 3.84")
 
     y, X, Z, W, cl = dgp(-0.5, -0.5, seed=5, share_seller=0.0)
     b, _ = tsls_k(y, X, Z, W, cl)

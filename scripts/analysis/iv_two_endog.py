@@ -270,6 +270,38 @@ def ar_projection(y, X, Z, W, cl, j, grid, level=0.95):
     return np.array(keep)
 
 
+def ar_set_one(y, x, Z, W, cl, level=0.95):
+    """Exact AR confidence set for one regressor x with one instrument Z (n x 1).
+
+    The AR statistic at c is (r - c f)^2 / var(r - c f), with r and f the Z-coefficients
+    of y and x, so the set is a quadratic inequality in c: one interval, two half-lines,
+    the whole line, or empty. Returns intervals as ar_common_exact does (None if not
+    identified).
+    """
+    if Z.shape[1] != 1:
+        raise ValueError("ar_set_one needs exactly one instrument")
+    if not _full_rank(np.column_stack([Z, W])):
+        return None
+    C, V = _ar_parts(y, x[:, None], Z, W, cl)
+    r, f = C[0, 0], C[0, 1]
+    vrr, vrf, vff = V[0][0][0, 0], V[0][1][0, 0], V[1][1][0, 0]
+    q = stats.chi2.ppf(level, 1)
+    a, b, d = f * f - q * vff, -2 * r * f + 2 * q * vrf, r * r - q * vrr
+    disc = b * b - 4 * a * d
+    if a > 0:
+        if disc < 0:
+            return []
+        lo, hi = sorted(np.roots([a, b, d]).real)
+        return [[lo, hi]]
+    if a < 0:
+        if disc < 0:
+            return [[-np.inf, np.inf]]
+        lo, hi = sorted(np.roots([a, b, d]).real)
+        return [[-np.inf, lo], [hi, np.inf]]
+    c0 = -d / b  # a == 0: a linear inequality b c + d <= 0
+    return [[-np.inf, c0]] if b > 0 else [[c0, np.inf]]
+
+
 def projection_grid(center=None, scale=None, fine=5.0, step=0.005, far=1e4, n_tail=400):
     """Grid for ar_projection: uniform on [-fine, fine], log-spaced out to +-far, and
     dense (scale / 20) within 4 scales of `center`, the 2SLS estimate. A just-identified

@@ -27,15 +27,30 @@ density at the reference price, so beta+ and beta- divide by the mean density in
 seller and buyer hours separately; their equality and their common-value AR set
 are reported beside the gamma-scale ones.
 
+THE SIGN YESTERDAY. An interaction instrument z * s_prev normally comes with
+s_prev itself as a control; the design as planned omits it, so s_prev (a lagged
+outcome) also instruments. Rows with s_prev, and s_prev x the hour's mean solar,
+as controls show what survives (Task 4 review).
+
 FLAGS. WEAK: a conditional first-stage F below 10 (read AR, not 2SLS).
 FEW-WEEKS: s = 1 or s = 0 in fewer than 100 week clusters, where AR over-rejects
 (28% at 3 weeks, 6% at 100 in the Task 2 review's simulation). A last robustness
 row uses the sign seven days before (zs7): s_prev is a lagged outcome.
 
-PLACEBO. FRINGE units (outside the five, >= 50 MW) have small X. Their reduced
-form, y on rivals' solar, estimates how solar reshapes offers through cost
-alone (start-ups, cycling); the five firms' reduced forms are read against it,
-hydro against hydro and thermal against thermal.
+PLACEBO. FRINGE units (outside the five, >= 50 MW; their X is not computed) are
+read as having little stake in the price. Their reduced form, y on rivals'
+solar, estimates how solar reshapes offers through cost alone (start-ups,
+cycling); the five firms' reduced forms are read against it, hydro against hydro
+and thermal against thermal.
+
+SOLAR'S DIRECT EFFECT. The empty common set is an over-identification failure
+between z and zs for one slope, so it rejects Nash only if z has no direct
+effect on offers -- which the placebo says it has. Three rows relax that: y net
+of the like-for-like fringe reduced form times z; and one common slope c on X,
+instrumented by zs alone with z as a control, first with one solar slope for
+all firms, then with one per firm (only within-firm variation left). The
+columns dg_plus_per_delta and dg_minus_per_delta give how far 2SLS moves per
+pp/GW of a direct effect of zs, the exclusion the placebo cannot test.
 """
 from __future__ import annotations
 
@@ -48,8 +63,8 @@ from scipy import stats
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from iv_two_endog import (ar_common_exact, ar_projection, ar_test, fmt_intervals,  # noqa: E402
-                          fmt_set, projection_grid, projection_sign, sw_f, tsls_k)
+from iv_two_endog import (ar_common_exact, ar_projection, ar_set_one, ar_test,  # noqa: E402
+                          fmt_intervals, fmt_set, projection_grid, projection_sign, sw_f, tsls_k)
 from midday_hydro_iv import ols  # noqa: E402
 from solar_first_stage import demean  # noqa: E402
 
@@ -77,9 +92,9 @@ def _negate(iv):
 
 
 def estimate(d: pd.DataFrame, label: str, y: str = "y50", dens: str = "dd50",
-             zs: str = "zs") -> dict:
+             zs: str = "zs", controls: tuple = ("fcst",)) -> dict:
     s_col = "s_prev" if zs == "zs" else "s_prev7"
-    cols = [y, "Xp", "Xm", "z", zs, "fcst"]
+    cols = [y, "Xp", "Xm", "z", zs, *controls]
     d = d.dropna(subset=cols)
     w1, w0 = d.loc[d[s_col] == 1, "wk"].nunique(), d.loc[d[s_col] == 0, "wk"].nunique()
     row = {"sample": label, "outcome": y, "instrument": f"z, {zs}", "n": len(d),
@@ -92,7 +107,7 @@ def estimate(d: pd.DataFrame, label: str, y: str = "y50", dens: str = "dd50",
     Y = w[y].to_numpy()
     X = w[["Xp", "Xm"]].to_numpy()
     Z = w[["z", zs]].to_numpy()
-    W = w[["fcst"]].to_numpy()
+    W = w[list(controls)].to_numpy()
     cl = d.wk.to_numpy()
     b, V = tsls_k(Y, X, Z, W, cl)
     if np.isnan(b).any():
@@ -115,6 +130,10 @@ def estimate(d: pd.DataFrame, label: str, y: str = "y50", dens: str = "dd50",
     p_eq_beta = float(2 * stats.norm.sf(abs(bp - bm) / np.sqrt(v_beta)))
     exb = ar_common_exact(Y, X * np.array([m_p, m_m]), Z, W, cl)
     beta_common = fmt_intervals(_negate(exb["intervals"])) if exb else "not identified"
+    # A direct effect delta of zs on y (exclusion failing) moves 2SLS by Pi^-1 (0, delta),
+    # Pi the first-stage coefficients of (X+, X-) on (z, zs).
+    Pi = np.linalg.lstsq(np.column_stack([Z, W]), X, rcond=None)[0][:2]
+    sens = np.linalg.solve(Pi, [0.0, 1.0])
     weak = bool(min(f_p, f_m) < WEAK_F)
     row |= {"status": "weak" if weak else "ok", "g_plus": b[0], "se_plus": se[0],
             "g_minus": b[1], "se_minus": se[1], "p_equal": p_eq, "sw_f_plus": f_p,
@@ -123,7 +142,8 @@ def estimate(d: pd.DataFrame, label: str, y: str = "y50", dens: str = "dd50",
             "proj_plus": fmt_set(pp, gp), "proj_minus": fmt_set(pm, gm),
             "sign_plus": projection_sign(pp), "sign_minus": projection_sign(pm),
             "density_plus": m_p, "density_minus": m_m, "beta_plus": bp, "beta_minus": bm,
-            "p_equal_beta": p_eq_beta, "beta_common": beta_common}
+            "p_equal_beta": p_eq_beta, "beta_common": beta_common,
+            "dg_plus_per_delta": sens[0], "dg_minus_per_delta": sens[1]}
     flags = ("  WEAK" if weak else "") + ("  FEW-WEEKS" if row["few_weeks"] else "")
     print(f"  {label:34s} n={len(d):>8,}  g+ {b[0]:+.3f} ({se[0]:.3f})  g- {b[1]:+.3f} ({se[1]:.3f})  "
           f"SW F {f_p:.1f}/{f_m:.1f}  AR p(0,0) {p00:.3f}  common g {row['ar_common']} "
@@ -131,6 +151,37 @@ def estimate(d: pd.DataFrame, label: str, y: str = "y50", dens: str = "dd50",
           f"beta {bp:+.2f}/{bm:+.2f} p(eq) {p_eq_beta:.3f} common beta {beta_common}  "
           f"weeks s=1/0 {w1}/{w0}{flags}")
     return row
+
+
+def common_slope(d: pd.DataFrame, label: str, firm_solar: bool) -> dict:
+    """One slope c on X = X+ + X-, instrumented by zs alone, z entering as a control.
+
+    With firm_solar, each firm gets its own solar slope (z x firm), so only variation
+    within a firm identifies c: the firms' different cost responses to solar can no
+    longer pass for a response to the sign of n. g+ and g- are then not separately
+    identified. c < 0 is Nash's common slope; the AR set is exact (one instrument).
+    """
+    d = d.dropna(subset=["y50", "X", "z", "zs", "fcst"]).copy()
+    ctrl = ["z"]
+    if firm_solar:
+        ctrl = [f"z_{f}" for f in sorted(d.firm.unique())]
+        for f, c in zip(sorted(d.firm.unique()), ctrl):
+            d[c] = d.z.where(d.firm == f, 0.0)
+    cols = ["y50", "X", "zs", "fcst", *ctrl]
+    w = demean(d, cols, ["ud", "hym"])
+    Y, x, Z = w.y50.to_numpy(), w.X.to_numpy(), w[["zs"]].to_numpy()
+    W, cl = w[ctrl + ["fcst"]].to_numpy(), d.wk.to_numpy()
+    b, V = tsls_k(Y, x[:, None], Z, W, cl)
+    f1 = sw_f(x[:, None], Z, W, cl, 0)
+    _, p0 = ar_test(Y, x[:, None], Z, W, cl, [0.0])
+    ar = fmt_intervals(ar_set_one(Y, x, Z, W, cl))
+    dens = d.dd50.mean()
+    print(f"  {label:34s} n={len(d):>8,}  c {b[0]:+.3f} ({np.sqrt(V[0, 0]):.3f})  F {f1:.1f}  "
+          f"AR p(c=0) {p0:.1e}  AR set {ar}  beta {-b[0] / dens:+.2f}")
+    return {"sample": label, "outcome": "y50", "instrument": "zs; z by firm" if firm_solar else "zs; z",
+            "status": "weak" if f1 < WEAK_F else "ok", "n": len(d), "units": d.unit.nunique(),
+            "weeks": d.wk.nunique(), "c": b[0], "c_se": np.sqrt(V[0, 0]), "c_f": f1,
+            "ar_p_zero": p0, "ar_common": ar, "beta_c": -b[0] / dens}
 
 
 def reduced_form(d: pd.DataFrame, label: str) -> dict:
@@ -147,6 +198,14 @@ def reduced_form(d: pd.DataFrame, label: str) -> dict:
 
 def main() -> int:
     h = load()
+    yr = h.date.dt.year
+    for lab, a, b in ERAS:
+        h[f"fcst_{lab}"] = h.fcst.where(yr.between(a, b), 0.0)
+    # zs varies within the day mostly as s_prev times the hour's mean solar, so s_prev
+    # (a lagged outcome) also acts as an instrument unless its own effect is controlled.
+    for s_col, zs, zb in (("s_prev", "zs", "s_zbar"), ("s_prev7", "zs7", "s7_zbar")):
+        est = (h.firm != "FRINGE") & h[zs].notna() & h.fcst.notna()
+        h[zb] = (h.loc[est].groupby("hym").z.transform("mean") * h.loc[est, s_col]).reindex(h.index)
     five = h[h.firm != "FRINGE"]
     rows = []
     print("LEG D -- g+ and g- in pp of capacity per EUR/MWh of X; beta = -g / density.\n")
@@ -169,6 +228,17 @@ def main() -> int:
     rows.append(estimate(five[both], "firm-days with both signs"))
     rows.append(estimate(five[five.zero_price == 0], "no zero-price hours"))
     rows.append(estimate(five, "pooled, sign 7 days before", zs="zs7"))
+    rows.append(estimate(five, "pooled, forecast slope by era",
+                         controls=tuple(f"fcst_{lab}" for lab, _, _ in ERAS)))
+    rows.append(estimate(five[five.firm != "ENDESA"], "pooled, without Endesa"))
+    print("\nTHE SIGN YESTERDAY AS A CONTROL -- the interaction instrument's own main effect")
+    rows.append(estimate(five, "pooled, s_prev controlled", controls=("fcst", "s_prev")))
+    rows.append(estimate(five, "pooled, s_prev and s_prev x mean solar controlled",
+                         controls=("fcst", "s_prev", "s_zbar")))
+    rows.append(estimate(five, "pooled, 7 days, s_prev7 controlled", zs="zs7",
+                         controls=("fcst", "s_prev7")))
+    rows.append(estimate(five, "pooled, 7 days, s_prev7 and s_prev7 x mean solar controlled",
+                         zs="zs7", controls=("fcst", "s_prev7", "s7_zbar")))
     print("\nPLACEBO -- reduced forms, s50 on rivals' solar")
     fringe = h[h.firm == "FRINGE"]
     rows.append(reduced_form(fringe, "FRINGE (placebo)"))
@@ -177,6 +247,15 @@ def main() -> int:
     for who, d in (("FRINGE", fringe), ("five firms", five)):
         for c, g in d.groupby(d.cls.isin(["ccgt", "coal"]).map({True: "thermal", False: "hydro"})):
             rows.append(reduced_form(g, f"{who}, {c}"))
+    print("\nSOLAR'S DIRECT EFFECT -- does a common slope fit once solar may move offers itself?")
+    rf = {r["sample"].split(", ")[1]: r["rf"] for r in rows
+          if r["sample"] in ("FRINGE, hydro", "FRINGE, thermal")}
+    tech = h.cls.isin(["ccgt", "coal"]).map({True: "thermal", False: "hydro"})
+    h["y50_net"] = h.y50 - tech.map(rf) * h.z
+    five = h[h.firm != "FRINGE"]
+    rows.append(estimate(five, "pooled, net of the fringe's solar response", y="y50_net"))
+    rows.append(common_slope(five, "pooled, one slope, z common", firm_solar=False))
+    rows.append(common_slope(five, "pooled, one slope, z by firm", firm_solar=True))
     pd.DataFrame(rows).to_csv(OUT, index=False)
     print(f"\nwrote {OUT.relative_to(ROOT)}")
     # Exit 1 only if the pooled test could not be computed at all.

@@ -75,9 +75,10 @@ CLASSES = {"hydro": "hydro", "pumped storage": "pumped", "gas CCGT": "ccgt", "co
 SUPPLY_ROLES = ["generation", "generation_large", "storage_mixed", "pumping"]
 FRINGE_MIN_MW = 50.0
 LISTS = DATA / "omie/registry/omie_unit_lists.parquet"
-# Repsol completed its purchase of Viesgo's generation on this date (public record, to
-# verify). The owner roll-up maps Viesgo to Repsol on every date, so before it REPSOL's
-# X adds two firms together and its rows are dropped.
+# Repsol completed its purchase of Viesgo's generation and retail on this date (Repsol
+# press release "Repsol completa la compra de los activos de Viesgo y su comercializadora",
+# 2018-11-02). The owner roll-up maps Viesgo to Repsol on every date, so before it
+# REPSOL's X adds two firms together and its rows are dropped.
 REPSOL_VIESGO = pd.Timestamp("2018-11-02")
 OVER_CAP = 1.02
 KEY = ["date", "period"]

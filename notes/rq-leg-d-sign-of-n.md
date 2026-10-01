@@ -382,8 +382,9 @@ yesterday's sign as instruments, leg D rejects price-taking and nothing more.
   2021 omits Castejón, which it owned then; X's sign flips in about 3.7% and
   4.9% of 2019 and 2020 periods. The panel's unit-days are dated, but X is not.
   Dating `firm_x` (separate task) requires rebuilding this panel and rerunning.
-- **The Repsol–Viesgo date** (2018-11-02) is from the public record, not yet
-  verified against a filing.
+- **The Repsol–Viesgo date** (2018-11-02) is confirmed by Repsol's own press
+  release of that day announcing the completed purchase (700 MW of hydro and
+  pumped storage, the Algeciras and Escatrón CCGTs, 750,000 retail customers).
 - **Combined cycle from 2025-03-19 is thinned** by the over-capacity drop
   (1,904 unit-days). Repsol's ALG3 and ECT3 lose 93.8% of their unit-days from
   2025-03; the 55 kept days are a selected remainder.

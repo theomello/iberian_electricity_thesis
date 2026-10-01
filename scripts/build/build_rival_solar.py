@@ -34,13 +34,24 @@ import pyarrow.parquet as pq
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
-from omie_owner import owner_group  # noqa: E402
+from omie_owner import exposed_group, owner_group  # noqa: E402
 
 DATA = ROOT / "data"
 BIDS = DATA / "omie/bids/parquet"
 TABLES = ROOT / "outputs/tables"
 FIRMS = ("EDP", "IBERDROLA", "ENDESA", "NATURGY", "REPSOL")
 KEY = ["date", "period"]
+MATCH = DATA / "jrc_ppdb/jrc_cab_match.parquet"
+LISTS = DATA / "omie/registry/omie_unit_lists.parquet"
+
+
+def thermal_groups() -> tuple[str, ...]:
+    """The five firms, then every other group owning a JRC-matched thermal unit in any
+    OMIE listing: leg C needs each such owner's rivals' renewables."""
+    m = pd.read_parquet(MATCH, columns=["unit"])
+    lst = pd.read_parquet(LISTS, columns=["unit", "agent_owner"])
+    g = lst[lst.unit.isin(m.unit)].agent_owner.map(exposed_group).dropna()
+    return FIRMS + tuple(sorted(set(g) - set(FIRMS)))
 
 
 def tech_units(tech: str = "solar") -> pd.Series:
@@ -52,19 +63,19 @@ def tech_units(tech: str = "solar") -> pd.Series:
     return pd.Series(s.agent_owner.map(owner_group).to_numpy(), index=s.unit.astype(str).to_numpy())
 
 
-def month(f: Path, grp: pd.Series) -> pd.DataFrame:
+def month(f: Path, grp: pd.Series, groups: tuple[str, ...] = FIRMS) -> pd.DataFrame:
     b = pq.read_table(f, columns=["date", "period", "unit", "side", "status", "power_mw"],
                       filters=[("unit", "in", list(grp.index)), ("side", "==", "V"),
                                ("status", "==", "O")]).to_pandas()
     b["grp"] = b.unit.astype(str).map(grp)
     k = [b.date, b.period]
     parts = [b.power_mw.groupby(k).sum().rename("z_all")]
-    for firm in FIRMS:
-        parts.append(b.power_mw.where(b.grp == firm, 0.0).groupby(k).sum().rename(f"own_{firm}"))
+    for g in groups:
+        parts.append(b.power_mw.where(b.grp == g, 0.0).groupby(k).sum().rename(f"own_{g}"))
     return pd.concat(parts, axis=1).reset_index()
 
 
-def align(d: pd.DataFrame, px: pd.DataFrame) -> pd.DataFrame:
+def align(d: pd.DataFrame, px: pd.DataFrame, groups: tuple[str, ...] = FIRMS) -> pd.DataFrame:
     """Solar sums onto the priced periods of the days the bid files cover.
 
     Only days with bid rows are kept: a frontier month's zip can be partial
@@ -74,12 +85,13 @@ def align(d: pd.DataFrame, px: pd.DataFrame) -> pd.DataFrame:
     d = px[px.date.isin(set(d.date))].merge(d, on=KEY, how="left")
     num = [c for c in d.columns if c not in KEY]
     d[num] = d[num].fillna(0.0)
-    for firm in FIRMS:
-        d[f"z_rival_{firm}"] = d.z_all - d[f"own_{firm}"]
+    for g in groups:
+        d[f"z_rival_{g}"] = d.z_all - d[f"own_{g}"]
     return d
 
 
 def build(months: list[str] | None, tech: str = "solar") -> pd.DataFrame:
+    groups = thermal_groups()
     grp = tech_units(tech)
     out = TABLES / f"rival_{tech}.parquet"
     print(f"{len(grp)} {tech}-labelled supply units; the five firms own "
@@ -89,13 +101,13 @@ def build(months: list[str] | None, tech: str = "solar") -> pd.DataFrame:
         files = [f for f in files if f.stem.split("_")[1] in months]
     parts = []
     for f in files:
-        parts.append(month(f, grp))
+        parts.append(month(f, grp, groups))
         print(f"  {f.stem}", file=sys.stderr, flush=True)
     d = pd.concat(parts, ignore_index=True)
     d["date"] = pd.to_datetime(d.date)
     px = pd.read_parquet(DATA / "omie/prices/omie_day_ahead_prices.parquet", columns=KEY)
     px["date"] = pd.to_datetime(px.date)
-    d = align(d, px)
+    d = align(d, px, groups)
     out.parent.mkdir(parents=True, exist_ok=True)
     d.to_parquet(out, index=False)
     print(f"wrote {out.relative_to(ROOT)}  ({len(d):,} periods)")

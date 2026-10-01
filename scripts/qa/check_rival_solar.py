@@ -66,6 +66,14 @@ def main() -> int:
             fails.append(f"own_{f} negative")
         if ((d.z_all - d[f"own_{f}"] - d[f"z_rival_{f}"]).abs() > 1e-6).any():
             fails.append(f"z_rival_{f} != z_all - own_{f}")
+    from build_rival_solar import thermal_groups
+    present = [c[len("z_rival_"):] for c in d.columns if c.startswith("z_rival_")]
+    for g in present:
+        if ((d.z_all - d[f"own_{g}"] - d[f"z_rival_{g}"]).abs() > 1e-6).any():
+            fails.append(f"z_rival_{g} != z_all - own_{g}")
+    absent = sorted(set(thermal_groups()) - set(present))
+    if absent:
+        fails.append(f"thermal owners without an instrument column: {absent}")
     px = pd.read_parquet(ROOT / "data/omie/prices/omie_day_ahead_prices.parquet", columns=KEY)
     px["date"] = pd.to_datetime(px.date)
     px = px[px.date.dt.strftime("%Y%m").isin(set(d.date.dt.strftime("%Y%m")))]

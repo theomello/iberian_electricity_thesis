@@ -229,6 +229,22 @@ def build_fuel_panel(units: pd.DataFrame, prices: pd.DataFrame, fuel_col: str,
     return panel
 
 
+# Carbon, coal and the exchange rate are quoted on trading days only. On a weekend or
+# holiday the price a plant faces is the last one traded, so they are carried forward
+# onto every calendar day -- at most this long, so a gap in the source never hides.
+STALE_DAYS = 5
+
+
+def last_traded(days: pd.DataFrame, *quotes: pd.DataFrame) -> pd.DataFrame:
+    """Each quote series on the calendar in `days`, at its last value on or before the day."""
+    out = days.assign(date=pd.to_datetime(days.date).astype("datetime64[ns]")).sort_values("date")
+    for q in quotes:
+        q = q.assign(date=pd.to_datetime(q.date).astype("datetime64[ns]")).sort_values("date")
+        out = pd.merge_asof(out, q, on="date", direction="backward",
+                            tolerance=pd.Timedelta(days=STALE_DAYS))
+    return out.dropna().reset_index(drop=True)
+
+
 def build() -> pd.DataFrame:
     d = load_inputs()
     match = d["match"]
@@ -238,15 +254,16 @@ def build() -> pd.DataFrame:
 
     # mibgas_es_eur_mwh has a single null day (documented in
     # fetch_mibgas_prices.py); drop it rather than propagate a NaN cost.
-    gas_prices = d["gas"].dropna(subset=["mibgas_es_eur_mwh"]).merge(
-        d["co2"], on="date", how="inner")
+    # MIBGAS publishes every calendar day, weekends included, so it sets the calendar.
+    gas_prices = last_traded(d["gas"].dropna(subset=["mibgas_es_eur_mwh"]), d["co2"])
     gas_panel = build_fuel_panel(gas_units, gas_prices, "mibgas_es_eur_mwh",
                                   GAS_EMISSION_FACTOR_TCO2_PER_MWH_TH, "gas")
 
     # Coal: USD/tonne -> EUR/tonne (divide by usd_per_eur, see
     # fetch_ecb_fx.py) -> EUR/MWh(th) (divide by the calorific value).
-    coal_prices = d["coal"].merge(d["fx"], on="date", how="inner").merge(
-        d["co2"], on="date", how="inner")
+    cal = pd.DataFrame({"date": pd.date_range(pd.to_datetime(d["coal"].date).min(),
+                                              pd.to_datetime(d["coal"].date).max())})
+    coal_prices = last_traded(cal, d["coal"], d["fx"], d["co2"])
     coal_prices["coal_eur_mwh_th"] = (
         coal_prices.coal_usd_tonne / coal_prices.usd_per_eur
         / COAL_CALORIFIC_VALUE_MWH_PER_TONNE

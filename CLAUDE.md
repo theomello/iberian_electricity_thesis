@@ -948,8 +948,13 @@ inside the mechanism, but the decree defines the adjustment on the gas price and
 converting it to a coal plant's fuel cost needs a consumption factor the decree
 does not give. Not invented here.
 
-**The output: `data/jrc_ppdb/implied_marginal_cost_daily.parquet`, 170,402
-unit-days, `fuel` column distinguishes gas/coal.** Gas (46 trustworthy
+**The output: `data/jrc_ppdb/implied_marginal_cost_daily.parquet`, 242,573
+unit-days (every calendar day), `fuel` column distinguishes gas/coal.** Until
+2026-10-01 it held 170,402 and **no weekends**: carbon, coal and the exchange rate
+are quoted on trading days only and were inner-joined, so every Saturday and Sunday
+fell out, and any design reading the file silently dropped weekends. They are now
+carried at their last traded value for up to 5 days (`last_traded`); MIBGAS
+publishes weekends itself. Every weekday cost is unchanged. Gas (46 trustworthy
 units): mean 94.27 €/MWh, range 16.51–466.41 — sits sensibly above OMIE's
 73.31 €/MWh mean day-ahead price, consistent with CCGT usually setting the
 margin. Coal (22 trustworthy units): mean 101.62 €/MWh, range 30.94–297.58

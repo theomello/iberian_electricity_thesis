@@ -270,6 +270,31 @@ def ar_projection(y, X, Z, W, cl, j, grid, level=0.95):
     return np.array(keep)
 
 
+def projection_grid(center=None, scale=None, fine=5.0, step=0.005, far=1e4, n_tail=400):
+    """Grid for ar_projection: uniform on [-fine, fine], log-spaced out to +-far, and
+    dense (scale / 20) within 4 scales of `center`, the 2SLS estimate. A just-identified
+    AR set always contains the estimate, so its piece is found however narrow or far out
+    it is. Contains 0, so projection_sign can tell whether 0 is in the set."""
+    core = np.round(np.arange(-fine, fine + step / 2, step), 4)
+    tail = np.geomspace(fine, far, n_tail)[1:]
+    parts = [core, tail, -tail]
+    if center is not None and np.isfinite(center) and np.isfinite(scale) and scale > 0:
+        parts.append(center + scale * np.linspace(-4.0, 4.0, 161))
+    return np.unique(np.concatenate(parts)) + 0.0  # + 0.0 turns -0.0 into 0.0
+
+
+def projection_sign(keep) -> str:
+    """The robust sign of a coefficient from its AR projection on a grid containing 0."""
+    keep = np.asarray(keep)
+    if keep.size == 0:
+        return "empty"
+    if keep.min() > 0:
+        return "+"
+    if keep.max() < 0:
+        return "-"
+    return "0 inside" if (keep == 0).any() else "both signs, 0 out"
+
+
 def fmt_intervals(iv) -> str:
     """Exact intervals as text; None (not identified) and [] (nothing kept) are named."""
     if iv is None:
@@ -284,9 +309,8 @@ def fmt_set(keep, grid):
     """Accepted grid points as intervals; an interval touching the grid's edge is open."""
     if len(keep) == 0:
         return "empty"
-    step = grid[1] - grid[0]
-    gaps = np.flatnonzero(np.diff(keep) > 1.5 * step)
-    pieces = np.split(keep, gaps + 1)
+    idx = np.searchsorted(grid, keep)  # pieces break where kept points are not grid neighbours
+    pieces = np.split(np.asarray(keep), np.flatnonzero(np.diff(idx) > 1) + 1)
     lo, hi = grid[0], grid[-1]
     return " U ".join(f"[{'-inf' if p[0] <= lo else f'{p[0]:.3f}'}, "
                       f"{'+inf' if p[-1] >= hi else f'{p[-1]:.3f}'}]" for p in pieces)

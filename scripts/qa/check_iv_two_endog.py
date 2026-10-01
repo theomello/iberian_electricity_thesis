@@ -18,7 +18,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "analysis"))
 from iv_two_endog import (ar_common_exact, ar_common_set, ar_projection, ar_test,  # noqa: E402
-                          fmt_intervals, fmt_set, sw_f, tsls_k)
+                          fmt_intervals, fmt_set, projection_grid, projection_sign, sw_f, tsls_k)
 from midday_hydro_iv import ols, tsls  # noqa: E402
 
 GRID = np.round(np.arange(-3.0, 3.0001, 0.005), 4)
@@ -84,6 +84,30 @@ def main() -> int:
     print(f"asymmetric, AR projection: g+ {fmt_set(pp, GRID)}, g- {fmt_set(pm, GRID)}")
     check(len(pm) > 0 and pm.min() > 0 and pm.min() < 0.5 < pm.max(), "projection: g- set positive, covers 0.5")
     check(len(pp) > 0 and pp.max() < 0 and pp.min() < -0.5 < pp.max(), "projection: g+ set negative, covers -0.5")
+
+    # A coefficient beyond the fine grid. The +-3 grid misses g+ = 10 altogether, and a
+    # narrow set far out (g+ = 50) falls between log-spaced tail points; the projection
+    # grid is dense around the 2SLS estimate, which the just-identified AR set contains.
+    y, X, Z, W, cl = dgp(10.0, -0.5, seed=11)
+    check(ar_projection(y, X, Z, W, cl, 0, GRID).size == 0, "g+ = 10: the +-3 grid misses it (the artefact)")
+    for true in (10.0, 50.0):
+        y, X, Z, W, cl = dgp(true, -0.5, seed=11)
+        b, V = tsls_k(y, X, Z, W, cl)
+        g = projection_grid(b[0], np.sqrt(V[0, 0]))
+        pp = ar_projection(y, X, Z, W, cl, 0, g)
+        print(f"g+ = {true:g}: AR projection {fmt_set(pp, g)}, sign {projection_sign(pp)}")
+        check(len(pp) > 0 and pp.min() < true < pp.max() and projection_sign(pp) == "+",
+              f"g+ = {true:g}: the projection grid covers it and reads '+'")
+    check(ar_projection(y, X, Z, W, cl, 0, projection_grid()).size == 0,
+          "g+ = 50: without the estimate the grid misses the narrow set")
+    check(0.0 in projection_grid(), "the projection grid contains 0")
+    # fmt_set on an uneven grid splits pieces by grid position, not by the first step.
+    u = np.array([-100.0, -10.0, -1.0, 0.0, 1.0, 10.0, 100.0])
+    check(fmt_set(u[[1, 2, 5]], u) == "[-10.000, -1.000] U [10.000, 10.000]", "fmt_set: uneven grid")
+    check(fmt_set(u[[0, 1, 6]], u) == "[-inf, -10.000] U [100.000, +inf]", "fmt_set: uneven grid edges")
+    for keep, want in (([], "empty"), ([1.0, 2.0], "+"), ([-2.0, -1.0], "-"),
+                       ([-1.0, 0.0, 1.0], "0 inside"), ([-10.0, 10.0], "both signs, 0 out")):
+        check(projection_sign(np.array(keep)) == want, f"projection_sign({keep}) == {want!r}")
 
     y, X, Z, W, cl = dgp(-0.5, -0.5, seed=3)
     x1 = X.sum(axis=1)

@@ -51,20 +51,30 @@ def main() -> int:
     check(d.date.dt.year.between(2018, 2023).all(), "2018-2023 only")
     check(((d.cleared_mw > 0) & (d.cleared_mw < d.offered_mw)).all(), "every row partly dispatched")
     check(not ((d.firm == "REPSOL") & (d.date < "2018-11-02")).any(), "no REPSOL before 2018-11-02")
-    for unit, before, after, when in (("CTJON1", "EDP", "TOTALENERGIES", "2022-02-08"),
-                                      ("CTJON3", "EDP", "TOTALENERGIES", "2022-02-08"),
-                                      ("PVENT1", "RWE", "NATURGY", "2019-07-18")):
+    # X is built on one static owner per unit (firm_incentive_net), so a unit-period is
+    # kept only when its dated owner is that owner: the unit must sit inside its firm's X.
+    import sys as _s
+    _s.path.insert(0, str(ROOT / "scripts" / "lib"))
+    from omie_owner import exposed_group
+    ua = pd.read_parquet(ROOT / "data/omie/registry/unit_agents.parquet", columns=["unit", "agent_owner"])
+    static = ua.set_index("unit").agent_owner.map(exposed_group)
+    off = d.firm.to_numpy() != d.unit.map(static).to_numpy()
+    check(not off.any(), f"every unit-period sits inside its firm's (static-owner) X ({off.sum():,} do not)")
+    for unit in ("CTJON1", "CTJON3"):
         u = d[d.unit == unit]
-        ok = (u.loc[u.date < when, "firm"].isin([before]).all()
-              and u.loc[u.date >= when, "firm"].isin([after]).all() and len(u) > 0)
-        check(ok, f"{unit}: {before} before {when}, {after} from it ({len(u)} rows)")
+        check(len(u) > 0 and (u.date >= "2020-12-01").all() and (u.firm == "TOTALENERGIES").all(),
+              f"{unit}: TOTALENERGIES from its sale on 2020-12-01, none before ({len(u)} rows)")
+    check("min_load" in d and 0.05 < d.min_load.mean() < 0.30,
+          f"min_load flags rows whose cleared volume is all priced at or below 5 EUR/MWh "
+          f"({d.min_load.mean() if 'min_load' in d else float('nan'):.3f})")
     gas, coal = d[d.fuel == "gas"], d[d.fuel == "coal"]
     capped = gas[(gas.c - gas.c_uncapped).abs() > 1e-9]
     check(capped.date.between("2022-06-15", "2023-12-31").all() and len(capped) > 0,
           f"gas cost differs from market cost only 2022-06-15..2023-12-31 ({len(capped):,} rows)")
     check(((coal.c - coal.c_uncapped).abs() < 1e-9).all(), "coal never capped")
     check(((d.fuel_index / d.eff - d.c).abs() < 1e-6).all(), "fuel_index / eff == c")
-    check(d[["X", "zw", "zs", "p", "c"]].notna().all().all(), "X, instruments, price and cost present")
+    check(np.isfinite(d[["X", "zw", "zs", "p", "c"]].to_numpy(dtype=float)).all(),
+          "X, instruments, price and cost finite (X undefined below 5 MW per EUR/MWh of slope)")
     cost = pd.read_parquet(ROOT / "data/jrc_ppdb/implied_marginal_cost_daily.parquet", columns=["unit", "date"])
     cost = cost[cost.date.between("2018-01-02", "2023-12-31")]
     per_unit = cost.groupby("unit").date.nunique()

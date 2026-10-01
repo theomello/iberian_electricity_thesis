@@ -17,8 +17,17 @@ Spanish price is the price.
 
 OWNER. The majority owner in the OMIE listing in force that day (nearest preceding
 snapshot), as its exposed group (`omie_owner.exposed_group`). REPSOL rows before its
-Viesgo purchase (2018-11-02) are dropped, as in leg D. A row whose owner has no X (Bizkaia
-Energia, Amorebieta's owner until 2022-02-08) is dropped and counted.
+Viesgo purchase (2018-11-02) are dropped, as in leg D. Castejon 1 and 3 are TotalEnergies'
+from their sale on 2020-12-01, which no listing dates. Because X (firm_incentive_net) is
+built on one static owner per unit, a unit-period is kept only when its dated owner is that
+static owner, so the unit always sits inside its own firm's X (leg D's rule); this drops
+Castejon before its sale and Plana del Vent while RWE's, and Amorebieta while Bizkaia
+Energia's (which has no X at all). X is undefined when rivals' slope is below 5 MW per
+EUR/MWh, as in firm_x.
+
+MINIMUM LOAD. `min_load` marks unit-periods whose every cleared MW was offered at or below
+5 EUR/MWh: the price then sits in the gap above a minimum-load tranche, not on a
+cost-reflecting step, so p - c says little about the markup. The test reads them separately.
 
 COLUMNS
   p            clearing price, EUR/MWh
@@ -55,16 +64,27 @@ CAB = DATA / "omie/cab/parquet"
 OUT = TABLES / "leg_c_panel.parquet"
 YEARS = (2018, 2023)
 TOL = 0.1  # MW: "some cleared, some not" needs more than rounding on each side
+MIN_SLOPE = 5.0  # MW per EUR/MWh: below it X is undefined, as in firm_x and firm_incentive_rebuild
+MIN_LOAD_EUR = 5.0  # a unit whose every cleared MW is offered at or below this clears only its minimum load
+# Castejon 1 and 3 passed to TotalEnergies on 2020-12-01 (EDP market notification, "EDP
+# concludes the sale to Total of 2 CCGT plants and B2C supply business in Spain"); the
+# listings show it only from the 2022-02-08 snapshot, there being none in between.
+CASTEJON_SALE = pd.Timestamp("2020-12-01")
+CASTEJON = ("CTJON1", "CTJON3")
 
 
 def unit_periods(f: Path, units: list[str]) -> pd.DataFrame:
-    """One bid month -> unit, date, period, offered_mw (status O) and cleared_mw (status C), sell side."""
-    b = pq.read_table(f, columns=["date", "period", "unit", "side", "status", "power_mw"],
+    """One bid month -> unit, date, period, offered_mw (status O), cleared_mw (status C) and
+    top_cleared_eur, the dearest price at which any cleared volume was offered (sell side)."""
+    b = pq.read_table(f, columns=["date", "period", "unit", "side", "status", "power_mw", "price_eur_mwh"],
                       filters=[("unit", "in", units), ("side", "==", "V")]).to_pandas()
     b["unit"] = b.unit.astype(str)
-    g = b.groupby(["unit", "date", "period", "status"]).power_mw.sum().unstack("status", fill_value=0.0)
+    k = ["unit", "date", "period"]
+    g = b.groupby([*k, "status"]).power_mw.sum().unstack("status", fill_value=0.0)
     g = g.reindex(columns=["O", "C"], fill_value=0.0)
-    return g.rename(columns={"O": "offered_mw", "C": "cleared_mw"}).reset_index()
+    g = g.rename(columns={"O": "offered_mw", "C": "cleared_mw"})
+    top = b[(b.status == "C") & (b.power_mw > TOL)].groupby(k).price_eur_mwh.max().rename("top_cleared_eur")
+    return g.join(top).reset_index()
 
 
 def at_margin(up: pd.DataFrame) -> pd.Series:
@@ -145,13 +165,22 @@ def build(months: list[str] | None) -> pd.DataFrame:
     print(f"  {len(d):,} in clean periods")
     left = d.assign(date=d.date.astype("datetime64[us]")).sort_values("date")
     d = pd.merge_asof(left, owner_listings(units), on="date", by="unit", direction="backward")
+    d.loc[d.unit.isin(CASTEJON) & (d.date >= CASTEJON_SALE), "firm"] = "TOTALENERGIES"
     d = d[~((d.firm == "REPSOL") & (d.date < REPSOL_VIESGO))]
+    # firm_incentive_net builds each firm's X on ONE static owner per unit, so a unit-period
+    # whose dated owner differs would sit outside its own firm's X (its sales left out of n,
+    # its offers counted as a rival's). Keep only unit-periods inside their firm's X.
+    ua = pd.read_parquet(DATA / "omie/registry/unit_agents.parquet", columns=["unit", "agent_owner"])
+    static = ua.set_index("unit").agent_owner.map(exposed_group)
+    inside = d.firm.to_numpy() == d.unit.map(static).to_numpy()
+    print("  outside their firm's static X (dropped):", d.loc[~inside].groupby(["unit", "firm"]).size().to_dict())
+    d = d[inside]
     groups = thermal_groups()
     x = pd.read_parquet(TABLES / "firm_incentive_net.parquet",
                         columns=["date", "period", "firm", "net_exp_mw", "slope_exp_h5"],
                         filters=[("firm", "in", list(groups))])
     x["date"] = pd.to_datetime(x.date).astype("datetime64[us]")
-    x["X"] = x.net_exp_mw / x.slope_exp_h5
+    x["X"] = (x.net_exp_mw / x.slope_exp_h5).where(x.slope_exp_h5 >= MIN_SLOPE)
     d = d.merge(x[["date", "period", "firm", "X"]], on=["date", "period", "firm"], how="left")
     z = instruments(groups)
     z["date"] = z.date.astype("datetime64[us]")
@@ -172,10 +201,14 @@ def build(months: list[str] | None) -> pd.DataFrame:
     d = d[~miss.any(axis=1)].copy()
     d["p"] = d.price_es
     d["fuel_index"] = d.c * d.eff
+    # Price in the gap above a minimum-load tranche offered near zero: p - c is not the
+    # markup on a cost-reflecting step (the spec's cheap-first-tranche concern).
+    d["min_load"] = d.top_cleared_eur <= MIN_LOAD_EUR
     iso = d.date.dt.isocalendar()
     d["wk"] = (iso.year.astype(int) * 100 + iso.week.astype(int)).astype("int32")
     cols = ["unit", "firm", "fuel", "date", "period", "utc", "wk", "p", "c", "c_uncapped", "fuel_index",
-            "eff", "eff_is_generic", "var_term", "X", "zw", "zs", "offered_mw", "cleared_mw"]
+            "eff", "eff_is_generic", "var_term", "X", "zw", "zs", "offered_mw", "cleared_mw",
+            "top_cleared_eur", "min_load"]
     d = d[cols].sort_values(["unit", "date", "period"]).reset_index(drop=True)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     d.to_parquet(OUT, index=False)

@@ -955,9 +955,9 @@ are quoted on trading days only and were inner-joined, so every Saturday and Sun
 fell out, and any design reading the file silently dropped weekends. They are now
 carried at their last traded value for up to 5 days (`last_traded`); MIBGAS
 publishes weekends itself. Every weekday cost is unchanged. Gas (46 trustworthy
-units): mean 94.27 €/MWh, range 16.51–466.41 — sits sensibly above OMIE's
+units): mean 93.49 €/MWh, range 15.73–466.41 (weekends included) — sits sensibly above OMIE's
 73.31 €/MWh mean day-ahead price, consistent with CCGT usually setting the
-margin. Coal (22 trustworthy units): mean 101.62 €/MWh, range 30.94–297.58
+margin. Coal (22 trustworthy units): mean 101.54 €/MWh, range 30.94–297.58
 — close to gas, plausible given coal's lower thermal efficiency (0.29–0.38
 vs. gas's 0.52–0.55) offset by cheaper fuel per MWh(th). Coal's price
 converts USD/tonne (`fetch_coal_price.py`, Rotterdam API2, ICE ticker

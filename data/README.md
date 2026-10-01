@@ -88,7 +88,7 @@ the window.
 | path | what |
 |---|---|
 | `raw/capacidad_inter_pbc_YYYYMMDD.<rev>` | 3,073 daily files (2018-2022 extracted from the yearly zips beside `raw/`) |
-| `omie_interconnection_capacity.parquet` | 365,276 rows, one per date × period × border (PT, FR, MA, AD) |
+| `omie_interconnection_capacity.parquet` | 364,988 rows, one per date × period × border (PT, FR, MA, AD) |
 
 Fetched by `scripts/fetch/fetch_omie_interconnection.py`. Import and export
 capacity, occupation and free capacity per border; import figures negative as

@@ -22,8 +22,11 @@ the header does not tell the resolution -- the period labels do:
     2025-03-19 -> 2025-09-30   Periodo;...   1..23/24      hourly (OMIE's platform migration)
     2025-10-01 ->              Periodo;...   HhQq          quarter-hour (MW)
 
-plus ONE quarter-hour file inside the hourly era, 2025-07-15 (96 periods), kept as
-published. `HhQq` counts hours within the local day (H1..H25 on the autumn DST day),
+plus ONE quarter-hour file inside the hourly era, 2025-07-15 (96 periods): OMIE
+re-emitted that day on 18/12/2025 in the new format, and its four quarters are
+identical within each hour, so `to_market_resolution` collapses it to the market's
+hourly periods (raising if the quarters ever differ). Every row therefore joins on
+(date, period) at the market's own resolution. `HhQq` counts hours within the local day (H1..H25 on the autumn DST day),
 so the period is (h - 1) * 4 + q. An hourly MWh figure is numerically the average MW.
 
 The six numbers per row are import capacity, import occupation, free import capacity,
@@ -104,6 +107,25 @@ def parse_text(text: str) -> pd.DataFrame:
     return d
 
 
+QUARTER_HOUR_START = date(2025, 10, 1)  # the day-ahead market's first 15-minute day
+
+
+def to_market_resolution(d: pd.DataFrame) -> pd.DataFrame:
+    """Collapse quarter-hour rows dated before the market went quarter-hourly to hours.
+
+    Such a file is hourly data relabelled (2025-07-15): the four quarters of an hour must
+    be identical, and anything else raises rather than being averaged away."""
+    early = (d.resolution_min == 15) & (d.date < QUARTER_HOUR_START)
+    if not early.any():
+        return d
+    e = d[early].assign(period=(d.loc[early, "period"] - 1) // 4 + 1, resolution_min=60)
+    spread = e.groupby(["date", "border", "period"])[VALUES].nunique().max().max()
+    if spread > 1:
+        raise ValueError("quarter-hour values differ within an hour before 2025-10-01")
+    e = e.drop_duplicates(["date", "border", "period"])
+    return pd.concat([d[~early], e], ignore_index=True)
+
+
 def available_files(sess) -> tuple[dict[date, str], set[int]]:
     """Daily files (highest revision per day) and yearly zips OMIE lists."""
     r = sess.get(OMIE_LIST, params={"parents[0]": DATASET, "realdir": DATASET}, timeout=90)
@@ -167,7 +189,8 @@ def latest_raw(start: date, end: date) -> list[Path]:
 
 def parse_all(start: date, end: date) -> pd.DataFrame:
     files = latest_raw(start, end)
-    d = pd.concat([parse_text(p.read_text(encoding="latin-1")) for p in files], ignore_index=True)
+    d = pd.concat([to_market_resolution(parse_text(p.read_text(encoding="latin-1"))) for p in files],
+                  ignore_index=True)
     d = d[(d.date >= start) & (d.date <= end)].sort_values(["date", "border", "period"])
     OUT.parent.mkdir(parents=True, exist_ok=True)
     d.to_parquet(OUT, index=False)

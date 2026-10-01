@@ -214,6 +214,7 @@ def hourly(o: pd.DataFrame, off: pd.DataFrame, u: pd.DataFrame, cap: pd.DataFram
     capacity share is undefined that day.
     """
     o["date"] = pd.to_datetime(o.date)
+    o["unit"] = o.unit.astype(str)  # some bid months store it as a categorical
     # Every period of a unit-day the unit is present in: a period with no offer scores 0
     # (nothing offered at or below the reference price), not a missing row -- whether a
     # unit offers at all moves with the hour, so dropping those periods selects.
@@ -255,7 +256,11 @@ def build(months: list[str] | None) -> pd.DataFrame:
     clean = x[x.firm == FIRMS[0]][KEY + ["clean", "zero_price"]]
     lists = listed_firm(units)
     parts, drops, moves = [], [], []
+    priced = set(per.date.dt.strftime("%Y%m"))
     for f, ym in zip(files, months):
+        if ym not in priced:  # bids run past the price frontier (CLAUDE.md)
+            print(f"  {f.stem}: no priced periods, skipped", file=sys.stderr, flush=True)
+            continue
         o = month_outcomes(f, units, one)
         if not o.empty:
             h_m, d_m, m_m = hourly(o, offered_total(f, units), u, unit_day_capacity(units, [ym]),

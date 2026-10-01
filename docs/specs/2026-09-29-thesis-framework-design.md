@@ -407,7 +407,9 @@ archive and β̂.
    gaps, not conduct (`rq-leg-c-thermal-cost.md`).
 5b. **Leg C on the offer steps: an estimate, not a diagnostic.** *Proposed
    2026-10-01, after the user asked for an estimate rather than the selected
-   own-step rows; to be confirmed before it is built.* Each step a unit offers is
+   own-step rows; to be confirmed before it is built.* The full design, with the
+   forecast instruments, the one-β test, the water value and the natural
+   experiments, is [`2026-10-01-step-offer-design.md`](2026-10-01-step-offer-design.md). Each step a unit offers is
    chosen before the auction, at a price b_k and a length, observed whether or not
    the price lands on it. A step bidder's conditions hold in expectation over the
    residual demand it could face (Wolak 2007; Kastl 2011; Reguant 2014, on this
@@ -433,7 +435,8 @@ archive and β̂.
    step's price-setting periods can mix signs. The ex-post optimal bid
    (`rq-gas-cap-conduct.md`, 2026-08-18) is the one-draw case; the gas cap's
    statutory cost (2022-06-15 to 2023-12-31) is its sharpest window.
-6. **A spatial weather instrument**, for legs C and D. Offered renewable volume is
+6. **A spatial weather instrument**, for legs C and D (now built from forecasts:
+   step-offer design §5.1). Offered renewable volume is
    partly a choice, so a firm's own offered renewables are not an instrument. In a
    scratch probe (2026-10-01, not committed; corrected for an hour misalignment by
    the final review) a firm's own offered solar and wind moved X down on both sides

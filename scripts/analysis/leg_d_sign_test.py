@@ -254,6 +254,8 @@ def main() -> int:
     h["y50_net"] = h.y50 - tech.map(rf) * h.z
     five = h[h.firm != "FRINGE"]
     rows.append(estimate(five, "pooled, net of the fringe's solar response", y="y50_net"))
+    rows.append(estimate(five, "pooled, net of fringe solar, s_prev and s_prev x mean solar controlled",
+                         y="y50_net", controls=("fcst", "s_prev", "s_zbar")))
     rows.append(common_slope(five, "pooled, one slope, z common", firm_solar=False))
     rows.append(common_slope(five, "pooled, one slope, z by firm", firm_solar=True))
     pd.DataFrame(rows).to_csv(OUT, index=False)

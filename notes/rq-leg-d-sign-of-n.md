@@ -486,18 +486,26 @@ difference is what the netted rows attribute to X.
 
 ### 7.3 Results
 
-β is on the §3.14 scale (β = 1 is full Nash).
+β is on the §3.14 scale (β = 1 is full Nash). "Sign of X" says which hours a β
+covers: a one-slope row imposes the same β on sellers (X > 0) and buyers (X < 0).
+Hours with X > 0 are 24% of the pooled sample: Endesa 0.3%, EDP 20%, Naturgy 20%,
+Iberdrola 37%, Repsol 74%.
 
-| specification | first-stage F | slopes | AR test of price-taking | β |
-|---|---|---|---|---|
-| raw offers, one common slope | 60 | c +0.255 (0.034); AR set [0.217, 0.300] | p 7·10⁻¹⁷ | −0.07 (wrong sign) |
-| **net of the fringe, one common slope** | **60** | **c −0.119 (0.035); AR set [−0.217, −0.041], overid p 0.998** | **p 6·10⁻⁴** | **0.03 [0.01, 0.06]** |
-| net of the fringe, two slopes, pooled first stage | 0.7/0.7 | not separated | p 6·10⁻⁴ | — |
-| **net of the fringe, two slopes, forecasts × firm** | **40/35** | **γ⁺ −0.001 (0.106), γ⁻ −0.682 (0.087); p(γ⁺ = γ⁻) < 0.001** | p ≈ 0 | **β⁺ 0.00, β⁻ 0.19** |
-| Iberdrola, net, one slope | 100 | c −0.150 (0.028); AR set [−0.202, −0.126] | p 10⁻⁹ | 0.03 [0.03, 0.05] |
-| Iberdrola, raw, two slopes | 17/12 | γ⁺ −0.001 (0.097), γ⁻ −0.032 (0.092) | **p 0.78** | common [−0.01, 0.02] |
-| EDP, net, one slope | 87 | c +0.057 (0.026); AR set **empty** | p 2·10⁻⁸ | — |
-| Endesa / Naturgy / Repsol, net, one slope | 0.9 / 5.4 / 2.1 | weak | | |
+| specification | sign of X | first-stage F | slopes | AR test of price-taking | β |
+|---|---|---|---|---|---|
+| raw offers, one common slope | both, one β | 60 | c +0.255 (0.034); AR set [0.217, 0.300] | p 7·10⁻¹⁷ | −0.07 (wrong sign) |
+| **net of the fringe, one common slope** | both, one β | **60** | **c −0.119 (0.035); AR set [−0.217, −0.041], overid p 0.998** | **p 6·10⁻⁴** | **0.03 [0.01, 0.06]** |
+| net of the fringe, two slopes, pooled first stage | each | 0.7/0.7 | not separated | p 6·10⁻⁴ | — |
+| **net of the fringe, two slopes, forecasts × firm** | **X > 0 (seller)** | **40** | **γ⁺ −0.001 (0.106)** | p ≈ 0 (joint) | **β⁺ 0.00** |
+| | **X < 0 (buyer)** | **35** | **γ⁻ −0.682 (0.087); p(γ⁺ = γ⁻) < 0.001** | | **β⁻ 0.19** |
+| Iberdrola, net, one slope | both, one β | 100 | c −0.150 (0.028); AR set [−0.202, −0.126] | p 10⁻⁹ | 0.03 [0.03, 0.05] |
+| Iberdrola, raw, two slopes | each | 17/12 | γ⁺ −0.001 (0.097), γ⁻ −0.032 (0.092) | **p 0.78** | common [−0.01, 0.02] |
+| EDP, net, one slope | both, one β | 87 | c +0.057 (0.026); AR set **empty** | p 2·10⁻⁸ | — |
+| Endesa / Naturgy / Repsol, net, one slope | both, one β | 0.9 / 5.4 / 2.1 | weak | | |
+
+The common 0.03 is not an average of β⁺ 0.00 and β⁻ 0.19: the rows use different
+first stages (one pooled response to the forecasts against one per firm), so
+they draw on different variation.
 
 ### 7.4 Reading
 

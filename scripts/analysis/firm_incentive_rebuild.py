@@ -62,6 +62,8 @@ MIN_SLOPE = 5.0     # MW per EUR/MWh, as in edp_hydro_panel.py
 TABLE_FIRMS = ["EDP", "IBERDROLA", "ENDESA", "NATURGY", "ACCIONA", "AXPO", "REPSOL"]
 KEY = ["date", "period"]
 
+REGULATED_OWNERS = ["EDP", "IBERDROLA", "ENDESA", "REPSOL", "NATURGY"]
+
 
 def unit_firm() -> pd.DataFrame:
     """Ownership spells (lib/unit_ownership): the owner groups in force on each date,
@@ -157,7 +159,7 @@ def report(f: pd.DataFrame) -> bool:
         print(f"\nSHARE OF FIRM-PERIODS AS A NET BUYER, {lab}")
         nb = t.assign(buyer=t[col] < 0).groupby(["firm", "year"]).buyer.mean().unstack()
         print(nb.reindex(TABLE_FIRMS).round(2).to_string())
-    print("\nPASS-THROUGH VOLUME by firm (mean MW over firm-periods; nonzero only for EDP, IBERDROLA)")
+    print("\nPASS-THROUGH VOLUME by firm (mean MW over firm-periods; nonzero only for REGULATED_OWNERS)")
     print(t.groupby("firm")[["pt_net_mw", "pt_q_mw", "pt_sell_h5", "pt_buy_h5"]].mean()
           .reindex(TABLE_FIRMS).round(1).to_string())
     print("\nCHECKS")
@@ -174,9 +176,13 @@ def report(f: pd.DataFrame) -> bool:
         print(f"  h={h:g}: slope_exp below slope_net on {v:.6f} of firm-periods (must be 0)")
         if v > 0:
             bad.append(f"slope_exp < slope_net at h={h:g}")
-    other = t[~t.firm.isin(["EDP", "IBERDROLA"])]
+    # Groups owning a regulated supplier: SU Eletricidade (EDP), Curenergia (Iberdrola),
+    # Energia XXI (Endesa), Regsiti (Viesgo, Repsol's from 2018-11-02), Comercializadora
+    # Regulada (Naturgy). Dated ownership reaches Energia XXI and Regsiti through the
+    # listings that name them; the static latest owner did not.
+    other = t[~t.firm.isin(REGULATED_OWNERS)]
     if (other.pt_net_mw.abs() > 0).any():
-        bad.append("pass-through volume attributed outside EDP and IBERDROLA")
+        bad.append("pass-through volume attributed outside the groups owning a regulated supplier")
     for b_ in bad:
         print(f"  FAIL {b_}")
     return not bad

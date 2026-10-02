@@ -8,6 +8,7 @@ leg D). Exits non-zero on any failure.
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -93,14 +94,20 @@ def main() -> int:
     gap = float((uh.unit_hours != uh.firm_hours).mean())
     check(gap < 0.001, f"every unit-day covers all its firm's clean hours ({gap:.4f} do not)")
 
-    # Ownership as listed on the date, not one static owner.
+    # Ownership on the date, by the unit's largest owner (lib/unit_ownership.py, 2026-10-02).
+    sys.path.insert(0, str(ROOT / "scripts" / "lib"))
+    from unit_ownership import majority_group
+    ud = h[["unit", "date"]].drop_duplicates()
+    g = majority_group(ud)
+    want = pd.Series(g.where(g.isin(FIRMS), "FRINGE").to_numpy(), index=pd.MultiIndex.from_frame(ud))
+    got = h.drop_duplicates(["unit", "date"]).set_index(["unit", "date"]).firm
+    off = (got != want.reindex(got.index)).sum()
+    check(off == 0, f"every unit-day counts for its largest owner that day, or FRINGE ({off:,} do not)")
     check(not ((five.firm == "REPSOL") & (five.date < pd.Timestamp("2018-11-02"))).any(),
           "no REPSOL rows before Repsol bought Viesgo (2018-11-02)")
     ct = h[h.unit.isin(["CTJON1", "CTJON3"])]
-    check(ct.empty or ct.date.min() >= pd.Timestamp("2022-02-08"),
-          "Castejon (EDP's until sold) enters FRINGE only once listed under its new owner")
-    pv = h[h.unit == "PVENT1"]
-    check(pv.empty or pv.date.min() >= pd.Timestamp("2019-07-18"), "PVENT1 only once listed under Naturgy")
+    check(ct.empty or ((ct.firm == "EDP") == (ct.date < pd.Timestamp("2020-12-01"))).all(),
+          "Castejon is EDP's before its sale on 2020-12-01 and FRINGE after")
     al = h[h.unit == "ALL1"]
     check(al.empty or (al.firm == "NATURGY").all(), "a co-owned unit follows its majority owner (ALL1: Naturgy 2/3)")
 

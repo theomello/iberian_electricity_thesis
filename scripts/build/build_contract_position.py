@@ -57,7 +57,7 @@ OUT = ROOT / "outputs" / "tables" / "contract_position_panel.parquet"
 OUT_OWNER = ROOT / "outputs" / "tables" / "contract_position_panel_owner.parquet"
 
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
-from omie_owner import owner_group  # noqa: E402
+from unit_ownership import attach_owners, spells  # noqa: E402
 
 COLS = ["date", "period", "resolution_min", "unit", "schedule_mw", "role_code"]
 
@@ -75,33 +75,31 @@ def unit_firm_map(tier: str) -> pd.DataFrame:
     `unit_agents` left January 2018 at 71.5% -- identical to the inference chain,
     i.e. no gain at all -- while the listings give 100%.
 
-    It also returns one row per unit *per snapshot*, so `attach_firm` can take
-    the snapshot nearest each delivery date instead of freezing one label for
-    eight years. 548 units change owner across the snapshots.
+    Since 2026-10-02 `owner` returns the ownership spells of lib/unit_ownership.py,
+    which read the listings the same way: the owners in force on each delivery
+    date (the preceding listing naming the unit; the first listing also covers
+    the time before it), each with its share, and the dated sales. Until then
+    this took the NEAREST snapshot in either direction and one owner per unit,
+    so a co-owned contract unit went whole to an arbitrary co-owner.
+    548 units change owner across the snapshots.
 
-    `owner` names a different entity from `firm` (the commercialising one) and
-    does no group roll-up of its own; see lib/omie_owner.py.
+    `owner` names a different entity from `firm` (the commercialising one); the
+    roll-up to groups is lib/omie_owner.owner_group.
     """
     if tier == "owner":
-        ul = pd.read_parquet(UNIT_LISTS, columns=["snapshot", "unit", "agent_owner"])
-        ul = ul[ul.agent_owner.notna()].copy()
-        ul["firm"] = ul.agent_owner.map(owner_group)
-        ul["date"] = pd.to_datetime(ul.snapshot)
-        return ul[["unit", "date", "firm"]].dropna(subset=["firm"]).sort_values("date")
+        return spells()
     return pd.read_parquet(AGENTS, columns=["unit", "firm"])
 
 
 def attach_firm(sell: pd.DataFrame, agents: pd.DataFrame) -> pd.DataFrame:
-    """Join the firm label, by nearest snapshot when the map is dated."""
-    if "date" not in agents.columns:
+    """Join the firm label: statically for `firm`, by date and share for `owner`
+    (one row per owner in force, schedule_mw times its share)."""
+    if "start" not in agents.columns:
         return sell.merge(agents, on="unit", how="left")
     s = sell.copy()
-    s["_d"] = pd.to_datetime(s.date)
     s["unit"] = s.unit.astype(str)
-    a = agents.rename(columns={"date": "_d"}).copy()
-    a["unit"] = a.unit.astype(str)
-    return pd.merge_asof(s.sort_values("_d"), a.sort_values("_d"),
-                         on="_d", by="unit", direction="nearest").drop(columns=["_d"])
+    a = attach_owners(s, agents, value_cols=("schedule_mw",))
+    return a.drop(columns=["pt", "share"]).rename(columns={"group": "firm"})
 
 
 def load_month(path: Path) -> pd.DataFrame:

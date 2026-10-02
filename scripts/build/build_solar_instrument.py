@@ -66,15 +66,15 @@ import pyarrow.parquet as pq
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
-from omie_owner import owner_group  # noqa: E402
+from unit_ownership import attach_owners, spells  # noqa: E402
 
 DATA = ROOT / "data"
 OUT = ROOT / "outputs/tables/solar_instrument.parquet"
 BIDS = DATA / "omie/bids/parquet"
 SUN_UP = 50.0   # W/m^2 of clear-sky irradiance below which kt is undefined
 EXCLUDE_OWNERS = {"EDP", "EDP COMERCIAL", "EDP DISTRIBUCAO"}
-# Large integrated groups, as named in owner_groups.parquet. TotalEnergies is
-# split across two group names there. IBERDESA is NOT included: nothing checked
+# Large integrated groups, as named in owner_groups.parquet. TOTAL was merged into
+# TOTALENERGIES on 2026-10-02; it stays listed for registries built before that. IBERDESA is NOT included: nothing checked
 # ties it to Iberdrola beyond the name.
 MAJORS = EXCLUDE_OWNERS | {"IBERDROLA", "ENDESA", "NATURGY", "REPSOL", "ACCIONA",
                            "TOTAL", "TOTALENERGIES", "ENGIE", "CEPSA"}
@@ -168,22 +168,32 @@ def realised_solar(periods: pd.DataFrame) -> pd.Series:
 
 
 def offered_solar() -> pd.DataFrame:
+    """Solar offered by units EDP does not own, and by units no major owns.
+
+    Ownership is by date and by share since 2026-10-02 (lib/unit_ownership.py):
+    a unit's offer counts times the share of its owners in force that day that
+    are not EDP (z_offered) or not a major (z_offered_indep). Until then each unit
+    was in or out for the whole window by its latest listed owner.
+    """
     u = pd.read_parquet(DATA / "omie/registry/unit_agents.parquet",
-                        columns=["unit", "role", "tech", "tech_omie", "tech_omie_early", "agent_owner"])
+                        columns=["unit", "role", "tech", "tech_omie", "tech_omie_early"])
     label = u.tech_omie.fillna(u.tech_omie_early).fillna(u.tech)
-    own = u.agent_owner.map(owner_group)
     solar = (label == "solar") & ~u.role.str.startswith("purchase")
-    units = sorted(u[solar & ~own.isin(EXCLUDE_OWNERS)].unit)
-    indep = set(u[solar & ~own.isin(MAJORS)].unit)
-    print(f"z_offered: {len(units)} solar-labelled supply units, EDP-owned excluded; "
-          f"z_offered_indep: {len(indep)} with every major excluded")
+    units = sorted(u.loc[solar, "unit"].astype(str))
+    sp = spells()
+    sp = sp[sp.unit.isin(set(units))]
+    print(f"z_offered: {len(units)} solar-labelled supply units, EDP's share excluded by date; "
+          f"z_offered_indep: every major's share excluded")
     parts = []
     for f in sorted(BIDS.glob("bids_*.parquet")):
         b = pq.read_table(f, columns=["date", "period", "unit", "side", "status", "power_mw"],
                           filters=[("unit", "in", units), ("side", "==", "V"),
                                    ("status", "==", "O")]).to_pandas()
-        b["indep_mw"] = b.power_mw.where(b.unit.isin(indep), 0.0)
-        g = b.groupby(["date", "period"])[["power_mw", "indep_mw"]].sum()
+        b["unit"] = b.unit.astype(str)
+        o = attach_owners(b, sp)
+        o["indep_mw"] = o.power_mw.where(~o.group.isin(MAJORS), 0.0)
+        o["power_mw"] = o.power_mw.where(~o.group.isin(EXCLUDE_OWNERS), 0.0)
+        g = o.groupby(["date", "period"])[["power_mw", "indep_mw"]].sum()
         parts.append(g.rename(columns={"power_mw": "z_offered",
                                        "indep_mw": "z_offered_indep"}).reset_index())
     d = pd.concat(parts, ignore_index=True)

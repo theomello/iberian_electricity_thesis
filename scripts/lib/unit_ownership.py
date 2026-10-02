@@ -17,12 +17,16 @@ DATED SALES. Between two snapshots a sale is invisible until the second one, so
 the sales that matter are dated by hand in ENTITY_CHANGES: an owner entity belongs
 to one group before the date and another from it. Spells are split there.
 
+UNIT SALES. A unit sold between two listings is dated in UNIT_CHANGES: the change
+the next listing shows takes effect on the sale date, not on the listing's date.
+
 FALLBACK. A unit no listing names keeps the inference chain's owner
 (`unit_agents.agent_owner`), share 1, for the whole window.
 
     sp = spells()                         # unit, start, end, owner, share, group, pt
     owners_on("ALZ1", pd.Timestamp("2024-01-15"), sp)
     attach_owners(bids, sp)               # one row per owner, power_mw x share
+    majority_group(df, sp)                # the largest owner's exposed group per row
 
 `group` is `omie_owner.owner_group` of the owner, or the dated group; `pt` flags a
 regulated pass-through owner (`omie_owner.is_pass_through`), whose group the
@@ -57,6 +61,16 @@ ENTITY_CHANGES = [
 ]
 
 
+# unit -> date: the change the next listing shows took effect on this date.
+UNIT_CHANGES = {
+    # Castejon 1 and 3, EDP's combined cycles, went to TotalEnergies with EDP's Spanish
+    # retail on 2020-12-01 (leg_c_panel.CASTEJON_SALE). The listings show EDP Espana on
+    # 2020-03-09 and EDP Comercializadora (TotalEnergies' from 2020-12-01) on 2022-02-08.
+    "CTJON1": "2020-12-01",
+    "CTJON3": "2020-12-01",
+}
+
+
 def _listed() -> pd.DataFrame:
     """unit, snapshot, owner, share (normalised within the unit-snapshot)."""
     l = pd.read_parquet(LISTS, columns=["snapshot", "unit", "agent_owner", "ownership_pct"])
@@ -85,6 +99,15 @@ def spells() -> pd.DataFrame:
     snaps["end"] = snaps.groupby("unit").snapshot.shift(-1).fillna(LATE)
     first = snaps.groupby("unit").snapshot.transform("min")
     snaps["start"] = snaps.snapshot.where(snaps.snapshot != first, EARLY)
+    # A dated unit sale: the first listing after the date takes effect on the date.
+    for u, d in UNIT_CHANGES.items():
+        d = pd.Timestamp(d)
+        su = snaps[(snaps.unit == u) & (snaps.snapshot > d)]
+        if su.empty:
+            continue
+        nxt = su.snapshot.min()
+        snaps.loc[(snaps.unit == u) & (snaps.snapshot == nxt), "start"] = d
+        snaps.loc[(snaps.unit == u) & (snaps.end == nxt), "end"] = d
     sp = l.merge(snaps, on=["unit", "snapshot"])
     # Split spells at the dated sales of an owner entity they contain.
     cuts = [pd.Timestamp(d) for pat, d, *_ in ENTITY_CHANGES]
@@ -139,3 +162,17 @@ def attach_owners(df: pd.DataFrame, sp: pd.DataFrame | None = None, unit_col: st
     for c in value_cols:
         out[c] = out[c] * out.share
     return out
+
+
+def majority_group(df: pd.DataFrame, sp: pd.DataFrame | None = None, unit_col: str = "unit",
+                   date_col: str = "date", exposed: bool = True) -> pd.Series:
+    """For each row of df, the group of the unit's largest owner in force that day
+    (None for a pass-through owner when `exposed`, or for a unit with no owner).
+    Aligned to df's index. Ties go to the owner listed first."""
+    sp = spells() if sp is None else sp
+    keys = df[[unit_col, date_col]].drop_duplicates()
+    a = attach_owners(keys, sp, unit_col=unit_col, date_col=date_col, value_cols=())
+    a = a.sort_values("share", ascending=False, kind="stable").drop_duplicates([unit_col, date_col])
+    g = a.group.where(~a.pt) if exposed else a.group
+    m = pd.Series(g.to_numpy(), index=pd.MultiIndex.from_frame(a[[unit_col, date_col]]))
+    return pd.Series(m.reindex(pd.MultiIndex.from_frame(df[[unit_col, date_col]])).to_numpy(), index=df.index)

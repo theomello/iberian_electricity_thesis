@@ -173,6 +173,12 @@ GROUP_MERGES: dict[str, tuple[str, str]] = {
         "Aldro Energia y Soluciones became ENI PLENITUDE IBERIA after Eni Plenitude "
         "bought it (2022); ESIOS gives both the agent ALDRO. One continuing retailer: "
         "the change of parent outside the five firms is not dated here"),
+    "IBERENERGIA": ("EDP",
+        "IBERENERGIA,S.A. holds Trillo's 15.5%: a 100% subsidiary of Hidroelectrica del "
+        "Cantabrico (EDP Espana), to which HC transferred the stake (El Periodico de la "
+        "Energia, 'EDP Espana pide a Industria traspasar la titularidad de su "
+        "participacion en Trillo a su filial Iberenergia'; CNMC INF/DE/0178/14). ESIOS "
+        "links it to Iberdrola only through Trillo's operator (merged 2026-10-02)"),
 }
 
 

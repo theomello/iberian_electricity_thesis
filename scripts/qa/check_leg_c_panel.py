@@ -51,19 +51,18 @@ def main() -> int:
     check(d.date.dt.year.between(2018, 2023).all(), "2018-2023 only")
     check(((d.cleared_mw > 0) & (d.cleared_mw < d.offered_mw)).all(), "every row partly dispatched")
     check(not ((d.firm == "REPSOL") & (d.date < "2018-11-02")).any(), "no REPSOL before 2018-11-02")
-    # X is built on one static owner per unit (firm_incentive_net), so a unit-period is
-    # kept only when its dated owner is that owner: the unit must sit inside its firm's X.
+    # X (firm_incentive_net) and the sample use the same dated, share-weighted ownership
+    # (lib/unit_ownership.py): each unit-period's firm is the unit's largest owner that day.
     import sys as _s
     _s.path.insert(0, str(ROOT / "scripts" / "lib"))
-    from omie_owner import exposed_group
-    ua = pd.read_parquet(ROOT / "data/omie/registry/unit_agents.parquet", columns=["unit", "agent_owner"])
-    static = ua.set_index("unit").agent_owner.map(exposed_group)
-    off = d.firm.to_numpy() != d.unit.map(static).to_numpy()
-    check(not off.any(), f"every unit-period sits inside its firm's (static-owner) X ({off.sum():,} do not)")
+    from unit_ownership import majority_group
+    off = d.firm.to_numpy() != majority_group(d).to_numpy()
+    check(not off.any(), f"every unit-period's firm is its largest owner in force that day ({off.sum():,} are not)")
     for unit in ("CTJON1", "CTJON3"):
         u = d[d.unit == unit]
-        check(len(u) > 0 and (u.date >= "2020-12-01").all() and (u.firm == "TOTALENERGIES").all(),
-              f"{unit}: TOTALENERGIES from its sale on 2020-12-01, none before ({len(u)} rows)")
+        pre, post = u[u.date < "2020-12-01"], u[u.date >= "2020-12-01"]
+        check(len(u) > 0 and (pre.firm == "EDP").all() and (post.firm == "TOTALENERGIES").all(),
+              f"{unit}: EDP's before its sale on 2020-12-01, TotalEnergies' after ({len(pre)} / {len(post)} rows)")
     check("min_load" in d and 0.05 < d.min_load.mean() < 0.30,
           f"min_load flags rows whose cleared volume is all priced at or below 5 EUR/MWh "
           f"({d.min_load.mean() if 'min_load' in d else float('nan'):.3f})")

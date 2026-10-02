@@ -28,7 +28,7 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 sys.path.insert(0, str(ROOT / "scripts" / "analysis"))
 from omie_owner import owner_group  # noqa: E402
-from unit_ownership import attach_owners, owners_on, spells  # noqa: E402
+from unit_ownership import attach_owners, majority_group, owners_on, spells  # noqa: E402
 
 FIRMS = ("EDP", "IBERDROLA", "ENDESA", "NATURGY", "REPSOL")
 
@@ -49,12 +49,13 @@ def main() -> int:
           "both PH Energia entities -> PH ENERGIA")
     check(owner_group("ALDRO ENERGIA Y SOLUCIONES S.L") == owner_group("ENI PLENITUDE IBERIA, S.L.U.")
           == "ENI PLENITUDE", "Aldro -> ENI PLENITUDE")
+    check(owner_group("IBERENERGIA,S.A.") == "EDP", "Iberenergia (Trillo's 15.5%) -> EDP")
 
     sp = spells()
     day = pd.Timestamp("2024-01-15")
     expect = {
         "ALZ1": {"IBERDROLA": 0.52687, "ENDESA": 0.36021, "NATURGY": 0.11292},
-        "TRL1": {"IBERDROLA": 0.49, "NATURGY": 0.345, "IBERENERGIA": 0.155, "ENDESA": 0.01},
+        "TRL1": {"IBERDROLA": 0.49, "NATURGY": 0.345, "EDP": 0.155, "ENDESA": 0.01},   # Iberenergia is EDP's
         "VAN2": {"ENDESA": 0.72, "IBERDROLA": 0.28},
         "ASC2": {"ENDESA": 0.85, "IBERDROLA": 0.15},
     }
@@ -74,6 +75,18 @@ def main() -> int:
     v1 = owners_on("VIES", pd.Timestamp("2018-11-02"), sp).group.tolist()
     check(v0 == ["VIESGO"] and v1 == ["REPSOL"], f"VIES (Viesgo hydro): VIESGO on 2018-11-01, REPSOL on 2018-11-02 "
           f"(got {v0} / {v1})")
+
+    for u in ("CTJON1", "CTJON3"):
+        c0 = owners_on(u, pd.Timestamp("2020-11-30"), sp).group.tolist()
+        c1 = owners_on(u, pd.Timestamp("2020-12-01"), sp).group.tolist()
+        check(c0 == ["EDP"] and c1 == ["TOTALENERGIES"], f"{u} (Castejon, sold with EDP's retail): EDP on "
+              f"2020-11-30, TotalEnergies on 2020-12-01 (got {c0} / {c1})")
+    nat = [owners_on(f"NATVD1{i}", pd.Timestamp("2019-06-01"), sp).group.tolist() for i in range(1, 6)]
+    check(all(g == ["EDP"] for g in nat), f"NATVD11-15 (EDP's parks via EDP Comercializadora) are EDP's in 2019 "
+          f"(got {nat}); this retired build_rival_solar.OWNER_FIX")
+    mj = majority_group(pd.DataFrame({"unit": ["ALZ1", "TRL1", "VAN2", "ASC1"], "date": [day] * 4}), sp)
+    check(mj.tolist() == ["IBERDROLA", "IBERDROLA", "ENDESA", "ENDESA"],
+          f"majority_group: ALZ1, TRL1 -> Iberdrola; VAN2, ASC1 -> Endesa (got {mj.tolist()})")
 
     ua = pd.read_parquet(ROOT / "data/omie/registry/unit_agents.parquet", columns=["unit", "agent_owner"]).dropna()
     unlisted = ua[~ua.unit.isin(set(lst.unit))]

@@ -15,15 +15,15 @@ DST days need no special case; the bid months are concatenated before neighbours
 Clean periods only (`firm_x.clean`: no market split, clearing identity holds), so the
 Spanish price is the price.
 
-OWNER. The majority owner in the OMIE listing in force that day (nearest preceding
-snapshot), as its exposed group (`omie_owner.exposed_group`). REPSOL rows before its
-Viesgo purchase (2018-11-02) are dropped, as in leg D. Castejon 1 and 3 are TotalEnergies'
-from their sale on 2020-12-01, which no listing dates. Because X (firm_incentive_net) is
-built on one static owner per unit, a unit-period is kept only when its dated owner is that
-static owner, so the unit always sits inside its own firm's X (leg D's rule); this drops
-Castejon before its sale and Plana del Vent while RWE's, and Amorebieta while Bizkaia
-Energia's (which has no X at all). X is undefined when rivals' slope is below 5 MW per
-EUR/MWh, as in firm_x.
+OWNER. The unit's largest owner in force that day, as its exposed group
+(`unit_ownership.majority_group`, 2026-10-02): the listing in force, with the dated
+sales of lib/unit_ownership.py (Castejon 1 and 3 TotalEnergies' from 2020-12-01;
+Viesgo's plant Repsol's only from 2018-11-02, VIESGO's before). X (firm_incentive_net)
+is built on the same dated, share-weighted ownership, so every unit-period sits inside its
+own firm's X. Until 2026-10-02 X used one static owner per unit and a unit-period was kept
+only when its dated owner was that static owner, which dropped Castejon before its sale,
+Plana del Vent while RWE's and Amorebieta while Bizkaia Energia's. X is undefined when
+rivals' slope is below 5 MW per EUR/MWh, as in firm_x.
 
 MINIMUM LOAD. `min_load` marks unit-periods whose every cleared MW was offered at or below
 5 EUR/MWh: the price then sits in the gap above a minimum-load tranche, not on a
@@ -54,8 +54,7 @@ sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 sys.path.insert(0, str(ROOT / "scripts" / "analysis"))
 sys.path.insert(0, str(ROOT / "scripts" / "build"))
 from build_rival_solar import thermal_groups  # noqa: E402
-from leg_d_panel import REPSOL_VIESGO  # noqa: E402
-from omie_owner import exposed_group  # noqa: E402
+from unit_ownership import majority_group, spells  # noqa: E402
 
 DATA = ROOT / "data"
 TABLES = ROOT / "outputs/tables"
@@ -69,8 +68,6 @@ MIN_LOAD_EUR = 5.0  # a unit whose every cleared MW is offered at or below this 
 # Castejon 1 and 3 passed to TotalEnergies on 2020-12-01 (EDP market notification, "EDP
 # concludes the sale to Total of 2 CCGT plants and B2C supply business in Spain"); the
 # listings show it only from the 2022-02-08 snapshot, there being none in between.
-CASTEJON_SALE = pd.Timestamp("2020-12-01")
-CASTEJON = ("CTJON1", "CTJON3")
 
 
 def unit_periods(f: Path, units: list[str]) -> pd.DataFrame:
@@ -103,17 +100,6 @@ def at_margin(up: pd.DataFrame) -> pd.Series:
     partly = ((up.cleared_mw > TOL) & (up.offered_mw - up.cleared_mw > TOL)).reset_index(drop=True)
     ok = partly & cleared_at(-step) & cleared_at(step)
     return pd.Series(ok.to_numpy(), index=up.index)
-
-
-def owner_listings(units: list[str]) -> pd.DataFrame:
-    """unit, date (snapshot), firm: the majority owner's exposed group in every OMIE listing."""
-    lst = pd.read_parquet(DATA / "omie/registry/omie_unit_lists.parquet",
-                          columns=["snapshot", "unit", "agent_owner", "ownership_pct"])
-    lst = lst[lst.unit.isin(units)].sort_values("ownership_pct", ascending=False)
-    lst = lst.drop_duplicates(["snapshot", "unit"]).copy()
-    lst["date"] = pd.to_datetime(lst.snapshot).astype("datetime64[us]")
-    lst["firm"] = lst.agent_owner.map(exposed_group)
-    return lst[["unit", "date", "firm"]].sort_values("date")
 
 
 def instruments(groups: tuple[str, ...]) -> pd.DataFrame:
@@ -163,18 +149,8 @@ def build(months: list[str] | None) -> pd.DataFrame:
     d = d.merge(clean, on=["date", "period"])
     d = d[d.clean].drop(columns="clean")
     print(f"  {len(d):,} in clean periods")
-    left = d.assign(date=d.date.astype("datetime64[us]")).sort_values("date")
-    d = pd.merge_asof(left, owner_listings(units), on="date", by="unit", direction="backward")
-    d.loc[d.unit.isin(CASTEJON) & (d.date >= CASTEJON_SALE), "firm"] = "TOTALENERGIES"
-    d = d[~((d.firm == "REPSOL") & (d.date < REPSOL_VIESGO))]
-    # firm_incentive_net builds each firm's X on ONE static owner per unit, so a unit-period
-    # whose dated owner differs would sit outside its own firm's X (its sales left out of n,
-    # its offers counted as a rival's). Keep only unit-periods inside their firm's X.
-    ua = pd.read_parquet(DATA / "omie/registry/unit_agents.parquet", columns=["unit", "agent_owner"])
-    static = ua.set_index("unit").agent_owner.map(exposed_group)
-    inside = d.firm.to_numpy() == d.unit.map(static).to_numpy()
-    print("  outside their firm's static X (dropped):", d.loc[~inside].groupby(["unit", "firm"]).size().to_dict())
-    d = d[inside]
+    d = d.assign(date=d.date.astype("datetime64[us]"))
+    d["firm"] = majority_group(d, spells())
     groups = thermal_groups()
     x = pd.read_parquet(TABLES / "firm_incentive_net.parquet",
                         columns=["date", "period", "firm", "net_exp_mw", "slope_exp_h5"],

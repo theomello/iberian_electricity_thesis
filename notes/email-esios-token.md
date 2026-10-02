@@ -4,6 +4,15 @@ Draft, 2026-08-21; purpose updated 2026-10-01 for the framework's instruments
 (day-ahead forecasts as variation exogenous to the firms; spec §8 steps 5b–6).
 **Address: `consultasios@ree.es`**
 
+**Outcome: sent 2026-10-01, token received 2026-10-02** (in `.env`). REE's desk
+replied that requests now go through the form at
+https://www.esios.ree.es/es/token (since 2026-09-18); the token itself came by
+automated email the same morning. It is personal, and REE asks that data already
+downloaded is not requested again (`fetch_esios_spain.py` caches every month).
+**Use 1777/1779/1775, not 541/542** as this draft asks: those two are
+republished hourly up to delivery, while 1777 (wind), 1779 (solar) and 1775
+(demand) are the forecasts published before 11:00 on D-1, from 2019.
+
 Spanish first, since that is a Spanish-language support desk and the OMIE
 request in this repo was also sent in Spanish. An English version follows if you
 prefer it.

@@ -8,8 +8,11 @@ process environment. Never commit them.
 
 How to obtain them (both free, both require a human):
 
-* **ESIOS** -- email ``consultasios@ree.es`` requesting a personal API token.
-  They reply with a key used as the ``x-api-key`` header.
+* **ESIOS** -- request a personal token with the form at
+  https://www.esios.ree.es/es/token (REE's route since 2026-09-18; its desk
+  answers email requests by pointing there). It arrives by email and goes in the ``x-api-key``
+  header (checked 2026-10-02). It is personal, and REE asks that data already
+  downloaded is not requested again.
 * **ENTSO-E** -- register at https://transparency.entsoe.eu, then email
   ``transparency@entsoe.eu`` from the registered address asking for API
   access. The token then appears in your account settings.

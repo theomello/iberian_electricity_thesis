@@ -65,8 +65,9 @@ WHAT THIS STILL CANNOT SEPARATE
 closure, intraday supply is higher and its price lower, producing a premium with
 no conduct at all — and that error is correlated with wind itself, so it mimics
 the arbitrage channel exactly. Separating them needs a published day-ahead wind
-forecast (ESIOS indicator 541, token required; there is no `.env` in this repo).
-Until then, `dπ/dwind < 0` is consistent with both stories and should be reported
+forecast: ESIOS 1777, REE's D+1 wind forecast, on disk from 2019 since 2026-10-02
+(not 541, which REE updates hourly up to delivery). Until this design is rerun
+with it, `dπ/dwind < 0` is consistent with both stories and should be reported
 as such. The heat channel is *not* subject to this, which is a reason to weight
 it more heavily than its size would suggest.
 """

@@ -795,6 +795,11 @@ and ESIOS indicator 541 **and `/archives` itself** return HTTP 403 without a
 token — so the token-free archive route that works for archives 82 and 83 does
 not extend to indicators. See [`notes/email-esios-token.md`](notes/email-esios-token.md).
 
+**Resolved 2026-10-02**: the ESIOS token arrived, and REE's day-ahead wind, solar
+and demand forecasts are on disk — see the ESIOS section below. Prefer ESIOS 1775
+to this file for demand: its publication time (before 11:00 on D-1) is stated,
+this one's is not.
+
 ### REN Portugal — complete
 `servicebus.ren.pt/datahubapi/electricity`, token-free, documented at
 https://datahub.ren.pt/pt/instrucoes-api/. Portugal is **inside** MIBEL, not
@@ -822,10 +827,41 @@ capacity has **no token-free Spanish source**, but Portugal publishes it.
 The price series is also the independent check on the OMIE parse — see the
 trap below.
 
-### ESIOS / ENTSO-E — installed capacity only
-Only **installed capacity** still lacks a source: REE's `potencia-instalada`
-returns HTTP 500 under every parameter combination tried. Tokens are needed
-for that alone; see `config.py`. Both scripts are written but never executed.
+### ESIOS — REE's day-ahead forecasts (token, from 2026-10-02)
+`data/esios/esios_{1775,1777,1779}.parquet`, fetched 2026-10-02 by
+`fetch/fetch_esios_spain.py --forecasts`: **67,967 hours each, 2019-01-01 →
+2026-10-02, every day present**, peninsular, hourly energy in MWh — still hourly
+after the day-ahead market's 15-minute switch. Columns: `indicator_id,
+indicator_name, value, datetime` (local) `, utc_timestamp, geo_id, geo_name`.
+
+| id | forecast | hourly corr. with REE realtime | mean forecast ÷ realised |
+|---|---|---|---|
+| 1775 | demand | 0.990 | 0.94 |
+| 1777 | wind | 0.965 | 0.98 |
+| 1779 | photovoltaic solar | 0.992 | 0.98 |
+
+Compared with `ree_realtime_5min.parquet` to 2025-12-11. The 6% demand gap is
+not explained; the realtime series may cover more than the peninsula (not checked).
+
+**These are what bidders knew**: REE publishes them before 11:00 on D-1, an hour
+before day-ahead offers close at 12:00 (the catalogue's own description). This is
+the instrument the step-offer design needs (`docs/specs/2026-10-01-step-offer-design.md`
+§5.1). **There is no 2018**: the series start 2019-01-01. ENTSO-E's Spanish
+forecast covers 2018 but is due only by 18:00 on D-1, so it fills the gap only if
+it matches 1777/1779 from 2019 on — check before using it.
+
+**The token** sits in the gitignored `.env` as `ESIOS_TOKEN`, sent as the
+`x-api-key` header. It is personal, and REE asks that data already downloaded is
+not requested again, so the fetcher caches every month as returned in
+`data/esios/raw/<id>/<YYYYMM>.json` and never re-requests a complete one. New
+tokens: the form at https://www.esios.ree.es/es/token. The catalogue (1,983
+indicators) is cached in `data/esios/indicator_catalogue.parquet`; search it
+offline with `--search`.
+
+**Installed capacity** is in the catalogue too (1475–1491, by technology), the
+one series REE's `potencia-instalada` never delivered (HTTP 500 under every
+parameter combination). Not fetched. ENTSO-E's token is still pending (ticket
+#9472601); `fetch/fetch_entsoe_spain.py` is written but never executed.
 
 ### MITECO reservoir levels — the missing water-value state variable
 `data/miteco/embalses_historico.parquet`, fetched 2026-08-18, token-free.
@@ -1385,6 +1421,18 @@ with or without geo parameters, while working at `time_trunc=day`. Use
 
 `potencia-instalada` returns HTTP 500 under every combination tried. That is
 the one series with no token-free source.
+
+### ESIOS 541 and 542 are not the day-ahead forecasts
+Found 2026-10-02, before the first fetch. Indicator 541 *Previsión de la
+producción eólica peninsular* and 542 *Generación prevista Solar fotovoltaica*
+read like the day-ahead forecasts, and this repo's notes and the token request
+named them. Their catalogue descriptions say REE **republishes them every hour**
+up to the end of D+1, so the value stored for an hour is a late update holding
+information bidders did not have at noon on D-1. Used as an instrument, it would
+carry part of the forecast surprise back in. The day-ahead vintage is 1777
+(wind), 1779 (solar) and 1775 (demand), published before 11:00 on D-1.
+**Read an ESIOS indicator's description for its publication time before using
+it as a forecast.**
 
 ### REE realtime is JSONP with a letter-coded DST hour
 The body is wrapped as ``null({...});`` and must have the wrapper stripped

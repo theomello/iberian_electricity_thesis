@@ -166,8 +166,13 @@ before the noon deadline and are not the firms' choices.
      registration (*to verify*). Needs farm locations matched to OMIE units:
      RAIPEE (MITECO's register of generating installations), OpenStreetMap,
      Global Energy Monitor.
-- **Demand forecast**: REE's day-ahead forecast is on disk
-  (`ree_demand_forecast_5min.parquet`); it shifts the level of residual demand.
+- **Spain's forecasts are on disk** (2026-10-02): REE's wind (ESIOS 1777),
+  solar (1779) and demand (1775) forecasts, published before 11:00 on D-1, hourly
+  from 2019-01-01. Not 541/542, which REE republishes hourly up to delivery.
+  2018 has none: ENTSO-E's Spanish series fills it only if it matches 1777 from
+  2019 on (its publication deadline, 18:00 on D-1, is after the auction).
+- **Demand forecast**: 1775 shifts the level of residual demand. It replaces
+  `ree_demand_forecast_5min.parquet`, whose publication time is not stated.
 
 ### 5.2 Planned outages of a firm's other units
 
@@ -314,9 +319,10 @@ Already published: the cap's price effect, exports to France, congestion rents.
 
 | item | status |
 |---|---|
-| ENTSO-E day-ahead wind and solar forecasts (ES, PT); per-plant generation; unavailability (Art. 15.1) | token requested 2026-10-01 (ticket #9472601); `fetch/fetch_entsoe_spain.py` written, never run; 400 requests per minute |
-| ESIOS forecasts (indicators 541, 542, demand), unit programmes | token requested 2026-10-01 (`notes/email-esios-token.md`); `fetch/fetch_esios_spain.py` written, never run |
-| REE demand forecast | on disk |
+| ENTSO-E day-ahead wind and solar forecasts (ES, PT); per-plant generation; unavailability (Art. 15.1) | token requested 2026-10-01 (ticket #9472601); `fetch/fetch_entsoe_spain.py` written, never run; 400 requests per minute; needed for Portugal and for Spain in 2018 |
+| ESIOS D+1 forecasts: demand 1775, wind 1777, solar 1779 | **on disk 2026-10-02**, hourly 2019-01-01 → 2026-10-02 (`data/esios/esios_{id}.parquet`); `qa/check_esios_forecasts.py` |
+| ESIOS unit programmes | token in hand; not fetched |
+| REE demand forecast, 5-minute | on disk; superseded by ESIOS 1775 |
 | SNIRH spill, storage, inflows, turbined flow | on disk (LMU eduVPN only) |
 | farm locations and owners (RAIPEE, OSM, GEM); site forecasts (Open-Meteo, TIGGE) | to fetch; coverage *to verify* |
 | hydro plant map for Spain (τ per unit) | to build from JRC hydro |
@@ -332,7 +338,8 @@ Already published: the cap's price effect, exports to France, congestion rents.
    bunching at 50 and 10 MW; τ per unit and how many firm-hours hold both taxed
    and untaxed hydro.
 3. **When the tokens arrive:** fetch the forecasts; first-stage probe of own-fleet
-   and rivals'-fleet forecasts on each firm's n, |RD′| and X.
+   and rivals'-fleet forecasts on each firm's n, |RD′| and X. *ESIOS fetched
+   2026-10-02 (Spain, 2019 on); ENTSO-E pending.*
 4. **Build the step estimator** on thermal firm-periods, gas-cap window first.
 5. **Water value**: spill anchor and forward proxy; the dynamic program for EDP's
    Portuguese cascades as its own project.
@@ -346,4 +353,7 @@ Already published: the cap's price effect, exports to France, congestion rents.
 - Portugal has no revenue levy equivalent to the canon; EDP's Spanish hydro is in
   Asturias; the canon's coverage of basins inside one region.
 - Spanish nuclear stopping at low prices since 2024.
-- ESIOS token header (`x-api-key` or `Authorization: Token`).
+- ~~ESIOS token header (`x-api-key` or `Authorization: Token`).~~ `x-api-key`,
+  checked 2026-10-02.
+- Whether ENTSO-E's Spanish day-ahead wind and solar forecast is REE's 11:00
+  forecast (compare with ESIOS 1777/1779 from 2019); if so, it fills 2018.

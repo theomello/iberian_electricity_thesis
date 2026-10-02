@@ -66,10 +66,11 @@ exactly. Checked 2026-08-21 and there is **no token-free route**:
   archives 82 and 83 does not extend to it.
 * ENTSO-E's transparency platform requires a token too.
 
-A personal ESIOS token is free but must be requested by email
-(`consultasios@ree.es`; see `scripts/lib/config.py`). Until someone does that,
-the wind-forecast-error confound in `rq-sequential-market-premium.md` §6 cannot
-be separated from the arbitrage channel.
+Resolved 2026-10-02: an ESIOS token is in `.env`, and REE's day-ahead wind,
+solar and demand forecasts (ESIOS 1777, 1779, 1775 -- not 541, which REE
+updates hourly up to delivery) come from `fetch_esios_spain.py --forecasts`.
+The wind-forecast-error confound in `rq-sequential-market-premium.md` §6 can now
+be separated from the arbitrage channel, from 2019 on.
 
 TIMEZONE — AND THE TRAP THIS FILE WALKED INTO ANYWAY
 

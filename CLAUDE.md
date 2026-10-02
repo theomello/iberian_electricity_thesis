@@ -26,7 +26,9 @@ deliberately, restated in Spanish-market terms.
 ## Environment
 
 Python lives in `.venv` (Python 3.14, pandas 3.0, pyarrow 25). Always use
-`.venv/bin/python`, never bare `python3`.
+`.venv/bin/python`, never bare `python3`. Added 2026-10-02 for the rainfall data:
+xarray 2026.9.0 and netCDF4 1.7.4 (E-OBS), shapely 2.1.2 and pyshp 3.1.6
+(HydroBASINS). There is no requirements file.
 
 ```bash
 .venv/bin/python scripts/fetch/fetch_omie_prices.py
@@ -76,6 +78,8 @@ scripts/
 | `fetch/fetch_esios_spain.py` | ESIOS | **yes** | `data/esios/esios_{id}.parquet`, `esios_installed_capacity.parquet` |
 | `fetch/fetch_entsoe_spain.py` | ENTSO-E | **yes** | `data/entsoe/entsoe_{series}_{zone}.parquet` |
 | `fetch/fetch_hydro_precipitation.py` | Open-Meteo ERA5 | no | `data/weather/precipitation_basins_daily.parquet` |
+| `fetch/fetch_eobs_precipitation.py` | E-OBS v33.0e (KNMI) | no | `data/eobs/eobs_rr_iberia_daily.parquet` |
+| `fetch/fetch_hydrobasins.py` | HydroBASINS v1c (HydroSHEDS) | no | `data/hydrosheds/hybas_iberia_lev{08,10,12}.parquet` |
 | `fetch/fetch_population_temperature.py` | Open-Meteo ERA5 | no | `data/weather/temperature_population_index.parquet` |
 | `fetch/fetch_omie_unavailability.py` | OMIE `indisp` | no | `data/omie/indisp/parquet/indisp_YYYYMM.parquet` |
 | `fetch/fetch_omie_interconnection.py` | OMIE `capacidad_inter_pbc` | no | `data/omie/interconnection/omie_interconnection_capacity.parquet` |
@@ -355,8 +359,8 @@ below are wrong, and the `IGN` note is wrong in its reasoning even though it
 was right to reject Iberdrola.
 
 **`agent_owner` names legal entities; `build_owner_groups.py` rolls them up.**
-`data/omie/registry/owner_groups.parquet` maps **1,451 owner strings to 1,097
-groups** on three evidence layers: the independent ESIOS chain's verdict on an
+`data/omie/registry/owner_groups.parquet` maps **1,451 owner strings to 1,091
+groups** (1,096 before the 2026-10-02 merges) on three evidence layers: the independent ESIOS chain's verdict on an
 entity's own units (**81.7%** of supply volume), a stem match onto a group that
 layer established (2.0%), seven hand-verified cases (0.3%), and **13.3% left
 standing as their own group** because no merge evidence was found.
@@ -376,6 +380,37 @@ is merged on the same mechanism; the midday-hydro panels already counted it in
 EDP's net position and the firm panel did not. Without the roll-up
 `SU ELETRICIDADE` — 7.3% of supply volume, EDP's Portuguese regulated supplier —
 reads as a firm in its own right, and Repsol splits across nine entities.
+
+**Seven more merges on 2026-10-02, all renamings** the layers had left apart
+(notes/report-ownership-mapping.md): Total → TotalEnergies, Clidom → Holaluz, both
+BP entities (the stems had taken "GAS" and "GAS EUROPE"), both PH Energia
+entities (the stems had taken the Portuguese legal forms "LDA" and "UNIPESSOAL"),
+Aldro → Eni Plenitude. Exactly ten owner strings changed group.
+
+**Ownership by date and by share — `lib/unit_ownership.py` (2026-10-02).** Until
+then the firm panels gave each unit its latest listed owner for the whole window.
+That put each **co-owned nuclear reactor whole with one co-owner, not always the
+largest**: Almaraz 1 (Iberdrola 52.7%, Endesa 36.0%, Naturgy 11.3%) and Trillo
+(Iberdrola 49%, Naturgy 34.5%, Iberenergía 15.5%, Endesa 1%) went to Naturgy,
+Vandellós II (Endesa 72%, Iberdrola 28%) to Iberdrola. Over 2018–2026 that
+overstated Naturgy's average net position by about 315 MW, half its mean, and
+understated Endesa's by about 268 MW. It also left sold businesses with their
+buyer for the whole window: EDP Comercializadora (EDP's Spanish retail, sold to
+TotalEnergies on 2020-12-01) and Viesgo (Repsol's only from 2018-11-02).
+
+The module gives the owners in force on any date: each listing's owners from its
+date to the next listing naming the unit, shares normalised to 1, spells split at
+the dated sales in `ENTITY_CHANGES`, and the inference chain's owner (share 1) for
+units no listing names. `attach_owners` splits a row across owners with its volume
+times each share. `firm_x.py`, `firm_incentive_rebuild.py` and
+`residual_demand_firm.py --tier owner` use it; `qa/check_unit_ownership.py` pins the
+reactors' shares, the sale dates, and that January 2024 rebuilt through each of the
+three differs from the static attribution by exactly the share changes.
+**The stored panels (`firm_x`, `firm_incentive_net`, `firm_residual_demand_full_owner`)
+and every result built on them predate the fix until they are rebuilt.** Other
+scripts still read `unit_agents.agent_owner` directly (`grep owner_group scripts`).
+Iberenergía (Trillo's 15.5%) is unresolved: the ESIOS chain links it to Iberdrola
+only through the reactor's operator, and EDP is the public holder of that stake.
 
 **Regulated pass-through suppliers are excluded from every firm's net position**
 (`is_pass_through` / `exposed_group` in `lib/omie_owner.py`, pinned by
@@ -1113,6 +1148,33 @@ flow: missing in the two windows, and not to be rescaled by 1,000 without a
 check against OMIE pumping schedules. Timestamps are **Lisbon** local time; the
 autumn repeated hour appears once. Pumped flow is recorded at only five of the
 pumped-storage stations (not Baixo Sabor, Foz Tua, Frades II or Gouvães).
+
+### E-OBS — gridded daily rainfall over the whole peninsula
+`data/eobs/eobs_rr_iberia_daily.parquet`, fetched 2026-10-02 by
+`fetch/fetch_eobs_precipitation.py`: **14,685,316 cell-days, 1,130 land cells at
+0.25°, 1991-01-01 → 2026-07-31, no day missing**. Columns `date, lat, lon, rr`
+(mm/day). E-OBS v33.0e is the European gridded dataset interpolated from weather
+stations (ECA&D, KNMI; Cornes et al. 2018): the 1950–2025 file (738 MB) plus KNMI's
+2026 file (68 MB, extended month by month and re-fetched when its size changes),
+both kept in `data/eobs/raw/`. Non-commercial research use only; cite it.
+Mean annual rainfall over the cells, 1991–2020: 616 mm.
+
+It replaces the single ERA5 points of `fetch_hydro_precipitation.py` for anything
+needing coverage: Open-Meteo's free tier counts every two weeks of data per point
+as a call, about 220 calls per point for 2018–2026 against 10,000 a day, so a grid
+is out of reach there. Starting in 1991 gives 1991–2020 normals to measure
+anomalies against. **No snowfall**: E-OBS rr is total precipitation.
+
+### HydroBASINS — sub-basins and the river network
+`data/hydrosheds/hybas_iberia_lev{08,10,12}.parquet`, fetched 2026-10-02 by
+`fetch/fetch_hydrobasins.py` from HydroSHEDS' `hybas_eu_lev01-12_v1c.zip` (361 MB,
+kept in `data/hydrosheds/raw/`; free licence, cite Lehner & Grill 2013). Level 12:
+**4,952 sub-basins, 647,959 km²** inside 35.8–44.0 N, 9.6 W–3.4 E (so a little of
+France and Morocco). Columns `HYBAS_ID, NEXT_DOWN, MAIN_BAS, SUB_AREA, UP_AREA,
+PFAF_ID, ORDER, wkb` (shapely geometry). `NEXT_DOWN` is the sub-basin each drains
+into, so a dam's upstream catchment is its sub-basin plus everything draining into
+it. 20 level-12 sub-basins drain outside the box (French and Moroccan rivers); no
+Spanish or Portuguese river does.
 
 ### EDP moved ~1,000 MW from `ACAVADO` to `ALIMA` in March 2024
 `cab` max power goes 1,632 → 632 MW for `ACAVADO` ("CAVADO") and 652 → 1,652

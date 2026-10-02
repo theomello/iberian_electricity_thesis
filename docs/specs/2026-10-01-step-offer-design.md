@@ -171,6 +171,11 @@ before the noon deadline and are not the firms' choices.
   from 2019-01-01. Not 541/542, which REE republishes hourly up to delivery.
   2018 has none: ENTSO-E's Spanish series fills it only if it matches 1777 from
   2019 on (its publication deadline, 18:00 on D-1, is after the auction).
+- **Divide by capacity.** Solar capacity grew from 4.4 to 55 GW over the window,
+  and that build-out was the firms' choice. Forecast ÷ installed capacity (ESIOS,
+  monthly, per region; on disk) is the expected capacity factor: weather alone.
+  It also gives the national denominator for tier 2 and the regional weights
+  for a cheaper version of tier 3.
 - **Demand forecast**: 1775 shifts the level of residual demand. It replaces
   `ree_demand_forecast_5min.parquet`, whose publication time is not stated.
 
@@ -320,7 +325,8 @@ Already published: the cap's price effect, exports to France, congestion rents.
 | item | status |
 |---|---|
 | ENTSO-E day-ahead wind and solar forecasts (ES, PT); per-plant generation; unavailability (Art. 15.1) | token requested 2026-10-01 (ticket #9472601); `fetch/fetch_entsoe_spain.py` written, never run; 400 requests per minute; needed for Portugal and for Spain in 2018 |
-| ESIOS D+1 forecasts: demand 1775, wind 1777, solar 1779 | **on disk 2026-10-02**, hourly 2019-01-01 → 2026-10-02 (`data/esios/esios_{id}.parquet`); `qa/check_esios_forecasts.py` |
+| ESIOS D+1 forecasts: demand 1775, wind 1777, solar 1779 | **on disk 2026-10-02**, hourly 2019-01-01 → 2026-10-02 (`data/esios/esios_{id}.parquet`); `qa/check_esios.py` |
+| ESIOS installed capacity by technology and region | **on disk 2026-10-02**, monthly 2015-01 → 2026-10, 19 regions (`esios_installed_capacity.parquet`) |
 | ESIOS unit programmes | token in hand; not fetched |
 | REE demand forecast, 5-minute | on disk; superseded by ESIOS 1775 |
 | SNIRH spill, storage, inflows, turbined flow | on disk (LMU eduVPN only) |

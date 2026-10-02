@@ -73,7 +73,7 @@ scripts/
 | `fetch/fetch_ree_realtime.py` | REE `demanda.ree.es` | no | `data/ree/ree_realtime_5min.parquet` |
 | `fetch/fetch_ree_demand_forecast.py` | REE `demanda.ree.es` | no | `data/ree/ree_demand_forecast_5min.parquet` |
 | `fetch/fetch_ren_portugal.py` | REN `servicebus.ren.pt` | no | `data/ren/ren_{production_15min,installed_power_monthly,market_prices,consumption_supply_daily}.parquet` |
-| `fetch/fetch_esios_spain.py` | ESIOS | **yes** | `data/esios/esios_{id}.parquet` |
+| `fetch/fetch_esios_spain.py` | ESIOS | **yes** | `data/esios/esios_{id}.parquet`, `esios_installed_capacity.parquet` |
 | `fetch/fetch_entsoe_spain.py` | ENTSO-E | **yes** | `data/entsoe/entsoe_{series}_{zone}.parquet` |
 | `fetch/fetch_hydro_precipitation.py` | Open-Meteo ERA5 | no | `data/weather/precipitation_basins_daily.parquet` |
 | `fetch/fetch_population_temperature.py` | Open-Meteo ERA5 | no | `data/weather/temperature_population_index.parquet` |
@@ -853,15 +853,48 @@ it matches 1777/1779 from 2019 on — check before using it.
 **The token** sits in the gitignored `.env` as `ESIOS_TOKEN`, sent as the
 `x-api-key` header. It is personal, and REE asks that data already downloaded is
 not requested again, so the fetcher caches every month as returned in
-`data/esios/raw/<id>/<YYYYMM>.json` and never re-requests a complete one. New
+`data/esios/raw/<id>/` and never re-requests a complete one. New
 tokens: the form at https://www.esios.ree.es/es/token. The catalogue (1,983
 indicators) is cached in `data/esios/indicator_catalogue.parquet`; search it
 offline with `--search`.
 
-**Installed capacity** is in the catalogue too (1475–1491, by technology), the
-one series REE's `potencia-instalada` never delivered (HTTP 500 under every
-parameter combination). Not fetched. ENTSO-E's token is still pending (ticket
-#9472601); `fetch/fetch_entsoe_spain.py` is written but never executed.
+**Installed capacity — `data/esios/esios_installed_capacity.parquet`**, fetched
+2026-10-02 by `--capacity`: **26,709 rows, 19 indicators, monthly, 2015-01 →
+2026-10, per autonomous community** (19 regions). It is the one series REE's
+`potencia-instalada` never delivered (HTTP 500 under every parameter combination).
+The 19: 17 technologies (1475–1491), the total (10300) and self-consumption
+(10413). They need `time_trunc=month`; without it the API answers HTTP 500.
+
+Peninsular capacity, GW:
+
+| | 2018-01 | 2022-01 | 2026-10 |
+|---|---|---|---|
+| wind (1485) | 22.9 | 28.1 | 32.9 |
+| photovoltaic (1486) | 4.4 | 16.2 | 55.1 |
+| combined cycle (1483) | 24.9 | 24.6 | 24.6 |
+| coal (1478) | 9.6 | 3.5 | 1.3 |
+| nuclear (1477) | 7.1 | 7.1 | 7.1 |
+| self-consumption (10413) | 1.2 | 3.3 | 11.3 |
+
+**Peninsular = every region except `NON_PENINSULAR`** in the fetcher: the Balearic
+and Canary Islands, Ceuta and Melilla, four separate electrical systems.
+
+**Pure pumped storage (1476, 3,331 MW) is outside both hydro (1475) and the
+total (10300)**: REE counts it as storage. The other 16 technologies sum to the
+total to the megawatt in every month; add 1476 and the sum overshoots by 3,331 MW.
+
+Validated against REE's realtime output (`qa/check_esios.py`): the highest hourly
+nuclear output equals nuclear capacity to within 0.3% in every year 2018–2026,
+which fixes the units (MW, not summed over days). For solar the same ratio falls
+from 0.89 (2018) to 0.54 (2025); midday curtailment fits that, so it does not
+test whether capacity is overstated. Not compared with REE's annual reports.
+
+Uses: dividing a forecast by capacity separates weather from the firms' own
+investment (step-offer design §5.1); it is the denominator of each firm's
+capacity share; the regions allow regional weather × regional capacity.
+
+ENTSO-E's token is still pending (ticket #9472601); `fetch/fetch_entsoe_spain.py`
+is written but never executed.
 
 ### MITECO reservoir levels — the missing water-value state variable
 `data/miteco/embalses_historico.parquet`, fetched 2026-08-18, token-free.

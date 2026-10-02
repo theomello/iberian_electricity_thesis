@@ -13,8 +13,8 @@ FILE (downloaded 2026-10-02 on the user's approval): hybas_eu_lev01-12_v1c.zip,
 use under the HydroSHEDS licence; cite Lehner & Grill (2013).
 
 OUTPUT: data/hydrosheds/hybas_iberia_lev{LEVEL}.parquet for the levels in LEVELS:
-HYBAS_ID, NEXT_DOWN, MAIN_BAS, SUB_AREA, UP_AREA (km2), PFAF_ID, ORDER, and the
-polygon as WKB (shapely). Iberian = the sub-basin's bounding box intersects
+HYBAS_ID, NEXT_DOWN, MAIN_BAS, SUB_AREA, UP_AREA (km2), PFAF_ID, ORDER, ENDO, and
+the polygon as WKB (shapely). Iberian = the sub-basin's bounding box intersects
 35.8-44.0 N, 9.6 W - 3.4 E; the river network inside the peninsula is closed, so
 no catchment of a Spanish or Portuguese dam leaves the selection. The raw zip
 stays in data/hydrosheds/raw/.
@@ -39,7 +39,9 @@ RAW = OUT / "raw"
 ZIP = RAW / "hybas_eu_lev01-12_v1c.zip"
 LEVELS = (8, 10, 12)
 BBOX = (-9.6, 35.8, 3.4, 44.0)  # lon_min, lat_min, lon_max, lat_max
-FIELDS = ["HYBAS_ID", "NEXT_DOWN", "MAIN_BAS", "SUB_AREA", "UP_AREA", "PFAF_ID", "ORDER"]
+# ENDO: 0 not endorheic, 1 part of an endorheic basin, 2 its sink. An endorheic
+# sub-basin can carry a NEXT_DOWN link while its water never reaches that river.
+FIELDS = ["HYBAS_ID", "NEXT_DOWN", "MAIN_BAS", "SUB_AREA", "UP_AREA", "PFAF_ID", "ORDER", "ENDO"]
 
 
 def download(sess) -> None:
@@ -69,7 +71,9 @@ def level(zf: zipfile.ZipFile, lev: int) -> pd.DataFrame:
         x0, y0, x1, y1 = shp.bbox
         if x1 < BBOX[0] or x0 > BBOX[2] or y1 < BBOX[1] or y0 > BBOX[3]:
             continue
-        keep.append(dict(zip(FIELDS, rec)) | {"wkb": shape(shp.__geo_interface__).wkb})
+        # By name: pyshp returns the requested fields in the FILE's order, not FIELDS'.
+        d = rec.as_dict()
+        keep.append({f: d[f] for f in FIELDS} | {"wkb": shape(shp.__geo_interface__).wkb})
     return pd.DataFrame(keep)
 
 

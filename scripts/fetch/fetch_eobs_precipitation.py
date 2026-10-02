@@ -86,6 +86,17 @@ def main() -> int:
     d = pd.concat(parts, ignore_index=True)
     d["date"] = pd.to_datetime(d.date)
     d = d.drop_duplicates(["date", "lat", "lon"], keep="last")
+    # KNMI's monthly file can be incomplete on its latest days (on 2026-10-02, six
+    # southern cells were missing on 2026-07-31). Drop trailing days reporting fewer
+    # cells than the usual count, so the series ends on the last complete day.
+    per_day = d.groupby("date").size()
+    usual = int(per_day.median())
+    short = per_day[per_day < usual]
+    tail = short.index[short.index > per_day[per_day >= usual].index.max()]
+    if len(tail):
+        print(f"  dropped {len(tail)} incomplete trailing day(s): {[str(x.date()) for x in tail]} "
+              f"({short[tail].min()} of {usual} cells)")
+        d = d[~d.date.isin(tail)]
     cells = d.groupby(["lat", "lon"]).size()
     out = OUT / "eobs_rr_iberia_daily.parquet"
     d.sort_values(["date", "lat", "lon"]).to_parquet(out, index=False)

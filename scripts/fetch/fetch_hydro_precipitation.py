@@ -74,6 +74,18 @@ BASINS = [
     ("galicia_sil_mino", 42.50, -7.60),
     ("cantabrico",     43.20, -3.80),
     ("segura",         38.10, -1.30),
+    # Added 2026-10-02 for the own-basin rainfall design (notes/rq-hydro-rain-first-stage.md):
+    # the five firms' cascades the points above miss or represent badly. One point each,
+    # near the reservoirs, not a basin average.
+    ("pirineo",        42.40,  0.85),   # Endesa's Ebro-Fecsa-Enher (Noguera Pallaresa/Ribagorzana)
+    ("catalunya_ter",  41.98,  2.40),   # Endesa's Ter (Sau, Susqueda)
+    ("galicia_costa",  42.95, -8.55),   # Naturgy's UF-Galicia Costa (Tambre, Ulla)
+    ("pt_lima_cavado", 41.80, -8.05),   # EDP's Lima and Cavado (Alto Lindoso, Alto Rabagao)
+    ("pt_douro",       41.20, -7.20),   # EDP's and Movhera's Douro dams
+    ("pt_tamega",      41.55, -7.80),   # Iberdrola's Tamega scheme (Gouvaes, Daivoes)
+    ("pt_mondego",     40.40, -7.90),   # EDP's Mondego (Aguieira)
+    ("pt_tejo_zezere", 39.90, -8.10),   # EDP's Tejo-Mondego system (Castelo do Bode, Cabril)
+    ("pt_guadiana",    38.30, -7.40),   # EDP's Alqueva
 ]
 
 

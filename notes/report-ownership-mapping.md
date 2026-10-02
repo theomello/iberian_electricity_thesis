@@ -4,6 +4,12 @@ Script: `analysis/ownership_mapping_report.py`. Tables:
 `outputs/tables/ownership_mapping_report_{year,firm,pairs,coowned}.csv`. How the
 mapping is built: [`docs/unit-agent-mapping.md`](../docs/unit-agent-mapping.md).
 
+**Status, 2026-10-02: fixed in code, panels not yet rebuilt.** `lib/unit_ownership.py`
+attributes by date and share (§6, item 1) and the renamings are merged (item 2);
+`firm_x.py`, `firm_incentive_rebuild.py` and `residual_demand_firm.py --tier owner`
+use it, pinned by `qa/check_unit_ownership.py`. The stored panels and every result
+built on them predate the fix until the rebuild (item 3).
+
 **In one line.** The mapping covers 90–98% of cleared volume (2018–2025), but the firm panels
 use each unit's latest listed owner for the whole window. That misplaces 2–5% of
 sell volume a year and up to 9% of buy volume in 2018–2019. One case is a bug, not
@@ -19,8 +25,10 @@ by about 315 MW, half its mean, and understates Endesa's by about 268 MW.
 - An **agent** submits the offers (~738 in REE's registry snapshot).
 - An **owner** is a legal entity in OMIE's listings (*Listado de Unidades*, 12
   snapshots 2014-09-24 → 2025-01-31, none for 2021), with an ownership share.
-- A **firm** is the group the owners roll up to (`build_owner_groups.py`): 1,092
-  groups, 156 owning sell units, 49 owning dispatchable plant, 21 with ≥ 100 MW of it.
+- A **firm** is the group the owners roll up to (`build_owner_groups.py`): 1,096
+  groups before the 2026-10-02 merges (1,091 after), 156 owning sell units, 49 owning
+  dispatchable plant, 21 with ≥ 100 MW of it. (A first version said 1,092, counted
+  on the wrong column.)
 
 ## 2. Coverage
 

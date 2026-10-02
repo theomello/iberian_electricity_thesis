@@ -33,7 +33,10 @@ old ones, which are kept for the record.
    volume out of n and q and give those units' offers back to the rivals:
        slope_exp_h = slope_net_h + (pt_sell_h + pt_buy_h) / 2h
 
-Owner groups come from `lib/omie_owner.owner_group`, as in the panel. Periods
+Owners come from `lib/unit_ownership.py` (2026-10-02): the groups in force on each
+date, each times its listed share, so a co-owned reactor splits pro rata and a sold
+business counts for its owner at the time. The panel this script reads
+(`residual_demand_firm.py --tier owner`) attributes the same way. Periods
 and p* are the panel's own (p* is the Spanish price; split periods are already
 excluded there).
 """
@@ -48,7 +51,7 @@ import pyarrow.parquet as pq
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
-from omie_owner import is_pass_through, owner_group  # noqa: E402
+from unit_ownership import attach_owners, spells  # noqa: E402
 from residual_demand import BANDWIDTHS  # noqa: E402
 
 DATA = ROOT / "data"
@@ -61,11 +64,11 @@ KEY = ["date", "period"]
 
 
 def unit_firm() -> pd.DataFrame:
-    """unit -> (firm, pt): the owner group, and whether the owner is pass-through."""
-    u = pd.read_parquet(DATA / "omie/registry/unit_agents.parquet", columns=["unit", "agent_owner"])
-    u["firm"] = u.agent_owner.map(owner_group)
-    u["pt"] = u.agent_owner.map(is_pass_through).astype(bool)
-    return u.dropna(subset=["firm"]).set_index("unit")[["firm", "pt"]]
+    """Ownership spells (lib/unit_ownership): the owner groups in force on each date,
+    with their shares, and whether each owner is pass-through. Until 2026-10-02 a
+    unit went whole to its latest listed owner for the whole window
+    (notes/report-ownership-mapping.md)."""
+    return spells().dropna(subset=["group"])
 
 
 def month_extras(ym: str, umap: pd.DataFrame, pstar: pd.DataFrame) -> pd.DataFrame:
@@ -74,7 +77,8 @@ def month_extras(ym: str, umap: pd.DataFrame, pstar: pd.DataFrame) -> pd.DataFra
                                "price_eur_mwh"]).to_pandas()
     b["date"] = pd.to_datetime(b.date)
     b["unit"] = b.unit.astype(str)
-    b = b.join(umap, on="unit", how="inner")
+    b = attach_owners(b[b.unit.isin(set(umap.unit))], umap)
+    b = b.dropna(subset=["group"]).rename(columns={"group": "firm"})
     b["side"] = b.side.astype(str)
     b["status"] = b.status.astype(str)
     b["sgn"] = b.side.map({"V": 1.0, "C": -1.0})

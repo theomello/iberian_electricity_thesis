@@ -67,7 +67,7 @@ TIER = "firm"
 VERIFY_MONTH = "202401"   # the month every other verification in this repo uses
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-from omie_owner import owner_group  # noqa: E402
+from unit_ownership import attach_owners, spells  # noqa: E402
 # slope_from_band_mw is deliberately NOT imported. The firm arithmetic below is
 # inline because eta_i divides by the FIRM's cleared volume and so needs a
 # q_firm_mw > 0 guard that the shared function does not have (it guards only
@@ -102,11 +102,20 @@ def load_agents() -> pd.DataFrame:
     Unlike theta, this side may read `unit_agents` directly: the q_firm
     arithmetic below is over supply units, which are exactly the registry the
     file covers.
+
+    Under `--tier owner` it returns ownership SPELLS (lib/unit_ownership.py,
+    2026-10-02) for the supply units: the groups in force on each date, each
+    times its listed share, so a co-owned reactor splits pro rata and a sold
+    business counts for its owner at the time. compute_month attaches them by
+    date. Before, each unit went whole to its latest listed owner for the whole
+    window (notes/report-ownership-mapping.md).
     """
     cols = ["unit", "role"] + (["agent_owner"] if TIER == "owner" else ["firm"])
     a = pq.read_table(AGENTS, columns=cols).to_pandas()
     if TIER == "owner":
-        a["firm"] = a.agent_owner.map(owner_group)
+        sup = set(a.loc[a.role.isin(SUPPLY_ROLES), "unit"])
+        sp = spells()
+        return sp[sp.unit.isin(sup)]
     return a.loc[a.role.isin(SUPPLY_ROLES), ["unit", "firm"]]
 
 
@@ -139,7 +148,12 @@ def compute_month(bids, px_m, agents, theta):
     mkt = cleared_by_period(bids).merge(px_m, on=KEY, how="inner").rename(
         columns={"price_es": "p_star", "sell_matched": "q_cleared"})
 
-    b = bids.merge(agents, on="unit", how="left")
+    if "start" in agents.columns:   # ownership spells: by date and by share
+        sup = bids.unit.isin(set(agents.unit))
+        owned = attach_owners(bids[sup], agents).rename(columns={"group": "firm"})
+        b = pd.concat([owned.drop(columns=["pt", "share"]), bids[~sup]], ignore_index=True)
+    else:
+        b = bids.merge(agents, on="unit", how="left")
     b["firm"] = b.firm.fillna("UNMAPPED")
 
     # Firm's own cleared SELL volume at p*: this is RD_i(p*) by market clearing.

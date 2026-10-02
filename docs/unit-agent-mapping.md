@@ -209,6 +209,24 @@ units that matter least.
 
 ---
 
+## Ownership by date and by share (2026-10-02)
+
+`agent_owner` is one owner per unit, from the latest listing naming it. The firm
+panels used it for the whole window until 2026-10-02, with two consequences found
+by `notes/report-ownership-mapping.md`:
+
+- **co-owned units went whole to one co-owner, not always the largest.** The five
+  co-owned reactors carry 4.2% of cleared sell volume; Almaraz 1 and Trillo sat
+  with Naturgy, Vandellós II with Iberdrola;
+- **sold businesses sat with the buyer for the whole window** (EDP Comercializadora,
+  TotalEnergies' from 2020-12-01; Viesgo, Repsol's from 2018-11-02).
+
+`scripts/lib/unit_ownership.py` replaces it for the firm panels: the owners in
+force on each date, each with its listed share, spells split at the dated sales in
+`ENTITY_CHANGES`, and `agent_owner` (share 1) for units no listing names. Between
+two listings an undated sale stays invisible until the second one, and there is no
+2021 listing: date the sales that matter in `ENTITY_CHANGES`.
+
 ## Five ways this can mislead you
 
 ### 1. CNMC measures PDBF; the bid data measures the day-ahead auction

@@ -20,6 +20,14 @@ with p* the Spanish price. Two definitions of "the firm's units":
               framework spec §2.4). Their volume leaves n and their offers
               count as a rival's.
 
+OWNERSHIP BY DATE AND SHARE (2026-10-02, lib/unit_ownership.py). A unit's volume
+and offers count for the owners in force on that date, each times its listed
+share: a co-owned reactor splits pro rata, a sold business counts for its owner
+at the time. Until 2026-10-02 each unit went whole to its latest listed owner for
+the whole window, which put Almaraz 1 and Trillo with Naturgy and Vandellos II
+with Iberdrola (notes/report-ownership-mapping.md). The stored panel predates the
+change until it is rebuilt.
+
 Split periods and clearing-identity failures are flagged (`clean`), zero prices
 too (`zero_price`: p* <= 1), not dropped. Legs A and B use clean periods; the
 firm panel's periods are `clean & ~zero_price`.
@@ -44,7 +52,7 @@ import pyarrow.parquet as pq
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
-from omie_owner import is_pass_through, owner_group  # noqa: E402
+from unit_ownership import attach_owners, spells  # noqa: E402
 from residual_demand import IDENTITY_TOL, KEY, ZERO_PRICE, cleared_by_period  # noqa: E402
 
 DATA = ROOT / "data"
@@ -58,10 +66,17 @@ MW = ["net_built_mw", "net_mw", "q_mw", "pt_net_mw", "own_band_built_mw", "own_b
 
 
 def unit_map() -> pd.DataFrame:
-    u = pd.read_parquet(DATA / "omie/registry/unit_agents.parquet", columns=["unit", "agent_owner"])
-    u["firm"] = u.agent_owner.map(owner_group)
-    u["pt"] = u.agent_owner.map(is_pass_through).astype(bool)
-    return u[u.firm.isin(FIRMS)].set_index("unit")[["firm", "pt"]]
+    """Ownership spells of every unit a firm owns at some date (lib/unit_ownership):
+    by date and by share, so a co-owned reactor counts for each owner pro rata and a
+    sold business for its owner at the time (notes/report-ownership-mapping.md)."""
+    sp = spells()
+    return sp[sp.unit.isin(set(sp.loc[sp.group.isin(FIRMS), "unit"]))]
+
+
+def _owned(b: pd.DataFrame, umap: pd.DataFrame) -> pd.DataFrame:
+    """Rows of b for the five firms' units, one per owner in force, power x share."""
+    m = attach_owners(b[b.unit.isin(set(umap.unit))], umap)
+    return m[m.group.isin(FIRMS)].rename(columns={"group": "firm"})
 
 
 def prices() -> pd.DataFrame:
@@ -82,7 +97,7 @@ def month(ym: str, umap: pd.DataFrame, px: pd.DataFrame) -> pd.DataFrame:
     b["status"] = b.status.astype(str)
     idg = cleared_by_period(b)[KEY + ["identity_gap"]]
 
-    m = b.join(umap, on="unit", how="inner")
+    m = _owned(b, umap)
     m["sgn"] = m.side.map({"V": 1.0, "C": -1.0})
     c = m[m.status == "C"]
     fk = KEY + ["firm"]
@@ -95,7 +110,7 @@ def month(ym: str, umap: pd.DataFrame, px: pd.DataFrame) -> pd.DataFrame:
     o = b[b.status == "O"].merge(px[KEY + ["p_star"]], on=KEY, how="inner")
     o = o[(o.price_eur_mwh - o.p_star).abs() <= H]
     band = o.groupby(KEY).power_mw.sum().rename("band_mw")
-    om = o.join(umap, on="unit", how="inner")
+    om = _owned(o, umap)
     own_b = om.groupby([om.date, om.period, om.firm]).power_mw.sum().rename("own_band_built_mw")
     ome = om[~om.pt]
     own_e = ome.groupby([ome.date, ome.period, ome.firm]).power_mw.sum().rename("own_band_mw")

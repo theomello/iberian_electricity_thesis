@@ -151,6 +151,28 @@ GROUP_MERGES: dict[str, tuple[str, str]] = {
         "in the ESIOS chain. The midday-hydro panels already counted it in EDP's "
         "net position; the firm panel did not, so EDP's retail load was missing "
         "from the chapter's net-buyer shares (merged 2026-09-30)"),
+    # Renamings the layers left apart, found by notes/report-ownership-mapping.md
+    # (merged 2026-10-02). Each pair is one legal entity under an old and a new name,
+    # or two entities of one company; the ESIOS chain agrees in every case.
+    "TOTAL": ("TOTALENERGIES",
+        "TOTAL GAS & POWER LIMITED is TOTALENERGIES GAS & POWER LIMITED before Total "
+        "renamed itself TotalEnergies (May 2021); ESIOS gives its units TOTALENERGIES"),
+    "CLIDOM": ("HOLALUZ",
+        "CLIDOM ENERGY SL is Holaluz's earlier entity; Holaluz's legal name is "
+        "HOLALUZ-CLIDOM SA, and ESIOS gives both the agent CLIDM"),
+    "GAS": ("BP",
+        "BP GAS AND POWER IBERIA, S.A.U.: the stem took the word GAS; ESIOS gives BP"),
+    "GAS EUROPE": ("BP",
+        "BP GAS EUROPE, S.A.U.: the stem took GAS EUROPE; ESIOS gives BP"),
+    "LDA": ("PH ENERGIA",
+        "PH ENERGIA, LDA: the stem took the Portuguese legal form LDA"),
+    "UNIPESSOAL": ("PH ENERGIA",
+        "PH ENERGIA UNIPESSOAL LDA: the stem took the legal form UNIPESSOAL; the same "
+        "company as PH ENERGIA, LDA"),
+    "ALDRO": ("ENI PLENITUDE",
+        "Aldro Energia y Soluciones became ENI PLENITUDE IBERIA after Eni Plenitude "
+        "bought it (2022); ESIOS gives both the agent ALDRO. One continuing retailer: "
+        "the change of parent outside the five firms is not dated here"),
 }
 
 

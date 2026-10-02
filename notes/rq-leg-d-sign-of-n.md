@@ -493,12 +493,12 @@ Iberdrola 37%, Repsol 74%.
 
 | specification | sign of X | first-stage F | slopes | AR test of price-taking | β |
 |---|---|---|---|---|---|
-| raw offers, one common slope | both, one β | 60 | c +0.255 (0.034); AR set [0.217, 0.300] | p 7·10⁻¹⁷ | −0.07 (wrong sign) |
-| **net of the fringe, one common slope** | both, one β | **60** | **c −0.119 (0.035); AR set [−0.217, −0.041], overid p 0.998** | **p 6·10⁻⁴** | **0.03 [0.01, 0.06]** |
+| raw offers, one common slope | both, one β | 60 | c +0.255 (0.034); AR set [0.217, 0.300]; wind and solar disagree, overid p 0.03 | p 7·10⁻¹⁷ | −0.07 (wrong sign) |
+| **net of the fringe, one common slope** | both, one β | **60** | **c −0.119 (0.035); AR set [−0.217, −0.041]; overid p 0.95** | **p 6·10⁻⁴** | **0.03 [0.01, 0.06]** |
 | net of the fringe, two slopes, pooled first stage | each | 0.7/0.7 | not separated | p 6·10⁻⁴ | — |
 | **net of the fringe, two slopes, forecasts × firm** | **X > 0 (seller)** | **40** | **γ⁺ −0.001 (0.106)** | p ≈ 0 (joint) | **β⁺ 0.00** |
 | | **X < 0 (buyer)** | **35** | **γ⁻ −0.682 (0.087); p(γ⁺ = γ⁻) < 0.001** | | **β⁻ 0.19** |
-| Iberdrola, net, one slope | both, one β | 100 | c −0.150 (0.028); AR set [−0.202, −0.126] | p 10⁻⁹ | 0.03 [0.03, 0.05] |
+| Iberdrola, net, one slope | both, one β | 100 | c −0.150 (0.028); AR set [−0.202, −0.126]; wind and solar disagree, overid p 0.035 | p 10⁻⁹ | 0.03 [0.03, 0.05] |
 | Iberdrola, raw, two slopes | each | 17/12 | γ⁺ −0.001 (0.097), γ⁻ −0.032 (0.092) | **p 0.78** | common [−0.01, 0.02] |
 | EDP, net, one slope | both, one β | 87 | c +0.057 (0.026); AR set **empty** | p 2·10⁻⁸ | — |
 | Endesa / Naturgy / Repsol, net, one slope | both, one β | 0.9 / 5.4 / 2.1 | weak | | |
@@ -507,10 +507,22 @@ The common 0.03 is not an average of β⁺ 0.00 and β⁻ 0.19: the rows use dif
 first stages (one pooled response to the forecasts against one per firm), so
 they draw on different variation.
 
+**The overidentification p-values.** With one slope and two instruments, the
+smallest Anderson–Rubin statistic over the slope tests whether wind and solar
+imply the same slope. Referred to χ²(2), the AR test's distribution at a fixed
+slope, it is conservative; the column `ar_common_p_min` does that, and the first
+version of this section quoted it (0.998, 0.108, 0.099). The overidentification
+p-value refers it to χ²(1): column `overid_p`, quoted above. Net of the fringe,
+wind alone gives c −0.117 (0.043, F 82) and solar alone −0.121 (0.049, F 52), so
+the statistic is 0.004. On raw offers they give +0.317 and +0.189. Within the
+fixed effects the two forecasts correlate −0.11, so they are separate sources of
+variation. The test can only catch a direct effect that differs between wind
+and solar: one proportional to each forecast's first stage passes unseen.
+
 ### 7.4 Reading
 
 1. **The market-power sign appears, and β is small.** Net of the fringe's cost
-   response, a single slope fits both forecasts (overidentification p 0.998)
+   response, a single slope fits both forecasts (overidentification p 0.95)
    with β = 0.03, between 0.01 and 0.06. Leg A's within-day hydro estimate was
    0.03–0.14. Two legs, two designs, the same order of magnitude: firms behave
    close to price-takers, with a small, detectable departure.
@@ -527,9 +539,10 @@ they draw on different variation.
    in §3.2. And with ten instruments there is no AR projection; the 2SLS is
    readable (F 40/35) only if every firm's forecasts are excluded.
 4. **By firm, only Iberdrola and EDP are strongly identified.** Iberdrola gives
-   0.03 net of the fringe and an interval around 0 on raw offers, where
-   price-taking is not rejected (p 0.78); the difference is the hydro netting.
-   For EDP no single slope fits both forecasts.
+   0.03 net of the fringe, but its wind and solar disagree (overidentification
+   p 0.035); on raw offers its interval sits around 0 and price-taking is not
+   rejected (p 0.78). The difference is the hydro netting. For EDP no single
+   slope fits both forecasts.
 5. **The pooled two-slope design is weak** (F 0.7): within a unit-day, the
    forecasts' hourly variation moves X⁺ and X⁻ alike. Leg D's two slopes need
    the firm-specific first stage.

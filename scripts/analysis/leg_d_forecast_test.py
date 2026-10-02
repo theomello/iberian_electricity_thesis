@@ -76,6 +76,13 @@ def forecasts() -> pd.DataFrame:
     return out
 
 
+def overid_p(ex: dict | None) -> float:
+    """The overidentification p-value: the smallest AR statistic over the common slope
+    against chi2(1). `p_min` refers it to chi2(2), the AR test's distribution at a
+    fixed slope, which is conservative once the slope is chosen to minimise it."""
+    return float(stats.chi2.sf(ex["q_min"], 1)) if ex else float("nan")
+
+
 def estimate(d: pd.DataFrame, label: str, y: str = "y50", dens: str = "dd50",
              z: tuple = ("W", "S"), controls: tuple = ("D",)) -> dict:
     z, controls = list(z), list(controls)
@@ -114,6 +121,7 @@ def estimate(d: pd.DataFrame, label: str, y: str = "y50", dens: str = "dd50",
     row |= {"status": "weak" if weak else "ok", "g_plus": b[0], "se_plus": se[0], "g_minus": b[1],
             "se_minus": se[1], "p_equal": p_eq, "sw_f_plus": f_p, "sw_f_minus": f_m, "ar_p_zero": p00,
             "ar_common": common, "ar_common_p_min": ex["p_min"] if ex else np.nan,
+            "overid_p": overid_p(ex),
             "proj_plus": fmt_set(pp, gp) if two else "n/a", "proj_minus": fmt_set(pm, gm) if two else "n/a",
             "sign_plus": projection_sign(pp) if two else "n/a", "sign_minus": projection_sign(pm) if two else "n/a",
             "density_plus": m_p, "density_minus": m_m, "beta_plus": bp, "beta_minus": bm,
@@ -142,12 +150,14 @@ def common_slope(d: pd.DataFrame, label: str, y: str = "y50", controls: tuple = 
     ar = fmt_intervals(s["intervals"]) if s else "not identified"
     dens = d.dd50.mean()
     print(f"  {label:44s} n={len(d):>9,}  c {b[0]:+.3f} ({np.sqrt(V[0, 0]):.3f})  F {f1:.1f}  "
-          f"AR p(c=0) {p0:.1e}  AR set {ar} (min p {s['p_min'] if s else np.nan:.3f})  "
+          f"AR p(c=0) {p0:.1e}  AR set {ar} (min p {s['p_min'] if s else np.nan:.3f}, "
+          f"overid p {overid_p(s):.3f})  "
           f"beta {-b[0] / dens:+.2f}")
     return {"sample": label, "outcome": y, "instrument": "W, S (one slope)", "controls": ", ".join(controls),
             "status": "weak" if f1 < WEAK_F else "ok", "n": len(d), "units": d.unit.nunique(),
             "weeks": d.wk.nunique(), "c": b[0], "c_se": float(np.sqrt(V[0, 0])), "c_f": f1,
             "ar_p_zero": p0, "ar_common": ar, "ar_common_p_min": s["p_min"] if s else np.nan,
+            "overid_p": overid_p(s),
             "beta_c": -b[0] / dens}
 
 

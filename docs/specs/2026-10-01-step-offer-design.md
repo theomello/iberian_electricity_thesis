@@ -153,6 +153,12 @@ before the noon deadline and are not the firms' choices.
   shifter leg B lacks); a forecast for rivals' fleets moves |RD′| and p. The
   model requires the same β from both: an overidentification test with two
   exogenous instruments.
+  *Probe 2026-10-02 ([`notes/rq-forecast-first-stage.md`](../../notes/rq-forecast-first-stage.md)):
+  the forecasts instrument X with F 10–64 across the five firms and move p
+  strongly (F 163), but a windy or sunny forecast **lowers** every firm's n,
+  wind owners included: it displaces their gas and hydro by more than their own
+  fleet adds. The own-fleet channel does not show; read W, S and D as shifters
+  of residual demand's level, three instruments for X.*
 - **Firm-level variation, coarse to fine:**
   1. **Spain and Portugal separately**: ENTSO-E's day-ahead wind and solar
      forecasts per bidding zone; the Portuguese forecast falls mostly on EDP's
@@ -345,7 +351,8 @@ Already published: the cap's price effect, exports to France, congestion rents.
    and untaxed hydro.
 3. **When the tokens arrive:** fetch the forecasts; first-stage probe of own-fleet
    and rivals'-fleet forecasts on each firm's n, |RD′| and X. *ESIOS fetched
-   2026-10-02 (Spain, 2019 on); ENTSO-E pending.*
+   2026-10-02 (Spain, 2019 on); ENTSO-E pending. First stage run 2026-10-02
+   (`notes/rq-forecast-first-stage.md`).*
 4. **Build the step estimator** on thermal firm-periods, gas-cap window first.
 5. **Water value**: spill anchor and forward proxy; the dynamic program for EDP's
    Portuguese cascades as its own project.

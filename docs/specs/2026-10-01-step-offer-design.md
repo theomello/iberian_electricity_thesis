@@ -28,7 +28,7 @@ gas cap. Its first deliverable is one β per technology on one scale, so that
 | A, hydro within the day | differenced out (unit-day effects) | EDP's three reshaping cascades: market-power sign from 2024, implied β 0.03–0.14; four cascades offer one flat curve all day; Iberdrola's allocation fits price-taking | `rq-midday-hydro.md` §3.11–3.15, §3.20; framework §4 |
 | B, hydro across days | modelled (Euler equation) | withdrawn: no first stage for EDP's day-level exposed X (F 0.4–1.9) | `rq-midday-hydro.md` §3.18–3.20 |
 | C, thermal in levels | observed (JRC efficiency) | β 3.10 (AR [2.59, 3.67], F 70), 3.06 heat rate estimated, 3.05 declared cost; not read as conduct (§2 below) | `rq-leg-c-thermal-cost.md` |
-| D, sign of n | common, prediction reversed | price-taking rejected in every pooled specification (AR p ≤ 1.1·10⁻⁶); a Nash-signed common slope fits only with yesterday's sign uncontrolled | `rq-leg-d-sign-of-n.md` |
+| D, sign of n | common, prediction reversed | first run: price-taking rejected; a Nash-signed common slope fits only with yesterday's sign uncontrolled. **Rerun 2026-10-02 with the forecasts, net of the fringe's cost response:** one common slope, β 0.03 [0.01, 0.06] (F 60); with a firm-specific first stage, β⁺ 0.00 and β⁻ 0.19, unequal | `rq-leg-d-sign-of-n.md` §1–6, §7 |
 
 ## 2. Why one estimator, and why on the steps
 

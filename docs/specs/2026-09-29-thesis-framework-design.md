@@ -283,7 +283,7 @@ rejecting β = 1, but those rows are selected on the price and sit about 8 €/M
 above the condition in levels. An estimate needs the conditions of a step bidder
 (§8 step 5b).
 
-### Leg D — the sign of n: cost common, prediction reversed. **Run 2026-10-01; inconclusive, price-taking rejected.**
+### Leg D — the sign of n: cost common, prediction reversed. **Run 2026-10-01; inconclusive, price-taking rejected. Rerun 2026-10-02 with REE's forecasts: β 0.03 net of the fringe; markdown when buying, no markup when selling (`rq-leg-d-sign-of-n.md` §7).**
 
 The condition predicts a markup for a net seller and a **markdown** for a net
 buyer, with the same β. The identifying variation is **within a firm**, because

@@ -11,6 +11,13 @@ Results: `outputs/tables/leg_d_results.csv`.
 Nash rested on rivals' solar moving offers only through X, which the placebo
 (§4) contradicts.*
 
+**Rerun 2026-10-02 with REE's day-ahead forecasts as the instruments (§7).**
+Net of the fringe's response to the same forecasts, one common slope fits both
+forecasts and has the market-power sign, but it is small: β = 0.03 (AR set
+0.01–0.06; F 60). Letting the first stage differ by firm separates the two
+slopes (F 40/35): no markup when selling (β⁺ 0.00), a markdown when buying
+(β⁻ 0.19), unequal at p < 0.001. Sections 1–6 describe the first run.
+
 **In one line.** With these instruments leg D rejects price-taking in every
 pooled specification and cannot tell the conduct models apart. A Nash-signed
 common slope fits only where yesterday's sign of n, the interaction
@@ -426,3 +433,105 @@ yesterday's sign as instruments, leg D rejects price-taking and nothing more.
   clearing identity fails.
 - **Financial hedges are unobserved** (spec §6), so X overstates the exposed
   position of a firm hedged financially.
+
+## 7. Rerun with REE's day-ahead forecasts (2026-10-02)
+
+Script `analysis/leg_d_forecast_test.py`; results
+`outputs/tables/leg_d_forecast_results.csv`; the forecasts' first stage on the
+firms' n and X in [`rq-forecast-first-stage.md`](rq-forecast-first-stage.md).
+
+### 7.1 What changes
+
+Same panel, outcome, fixed effects (unit × day, hour × year-month), clustering
+and weak-instrument-robust inference as §1. Two changes:
+
+- **Instruments:** W and S, REE's wind and solar forecasts for D+1, published
+  before 11:00 on D-1 (ESIOS 1777, 1779), in GW. They replace z (rivals' offered
+  solar, partly a choice) and z · s_prev (which made yesterday's sign, a lagged
+  outcome, an instrument). Offers close at 12:00, so an offer can respond to
+  the forecast only by a decision of the firm.
+- **Control:** D, REE's demand forecast of the same vintage (ESIOS 1775). It
+  replaces `fcst`, whose publication time is not stated.
+
+**Sample:** 2019-01-01 → 2026-05-31 (the forecasts start in 2019), on the
+24-hour days of §2: 5,171,005 unit-hours of the five firms; the fringe's
+1,781,113 on the same days.
+
+**Mechanics.** The forecasts move X mostly mechanically: a windy forecast lowers
+the price, so the firm's existing offers clear less and n falls with no
+decision. That is what a residual-demand shifter should do. It is harmless here
+because the outcome is the unit's offer shape, measured against the unit-day's
+own median offer price, not against the market price. With the price as the
+outcome (leg C in levels) the same forecasts would move p and X together by
+construction, and must not be used that way.
+
+### 7.2 The placebo decides which rows to read
+
+Reduced forms, s50 on the forecasts, pp of capacity per GW:
+
+| units | on W (t) | on S (t) |
+|---|---|---|
+| FRINGE, thermal | −0.221 (−6.5) | −0.253 (−4.9) |
+| five firms, thermal | −0.316 (−9.8) | −0.216 (−4.1) |
+| FRINGE, hydro | −0.172 (−9.0) | −0.161 (−5.0) |
+| five firms, hydro | +0.038 (+3.0) | −0.028 (−1.5) |
+
+**Thermal plants with no stake in the price respond to a windy or sunny
+forecast as the five firms' do.** The forecasts reshape thermal offers through
+cost (start-ups, cycling), so on raw offers they fail the exclusion. The rows
+to read subtract the fringe's response, technology by technology, from y. For
+hydro this assumes the fringe's response (−0.17) is what a price-taking
+reservoir would do; the five firms' hydro does not respond at all, and the
+difference is what the netted rows attribute to X.
+
+### 7.3 Results
+
+β is on the §3.14 scale (β = 1 is full Nash).
+
+| specification | first-stage F | slopes | AR test of price-taking | β |
+|---|---|---|---|---|
+| raw offers, one common slope | 60 | c +0.255 (0.034); AR set [0.217, 0.300] | p 7·10⁻¹⁷ | −0.07 (wrong sign) |
+| **net of the fringe, one common slope** | **60** | **c −0.119 (0.035); AR set [−0.217, −0.041], overid p 0.998** | **p 6·10⁻⁴** | **0.03 [0.01, 0.06]** |
+| net of the fringe, two slopes, pooled first stage | 0.7/0.7 | not separated | p 6·10⁻⁴ | — |
+| **net of the fringe, two slopes, forecasts × firm** | **40/35** | **γ⁺ −0.001 (0.106), γ⁻ −0.682 (0.087); p(γ⁺ = γ⁻) < 0.001** | p ≈ 0 | **β⁺ 0.00, β⁻ 0.19** |
+| Iberdrola, net, one slope | 100 | c −0.150 (0.028); AR set [−0.202, −0.126] | p 10⁻⁹ | 0.03 [0.03, 0.05] |
+| Iberdrola, raw, two slopes | 17/12 | γ⁺ −0.001 (0.097), γ⁻ −0.032 (0.092) | **p 0.78** | common [−0.01, 0.02] |
+| EDP, net, one slope | 87 | c +0.057 (0.026); AR set **empty** | p 2·10⁻⁸ | — |
+| Endesa / Naturgy / Repsol, net, one slope | 0.9 / 5.4 / 2.1 | weak | | |
+
+### 7.4 Reading
+
+1. **The market-power sign appears, and β is small.** Net of the fringe's cost
+   response, a single slope fits both forecasts (overidentification p 0.998)
+   with β = 0.03, between 0.01 and 0.06. Leg A's within-day hydro estimate was
+   0.03–0.14. Two legs, two designs, the same order of magnitude: firms behave
+   close to price-takers, with a small, detectable departure.
+2. **On raw offers the slope has the wrong sign** (β −0.07): the forecasts' cost
+   effect on thermal offers dominates it. The placebo is what turns the sign;
+   the reading depends on the fringe being a valid price-taking benchmark.
+3. **The asymmetry.** With the first stage free to differ by firm, sellers'
+   slope is zero and buyers' is clearly negative: firms shade their offers to
+   lower the price when they are net buyers (β⁻ 0.19) and do not raise it when
+   net sellers. Nash on n predicts equal slopes; output-based conduct predicts
+   γ⁺ < 0 < γ⁻. This is neither: market power on the buying side only.
+   Two cautions. The two slopes are separated largely by differences between
+   firms (Endesa is a buyer in almost every hour, Repsol a seller in two thirds), as
+   in §3.2. And with ten instruments there is no AR projection; the 2SLS is
+   readable (F 40/35) only if every firm's forecasts are excluded.
+4. **By firm, only Iberdrola and EDP are strongly identified.** Iberdrola gives
+   0.03 net of the fringe and an interval around 0 on raw offers, where
+   price-taking is not rejected (p 0.78); the difference is the hydro netting.
+   For EDP no single slope fits both forecasts.
+5. **The pooled two-slope design is weak** (F 0.7): within a unit-day, the
+   forecasts' hourly variation moves X⁺ and X⁻ alike. Leg D's two slopes need
+   the firm-specific first stage.
+
+### 7.5 Limits
+
+- **The netting is an assumption**: the fringe's response to the forecasts is
+  taken as a price-taker's. For thermal the two fleets respond alike; for hydro
+  they do not, and the netted rows read the difference as conduct.
+- **The asymmetry rests on differences between firms** and on ten exclusion
+  restrictions at once.
+- **2019 on, Spain's forecasts only** (Portugal's needs ENTSO-E).
+- The limits of §6 carry over.

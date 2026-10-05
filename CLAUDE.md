@@ -359,7 +359,7 @@ below are wrong, and the `IGN` note is wrong in its reasoning even though it
 was right to reject Iberdrola.
 
 **`agent_owner` names legal entities; `build_owner_groups.py` rolls them up.**
-`data/omie/registry/owner_groups.parquet` maps **1,451 owner strings to 1,091
+`data/omie/registry/owner_groups.parquet` maps **1,451 owner strings to 1,090
 groups** (1,096 before the 2026-10-02 merges) on three evidence layers: the independent ESIOS chain's verdict on an
 entity's own units (**81.7%** of supply volume), a stem match onto a group that
 layer established (2.0%), seven hand-verified cases (0.3%), and **13.3% left
@@ -406,11 +406,17 @@ times each share. `firm_x.py`, `firm_incentive_rebuild.py` and
 `residual_demand_firm.py --tier owner` use it; `qa/check_unit_ownership.py` pins the
 reactors' shares, the sale dates, and that January 2024 rebuilt through each of the
 three differs from the static attribution by exactly the share changes.
-**The stored panels (`firm_x`, `firm_incentive_net`, `firm_residual_demand_full_owner`)
-and every result built on them predate the fix until they are rebuilt.** Other
-scripts still read `unit_agents.agent_owner` directly (`grep owner_group scripts`).
-Iberenergía (Trillo's 15.5%) is unresolved: the ESIOS chain links it to Iberdrola
-only through the reactor's operator, and EDP is the public holder of that stake.
+**The stored panels and legs C and D were rebuilt on it on 2026-10-03**
+(`.superpowers/sdd/2026-10-02-ownership-rerun/chain.sh`, 19 steps, all checks pass;
+old against new in `notes/handoff-2026-10-05.md`). Every builder of the leg C/D panels
+and instruments uses it. **Leg A and the descriptive scripts still read the static
+owner** (`edp_hydro_panel.py`, `hydro_within_day_probe.py`, `firm_net_position.py`,
+`own_demand_in_band.py`, `firm_shares_hourly.py`, `markdown_contract_test.py`,
+`iberdrola_contract_trace.py`, `iberdrola_self_supply.py` and older designs).
+Iberenergía (Trillo's 15.5%) is merged into EDP (`GROUP_MERGES`): a 100% subsidiary
+of Hidroeléctrica del Cantábrico (CNMC INF/DE/0178/14). Under dated ownership
+Endesa's Energía XXI and Repsol's Regsiti are caught as regulated pass-through
+suppliers too (Endesa: −282 MW mean), which the static owner missed.
 
 **Regulated pass-through suppliers are excluded from every firm's net position**
 (`is_pass_through` / `exposed_group` in `lib/omie_owner.py`, pinned by

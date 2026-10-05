@@ -4,7 +4,7 @@ Script: `analysis/ownership_mapping_report.py`. Tables:
 `outputs/tables/ownership_mapping_report_{year,firm,pairs,coowned}.csv`. How the
 mapping is built: [`docs/unit-agent-mapping.md`](../docs/unit-agent-mapping.md).
 
-**Status, 2026-10-02: fixed in code, panels not yet rebuilt.** `lib/unit_ownership.py`
+**Status, 2026-10-03: fixed in code; firm panels, legs C and D rebuilt (leg A and descriptive scripts not yet).** `lib/unit_ownership.py`
 attributes by date and share (§6, item 1) and the renamings are merged (item 2);
 `firm_x.py`, `firm_incentive_rebuild.py` and `residual_demand_firm.py --tier owner`
 use it, pinned by `qa/check_unit_ownership.py`. The stored panels and every result

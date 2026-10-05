@@ -20,6 +20,7 @@ Always use the project interpreter — `.venv/bin/python`, never bare `python3`.
 |---|---|
 | `omie_common.py` | the study window, an HTTP session with retries, OMIE URL builders, and the DST/resolution logic (`day_periods_utc`, `resolution_minutes`) plus the two **incompatible number parsers** |
 | `config.py` | loads `ESIOS_TOKEN` / `ENTSOE_TOKEN` from a gitignored `.env`, and fails with instructions when one is missing |
+| `regions.py` | `locate(lat, lon)`: country, NUTS 2021 region and ESIOS region id of a coordinate in Spain or Portugal |
 
 Two things in here exist because getting them wrong is silent:
 

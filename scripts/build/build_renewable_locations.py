@@ -31,12 +31,17 @@ a trailing unit number. A REE farm and an OSM plant of the same source pair when
   - the pairing is the best on both sides and unique (ties are left unmatched).
 Exact-root pairs are taken first, then fuzzy pairs among what is left.
 
+REGION. Each located farm gets its autonomous community from Eurostat's NUTS 2021
+polygons (`lib/regions.py`), with ESIOS's id for that region, so located capacity can
+be set against ESIOS's installed capacity by region (indicators 1485 wind, 1486 PV).
+
 OUTPUT (data/osm/):
   renewable_unit_locations.parquet   uf, up, tech, max_power_mw, descr_long, osm_id,
                                      osm_name, osm_mw, lat, lon, method, sim,
-                                     source (osm / wri), agent, firm
-Coverage is printed by technology and by the owner group of the farm's OMIE unit.
-Data (c) OpenStreetMap contributors, ODbL 1.0.
+                                     source (osm / wri), agent, firm, nuts_id, country,
+                                     region, esios_geo_id, region_how
+Coverage is printed by technology, by the owner group of the farm's OMIE unit, and by
+region against ESIOS's capacity. Data (c) OpenStreetMap contributors, ODbL 1.0.
 """
 from __future__ import annotations
 
@@ -45,10 +50,14 @@ import unicodedata
 from difflib import SequenceMatcher
 from pathlib import Path
 
+import sys
+
 import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(ROOT / "scripts" / "lib"))
+from regions import locate  # noqa: E402
 
 DATA = ROOT / "data"
 OSM = DATA / "osm/osm_renewable_plants.parquet"
@@ -199,7 +208,22 @@ def main() -> int:
     g = g.loc[g["GW"].sum(axis=1).sort_values(ascending=False).index]
     print("\ncoverage by the farm's agent's firm (2026 snapshot), largest 15:\n" + g.head(15).round(2).to_string())
     m = m.merge(reg[["uf", "agent", "firm"]], on="uf", how="left")
+    r = locate(m.lat, m.lon)
+    m = pd.concat([m, r.drop(columns="how").assign(region_how=r.how)], axis=1)
     m.to_parquet(OUT, index=False)
+    print(f"\nregion of the located farms: {m.region_how.value_counts().to_dict()}, "
+          f"country {m.country.value_counts(dropna=False).to_dict()}")
+    cap = pd.read_parquet(DATA / "esios/esios_installed_capacity.parquet")
+    cap = cap[cap.indicator_id.isin([1485, 1486]) & (cap.datetime.str[:7] == "2026-08")]
+    cap = cap.pivot_table(index=["geo_id", "geo_name"], columns="indicator_id", values="value").reset_index()
+    loc = m.assign(t=m.tech.map(TECH)).pivot_table(index="esios_geo_id", columns="t", values="max_power_mw",
+                                                    aggfunc="sum")
+    cap = cap.join(loc, on="geo_id")
+    tab = pd.DataFrame({"region": cap.geo_name, "wind_GW": cap[1485] / 1000,
+                        "wind_located": cap.get("wind") / cap[1485], "pv_GW": cap[1486] / 1000,
+                        "pv_located": cap.get("solar") / cap[1486]}).sort_values("wind_GW", ascending=False)
+    print("\nlocated share of ESIOS's capacity by region, August 2026 (REE's register is a 2026-08-12 snapshot):\n"
+          + tab[tab.wind_GW + tab.pv_GW > 0.05].round(2).to_string(index=False))
     print("\na sample of fuzzy matches to read:")
     print(m[m.method == "fuzzy root"].sample(min(15, (m.method == "fuzzy root").sum()), random_state=0)[
         ["descr_long", "osm_name", "max_power_mw", "osm_mw", "sim"]].to_string(index=False))

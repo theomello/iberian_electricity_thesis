@@ -98,10 +98,12 @@ scripts/
 | `build/build_reactor_outages.py` | PDBF + `cab` + `indisp` + ownership | no | `outputs/tables/reactor_outage_{hours,dose}.parquet`, `reactor_outage_spells.csv` |
 | `fetch/fetch_osm_renewables.py` | OpenStreetMap (Overpass API) | no | `data/osm/osm_renewable_plants.parquet`, `osm_wind_turbines.parquet` |
 | `fetch/fetch_wri_gppd.py` | WRI Global Power Plant Database v1.3 | no | `data/wri/wri_gppd_iberia.parquet` |
+| `fetch/fetch_gisco_nuts.py` | Eurostat GISCO NUTS 2021, 1:1 million | no | `data/gisco/nuts2_iberia.parquet` |
 | `build/build_renewable_locations.py` | REE physical units + OSM + WRI | no | `data/osm/renewable_unit_locations.parquet` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
-`lib/config.py` loads tokens from a gitignored `.env`.
+`lib/config.py` loads tokens from a gitignored `.env`; `lib/regions.py` gives a
+coordinate its country and region (`locate`).
 
 ## Data inventory
 
@@ -1243,11 +1245,37 @@ Endesa 65%, EDP 63%, Acciona 58%, Naturgy 55%, Repsol 28%.
 declares a 90 s timeout and 64 MiB (admitted where the defaults are refused), splits
 a failing tile into quarters, skips what still fails (listed in
 `data/osm/missing_tiles.json`, exit code 2) and fetches only what is missing on a
-re-run. `country` in the OSM files is a crude guess from coordinates. OSM is ODbL
-1.0, GPPD CC BY 4.0: cite both.
+re-run. OSM is ODbL 1.0, GPPD CC BY 4.0: cite both.
 `osm_wind_turbines.parquet` holds **25,494 single turbines with coordinates** (17% named),
 not yet used; turbine clusters could place the wind farms that have no name to match.
 Ask Overpass for `out body` on nodes: `out tags` returns no coordinates.
+
+**Country and region come from Eurostat's NUTS polygons (2026-10-05), not from a
+longitude cut.** The fetcher first tagged everything west of 6.2° W between 37° and
+42.2° N as Portuguese. Against the polygons that put 708 Spanish turbines in Portugal
+(Castilla y León 327, Andalucía 241, Galicia 128, Extremadura 12) and 844 turbines in
+France, Morocco and Algeria in Spain. Now: **Spain 21,845, Portugal 2,801, 848 outside
+both** (`country` blank, including WindFloat Atlantic offshore). Turbines per region
+correlate 0.96 with ESIOS's wind capacity per region (1.0–2.0 MW a turbine; Portugal
+5.5 GW over 2,801, 2.0); the Canaries are outside the tiles. All 723 located farms fall
+in Spain. Located wind as a share of ESIOS's August 2026 capacity: Castilla y León
+63%, Aragón 49%, Castilla-La Mancha 49%, Galicia 52%, Andalucía 70%, Cataluña 15%.
+
+**OSM's capacity tag is sometimes a bare number in kW**: `parse_mw` reads a number
+without a unit as MW, so La Robla I and II, 5 MW solar plants, read 5,000 MW. Only 8 of
+5,215 tags are bare numbers. The matcher's capacity gate rejects a pair with such a
+capacity, so the error can cost a match but cannot create one.
+
+### Eurostat NUTS 2021 regions — country and autonomous community of a coordinate
+`data/gisco/nuts2_iberia.parquet`, fetched 2026-10-05 by `fetch/fetch_gisco_nuts.py`:
+the **19 Spanish and 7 Portuguese NUTS level-2 regions** (autonomous communities, Ceuta
+and Melilla included; Portugal's five mainland regions plus Açores and Madeira), as
+shapely geometry (WGS84). Eurostat GISCO, 1:1 million, so a border or coastline is
+within about a kilometre; the European file (18 MB) is kept in `data/gisco/raw/`.
+Attribution: "© EuroGeographics for the administrative boundaries". `lib/regions.py`
+`locate(lat, lon)` gives `nuts_id, country, region, esios_geo_id, how`: a point within
+0.05° of a coastline gets the nearest region (`near`), anything farther stays blank.
+`esios_geo_id` maps each Spanish region onto ESIOS's installed capacity by region.
 
 ### EDP moved ~1,000 MW from `ACAVADO` to `ALIMA` in March 2024
 `cab` max power goes 1,632 → 632 MW for `ACAVADO` ("CAVADO") and 652 → 1,652

@@ -19,11 +19,17 @@ A tile no server answers is skipped, not fatal: the run goes on, the tiles still
 missing are listed in data/osm/missing_tiles.json, the parquets are written from what
 is cached, and the exit code is 2. Re-running fetches only what is missing.
 
+COUNTRY AND REGION come from Eurostat's NUTS 2021 polygons (`lib/regions.py`; run
+`fetch_gisco_nuts.py` first): `country` is ES or PT, blank for the parts of the tiles
+in France, Morocco and Algeria and for offshore turbines; `nuts_id` and `region` are the
+autonomous community or Portuguese region; `esios_geo_id` is ESIOS's id of that region.
+
 OUTPUTS (data/osm/):
   osm_renewable_plants.parquet   osm_type, osm_id, country, source (wind/solar), lat, lon
                                  (the centre for ways and relations), name, operator,
-                                 output (the raw capacity tag), mw (parsed), start_date, tags
-  osm_wind_turbines.parquet      osm_id, country, lat, lon, name, operator, output, mw
+                                 output (the raw capacity tag), mw (parsed), start_date, tags,
+                                 nuts_id, region, esios_geo_id, region_how
+  osm_wind_turbines.parquet      the same columns, one row per turbine
 """
 from __future__ import annotations
 
@@ -38,6 +44,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 from omie_common import DATA, session  # noqa: E402
+from regions import locate  # noqa: E402
 
 # On 2026-10-05 the main server answered 504 to every query and two mirrors timed out;
 # the mail.ru mirror answered. Tried in this order.
@@ -46,10 +53,8 @@ URLS = ["https://maps.mail.ru/osm/tools/overpass/api/interpreter", "https://over
 OUT = DATA / "osm"
 RAW = OUT / "raw"
 # The peninsula in tiles, queried by bounding box: an area filter (inside a country's
-# boundary) made every query time out on the public servers. Country is not needed
-# downstream, which matches by name to REE's (Spanish) register; `country` is left
-# as the tile's best guess (lon < -6.2 and lat between 37 and 42.2: PT), to be read
-# as a hint only.
+# boundary) made every query time out on the public servers. The tiles reach into
+# France, Morocco and Algeria; `country` is set afterwards from the NUTS polygons.
 LATS = [(35.8, 38.5), (38.5, 41.0), (41.0, 44.0)]
 LONS = [(-9.6, -6.0), (-6.0, -3.0), (-3.0, 0.0), (0.0, 4.4)]
 TILES = [(s_, w_, n_, e_) for (s_, n_) in LATS for (w_, e_) in LONS]
@@ -158,8 +163,7 @@ def rows(js: dict, kind: str) -> list[dict]:
         lat = e.get("lat", e.get("center", {}).get("lat"))
         lon = e.get("lon", e.get("center", {}).get("lon"))
         output = t.get("plant:output:electricity") if kind == "plants" else t.get("generator:output:electricity")
-        iso = "PT" if (lon is not None and lat is not None and lon < -6.2 and 37.0 < lat < 42.2) else "ES"
-        out.append({"osm_type": e["type"], "osm_id": e["id"], "country": iso,
+        out.append({"osm_type": e["type"], "osm_id": e["id"],
                     "source": t.get("plant:source", t.get("generator:source")), "lat": lat, "lon": lon,
                     "name": t.get("name"), "operator": t.get("operator"), "output": output, "mw": parse_mw(output),
                     "start_date": t.get("start_date"), "tags": json.dumps(t, ensure_ascii=False)})
@@ -173,14 +177,18 @@ def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     for kind, name in (("plants", "osm_renewable_plants.parquet"), ("turbines", "osm_wind_turbines.parquet")):
         d = pd.DataFrame(rows(fetch(kind, args.refresh), kind))
+        r = locate(d.lat, d.lon)
+        d = pd.concat([d, r.drop(columns="how").assign(region_how=r.how)], axis=1)
+        d.insert(2, "country", d.pop("country"))
         d.to_parquet(OUT / name, index=False)
         print(f"wrote data/osm/{name}: {len(d):,} rows")
         if kind == "plants":
-            g = d.groupby(["country", "source"]).agg(n=("osm_id", "size"), named=("name", lambda x: x.notna().sum()),
+            g = d.groupby(["country", "source"], dropna=False).agg(n=("osm_id", "size"), named=("name", lambda x: x.notna().sum()),
                                                      with_mw=("mw", lambda x: x.notna().sum()), mw=("mw", "sum"))
             print(g.round(0).to_string())
         else:
-            print(d.groupby("country").agg(n=("osm_id", "size"), named=("name", lambda x: x.notna().sum())).to_string())
+            print(d.groupby(["country", "region"], dropna=False).agg(
+                n=("osm_id", "size"), named=("name", lambda x: x.notna().sum())).to_string())
     miss = OUT / "missing_tiles.json"
     if MISSING:
         miss.write_text(json.dumps(MISSING, indent=1))

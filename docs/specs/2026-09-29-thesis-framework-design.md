@@ -13,6 +13,13 @@ joint hypothesis rather than conduct alone; the leading candidate is that the
 price sits in the gaps of stepped offers (§4). An estimator on the offer steps is
 proposed (§8 step 5b).
 
+**Revised 2026-10-05:** leg C's β ≈ 3 is explained: the outcome contains the
+market price, which falls down the merit order for every plant when renewables
+rise, so it is not conduct (`rq-leg-c-thermal-cost.md` §6). Conduct is read from
+the firms' own offers, net of price-takers' offers (legs A and D: β 0.02–0.14).
+Every leg now runs on ownership by date and share; no conclusion moved. The next
+design, with the ideas of 2026-10-02/03 assessed and ranked, is §9.
+
 It connects the descriptive chapter
 ([`rq-descriptive-price-formation.md`](../../notes/rq-descriptive-price-formation.md)),
 the midday-hydro work ([`rq-midday-hydro.md`](../../notes/rq-midday-hydro.md)), the
@@ -145,8 +152,8 @@ generation. Its median X is negative in every hour, most of all at midday
 |---|---|---|---|
 | p_t | Spanish or Portuguese clearing price, by the unit's zone | `omie_day_ahead_prices.parquet` | complete 2018–2026 |
 | \|RD′_ft\| | rivals' offer density within ±h of p, own sell **and** buy offers removed | `firm_residual_demand_full_owner.parquet`, `firm_incentive_net.parquet` | built, 5.5 M firm-periods |
-| n_ft | cleared sales − purchases over every unit a firm owns | `firm_incentive_rebuild.py`, `firm_net_position.py` | built. Ownership groups from OMIE's published owner (Enel Green Power merged into Endesa, 2026-09-29). **To rebuild on the exposed position (§2.4)** |
-| c, thermal | gas or coal / efficiency + carbon, gas-cap adjusted | `implied_marginal_cost_daily.parquet` | built for 68 plant-specific units. **Omits O&M and start-ups** |
+| n_ft | cleared sales − purchases over every unit a firm owns | `firm_x.py`, `firm_incentive_rebuild.py` | built on the exposed position (§2.4) and on owners by date and share (`lib/unit_ownership.py`, 2026-10-02; shares confirmed by the reactors' bilateral flows) |
+| c, thermal | gas or coal / efficiency + carbon, gas-cap adjusted | `implied_marginal_cost_daily.parquet` | built for 68 plant-specific Spanish units and, from 2026-10-05, Portugal's 16; `_bid` columns use prices final at 12:00 on D-1. **Omits O&M and start-ups** |
 | c, thermal, bound | the minimum-income condition plants declare | `cab` | 2017 → 2025-03-18 on one basis |
 | c, hydro (λ) | the unit-day's volume-weighted offer-price quantiles | `water_value_revealed.parquet` (§3.16) | built for the auction-route owners (EDP, Movhera, Repsol) |
 | storage | hours of full output per cascade | `storage_hours.parquet` (§3.17) | Portugal only, lower bound |
@@ -219,7 +226,7 @@ control.
   days and F rises to 16, but the set [−0.72, 1.13] still contains β = 1. The
   solar era needs a stronger instrument, not more periods.
 
-### Leg C — thermal plant: cost observed. **Run 2026-10-01; β ≈ 3, not read as conduct.**
+### Leg C — thermal plant: cost observed. **Run 2026-10-01; β ≈ 3, explained 2026-10-05 as the merit order, not conduct (§9.1).**
 
 For a gas or coal unit c is measured, so the condition can be tested in
 **levels**, which no other leg can do. The design is route 2 of three
@@ -283,7 +290,7 @@ rejecting β = 1, but those rows are selected on the price and sit about 8 €/M
 above the condition in levels. An estimate needs the conditions of a step bidder
 (§8 step 5b).
 
-### Leg D — the sign of n: cost common, prediction reversed. **Run 2026-10-01; inconclusive, price-taking rejected. Rerun 2026-10-02 with REE's forecasts: β 0.03 net of the fringe; markdown when buying, no markup when selling (`rq-leg-d-sign-of-n.md` §7).**
+### Leg D — the sign of n: cost common, prediction reversed. **Run 2026-10-01; inconclusive, price-taking rejected. Rerun 2026-10-02 with REE's forecasts: β 0.03 net of the fringe (0.024 on owners by date); markdown when buying (β⁻ 0.19), no markup when selling (`rq-leg-d-sign-of-n.md` §7–8).**
 
 The condition predicts a markup for a net seller and a **markdown** for a net
 buyer, with the same β. The identifying variation is **within a firm**, because
@@ -455,3 +462,139 @@ archive and β̂.
 publishable as a null against Nash), or all four legs with the counterfactual?
 Leg B was to decide whether the across-day margin is worth the full effort;
 it now needs a new instrument first (§3.20).
+
+## 9. The next design: one condition for every firm, read from offers (2026-10-05)
+
+From the 2026-10-02/03 discussion (`notes/handoff-2026-10-05.md` §4) and the
+diagnosis of leg C. Each idea is assessed against what the data have shown; the
+ranking is a proposal.
+
+### 9.1 What the diagnosis of β ≈ 3 changes
+
+Leg C's β ≈ 3 and the "invalid" β = 3.6 of leg A's price-setting version
+(`rq-midday-hydro.md` §3.11) are one artefact. A plant's p − c moves with the market
+price, which other plants set in 98.6% of rows. One GW of rivals' renewables lowers
+it by about 2 €/MWh (1 GW over a rivals' slope of about 500 MW per €/MWh) for every
+plant: the other owners' p − c falls 2.56 / 1.31 per GW of wind / solar while their
+X does not move (0.00 / −0.02). With n alone moving, β̂ equals rivals' slope over
+the firm's own supply response, 504 / 52 ≈ 10 (estimate 10.9): a ratio of slopes, as
+in Bresnahan (1982), not conduct.
+
+**The rule this gives.** A parameter that differs by firm is read from an outcome
+that differs by firm (the firm's own offers), net of how price-takers' offers respond
+to the same shock, with instruments known when offers are submitted. Legs A and D
+follow it and give β 0.02–0.14. Two consequences:
+
+- **The step estimator (§8 step 5b) needs the benchmark too.** On the rows where
+  the unit's own step sets the price, the other owners' offer minus cost still falls
+  1.7–2.2 €/MWh per GW of forecast with X fixed: a lower step of the same ladder sets
+  the price. Offer ladders slope up without market power, so the estimator must net
+  out a non-strategic ladder (from price-takers of the same technology) or put it in
+  c(q). Without it the step moments inherit part of the bias.
+- **Within-day β is small; β is not shown to be small.** Within-day estimates
+  cannot see a day-level strategy (EDP's flat cascades submit one curve a day), and
+  the across-day margin (leg B) has no instrument yet. §9.3 gives it one.
+
+### 9.2 The model, stated once
+
+For every dispatchable unit u of every firm f, in period t of day d:
+
+```
+y_ut = α_ud + δ_(tech × t) + γ · X_ft + ε_ut,        β = −γ / (offer density at the reference price)
+```
+
+- **y**: the unit's own offer at fixed points, either quantity offered below the
+  unit-day's own price quantiles (legs A and D; all technologies) or, for thermal
+  plant, offer price at fixed shares of capacity minus c (levels; known-at-bidding
+  cost, `_bid` columns).
+- **δ_(tech × t)** absorbs the merit-order movement and every common shock
+  (national forecasts, fuel, demand). What it does not absorb is variation in X
+  across firms within the period, so **only firm-specific shocks identify γ**. That
+  is why the shift-share instruments matter: common instruments are absorbed by the
+  period effects that make the design valid.
+- **The fringe** enters as the low-dose end of X, not as an untreated group.
+
+### 9.3 Instruments for n, ranked
+
+| rank | instrument | dose by firm | evidence so far | threat | verdict |
+|---|---|---|---|---|---|
+| 1 | **outages of co-owned reactors, by share** | lost MW × listed share (Almaraz 1 down: Iberdrola −52.7%, Endesa −36%, Naturgy −11.3%) | 2018-01 → 2026-05 from PDBF: 145 outage spells of ≥ 2 days, 2,687 reactor-days, 79 of ≤ 10 days; Endesa's and Iberdrola's daily doses correlate 0.65. Shares confirmed by the bilateral flows (`report-ownership-mapping.md` §4) | output modulation and economic shutdowns at low prices since about 2023 are price responses, not shocks; refuelling dates are chosen months ahead | **first.** Keep declared refuelling and unplanned trips only (`indisp` reasons, PDBF schedules where `indisp` has gaps). The date choice is common to every co-owner in the period, so only the difference in doses identifies. Multi-week, so it also moves day-level X: **leg B's missing first stage** |
+| 2 | own-catchment rain × share | GW × share × catchment anomaly | complete data: pooled F 21.3 (90 days), quarter clusters 11.9, wild bootstrap over firms p 0.044 (`rq-hydro-rain-first-stage.md`) | six firms; EDP's, Iberdrola's, Movhera's and Naturgy's indices correlate 0.94–0.98, so the effective number of independent shocks (Borusyak, Hull & Jaravel 2022) is small | second; mostly for leg B and for EDP / Iberdrola |
+| 3 | own regional wind and solar | own capacity by region × regional weather | national forecasts lower every firm's n (displacement beats own fleet); with period effects only (own share − mean) × weather is left | needs farm locations matched to OMIE units (RAIPEE, OpenStreetMap) and regional weather | third; data-heavy |
+| 4 | rivals' shocks for \|RD′\| | rivals' outages, interconnector capacity | moving only the slope gave β −16 at F 7 (leg C); interconnector capacity barely moved X in a probe | rival outages shift residual demand rather than rotate it | low; a rotation instrument has not been found |
+
+### 9.4 Heterogeneity and the control group
+
+- **The fringe is an assumption, not a fact.** Hortaçsu and Puller (2008) found
+  small Texas firms bidding far from their best response, so "the fringe responds
+  as a price-taker" must be tested. The fringe's thermal offers respond to the
+  forecasts as the five firms' do (leg D §7.2), but its hydro does not.
+- **The theory already specifies the heterogeneity**: the response is β times X, and
+  X carries 1/|RD′|. The parametric model is the test; sorted groups by predicted
+  dose (Chernozhukov, Demirer, Duflo & Fernández-Val) are the way to show it.
+- **An instrumental forest** (Athey, Tibshirani & Wager 2019) adds little with five
+  strategic firms and weekly dependence. Parked.
+- **The buyer–seller asymmetry** (β⁻ 0.19, β⁺ ≈ 0) is the most distinctive result,
+  but it rests on differences between firms (Endesa a buyer almost always, Repsol
+  mostly a seller). Reactor outages move the same firm across n = 0, which tests it
+  within firm.
+
+### 9.5 Sequential markets: anticipated against surprise
+
+The monetary-policy distinction (Romer & Romer 2004; Kuttner 2001; Nakamura &
+Steinsson 2018) maps onto the two auctions:
+
+- **Day-ahead offers** respond to the D-1 forecast, which is in the firm's
+  information set. Residualising it on what was predictable earlier (normal weather
+  for the hour and date, yesterday's output, capacity) is a robustness check: it
+  removes slow confounders, not the merit-order effect, which anticipated and
+  unanticipated wind both cause.
+- **Placebo**: day-ahead offers must not respond to the realised forecast error
+  (realised − D-1 forecast), which arrives after they are locked. A response would
+  mean firms forecast better than REE.
+- **Intraday offers** come after the day-ahead positions are fixed, so the forecast
+  error moves each firm's intraday position by its fleet exposure: its wind share ×
+  the national surprise, a shift-share across firms within the hour. Same condition,
+  intraday n. Data on disk (`curva_pibc_uof`, `marginalpibc`, REE forecasts).
+- **The buyers' test** (Ito & Reguant 2016): the day-ahead − intraday price premium
+  should rise with the five firms' combined exposed n and turn negative when they are
+  net buyers. Cheap; a market-level time series, so a description, not an estimate.
+  Control for the forecast errors, which also move the premium.
+
+### 9.6 Policies with a known prediction: tests of c, not of β
+
+A tax or a cap moves cost, not n, so it validates the cost term and pass-through.
+That is what leg C in levels needs.
+
+- **The 7% tax on the value of Spanish generation (IVPEE)**: suspended from
+  2021-07-01 to 2023-12-31; back at 3.5% in 2024 Q1, 5.25% in Q2, and 7% from
+  2024-07-01 (RDL 12/2021 and extensions; RDL 8/2023). It taxes Spanish units only,
+  so a Spanish unit's condition becomes b = c/(1 − τ) + β · X, and its offer moves
+  by c · τ/(1 − τ) (about 6 €/MWh at c = 80) relative to a Portuguese unit in the
+  same auction. That gives four dated events with known doses, and Portugal's ten
+  combined cycles now have costs (JRC, 2026-10-05). Threats: July 2021 is the start
+  of the gas crisis (common to both countries, absorbed by period effects); prices
+  split by zone (use the zone price); Portugal's CESE levy is on assets, not output.
+- **The gas cap** (2022-06-15 → 2023-12-31): dose per unit (gas − reference) /
+  efficiency; the sharpest window for the cost in levels.
+- **The 2021 windfall levy**: it acts through contracting (n via θ) and needs 2021
+  ownership, which no listing gives. Parked.
+- **Changes-in-changes** (Athey & Imbens 2006) is a way to show whole distributions;
+  the known-dose prediction is in means.
+
+### 9.7 Sequence
+
+1. **Outage table**: reactor spells by type (refuelling, trip, economic), dose per
+   firm by share; check that trips are not timed on prices.
+2. **The §9.2 regression with outage doses as instruments**: one β, then β⁺ and β⁻
+   within firm. Rain as the second instrument.
+3. **IVPEE test** on thermal offers, Spanish against Portuguese, with `_bid` costs.
+   It validates c before any levels estimate.
+4. **Day-ahead − intraday premium** against combined n (descriptive).
+5. **Intraday surprise design.**
+6. **Step estimator** with the non-strategic ladder netted (§9.1), once steps 2–3
+   pin β's range and c.
+
+*To verify before use*: the IVPEE decree chain and dates; the reasons OMIE's
+`indisp` gives for each reactor outage; whether Portugal's CESE has any per-MWh
+component.

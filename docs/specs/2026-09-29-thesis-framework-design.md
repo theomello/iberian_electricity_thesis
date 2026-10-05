@@ -520,7 +520,7 @@ y_ut = α_ud + δ_(tech × t) + γ · X_ft + ε_ut,        β = −γ / (offer d
 |---|---|---|---|---|---|
 | 1 | **outages of co-owned reactors, by share** | lost MW × listed share (Almaraz 1 down: Iberdrola −52.7%, Endesa −36%, Naturgy −11.3%) | 2018-01 → 2026-05 from PDBF: 145 outage spells of ≥ 2 days, 2,687 reactor-days, 79 of ≤ 10 days; Endesa's and Iberdrola's daily doses correlate 0.65. Shares confirmed by the bilateral flows (`report-ownership-mapping.md` §4) | output modulation and economic shutdowns at low prices since about 2023 are price responses, not shocks; refuelling dates are chosen months ahead | **first.** Keep declared refuelling and unplanned trips only (`indisp` reasons, PDBF schedules where `indisp` has gaps). The date choice is common to every co-owner in the period, so only the difference in doses identifies. Multi-week, so it also moves day-level X: **leg B's missing first stage** |
 | 2 | own-catchment rain × share | GW × share × catchment anomaly | complete data: pooled F 21.3 (90 days), quarter clusters 11.9, wild bootstrap over firms p 0.044 (`rq-hydro-rain-first-stage.md`) | six firms; EDP's, Iberdrola's, Movhera's and Naturgy's indices correlate 0.94–0.98, so the effective number of independent shocks (Borusyak, Hull & Jaravel 2022) is small | second; mostly for leg B and for EDP / Iberdrola |
-| 3 | own regional wind and solar | own capacity by region × regional weather | national forecasts lower every firm's n (displacement beats own fleet); with period effects only (own share − mean) × weather is left | needs farm locations matched to OMIE units (RAIPEE, OpenStreetMap) and regional weather | third; data-heavy |
+| 3 | own regional wind and solar | own capacity by region × regional weather | national forecasts lower every firm's n (displacement beats own fleet); with period effects only (own share − mean) × weather is left. **Locations 2026-10-05:** 54% of wind GW and 16% of PV matched by name to OSM and WRI; owner via the REE agent (2026 snapshot, undated), since REE's farm units are not OMIE units | regional weather at the located farms; PV coverage | third; data-heavy |
 | 4 | rivals' shocks for \|RD′\| | rivals' outages, interconnector capacity | moving only the slope gave β −16 at F 7 (leg C); interconnector capacity barely moved X in a probe | rival outages shift residual demand rather than rotate it | low; a rotation instrument has not been found |
 
 **Built 2026-10-05** (`notes/rq-reactor-outages.md`). 49 unplanned and 51 planned
@@ -529,6 +529,16 @@ lowers its exposed n by 0.86 MW (F 121; planned 0.89, F 138), and X by about 5 �
 per GW. Unplanned outages follow ordinary prices (+0.6 €/MWh two days before, se 3.4).
 The undeclared cuts of 2024–2026 (5–8 TWh a year) follow low prices and are excluded.
 Thin for Naturgy and EDP, whose doses come only through Almaraz and Trillo.
+
+**§9.2 run on it, 2026-10-05** (`rq-reactor-outages.md` §6). Offer price at 25% of
+offered volume, unit × week and technology × date × hour effects: **β −0.88, 95%
+Anderson–Rubin set [−4.20, 0.66]**. β = 1 is rejected (p 0.03) and β = 0 is not; at
+the 50% point, [−3.95, 1.25]. At the unit level the first stage is only F ≈ 10,
+because week effects absorb multi-week outages. Point estimates are negative, from
+combined cycles after unplanned trips (t 1.7). Neither withdrawal from the auction
+(offered volume does not move) nor location (the dose of nearby reactors, any owner,
+has no effect) explains it. So the across-day margin bounds β below 1 and does not
+separate 0 from 0.5.
 
 ### 9.4 Heterogeneity and the control group
 
@@ -593,8 +603,9 @@ That is what leg C in levels needs.
 
 1. ~~**Outage table**~~ — built 2026-10-05: first stage F 121 (unplanned), trips not
    timed on prices (`rq-reactor-outages.md`).
-2. **The §9.2 regression with outage doses as instruments**: one β, then β⁺ and β⁻
-   within firm. Rain as the second instrument.
+2. ~~**The §9.2 regression with outage doses as instruments**~~ — run 2026-10-05:
+   β −0.9, set [−4.2, 0.7], F ≈ 10; β⁺/β⁻ too weak (F 5). Still to do: rain as the
+   second instrument, and an event study of unplanned trips.
 3. **IVPEE test** on thermal offers, Spanish against Portuguese, with `_bid` costs.
    It validates c before any levels estimate.
 4. **Day-ahead − intraday premium** against combined n (descriptive).

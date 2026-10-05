@@ -96,6 +96,9 @@ scripts/
 | `build/build_storage_hours.py` | JRC hydro + `cab` + a hand plant→unit map | no | `data/jrc_hydro/storage_hours.parquet` |
 | `fetch/fetch_snirh_reservoirs.py` | APA SNIRH *dados de base* | no, but **LMU eduVPN only** | `data/snirh/snirh_reservoir_series.parquet` |
 | `build/build_reactor_outages.py` | PDBF + `cab` + `indisp` + ownership | no | `outputs/tables/reactor_outage_{hours,dose}.parquet`, `reactor_outage_spells.csv` |
+| `fetch/fetch_osm_renewables.py` | OpenStreetMap (Overpass API) | no | `data/osm/osm_renewable_plants.parquet`, `osm_wind_turbines.parquet` |
+| `fetch/fetch_wri_gppd.py` | WRI Global Power Plant Database v1.3 | no | `data/wri/wri_gppd_iberia.parquet` |
+| `build/build_renewable_locations.py` | REE physical units + OSM + WRI | no | `data/osm/renewable_unit_locations.parquet` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
 `lib/config.py` loads tokens from a gitignored `.env`.
@@ -1214,6 +1217,32 @@ cuts look like weather. 49 unplanned and 51 planned spells; unplanned outages fo
 ordinary prices. **Undeclared lost output rose to 5–8 TWh a year from 2024** and
 follows low prices: reactors now cut output at low prices, which is a choice and not
 an instrument. Detail and first stage in `notes/rq-reactor-outages.md`.
+Used in the §9.2 offer regression (`analysis/outage_offer_test.py`, 2026-10-05):
+β −0.9, 95% set [−4.2, 0.7], unit-level first stage F ≈ 10.
+
+### Wind and solar farm locations — 54% of wind located, 16% of solar (2026-10-05)
+`data/osm/renewable_unit_locations.parquet`, built by `build/build_renewable_locations.py`:
+REE's farms (ESIOS archive 81, a 2026-08-12 snapshot: 1,173 onshore wind farms, 32.3 GW;
+2,025 PV, 40.7 GW) matched by name to OpenStreetMap plants, then to WRI's Global Power
+Plant Database (v1.3, 2021) for what OSM leaves. **723 farms: 17.5 GW of wind (54%),
+6.5 GW of PV (16%)**. Matched capacities agree: REE over OSM has median 1.00, 5–95%
+0.76–1.16. Solar is low because most OSM solar plants carry no name (983 of 3,357 in
+Spain).
+
+**REE's programming units for wind and solar are not OMIE units**: 0 of 455 wind `up`
+codes appear in OMIE. Farms sell through their agents' aggregated units ("eólica
+habilitada"). So a farm's firm comes from its REE `agent`, mapped to the modal firm of
+that agent's OMIE units in `unit_agents.parquet`: 97.6% of wind MW, 94.9% of PV. That
+is the 2026 snapshot, not dated, and for representatives (Nexus, Ignis, Gesternova)
+it names the agent that bids, not the owner. Located wind by firm: Iberdrola 75%,
+Endesa 65%, EDP 63%, Acciona 58%, Naturgy 55%, Repsol 28%.
+
+**The public Overpass servers answer 504 under load**, even to tiny tiles. The fetcher
+declares a 90 s timeout and 64 MiB (admitted where the defaults are refused), splits
+a failing tile into quarters, skips what still fails (listed in
+`data/osm/missing_tiles.json`, exit code 2) and fetches only what is missing on a
+re-run. `country` in the OSM files is a crude guess from coordinates. OSM is ODbL
+1.0, GPPD CC BY 4.0: cite both.
 
 ### EDP moved ~1,000 MW from `ACAVADO` to `ALIMA` in March 2024
 `cab` max power goes 1,632 → 632 MW for `ACAVADO` ("CAVADO") and 652 → 1,652

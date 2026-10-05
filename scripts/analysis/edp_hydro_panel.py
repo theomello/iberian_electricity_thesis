@@ -48,6 +48,11 @@ the hourly route split in `hydro_schedule_routes.parquet`.
   too, not only its sell offers. For EDP that is mostly its pumping legs, and it
   matters in a tail of periods, not the median.
 
+  The group a row's X comes from is the unit's owner group IN FORCE THAT DAY
+  (`hydro_within_day_probe.dated_group`, 2026-10-05): VIES is Viesgo's, with no
+  X, before Repsol's purchase on 2018-11-02. `--attach-x` re-labels and
+  re-attaches without re-reading bids.
+
   EDP COMERCIAL (EDP's Portuguese retailer) is merged into EDP in
   `owner_groups.parquet` (GROUP_MERGES, 2026-09-30). It offers essentially no
   supply but buys 1.6-4.7 TWh a year in 2022-2024.
@@ -75,7 +80,7 @@ import pyarrow.parquet as pq
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from hydro_within_day_probe import BIDS, storage_hydro  # noqa: E402
+from hydro_within_day_probe import BIDS, dated_group, storage_hydro  # noqa: E402
 
 DATA = ROOT / "data"
 PRICES = DATA / "omie/prices/omie_day_ahead_prices.parquet"
@@ -211,6 +216,7 @@ def add_flatness(d: pd.DataFrame) -> pd.DataFrame:
 
 
 def add_firm(d: pd.DataFrame) -> pd.DataFrame:
+    d = d.drop(columns=[c for c in ("slope_i_h5", "q_firm_mw", "theta_mw") if c in d.columns])
     f = pq.read_table(FIRM_SLOPE, columns=["date", "period", "firm", "slope_i_h5", "q_firm_mw",
                                            "theta_mw"],
                       filters=[("firm", "in", list(GROUPS))]).to_pandas()
@@ -233,6 +239,7 @@ def build() -> pd.DataFrame:
         parts.append(month_panel(m, cap, prices))
         print(f"  {m}", flush=True, file=sys.stderr)
     d = pd.concat([p for p in parts if not p.empty], ignore_index=True)
+    d["group"] = dated_group(d)
     d = attach_x(add_firm(add_flatness(d)))
     d["year"] = d.date.dt.year
     d["era"] = pd.cut(d.year, [2017, 2020, 2023, 2026], labels=list(ERAS))
@@ -347,19 +354,34 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--report", action="store_true", help="report on the saved panel only")
     ap.add_argument("--attach-x", action="store_true",
-                    help="re-attach X from firm_x.parquet to the saved panel, without re-reading bids")
+                    help="re-label owners by date and re-attach the firm panel and X to the saved "
+                         "panel, without re-reading bids")
     args = ap.parse_args()
     if args.attach_x:
+        # The bid-derived columns do not depend on ownership; only the group, the firm
+        # panel's slope and X do. Re-label each row with the group in force on its date
+        # (2026-10-05) and re-attach both, which firm_x.py and residual_demand_firm.py
+        # now build on owners by date and share.
         old = pd.read_parquet(OUT)
-        d = attach_x(old)
-        m = old[["date", "period", "unit", "X"]].merge(d[["date", "period", "unit", "X_built"]],
-                                                       on=["date", "period", "unit"]).dropna()
-        diff = (m.X - m.X_built).abs()
-        print(f"old X vs new X_built: corr {m.X.corr(m.X_built):.6f}, median |diff| {diff.median():.4f}, "
-              f"exact (<1e-3) {(diff < 1e-3).mean():.3f} over {len(m):,} unit-periods")
-        if not (m.X.corr(m.X_built) > 0.9999):
-            print("FAIL: as-built X does not reproduce the saved panel's X; not overwriting")
+        d = old.copy()
+        d["group"] = dated_group(d)
+        moved = d.group.ne(old.group)
+        print(f"rows whose group changes: {int(moved.sum()):,} "
+              f"({d.loc[moved, 'unit'].value_counts().to_dict()})")
+        d = attach_x(add_firm(d))
+        # Wiring: on rows whose group did not change, X must be found exactly where it
+        # was before (same periods: the firm panel's clean, priced periods).
+        same = ~moved.to_numpy()
+        had, has = old.X.notna().to_numpy()[same], d.X.notna().to_numpy()[same]
+        print(f"X defined on unchanged rows: before {had.sum():,}, after {has.sum():,}")
+        if (had != has).any():
+            print("FAIL: X coverage changed on rows whose owner did not; not overwriting")
             return 1
+        both = old.X.notna() & d.X.notna()
+        for g, s in d[both].groupby("group"):
+            o = old.loc[s.index, "X"]
+            print(f"  {g:9s} X old -> new: median {o.median():+.2f} -> {s.X.median():+.2f}, "
+                  f"corr {o.corr(s.X):.4f}, n {len(s):,}")
         d.to_parquet(OUT, index=False)
         print(f"wrote {OUT.relative_to(ROOT)}")
     else:

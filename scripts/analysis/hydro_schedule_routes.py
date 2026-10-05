@@ -22,6 +22,9 @@ Their sum is the unit's scheduled position after the intraday market. What is
 NOT visible is balancing reserve and redispatch after that (ESIOS, token
 required), so this is the schedule, not metered output.
 
+Each row carries the unit's owner group in force on its date
+(`hydro_within_day_probe.dated_group`, 2026-10-05).
+
 ENERGY, NOT MW
 
 Every file here switched to 15-minute periods on its own date (PDBF and intraday
@@ -40,7 +43,7 @@ import pyarrow.parquet as pq
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from hydro_within_day_probe import BIDS, storage_hydro  # noqa: E402
+from hydro_within_day_probe import BIDS, dated_group, storage_hydro  # noqa: E402
 
 DATA = ROOT / "data"
 PDBF = DATA / "omie/pdbf/parquet"
@@ -103,7 +106,13 @@ def main() -> int:
     for c in ("bilateral", "auction", "intraday", "pdbf_auction"):
         if c not in d:
             d[c] = 0.0
+    # A month-end hour can come from two month files (an intraday row carries its own
+    # delivery date, which may fall in the previous month), so sum each unit-hour once.
+    # Until 2026-10-05 1,046 unit-hours appeared twice, auction and intraday split.
+    d = d.groupby(["unit", "date", "hour"], as_index=False)[
+        ["pdbf_auction", "bilateral", "auction", "intraday"]].sum()
     d = d.merge(cap[["unit", "group"]], on="unit")
+    d["group"] = dated_group(d)          # the owner group in force on the row's date
     d["total"] = d.bilateral + d.auction + d.intraday
     d["year"] = d.date.dt.year
     d["bin"] = d.hour.map({h: k for k, r in HOUR_BINS.items() for h in r})

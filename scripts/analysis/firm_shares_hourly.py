@@ -60,14 +60,15 @@ Note the residual bias now runs *against* the headline rather than with it:
 coverage falls over 2024-26 while the measured Lerner rises, so that rise cannot
 be produced by coverage.
 
-GROUPING IS THE REMAINING WEAK POINT ON `--tier owner`
+GROUPING AND DATING ON `--tier owner`
 
-`agent_owner` names legal entities, not corporate groups, and unlike `firm` it
-does no roll-up. On 2023 cleared sell volume `SU ELETRICIDADE` is 7.96% and is
-EDP's Portuguese regulated supplier. `OWNER_ALIASES` below fixes four such
-cases and is **not exhaustive**, so owner-tier share *levels* are diagnostic
-until a proper group mapping is built. The coverage claim above does not depend
-on the grouping.
+`agent_owner` names legal entities; `lib/omie_owner.owner_group` rolls them up
+to groups (`owner_groups.parquet`, 1,090 groups). Since 2026-10-05 the owner
+tier is also dated and split by share (`lib/unit_ownership.py`): a unit's
+cleared volume counts for each owner in force that day, times its share, so a
+co-owned reactor is split among its co-owners and a sold business sits with its
+owner at the time. Regulated pass-through suppliers stay inside their groups
+here: these are shares of cleared volume, not exposed positions.
 
 VALIDATION
 
@@ -89,22 +90,28 @@ import pyarrow.parquet as pq
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
-from omie_owner import owner_group  # noqa: E402
+from unit_ownership import attach_owners, spells  # noqa: E402
 DATA = ROOT / "data"
 BIDS = DATA / "omie" / "bids" / "parquet"
 ETA = ROOT / "outputs" / "tables" / "residual_demand_slope_full.parquet"
 FIRMS = ["IBERDROLA", "ENDESA", "EDP", "NATURGY", "AXPO", "ACCIONA", "REPSOL"]
 
 
-def firm_period_volume(unit_firm: dict[str, str]) -> pd.DataFrame:
-    """Cleared sell volume by (date, period, firm), whole archive."""
+def firm_period_volume(unit_firm: dict[str, str] | None, sp: pd.DataFrame | None = None) -> pd.DataFrame:
+    """Cleared sell volume by (date, period, firm), whole archive. With ownership
+    spells `sp`, each unit's volume goes to its owners in force that day by share."""
     frames = []
     files = sorted(BIDS.glob("bids_*.parquet"))
     for i, f in enumerate(files, 1):
         t = ds.dataset(f).to_table(
             filter=(pc.field("status") == "C") & (pc.field("side") == "V"),
             columns=["date", "period", "unit", "power_mw"]).to_pandas()
-        t["firm"] = t.unit.map(unit_firm)
+        if sp is not None:
+            t["date"] = pd.to_datetime(t.date)
+            t["unit"] = t.unit.astype(str)
+            t = attach_owners(t, sp).rename(columns={"group": "firm"})   # power_mw x share
+        else:
+            t["firm"] = t.unit.map(unit_firm)
         tot = t.groupby(["date", "period"]).power_mw.sum().rename("total_mw")
         g = (t[t.firm.notna()].groupby(["date", "period", "firm"]).power_mw.sum()
              .rename("firm_mw").reset_index().merge(tot, on=["date", "period"]))
@@ -129,16 +136,18 @@ def main() -> int:
         print(f"missing {reg.name} -- run build_unit_agents.py --tier {args.tier}",
               file=sys.stderr)
         return 1
-    ua = pq.read_table(reg).to_pandas()
     if args.tier == "owner":
-        # OMIE's published owner instead of the inference chain -- see the
-        # docstring's coverage section for why this is the tier to use for
-        # anything across years.
-        ua["firm"] = ua.agent_owner.map(owner_group)
-    unit_firm = dict(zip(ua.loc[ua.firm.notna(), "unit"], ua.loc[ua.firm.notna(), "firm"]))
-    print(f"tier={args.tier}: {len(unit_firm):,} units carry a firm\n")
-
-    fv = firm_period_volume(unit_firm)
+        # OMIE's published owner, by date and by share, instead of the inference
+        # chain -- see the docstring's coverage section for why this is the tier
+        # to use for anything across years.
+        sp = spells().dropna(subset=["group"])
+        print(f"tier=owner: {sp.unit.nunique():,} units carry an owner group on some date\n")
+        fv = firm_period_volume(None, sp)
+    else:
+        ua = pq.read_table(reg).to_pandas()
+        unit_firm = dict(zip(ua.loc[ua.firm.notna(), "unit"], ua.loc[ua.firm.notna(), "firm"]))
+        print(f"tier={args.tier}: {len(unit_firm):,} units carry a firm\n")
+        fv = firm_period_volume(unit_firm)
     eta = pq.read_table(ETA, columns=["date", "period", "eta_h5", "p_star",
                                       "vre_share", "year"]).to_pandas()
     eta["date"] = pd.to_datetime(eta.date)

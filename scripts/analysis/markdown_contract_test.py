@@ -156,6 +156,11 @@ to raise theta. The exclusion argument is cross-fleet: it moves a firm's
 contract position through its HYDRO AND NUCLEAR assets, which is unrelated to
 its CCGTs' fuel costs -- and the CCGT offers are the outcome. See
 levy_contract_exposure.py, which already builds the exposure measure.
+
+OWNERS BY DATE (2026-10-05). A unit's firm is its largest owner in force that
+day, and a firm's capacity at the start of each month sums its supply units'
+max power times its share then (`lib/unit_ownership.py`), so a co-owned reactor
+is split among its co-owners and a sold plant counts for its owner at the time.
 """
 
 from __future__ import annotations
@@ -175,7 +180,20 @@ OUT = ROOT / "outputs" / "tables" / "markdown_contract_panel.parquet"
 SUPPLY_ROLES = {"generation", "generation_large", "storage_mixed", "pumping"}
 
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
-from omie_owner import owner_group  # noqa: E402
+from unit_ownership import majority_group, spells  # noqa: E402
+
+
+def firm_capacity(ua: pd.DataFrame, sp: pd.DataFrame) -> pd.DataFrame:
+    """Each firm's supply capacity (MW) at the start of each month: its units' max
+    power times its share in force that day. Columns firm, ym, cap_firm."""
+    cap = ua[ua.role.isin(SUPPLY_ROLES)][["unit", "max_power_mw"]]
+    s = sp.dropna(subset=["group"]).merge(cap, on="unit")
+    rows = []
+    for t in pd.date_range("2018-01-01", "2026-12-01", freq="MS"):
+        on = s[(s.start <= t) & (s.end > t)]
+        g = (on.max_power_mw * on.share).groupby(on.group).sum()
+        rows.append(pd.DataFrame({"firm": g.index, "ym": t.strftime("%Y-%m"), "cap_firm": g.to_numpy()}))
+    return pd.concat(rows, ignore_index=True)
 
 
 def load() -> pd.DataFrame:
@@ -188,20 +206,19 @@ def load() -> pd.DataFrame:
                                 "fuel", "eff_is_generic"]).to_pandas()
     mc = mc[~mc.eff_is_generic]          # plant-specific efficiency only
     ua = pq.read_table(DATA / "omie/registry/unit_agents.parquet",
-                       columns=["unit", "agent_owner", "role",
-                                "max_power_mw"]).to_pandas()
-    ua["firm"] = ua.agent_owner.map(owner_group)
+                       columns=["unit", "role", "max_power_mw"]).to_pandas()
     rd = pq.read_table(ROOT / "outputs/tables/firm_residual_demand_full_owner.parquet",
                        columns=["date", "period", "firm", "q_firm_mw", "theta_mw",
                                 "ability_h5", "incentive_h5"]).to_pandas()
     for f in (off, mc, rd):
         f["date"] = pd.to_datetime(f.date)
 
-    d = (off.merge(mc, on=["unit", "date"], how="inner")
-            .merge(ua[["unit", "firm"]], on="unit", how="left")
-            .merge(rd, on=["date", "period", "firm"], how="inner"))
-    cap = ua[ua.role.isin(SUPPLY_ROLES)].groupby("firm").max_power_mw.sum()
-    d["cap_firm"] = d.firm.map(cap)
+    sp = spells()
+    d = off.merge(mc, on=["unit", "date"], how="inner")
+    d["firm"] = majority_group(d, sp, exposed=False)      # the owner in force that day
+    d = d.merge(rd, on=["date", "period", "firm"], how="inner")
+    d["ym"] = d.date.dt.to_period("M").astype(str)
+    d = d.merge(firm_capacity(ua, sp), on=["firm", "ym"], how="left")
     # Default to the CAPPED cost: under RDL 10/2022 a capped plant offers on
     # the reference gas price, so the market price is the wrong benchmark
     # exactly where the interesting variation is. `markup_uncapped` is kept
@@ -211,7 +228,6 @@ def load() -> pd.DataFrame:
     d["frac"] = ((d.q_firm_mw - d.theta_mw) / d.q_firm_mw).clip(-5, 1)
     d["frac_cap"] = (d.cap_firm - d.theta_mw) / d.cap_firm
     d["year"] = d.date.dt.year
-    d["ym"] = d.date.dt.to_period("M").astype(str)
     return d.dropna(subset=["markup", "frac", "frac_cap"])
 
 
@@ -253,10 +269,8 @@ def load_declared() -> pd.DataFrame:
     day = o.groupby(["date", "unit"], as_index=False)[["p25", "p50", "p75"]].median()
 
     ua = pq.read_table(DATA / "omie/registry/unit_agents.parquet",
-                       columns=["unit", "agent_owner", "role",
-                                "max_power_mw"]).to_pandas()
-    ua["firm"] = ua.agent_owner.map(owner_group)
-    cap_firm = ua[ua.role.isin(SUPPLY_ROLES)].groupby("firm").max_power_mw.sum()
+                       columns=["unit", "role", "max_power_mw"]).to_pandas()
+    sp = spells()
 
     rd = pq.read_table(ROOT / "outputs/tables/firm_residual_demand_full_owner.parquet",
                        columns=["date", "period", "firm", "q_firm_mw",
@@ -265,13 +279,13 @@ def load_declared() -> pd.DataFrame:
     rd = rd.groupby(["date", "firm"], as_index=False).agg(
         q=("q_firm_mw", "mean"), th=("theta_mw", "mean"))
 
-    d = (day.merge(cab, on=["date", "unit"], how="inner")
-            .merge(ua[["unit", "firm"]], on="unit", how="left")
-            .merge(rd, on=["date", "firm"], how="inner"))
-    d["cap_firm"] = d.firm.map(cap_firm)
+    d = day.merge(cab, on=["date", "unit"], how="inner")
+    d["firm"] = majority_group(d, sp, exposed=False)      # the owner in force that day
+    d = d.merge(rd, on=["date", "firm"], how="inner")
+    d["ym"] = d.date.dt.to_period("M").astype(str)
+    d = d.merge(firm_capacity(ua, sp), on=["firm", "ym"], how="left")
     d["frac"] = ((d.q - d.th) / d.q).clip(-5, 1)
     d["frac_cap"] = (d.cap_firm - d.th) / d.cap_firm
-    d["ym"] = d.date.dt.to_period("M").astype(str)
     for c in ("p25", "p50", "p75"):
         d[f"mk_{c}"] = d[c] - d["var"]
     return d

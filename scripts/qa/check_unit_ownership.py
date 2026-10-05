@@ -12,9 +12,14 @@ Checks `lib/unit_ownership.py` on the registry itself:
     TotalEnergies' from 2020-12-01; Viesgo is Repsol's from 2018-11-02;
   - a unit no listing names keeps the inference chain's owner, share 1;
   - attach_owners splits a row across owners and preserves its total;
-and the wiring: `firm_x.month` for January 2024 must differ from the stored
-`firm_x.parquet` (built on the static owner) by exactly the share changes
-times each unit's signed cleared volume. Exits non-zero on any failure.
+and the wiring: `firm_x.month` and `firm_incentive_rebuild.month_extras` for
+January 2024 must equal the stored panels (rebuilt on the spells on 2026-10-03),
+and `residual_demand_firm` must differ from a static build made here by exactly
+the share changes times each unit's cleared volume. Exits non-zero on any failure.
+
+Since 2026-10-05 the same for the panels migrated then: `own_demand_in_band`'s
+January 2024 band volumes against the static attribution (and the stored panel
+against them), and `edp_hydro_panel`'s groups and X (leg A).
 """
 from __future__ import annotations
 
@@ -120,12 +125,15 @@ def main() -> int:
     dn = dn[dn.group.isin(FIRMS)].groupby(["date", "period", "group"]).signed.sum().rename("s_new")
     e = pd.concat([st.rename_axis(["date", "period", "firm"]), dn.rename_axis(["date", "period", "firm"])], axis=1).fillna(0)
     e["delta"] = e.s_new - e.s_old
-    j = j.merge(e.delta.reset_index(), on=["date", "period", "firm"], how="left").fillna({"delta": 0.0})
-    gap = (j.net_built_mw - j.net_built_mw_old - j.delta).abs().max()
+    # The stored panel was rebuilt on the spells on 2026-10-03, so it must equal a
+    # fresh build; the static attribution survives only as `st`, built here.
+    # (Until 2026-10-05 this compared against a stored STATIC panel and failed by
+    # construction once the panel was rebuilt.)
+    gap = (j.net_built_mw - j.net_built_mw_old).abs().max()
     check(len(j) == len(old) and gap < 1e-3,
-          f"firm_x.month(202401) = stored panel + share changes x signed cleared volume (max gap {gap:.2e} MW)")
-    mean_change = (j.net_built_mw - j.net_built_mw_old).groupby(j.firm).mean().round(1).to_dict()
-    print(f"      mean change in n (as built), January 2024, MW: {mean_change}")
+          f"firm_x.month(202401) = stored firm_x.parquet, both on the spells (max gap {gap:.2e} MW)")
+    mean_change = e.delta.groupby(level=2).mean().reindex(list(FIRMS)).round(1).to_dict()
+    print(f"      spells minus static attribution, signed cleared volume, January 2024 mean, MW: {mean_change}")
 
     # The all-firm chain, same month, same test, on the five firms (whose group names
     # the 2026-10-02 merges left alone): firm_incentive_rebuild's net position, and
@@ -138,10 +146,9 @@ def main() -> int:
         old.drop_duplicates(["date", "period"])[["date", "period", "p_star"]], on=["date", "period"])
     ex = fir.month_extras("202401", fir.unit_firm(), px)
     ex = ex[ex.firm.isin(FIRMS)].merge(inc, on=["date", "period", "firm"], suffixes=("", "_old"))
-    ex = ex.merge(e.delta.reset_index(), on=["date", "period", "firm"], how="left").fillna({"delta": 0.0})
-    gap2 = (ex.net_mw - ex.net_mw_old - ex.delta).abs().max()
-    check(len(ex) > 0 and gap2 < 1e-3, f"firm_incentive_rebuild.month_extras(202401) = stored + share changes "
-          f"(max gap {gap2:.2e} MW, {len(ex):,} firm-periods)")
+    gap2 = (ex.net_mw - ex.net_mw_old).abs().max()
+    check(len(ex) > 0 and gap2 < 1e-3, f"firm_incentive_rebuild.month_extras(202401) = stored firm_incentive_net, "
+          f"both on the spells (max gap {gap2:.2e} MW, {len(ex):,} firm-periods)")
 
     rdf.TIER = "owner"
     lo, hi = rdf.month_bounds("202401")
@@ -172,6 +179,61 @@ def main() -> int:
     gap3 = (r.q_firm_mw - r.q_firm_mw_old - r.dq).abs().max()
     check(len(r) > 0 and gap3 < 1e-3, f"residual_demand_firm.compute_month(202401) q_firm = static build + share changes "
           f"(max gap {gap3:.2e} MW, {len(r):,} firm-periods)")
+
+    # Leg A and the descriptive panels (migrated 2026-10-05). own_demand_in_band:
+    # January 2024 through month_band against the static attribution, built the same
+    # way, differs by exactly the share changes times each unit's in-band volume; and
+    # the stored panel carries month_band's numbers.
+    import own_demand_in_band as odb
+    usp = odb.unit_map()
+    pxo = pd.read_parquet(ROOT / "data/omie/prices/omie_day_ahead_prices.parquet",
+                          columns=["date", "period", "price_es"]).rename(columns={"price_es": "p_star"})
+    pxo["date"] = pd.to_datetime(pxo.date)
+    band = odb.month_band("202401", usp, pxo).set_index(["date", "period", "firm"])
+    ob = pd.read_parquet(ROOT / "data/omie/bids/parquet/bids_202401.parquet",
+                         columns=["date", "period", "unit", "side", "status", "power_mw", "price_eur_mwh"])
+    ob = ob[ob.status.astype(str) == "O"].copy()
+    ob["date"], ob["unit"], ob["side"] = pd.to_datetime(ob.date), ob.unit.astype(str), ob.side.astype(str)
+    ob = ob.merge(pxo, on=["date", "period"])
+    ob = ob[(ob.price_eur_mwh - ob.p_star).abs() <= odb.H]
+    bo = ob.merge(ua[["unit", "static"]], on="unit")
+    bo = bo[bo.static.isin(FIRMS)].groupby(["date", "period", "static", "side"]).power_mw.sum().unstack("side")
+    bn = attach_owners(ob[ob.unit.isin(set(usp.unit))], usp)
+    bn = bn[bn.group.isin(FIRMS)].groupby(["date", "period", "group", "side"]).power_mw.sum().unstack("side")
+    dv = bn.rename_axis(["date", "period", "firm"]).sub(bo.rename_axis(["date", "period", "firm"]), fill_value=0)
+    st_band = bo.rename_axis(["date", "period", "firm"]).reindex(band.index).fillna(0)
+    gap4 = max(float((band.own_sell_band - st_band.get("V", 0) - dv.V.reindex(band.index).fillna(0)).abs().max()),
+               float((band.own_buy_band - st_band.get("C", 0) - dv.C.reindex(band.index).fillna(0)).abs().max()))
+    check(gap4 < 1e-3, f"own_demand_in_band.month_band(202401) = static build + share changes (max gap {gap4:.2e} MW)")
+    sto = pd.read_parquet(ROOT / "outputs/tables/own_demand_in_band.parquet",
+                          columns=["date", "period", "firm", "own_sell_band", "own_buy_band"])
+    sto = sto[sto.date.dt.strftime("%Y%m") == "202401"].set_index(["date", "period", "firm"])
+    cmp_ = sto.join(band, rsuffix="_new", how="inner")
+    gap5 = float((cmp_.own_buy_band - cmp_.own_buy_band_new).abs().max()) if len(cmp_) else np.inf
+    check(len(cmp_) > 0 and gap5 < 1e-3, f"stored own_demand_in_band.parquet carries month_band's January 2024 "
+          f"(max gap {gap5:.2e} MW, {len(cmp_):,} firm-periods)")
+
+    # edp_hydro_panel: every row's group is the one in force on its date, the only
+    # rows off the latest-owner group are VIES before Repsol's purchase, and X is
+    # firm_x's X for that group on every firm-panel period.
+    import hydro_within_day_probe as hwd
+    hp = pd.read_parquet(ROOT / "outputs/tables/edp_hydro_panel.parquet",
+                         columns=["date", "period", "unit", "group", "X"])
+    latest = hp.unit.map(hwd.storage_hydro().set_index("unit").group)
+    off = hp[hp.group.ne(latest)]
+    check(set(off.unit) == {"VIES"} and off.date.max() < pd.Timestamp("2018-11-02") and (off.group == "VIESGO").all(),
+          f"edp_hydro_panel: groups off the latest owner are VIES -> VIESGO before 2018-11-02 only "
+          f"({len(off):,} rows, units {sorted(set(off.unit))})")
+    m1 = hp[hp.date.dt.strftime("%Y%m") == "202401"]
+    check(bool((m1.group.to_numpy() == hwd.dated_group(m1).to_numpy()).all()),
+          "edp_hydro_panel January 2024: group = dated_group on every row")
+    fx = pd.read_parquet(ROOT / "outputs/tables/firm_x.parquet", columns=["date", "period", "firm", "X", "clean", "zero_price"])
+    fx = fx[fx.clean & ~fx.zero_price].rename(columns={"firm": "group"})
+    jx = hp.dropna(subset=["X"]).merge(fx[["date", "period", "group", "X"]], on=["date", "period", "group"],
+                                       how="left", suffixes=("", "_fx"))
+    gap6 = float((jx.X - jx.X_fx).abs().max())
+    check(jx.X_fx.notna().all() and gap6 < 1e-9,
+          f"edp_hydro_panel X = firm_x X for the row's dated group (max gap {gap6:.1e}, {len(jx):,} rows)")
     print("OK" if not fails else f"{len(fails)} failure(s)")
     return 1 if fails else 0
 

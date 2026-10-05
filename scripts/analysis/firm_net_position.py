@@ -25,6 +25,11 @@ comparable in sign, not in level.
 
 Describes the AS-BUILT net position. The exposed position (regulated
 pass-through suppliers excluded, framework spec §2.4) is computed in firm_x.py.
+
+Owners by date and by share (lib/unit_ownership.py, 2026-10-05): a unit's cleared
+volume counts for each owner in force that day, times its share, so a co-owned
+reactor is split among its co-owners and a sold business sits with its owner at
+the time. EDP COMERCIAL is part of EDP since the GROUP_MERGES of 2026-09-30.
 """
 from __future__ import annotations
 
@@ -36,27 +41,30 @@ import pyarrow.parquet as pq
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
-from omie_owner import owner_group  # noqa: E402
+from unit_ownership import attach_owners, spells  # noqa: E402
 
 DATA = ROOT / "data"
 BIDS = DATA / "omie/bids/parquet"
 FIRM_PANEL = ROOT / "outputs/tables/firm_residual_demand_full_owner.parquet"
-FIRMS = ["IBERDROLA", "ENDESA", "NATURGY", "REPSOL", "EDP", "EDP COMERCIAL"]
+FIRMS = ["IBERDROLA", "ENDESA", "NATURGY", "REPSOL", "EDP"]
 MONTHS = ("02", "06", "10")
 
 
 def auction_net() -> pd.DataFrame:
-    u = pd.read_parquet(DATA / "omie/registry/unit_agents.parquet", columns=["unit", "agent_owner"])
-    fmap = u.set_index("unit").agent_owner.map(owner_group)
+    sp = spells()
+    sp = sp[sp.unit.isin(set(sp.loc[sp.group.isin(FIRMS), "unit"]))]
     rows = []
     for y in range(2018, 2027):
         for mm in MONTHS:
             f = BIDS / f"bids_{y}{mm}.parquet"
             if not f.exists():
                 continue
-            b = pq.read_table(f, columns=["unit", "side", "status", "power_mw", "resolution_min"],
-                              filters=[("status", "==", "C")]).to_pandas()
-            b["firm"] = b.unit.map(fmap)
+            b = pq.read_table(f, columns=["date", "unit", "side", "status", "power_mw", "resolution_min"],
+                              filters=[("status", "==", "C"), ("unit", "in", sorted(set(sp.unit)))]
+                              ).to_pandas()
+            b["date"] = pd.to_datetime(b.date)
+            b["unit"] = b.unit.astype(str)
+            b = attach_owners(b, sp).rename(columns={"group": "firm"})   # power_mw x share
             b = b[b.firm.isin(FIRMS)]
             b["twh"] = b.power_mw * b.resolution_min / 60 / 1e6
             t = b.pivot_table(index="firm", columns="side", values="twh", aggfunc="sum",
@@ -84,9 +92,6 @@ def main() -> int:
         if firm in out.index.get_level_values(0):
             print(f"\n{firm}")
             print(out.loc[firm].T.to_string())
-    edp = out.loc["EDP", "net"].add(out.loc["EDP COMERCIAL", "net"], fill_value=0.0)
-    print("\nEDP including EDP COMERCIAL, net:")
-    print(edp.round(2).to_frame().T.to_string())
     return 0
 
 

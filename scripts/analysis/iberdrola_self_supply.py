@@ -38,6 +38,7 @@ level of demand, not for its price.
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -46,6 +47,8 @@ import pyarrow.parquet as pq
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 DATA = ROOT / "data"
+sys.path.insert(0, str(ROOT / "scripts" / "lib"))
+from unit_ownership import spells  # noqa: E402
 
 HYDRO = ["DUER", "EBRA", "JUCA", "MUEL", "SIL", "TAJO"]
 MONTHS = ["201903", "201910", "202103", "202203", "202303", "202403", "202410", "202503"]
@@ -53,12 +56,13 @@ OUTCOMES = ["bid", "bought", "intraday", "other_bil", "total"]
 
 
 def iberdrola_purchase_units() -> list[str]:
-    u = pd.read_parquet(DATA / "omie/registry/unit_agents.parquet",
-                        columns=["unit", "role", "agent_owner"])
-    g = pd.read_parquet(DATA / "omie/registry/owner_groups.parquet",
-                        columns=["agent_owner", "group"])
-    u = u.merge(g, on="agent_owner", how="left")
-    return sorted(u[(u.group == "IBERDROLA") & u.role.str.startswith("purchase")].unit)
+    """Purchase units Iberdrola owns on some date since 2018 (lib/unit_ownership.py,
+    2026-10-05). The same ten units as the latest listing gives, each Iberdrola's
+    whole throughout."""
+    u = pd.read_parquet(DATA / "omie/registry/unit_agents.parquet", columns=["unit", "role"])
+    sp = spells()
+    ib = set(sp[(sp.group == "IBERDROLA") & (sp.end > pd.Timestamp("2018-01-01"))].unit)
+    return sorted(u[u.unit.isin(ib) & u.role.str.startswith("purchase", na=False)].unit)
 
 
 def demand_forecast() -> pd.DataFrame:

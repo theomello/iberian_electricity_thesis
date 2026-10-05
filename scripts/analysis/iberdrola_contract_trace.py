@@ -18,7 +18,8 @@ same contract id is credited with
     seller MWh x (Iberdrola retail buy MWh / all buy MWh on that contract-period)
 
 so a contract shared with other buyers is not all attributed to Iberdrola.
-Sellers are labelled by owner group (`lib/omie_owner.owner_group`) and by
+Sellers are labelled by the owner groups in force that day, each with its share
+(`lib/unit_ownership.py`, 2026-10-05; a co-owned reactor's sale is split), and by
 technology (OMIE's listing, projected label, then the `cab` name), and the
 storage-hydro units already traced (HYDRO) are shown as their own row.
 
@@ -36,7 +37,7 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from iberdrola_self_supply import HYDRO, iberdrola_purchase_units  # noqa: E402
-from omie_owner import owner_group  # noqa: E402
+from unit_ownership import attach_owners, spells  # noqa: E402
 
 DATA = ROOT / "data"
 MONTHS = ("02", "06", "10")
@@ -44,14 +45,12 @@ MONTHS = ("02", "06", "10")
 
 def labels() -> pd.DataFrame:
     u = pd.read_parquet(DATA / "omie/registry/unit_agents.parquet",
-                        columns=["unit", "descr", "tech", "tech_omie", "tech_omie_early",
-                                 "agent_owner"])
-    u["owner"] = u.agent_owner.map(owner_group).fillna("UNMAPPED")
+                        columns=["unit", "descr", "tech", "tech_omie", "tech_omie_early"])
     u["techl"] = u.tech_omie.fillna(u.tech_omie_early).fillna(u.tech).fillna("unknown")
-    return u.set_index("unit")[["descr", "owner", "techl"]]
+    return u.set_index("unit")[["descr", "techl"]]
 
 
-def month_trace(ym: str, retail: list[str], lab: pd.DataFrame) -> pd.DataFrame:
+def month_trace(ym: str, retail: list[str], lab: pd.DataFrame, sp: pd.DataFrame) -> pd.DataFrame:
     f = DATA / f"omie/pdbf/parquet/pdbf_{ym}.parquet"
     if not f.exists():
         return pd.DataFrame()
@@ -68,8 +67,14 @@ def month_trace(ym: str, retail: list[str], lab: pd.DataFrame) -> pd.DataFrame:
     share = (ib / allb).rename("share").reset_index()
     sells = p[p.mwh > 0].merge(share, on=key, how="inner")
     sells["to_ib"] = sells.mwh * sells.share
-    out = sells.groupby("unit").agg(twh=("to_ib", "sum"),
-                                    contracts=("unit_id", "nunique")).reset_index()
+    # The seller's owners in force that day, each with its share of the energy
+    # (lib/unit_ownership.py, 2026-10-05): a co-owned reactor's sale is split.
+    sells["date"] = pd.to_datetime(sells.date)
+    sells["unit"] = sells.unit.astype(str)
+    sells = attach_owners(sells.drop(columns="share"), sp, value_cols=("to_ib",))
+    sells["owner"] = sells.group.fillna("UNMAPPED")
+    out = sells.groupby(["unit", "owner"]).agg(twh=("to_ib", "sum"),
+                                               contracts=("unit_id", "nunique")).reset_index()
     out["twh"] /= 1e6
     out = out.join(lab, on="unit")
     out["year"] = int(ym[:4])
@@ -79,7 +84,8 @@ def month_trace(ym: str, retail: list[str], lab: pd.DataFrame) -> pd.DataFrame:
 def main() -> int:
     retail = iberdrola_purchase_units()
     lab = labels()
-    parts = [month_trace(f"{y}{m}", retail, lab) for y in range(2018, 2027) for m in MONTHS]
+    sp = spells()
+    parts = [month_trace(f"{y}{m}", retail, lab, sp) for y in range(2018, 2027) for m in MONTHS]
     d = pd.concat([x for x in parts if not x.empty], ignore_index=True)
     d["source"] = d.owner + " / " + d.techl
     d.loc[d.unit.isin(HYDRO), "source"] = "IBERDROLA / storage hydro (traced, §3.8)"

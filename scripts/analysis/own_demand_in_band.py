@@ -20,10 +20,11 @@ Leaving them in overstates |RD'_i|, which understates the firm's price impact,
 `ability`, and the design's X = net / |RD'_i|.
 
 This measures the size of that overstatement. Own units are every unit the
-firm owns under `lib/omie_owner.owner_group`, all roles; EDP COMERCIAL (EDP's
-Portuguese retailer, a separate group in `owner_groups.parquet`) is counted
-with EDP, as in `edp_hydro_panel.py`. The band is h = 5 EUR/MWh around the
-Spanish price, as in the firm panel, on the periods that panel keeps.
+firm owns ON THAT DAY, all roles, each owner's volume times its share
+(`lib/unit_ownership.py`, by date and by share since 2026-10-05; EDP COMERCIAL,
+EDP's Portuguese retailer, is part of EDP since the GROUP_MERGES of 2026-09-30).
+The band is h = 5 EUR/MWh around the Spanish price, as in the firm panel, on the
+periods that panel keeps.
 
     slope_net = slope_i - own_buy_in_band / 2h
 
@@ -41,32 +42,32 @@ import pyarrow.parquet as pq
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
-from omie_owner import owner_group  # noqa: E402
+from unit_ownership import attach_owners, spells  # noqa: E402
 
 DATA = ROOT / "data"
 BIDS = DATA / "omie/bids/parquet"
 FIRM_PANEL = ROOT / "outputs/tables/firm_residual_demand_full_owner.parquet"
 OUT = ROOT / "outputs/tables/own_demand_in_band.parquet"
 H = 5.0
-FIRMS = {"EDP": ("EDP", "EDP COMERCIAL"), "IBERDROLA": ("IBERDROLA",),
-         "ENDESA": ("ENDESA",), "NATURGY": ("NATURGY",), "REPSOL": ("REPSOL",)}
+FIRMS = ("EDP", "IBERDROLA", "ENDESA", "NATURGY", "REPSOL")
 
 
-def unit_firm() -> pd.Series:
-    u = pd.read_parquet(DATA / "omie/registry/unit_agents.parquet", columns=["unit", "agent_owner"])
-    grp = u.agent_owner.map(owner_group)
-    back = {m: f for f, members in FIRMS.items() for m in members}
-    return pd.Series(grp.map(back).to_numpy(), index=u.unit).dropna()
+def unit_map() -> pd.DataFrame:
+    """Ownership spells of every unit one of the firms owns at some date."""
+    sp = spells()
+    return sp[sp.unit.isin(set(sp.loc[sp.group.isin(FIRMS), "unit"]))]
 
 
-def month_band(ym: str, fmap: pd.Series, px: pd.DataFrame) -> pd.DataFrame:
+def month_band(ym: str, sp: pd.DataFrame, px: pd.DataFrame) -> pd.DataFrame:
     b = pq.read_table(BIDS / f"bids_{ym}.parquet",
                       columns=["date", "period", "unit", "side", "status", "power_mw", "price_eur_mwh"],
-                      filters=[("status", "==", "O"), ("unit", "in", list(fmap.index))]).to_pandas()
+                      filters=[("status", "==", "O"), ("unit", "in", sorted(set(sp.unit)))]).to_pandas()
     b["date"] = pd.to_datetime(b.date)
+    b["unit"] = b.unit.astype(str)
     b = b.merge(px, on=["date", "period"], how="inner")
     b = b[(b.price_eur_mwh - b.p_star).abs() <= H]
-    b["firm"] = b.unit.map(fmap)
+    b = attach_owners(b, sp).rename(columns={"group": "firm"})   # power_mw x share
+    b = b[b.firm.isin(FIRMS)]
     b["side"] = b.side.astype(str)
     t = b.pivot_table(index=["date", "period", "firm"], columns="side", values="power_mw",
                       aggfunc="sum", observed=True).reindex(columns=["V", "C"]).fillna(0.0)
@@ -74,12 +75,12 @@ def month_band(ym: str, fmap: pd.Series, px: pd.DataFrame) -> pd.DataFrame:
 
 
 def main() -> int:
-    fmap = unit_firm()
+    sp = unit_map()
     px = pd.read_parquet(DATA / "omie/prices/omie_day_ahead_prices.parquet",
                          columns=["date", "period", "price_es"]).rename(columns={"price_es": "p_star"})
     px["date"] = pd.to_datetime(px.date)
     months = sorted(f.stem.split("_")[1] for f in BIDS.glob("bids_*.parquet"))
-    band = pd.concat([month_band(m, fmap, px) for m in months], ignore_index=True)
+    band = pd.concat([month_band(m, sp, px) for m in months], ignore_index=True)
 
     f = pq.read_table(FIRM_PANEL, columns=["date", "period", "firm", "slope_i_h5"],
                       filters=[("firm", "in", list(FIRMS))]).to_pandas()

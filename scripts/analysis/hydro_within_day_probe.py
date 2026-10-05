@@ -25,7 +25,10 @@ Storage hydro that SELLS, from `unit_agents.parquet`: every `hydro_ugh` unit,
 the Portuguese cascades (`hydro`, PT, >= 200 MW, which are named after rivers --
 see CLAUDE.md), and La Muela's turbine leg (MUEL). Supply roles only, which
 drops the `HCGC01` purchase unit that `tech` labels hydro, and the bombagem
-units, which buy. Owner groups come from `owner_groups.parquet`.
+units, which buy. `storage_hydro()` gives each unit its latest owner group, used
+only to SELECT units; every row is then labelled with the group in force on its
+date (`dated_group`, lib/unit_ownership.py, 2026-10-05). Among these units that
+moves one: VIES is Viesgo's, not Repsol's, before 2018-11-02.
 
 THE MEASURE
 
@@ -54,7 +57,9 @@ import pyarrow.parquet as pq
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 from capacity_quantile_offer import SUPPLY_ROLES, quantile_prices  # noqa: E402
+from unit_ownership import majority_group, spells  # noqa: E402
 
 DATA = ROOT / "data"
 AGENTS = DATA / "omie/registry/unit_agents.parquet"
@@ -84,6 +89,13 @@ def storage_hydro() -> pd.DataFrame:
     return u[["unit", "max_power_mw", "group", "tech"]].rename(columns={"max_power_mw": "cap"})
 
 
+def dated_group(d: pd.DataFrame, sp: pd.DataFrame | None = None) -> pd.Series:
+    """The owner group in force on each row's date (its largest owner), aligned to d.
+    Falls back to the latest group (`group` column) where no spell covers the date."""
+    g = majority_group(d[["unit", "date"]], spells() if sp is None else sp, exposed=False)
+    return g.fillna(d["group"]) if "group" in d.columns else g
+
+
 def build(months: list[str], cap: pd.DataFrame) -> pd.DataFrame:
     prices = pd.read_parquet(PRICES, columns=["date", "period", "price_es"])
     prices["date"] = pd.to_datetime(prices["date"])
@@ -104,6 +116,7 @@ def build(months: list[str], cap: pd.DataFrame) -> pd.DataFrame:
         rows.append(q)
         print(f"  {m}: {len(q):,} unit-periods", flush=True, file=sys.stderr)
     d = pd.concat(rows, ignore_index=True)
+    d["group"] = dated_group(d)
 
     g = d.groupby(["unit", "date"])
     d["flat"] = (g.p50.transform("max") - g.p50.transform("min")) < 0.01

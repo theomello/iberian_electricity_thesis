@@ -11,6 +11,10 @@ by 0.86 MW per MW of its share of the lost output, with hour effects absorbing t
 price (F 121). The outages are not preceded by unusual prices. The undeclared cuts
 of 2024–2026 are price responses and are kept out.
 
+**The offer regression, §6 (2026-10-05).** β is −0.9, 95% set [−4.2, 0.7]: β = 1
+(supply-function Nash) is rejected and β = 0 (price-taking) is not. The instrument
+is borderline at the unit level (F ≈ 10).
+
 ## 1. What is built
 
 - **Lost output**, hour by hour, for the seven reactors (Almaraz 1 and 2, Ascó 1 and
@@ -119,8 +123,95 @@ F 146). One GW lost lowers X by about 5 €/MWh.
 - **"Economic" moves n by more than its loss (−1.6).** Two flexible-operation spells,
   coinciding with the firms' other cuts; excluded anyway.
 
-## 6. Next
+## 6. The offer regression (2026-10-05)
 
-The §9.2 regression: unit offers on X with unit × day and technology × hour effects,
-X instrumented by the unplanned and planned doses. Then β⁺ and β⁻ within firm, since
-an outage can push a firm across n = 0.
+`analysis/outage_offer_panel.py` builds the panel; `analysis/outage_offer_test.py`
+runs it (48 minutes) and writes `outputs/tables/outage_offer_results.csv`.
+
+**The question, by example.** Say Endesa's reactor trips. Endesa now sells less in
+the auction, so it gains less from a high price. If firms price to their net
+position (β > 0), Endesa's gas and hydro plants should now offer **lower** than
+Iberdrola's comparable plants in the same hour. Price-taking firms (β = 0) would
+not change their offers.
+
+**Design** (spec §9.2). 7.8 M unit-hours, 178 dispatchable units (hydro, pumped
+storage, combined cycle, coal), clean periods 2018–2026.
+
+- **Outcome:** the unit's offer price at 25% and at 50% of the volume it offers
+  (steps capped at 1,000 €/MWh). For thermal units also the 50% price minus the cost
+  known at bidding (`c_bid`).
+- **Technology × date × hour effects** absorb the market price, so the merit order
+  that inflated leg C cannot enter.
+- **Unit × week effects:** the comparison is across days within a week.
+- **Instruments:** X instrumented by the firm's unplanned and planned doses (GW).
+- **Inference:** week clusters, and Anderson–Rubin sets, which stay valid when the
+  instrument is weak.
+
+**First stage.** One GW of own outage lowers X by 3.3 €/MWh (unplanned, se 0.9) and
+3.9 (planned, se 1.1). Joint F ≈ 10, borderline. The firm-level first stage was far
+stronger (n, F 121) because the unit × week effects absorb outages that last whole
+weeks, as refuelling does. Only the starts and ends of spells are left.
+
+| sample | offer at | β | 95% set (AR) | p, β = 0 | p, β = 1 | F |
+|---|---|---|---|---|---|---|
+| all units | 25% | −0.88 | [−4.20, 0.66] | 0.11 | **0.03** | 10.2 |
+| all units | 50% | −0.73 | [−3.95, 1.25] | 0.14 | 0.06 | 10.2 |
+| five firms only | 25% | −0.81 | [−3.84, 0.69] | 0.12 | **0.03** | 11.1 |
+| month clusters | 25% | −0.88 | [−4.19, 0.33] | 0.07 | **0.02** | 11.4 |
+| no zero-price hours | 25% | −0.87 | [−4.05, 0.78] | 0.14 | **0.04** | 10.6 |
+| unplanned dose only | 25% | −2.79 | [−7.86, −0.17] | **0.04** | **0.01** | 9.8 |
+| planned dose only | 25% | +0.47 | [−3.11, 4.16] | 0.74 | 0.71 | 9.0 |
+| hydro | 50% | +0.41 | [−1.78, 2.18] | 0.33 | 0.28 | 8.4 |
+| combined cycle | 50% | −2.38 | [−8.70, 1.98] | 0.17 | 0.10 | 10.5 |
+| coal | 50% | +3.48 | [−3.85, 12.05] | 0.45 | 0.68 | 7.4 |
+| thermal, offer − c_bid | 50% | −1.59 | [−6.98, 2.78] | 0.28 | 0.17 | 11.2 |
+
+**Reading.**
+
+- **No sign that offers follow the net position across days.** Every pooled set
+  contains 0, and its upper end lies between 0.3 and 1.3. β = 1 is rejected at 5% on
+  the 25% offer in every pooled variant, and at 4–7% on the 50% offer.
+- **This agrees with legs A and D** (β 0.02–0.14) and with §9.1's reading of leg C:
+  once period effects remove the price, the β ≈ 3 is gone.
+- **The point estimates are negative**, from unplanned outages and combined cycles.
+  - One GW of unplanned own outage raises the firm's other offers by 7.5 €/MWh
+    (se 3.8, 25% point).
+  - By technology (50% point, the 86 located thermal units of the check below):
+    combined cycles +16 €/MWh (se 9), coal −4.5 (se 3.4).
+  - Planned outages: −0.4 (se 4.9).
+  - The unplanned and planned β differ by about 3.3, with a standard error near 2,
+    so they are not shown to disagree.
+
+**Two explanations of the negative sign, tested and rejected.**
+
+1. **Withdrawal from the auction.** A firm covering a lost reactor's contracts with
+   its other plant would take that plant's volume out of the auction, and the
+   offered share would fall. It does not: +0.004 per GW (se 0.003), combined cycles
+   +0.003 (se 0.0015).
+2. **Location.** A stopped reactor may make nearby gas plant necessary for grid
+   constraints (*restricciones técnicas*, paid as bid), and owners' plants sit near
+   their own reactors. The test adds the dose of every reactor within 150 or 300 km
+   of the unit, whoever owns it (`analysis/outage_offer_location_check.py`,
+   `outputs/tables/outage_offer_location_check.csv`; 86 of 97 thermal units located
+   through JRC). Nothing changes:
+   - the nearby dose is close to zero (50% offer, within 150 km: −2.3, se 4.6);
+   - the own dose is unchanged (+12.1 against +11.8 without it).
+
+**Sellers against buyers.** Splitting X into X⁺ and X⁻, with the doses split by the
+firm's sign in the previous week, gives X⁺ +3.7 (F 5.0) and X⁻ −1.3 (F 10.1). Too
+weak to read.
+
+**Limits.**
+
+- **Precision.** F ≈ 10, and the sets span 4–5 €/MWh per €/MWh of X. The design
+  bounds β below 1. It does not separate 0 from 0.5.
+- **Few events.** Unplanned spells fall mostly on Endesa and Iberdrola (§5).
+- **Unexplained sign.** The combined-cycle response to the firm's own unplanned trips
+  is unexplained. At t 1.7 it may be noise.
+
+**Next.**
+
+- **Rain as the second instrument** (spec §9.3 rank 2), stronger for hydro.
+- **An event study of unplanned trips:** the owner's units against rivals' units, day
+  by day around the trip. It shows the combined-cycle response directly, without the
+  week effects that cost power here.

@@ -95,6 +95,7 @@ scripts/
 | `fetch/fetch_jrc_hydro_database.py` | JRC Hydro-power plants database (GitHub) | no | `data/jrc_hydro/jrc_hydro_plants.parquet` |
 | `build/build_storage_hours.py` | JRC hydro + `cab` + a hand plant→unit map | no | `data/jrc_hydro/storage_hours.parquet` |
 | `fetch/fetch_snirh_reservoirs.py` | APA SNIRH *dados de base* | no, but **LMU eduVPN only** | `data/snirh/snirh_reservoir_series.parquet` |
+| `build/build_reactor_outages.py` | PDBF + `cab` + `indisp` + ownership | no | `outputs/tables/reactor_outage_{hours,dose}.parquet`, `reactor_outage_spells.csv` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
 `lib/config.py` loads tokens from a gitignored `.env`.
@@ -1202,6 +1203,17 @@ PFAF_ID, ORDER, wkb` (shapely geometry). `NEXT_DOWN` is the sub-basin each drain
 into, so a dam's upstream catchment is its sub-basin plus everything draining into
 it. 20 level-12 sub-basins drain outside the box (French and Moroccan rivers); no
 Spanish or Portuguese river does.
+
+### Reactor outages by cause — the instrument for n (2026-10-05)
+`build/build_reactor_outages.py`: lost output of the seven reactors hour by hour
+(`cab` max power minus the PDBF schedule), each hour's cause from the `indisp`
+declaration covering it, and each owner's dose by its share that day. **A
+declaration explains at most the capacity it takes away**: a summer-long cooling
+limit to 960 MW does not explain a cut to 400 MW at low prices, which first made such
+cuts look like weather. 49 unplanned and 51 planned spells; unplanned outages follow
+ordinary prices. **Undeclared lost output rose to 5–8 TWh a year from 2024** and
+follows low prices: reactors now cut output at low prices, which is a choice and not
+an instrument. Detail and first stage in `notes/rq-reactor-outages.md`.
 
 ### EDP moved ~1,000 MW from `ACAVADO` to `ALIMA` in March 2024
 `cab` max power goes 1,632 → 632 MW for `ACAVADO` ("CAVADO") and 652 → 1,652

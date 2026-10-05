@@ -523,6 +523,13 @@ y_ut = α_ud + δ_(tech × t) + γ · X_ft + ε_ut,        β = −γ / (offer d
 | 3 | own regional wind and solar | own capacity by region × regional weather | national forecasts lower every firm's n (displacement beats own fleet); with period effects only (own share − mean) × weather is left | needs farm locations matched to OMIE units (RAIPEE, OpenStreetMap) and regional weather | third; data-heavy |
 | 4 | rivals' shocks for \|RD′\| | rivals' outages, interconnector capacity | moving only the slope gave β −16 at F 7 (leg C); interconnector capacity barely moved X in a probe | rival outages shift residual demand rather than rotate it | low; a rotation instrument has not been found |
 
+**Built 2026-10-05** (`notes/rq-reactor-outages.md`). 49 unplanned and 51 planned
+outage spells; with firm × month and hour effects, each MW of a firm's unplanned dose
+lowers its exposed n by 0.86 MW (F 121; planned 0.89, F 138), and X by about 5 €/MWh
+per GW. Unplanned outages follow ordinary prices (+0.6 €/MWh two days before, se 3.4).
+The undeclared cuts of 2024–2026 (5–8 TWh a year) follow low prices and are excluded.
+Thin for Naturgy and EDP, whose doses come only through Almaraz and Trillo.
+
 ### 9.4 Heterogeneity and the control group
 
 - **The fringe is an assumption, not a fact.** Hortaçsu and Puller (2008) found
@@ -584,8 +591,8 @@ That is what leg C in levels needs.
 
 ### 9.7 Sequence
 
-1. **Outage table**: reactor spells by type (refuelling, trip, economic), dose per
-   firm by share; check that trips are not timed on prices.
+1. ~~**Outage table**~~ — built 2026-10-05: first stage F 121 (unplanned), trips not
+   timed on prices (`rq-reactor-outages.md`).
 2. **The §9.2 regression with outage doses as instruments**: one β, then β⁺ and β⁻
    within firm. Rain as the second instrument.
 3. **IVPEE test** on thermal offers, Spanish against Portuguese, with `_bid` costs.

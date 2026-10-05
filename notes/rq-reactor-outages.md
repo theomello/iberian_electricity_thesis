@@ -14,6 +14,9 @@ of 2024–2026 are price responses and are kept out.
 **The offer regression, §6 (2026-10-05).** β is −0.9, 95% set [−4.2, 0.7]: β = 1
 (supply-function Nash) is rejected and β = 0 (price-taking) is not. The instrument
 is borderline at the unit level (F ≈ 10).
+**Rain as a second instrument and an event study, §7–8.** On thermal units, rain and
+outages together give β −0.9, 95% set [−4.0, 1.8] (F 13.5). Trips cut the owners' X
+at once, and their offers show no jump.
 
 ## 1. What is built
 
@@ -215,3 +218,93 @@ weak to read.
 - **An event study of unplanned trips:** the owner's units against rivals' units, day
   by day around the trip. It shows the combined-cycle response directly, without the
   week effects that cost power here.
+
+## 7. Rain as a second instrument (2026-10-05)
+
+`analysis/outage_rain_offer_test.py` → `outputs/tables/outage_rain_offer_results.csv`.
+
+**Index.** Each group's own-catchment rain, as in `rq-hydro-rain-first-stage.md`,
+but daily and for every group owning linked hydro (six do). H is the rain over the
+k days before day t, standardised against 1991–2020, weighted by GW × ownership
+share.
+
+**Thermal units only.** Rain changes a hydro unit's own cost (the value of its
+water), so it cannot be excluded from hydro offers. A gas or coal plant's cost does
+not depend on rain.
+
+**Effects.** A 30-day rain sum barely moves within a week, so unit × week effects
+leave it nothing. The rain runs use unit × month effects and month clusters.
+
+84 thermal units with a plant-specific cost, 3.6 M unit-hours, 2018-04 → 2026-05.
+The outcome is the offer price at 50% of offered volume (the 25% point and offer
+minus `c_bid` agree):
+
+| instruments | effects | first stage | β | 95% set (AR) | p, β = 1 | F |
+|---|---|---|---|---|---|---|
+| outages | unit × week | −3.7 per GW (unpl.) | −1.78 | [−7.26, 2.65] | 0.15 | 11.0 |
+| outages | unit × month | −3.3 per GW (unpl.) | −0.14 | [−4.03, 4.31] | 0.44 | 14.9 |
+| rain, 30 days | unit × month | +0.20 per unit of H (se 0.07) | −2.46 | [−7.18, 1.52] | 0.08 | 9.5 |
+| rain, 90 days | unit × month | +0.28 (se 0.10) | −4.34 | [−10.68, 0.12] | 0.03 | 7.7 |
+| **outages + rain 30** | unit × month | | **−0.85** | **[−3.96, 1.83]** | 0.17 | 13.5 |
+| outages + rain 90 | unit × month | | −1.27 | [−4.77, 1.53] | 0.09 | 12.1 |
+
+- **Rain works as a first stage.** More rain in a firm's catchments raises its X
+  (its hydro sells more), with F 9.5 alone.
+- **Rain also gives a negative β.** Two independent instruments now point the same
+  way: a shock that cuts a firm's cheap own output (a trip, a dry month) raises its
+  thermal offers. The simple condition predicts the opposite.
+- **Combined, the set is [−4.0, 1.8].** It contains both 0 and 1. Thermal units
+  alone do not separate price-taking from Nash. The all-unit run of §6 rejected
+  β = 1, but it includes hydro, whose offers rain would also move.
+
+## 8. Event study of unplanned trips (2026-10-05)
+
+`analysis/outage_event_study.py` → `outputs/tables/outage_event_study.csv`,
+`outputs/figures/outage_event_study.png`.
+
+**Events.** 21 unplanned trips of at least 24 hours, of reactors that ran normally
+in the 7 days before. Ten other spells were dropped because the reactor was already
+down: six continue a refuelling or another stop (Almaraz 1 in June 2020, Ascó 1 in
+November 2021, Vandellòs II in November 2022), and four are stretches of reduced
+output.
+
+**Design.** Stacked by event, unit-day means:
+
+- owners' units against rivals' units of the same technology on the same day;
+- intensity = owner's share × reactor capacity (GW);
+- day −1 is the reference;
+- controls: the group's planned dose and its unplanned dose from other reactors;
+- clusters: event.
+
+Per GW of the owner's share:
+
+| | days −7..−2 | days 0–3 | days 4–14 |
+|---|---|---|---|
+| X, all units | −1.3 (2.8) | **−3.5 (1.6)** | −1.7 (2.6) |
+| offer at 50%, all units | +12.4 (8.4) | +6.3 (5.5) | −1.9 (6.1) |
+| combined cycles | +12.6 (17.5) | +9.3 (11.8) | −1.1 (13.5) |
+| coal | +5.0 (3.2) | **−4.8 (2.3)** | −4.5 (3.4) |
+| hydro | +16.6 (9.2) | +8.5 (9.2) | −1.5 (6.4) |
+| offered share of capacity | 0.00 (0.01) | 0.00 (0.00) | +0.01 (0.01) |
+
+- **The trip reaches the owner's position at once**: X falls about 5 €/MWh per GW
+  on day 0.
+- **Offers do not jump.** Relative to rivals', owners' hydro and gas offers are
+  higher in the week before than on day −1, drift down through the window, and show
+  no break at day 0. The positive
+  reduced form of §6 is not a response to the trip. It comes from slow movement
+  that unit × week effects pick up.
+- **Only coal moves the predicted way.** Its offers fall by 4.8 €/MWh per GW in
+  days 0–3 (se 2.3), against X −3.7: β ≈ 1.3, from 6,500 unit-days.
+- **With 21 events the bands are wide.** Read the pattern, not single days.
+
+## 9. Where this leaves the across-day margin
+
+- **Two instruments move X and the offers do not follow.** Outages (F 121 on n at
+  the firm level, ≈ 10–15 on X at the unit level) and rain (F 9.5).
+- **β = 1 is rejected only on all units** (§6). On thermal units the combined set
+  is [−4.0, 1.8].
+- **Every point estimate is negative**, from two independent sources. That is a
+  pattern the single condition does not explain. It does not come from withdrawal
+  of volume (offered share flat), location (§6), or the timing of trips (§8).
+

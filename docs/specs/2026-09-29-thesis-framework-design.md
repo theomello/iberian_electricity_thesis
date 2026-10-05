@@ -604,8 +604,11 @@ That is what leg C in levels needs.
 1. ~~**Outage table**~~ — built 2026-10-05: first stage F 121 (unplanned), trips not
    timed on prices (`rq-reactor-outages.md`).
 2. ~~**The §9.2 regression with outage doses as instruments**~~ — run 2026-10-05:
-   β −0.9, set [−4.2, 0.7], F ≈ 10; β⁺/β⁻ too weak (F 5). Still to do: rain as the
-   second instrument, and an event study of unplanned trips.
+   β −0.9, set [−4.2, 0.7], F ≈ 10; β⁺/β⁻ too weak (F 5). Rain added as a second
+   instrument (thermal units, unit × month effects): combined β −0.85, set
+   [−4.0, 1.8], F 13.5; rain alone also negative. Event study of 21 clean trips: X
+   falls at once (−3.5 per GW, days 0–3), offers show no break
+   (`rq-reactor-outages.md` §7–9).
 3. **IVPEE test** on thermal offers, Spanish against Portuguese, with `_bid` costs.
    It validates c before any levels estimate.
 4. **Day-ahead − intraday premium** against combined n (descriptive).

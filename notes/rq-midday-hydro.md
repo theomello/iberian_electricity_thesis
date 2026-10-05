@@ -1197,6 +1197,49 @@ in every hour.** Median X, €/MWh:
 **Next.** Leg B needs an instrument that moves EDP's day-level exposed X.
 Offered solar is not one.
 
+### 3.21 Owners by date and share: leg A holds (2026-10-05)
+
+`hydro_within_day_probe.dated_group`, `edp_hydro_panel.py --attach-x`; framework
+spec §2.4. Each unit-period now carries the owner group in force that day, and X
+comes from `firm_x.py` on ownership by date and share (co-owned reactors split,
+Iberenergía's 15.5% of Trillo in EDP, EDP's Spanish retail and Castejón EDP's
+until 2020-12-01). Among the storage units only VIES changes group: Viesgo's, with
+no X, before Repsol's purchase on 2018-11-02 (7,320 unit-periods). EDP's X moves
+level (median −3.21 → −2.36 €/MWh) and keeps its hourly shape (correlation 0.996).
+
+| result | section | exposed, static owner | exposed, dated owner |
+|---|---|---|---|
+| first stage, all EDP periods, hour × year-month FE (F) | §3.10 | 92.5 | 97.9 |
+| within-day β at 50% of offered volume, pooled | §3.11 | 0.09 [−0.13, 0.33] | 0.089 [−0.13, 0.33] |
+| within-day β at 75% of offered volume, 2024–26 | §3.11 | 2.29 [1.29, 3.69] | 2.23 [1.26, 3.56] |
+| reshaping cascades, quantity at the median, 2024–26 | §3.14 | −0.141 [−0.25, −0.06], β 0.08 | −0.137 [−0.24, −0.06], β 0.07 |
+| by cascade, implied β, 2024–26: Douro / Mondego / Tejo-Mondego | §3.14 | 0.12 / 0.03 / 0.06 (as built) | 0.14 / 0.03 / 0.09 |
+| Iberdrola, best β by era; overlap at β = 1 | §3.15 | −0.75/−0.25/−0.5; 0.801/0.709/0.683 | −0.5/−0.25/−0.5; 0.802/0.708/0.676 |
+| within-day markup bound on λ̂₅₀, median (p90) | §3.16 | 0.50 (1.75) | 0.40 (1.74) |
+| leg B, large storage, λ₅₀ pooled: F | §3.19 | 0.4 | 0.4 (still no first stage) |
+| price-setting periods, 2SLS β (invalid, §3.11) | §3.11 | 3.6 [2.52, 5.95] | 3.71 [2.67, 5.72] |
+
+**Every leg A conclusion stands**: β ≈ 0 at the bottom and middle of EDP's curve,
+the reshaping cascades respond at 3–14% of Nash from 2024, Iberdrola allocates
+like a price-taker.
+
+**Why the price-setting version gives 3.6.** §3.11 found that the unit's movement
+along its own curve explains about 5% of the reduced form and called the rest
+selection. Leg C's diagnosis (`rq-leg-c-thermal-cost.md` §6) names the rest: more
+solar moves the market price down the merit order, set by other plants, for every
+plant whether its owner has a stake or not, and a price outcome attributes that
+to X. Measured on the offers, at fixed points or as quantity at a fixed price,
+the outcome does not contain the market price, which is why §3.11–§3.14 work.
+
+**§3.8 corrected: Iberdrola's retail buys 99–100% of its bilateral energy from
+its own units.** The 1.5–2 TWh "from co-owned nuclear registered to Naturgy or
+Endesa" was Iberdrola's own share of Almaraz, Trillo, Vandellós II and Ascó 2. A
+co-owned reactor's bilateral output goes to each co-owner's retail arm in about
+its ownership share (Almaraz 1, June 2023: 0.557 / 0.330 / 0.113 to Iberdrola /
+Endesa / Naturgy, against listed shares 0.527 / 0.360 / 0.113; Vandellós II and
+Ascó 2 alike). That is also an independent check on the listing's shares.
+`iberdrola_contract_trace.py` now labels such flows Iberdrola's.
+
 ## 4. Specification (to build)
 
 ```

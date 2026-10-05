@@ -56,3 +56,25 @@ lower the price its thermal sells at), Naturgy and Repsol ≈ 0.
 - Ownership static (Repsol owns Viesgo's hydro only from 2018-11-02).
 - A first stage only: no thermal outcome yet. Wet weeks are often windy: the
   second stage needs the firm's own wind and solar controlled.
+
+## Rerun on owners by date and share (2026-10-03)
+
+Same probe (single ERA5 points per basin, 2018–2026); n now on dated ownership.
+Static → dated:
+
+| sample | b (MW per mm/day) | F |
+|---|---|---|
+| pooled, 90 days | 38.8 → 31.1 | 15.4 → 11.6 |
+| pooled, 30 days | 41.0 → 38.5 | 18.0 → 19.9 |
+| pooled, 90 days, quarter clusters | 38.8 → 31.1 | 9.4 → 6.6 |
+| pooled, 90 days, without Movhera | 43.9 → 35.8 | 17.6 → 13.6 |
+| basin mix only, 90 / 30 days | 170 / 152 → 139 / 132 | 26.7 / 21.1 → 18.5 / 20.9 |
+| EDP, 90 days | 39.7 → 33.5 | 32.3 → 24.9 |
+| Iberdrola, 90 days | 21.6 → 20.9 | 5.2 → 6.4 |
+| Endesa, 90 days | −37.5 → −34.3 | 4.5 → 3.3 |
+| Naturgy / Repsol, 90 days | ≈ 0 | ≈ 0 |
+| Movhera | 43.7 | 24.9 (unchanged) |
+
+The 90-day pooled first stage weakens and falls below 10 with quarter clusters.
+The next version is the complete-data one (catchment rain per plant × the owner's
+share that day; handoff 2026-10-05 job 4).

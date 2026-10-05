@@ -290,6 +290,25 @@ observable marginal cost.
 >   counted (2022: +2.48 alone, +0.26 together). EDP Comercial's purchases vanish
 >   from 2025; unexplained, possibly an ownership change across snapshots.
 >
+> **On owners by date and share (2026-10-05)**, same measure, TWh over Feb + Jun +
+> Oct (co-owned reactors split by share; Viesgo Repsol's from 2018-11-02; EDP's
+> Spanish retail, wind and Castejón EDP's until 2020-12-01; EDP Comercial in EDP):
+>
+> | firm | 2018 | 2020 | 2022 | 2023 | 2024 | 2025 | 2026 |
+> |---|---|---|---|---|---|---|---|
+> | Iberdrola | −3.93 | −3.10 | −3.95 | −3.89 | −2.53 | −2.02 | −2.46 |
+> | Endesa | −5.98 | −5.80 | −4.07 | −5.04 | −5.38 | −4.81 | −3.30 |
+> | Naturgy | −5.10 | −2.52 | −0.75 | −1.68 | −1.39 | −1.69 | −0.93 |
+> | Repsol | +0.39 | +0.93 | +1.09 | +0.97 | −0.66 | −0.53 | −0.54 |
+> | EDP | +3.34 | +3.74 | +0.32 | +1.28 | +2.17 | +0.81 | +0.41 |
+>
+> Every sign holds. Endesa's 2018–2019 purchases include Energía XXI, its regulated
+> supplier, under its old name; renamed in late 2019 it stands as its own group,
+> so Endesa's as-built purchases drop by about 3 TWh at the rename. Naturgy's,
+> Repsol's and EDP's regulated suppliers (Comercializadora Regulada, Regsiti,
+> Baser, CHC) stand apart the same way. The exposed position, which leaves all of
+> them out, is unaffected.
+>
 > **Rebuilt 2026-09-29** — see the tables directly below this box. Every
 > `incentive` figure after them in this section is superseded and kept only as
 > the record of what was reported.

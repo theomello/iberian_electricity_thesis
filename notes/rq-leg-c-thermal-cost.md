@@ -12,6 +12,9 @@ renewables rise. The price falls down the merit order for every plant, and the
 condition reads that fall as a change in markup. Conduct has to be read from the
 firms' own offers, net of price-takers' offers (leg D §7 does this: β 0.024).
 
+*§1–§5 quote the run on static owners (2026-10-01). §7 lists every figure on
+owners by date and share (rerun 2026-10-03); nothing in the verdict changes.*
+
 **In one line.** The condition in levels gives β ≈ 3, three times full Nash.
 That rejects a joint hypothesis, not conduct alone, and the leading candidate
 for the failure is that the price sits inside the gaps of the units' stepped
@@ -367,3 +370,34 @@ the cheap improvements.
 
 **The β ≈ 3 stays as a result:** a conduct test with the market price as its
 outcome would, in this market, wrongly find more-than-Nash conduct.
+
+## 7. Rerun on owners by date and share (2026-10-03)
+
+`lib/unit_ownership.py`: co-owned reactors split by share, dated sales, Iberenergía
+in EDP. Rows grow by 8% (335,545 → 363,867) because units whose dated owner differs
+from the static one are no longer dropped. Static → dated:
+
+| result (specification 1 unless stated) | static | dated |
+|---|---|---|
+| pooled β (F; AR set) | 3.103 (70.1; [2.587, 3.665]) | 3.094 (69.0; [2.574, 3.627]) |
+| specification 2 / route 3 | 3.060 / 3.049 | 3.052 / 2.950 |
+| gas / coal | 3.695 / 1.362 | 3.660 / 1.366 |
+| 2018–2021 / 2022–2023 | 2.054 / 3.354 | 2.176 / 3.323 |
+| 2018 / 2019 / 2020 (AR sets empty) | 0.567 / 1.831 / 0.747 | 0.856 / 2.704 / 2.010 |
+| 2021 / 2022 / 2023 | 3.132 / 3.265 / 4.740 | 3.138 / 3.248 / 4.523 |
+| five firms / other owners | 2.314 / −17.7 (F 3.1) | 2.275 / 38.8 (F 0.9) |
+| p − own top step / own top step − c | 2.251 / 0.853 | 2.049 / 1.045 |
+| own step at p, both instruments / solar alone | 0.869 / 0.894 [0.554, 1.517] | 0.802 / 0.839 [0.489, 1.476] |
+| unit effects at the own-step β, median (IQR) | +8.31 (+4.82 to +14.61) | +7.96 (to +13.30) |
+| n alone / slope alone | 10.47 / −19.1 | 10.89 / −16.5 |
+| slope floor 20 / 50 / 100 | 3.41 / 4.22 / 5.43 | 3.38 / 4.15 / 5.33 |
+| reduced forms per GW, wind / solar: p | −1.65 / −2.09 | −1.55 / −1.70 |
+| p − c | −2.09 / −2.00 | −2.00 / −1.88 |
+| X | −0.68 / −0.64 | −0.63 / −0.62 |
+| n (MW) | −91.5 / −91.3 | −90.3 / −88.4 |
+| median p − c, net buyers / net sellers | +14.05 / +16.28 | +13.88 / +15.23 |
+| median top − c, net buyers / net sellers | +2.87 / +1.00 | +3.14 / +1.20 |
+| specification 2 check, gas h·eff median (share within 20%) | 1.058 (0.67) | 1.074 (0.67) |
+
+The 2018–2020 years move most: they hold the dated sales (Viesgo to 2018-11,
+EDP's Castejón and Spanish retail to 2020-12). §6 already quotes the dated run.

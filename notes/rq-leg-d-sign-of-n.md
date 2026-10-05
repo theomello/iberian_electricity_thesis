@@ -11,6 +11,9 @@ Results: `outputs/tables/leg_d_results.csv`.
 Nash rested on rivals' solar moving offers only through X, which the placebo
 (§4) contradicts.*
 
+*§1–§7 quote the run on static owners. §8 lists the figures on owners by date and
+share (rerun 2026-10-03): β 0.03 → 0.024, β⁻ 0.19 unchanged; no conclusion moves.*
+
 **Rerun 2026-10-02 with REE's day-ahead forecasts as the instruments (§7).**
 Net of the fringe's response to the same forecasts, one common slope fits both
 forecasts and has the market-power sign, but it is small: β = 0.03 (AR set
@@ -556,3 +559,37 @@ and solar: one proportional to each forecast's first stage passes unseen.
   restrictions at once.
 - **2019 on, Spain's forecasts only** (Portugal's needs ENTSO-E).
 - The limits of §6 carry over.
+
+## 8. Rerun on owners by date and share (2026-10-03)
+
+Same panel and specifications; each unit's owner is the one in force that day, a
+co-owned unit goes to its largest owner, and X comes from `firm_x.py` on the same
+ownership. Static → dated.
+
+**§7, the forecast design (the rows to read):**
+
+| specification | static | dated |
+|---|---|---|
+| net of the fringe, one slope: c (AR set); β | −0.119 ([−0.217, −0.041]); 0.032 | −0.091 ([−0.185, −0.015]); **0.024** (AR ≈ [0.00, 0.05]) |
+| its first-stage F; overidentification p | 60.0; 0.95 | 60.1; 0.92 |
+| net, forecasts × firm: β⁺ / β⁻ (F) | 0.000 / 0.187 (40 / 35) | −0.014 / **0.186** (39 / 34) |
+| raw offers, one slope: β; overid p | −0.068; 0.03 | −0.068; 0.02 |
+| Iberdrola, net, one slope: β; overid p | 0.035; 0.035 | 0.033; 0.027 |
+| Iberdrola, raw, two slopes: AR p of price-taking | 0.78 | 0.78 (unchanged) |
+| EDP, net, one slope: AR set | empty | empty |
+| placebo, fringe thermal on W / S (pp per GW) | −0.221 / −0.253 | −0.207 / −0.211 |
+
+**§1–§6, the first design (superseded by §7):**
+
+| specification | static | dated |
+|---|---|---|
+| pooled γ⁺ / γ⁻ (β⁺ / β⁻); p(equal) | +3.39 / −1.38 (−0.83 / +0.38); 0.009 | +4.21 / −1.62 (−1.04 / +0.44); 0.009 |
+| pooled SW F⁺ / F⁻ | 8.9 / 25.0 | 8.3 / 36.6 |
+| Iberdrola γ⁺ / γ⁻ (F) | +0.72 / −0.50 (15.2) | +0.92 / −0.54 (12.2) |
+| one common slope, z common: c; β; F | −1.793; 0.48; 60 | −2.032; 0.54; 69 |
+| one common slope, z by firm: c; F | −1.831; 9.99 (weak) | −1.435; 27.8 |
+| net of the fringe's solar response: AR common γ | [−2.152, −1.594] | empty |
+| s_prev controlled: AR common γ | two unbounded pieces | [5.80, 55.69] (wrong sign) |
+
+The first design's verdict stands: the Nash-signed common slope needs the lagged
+sign uncontrolled; with it controlled the slope is undetermined or wrong-signed.

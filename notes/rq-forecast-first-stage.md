@@ -11,6 +11,10 @@ position, including the firms that own the most wind, because it pushes their
 gas and hydro out of the dispatch. That loss outweighs what their own wind and
 solar add.
 
+*§2–§3 quote the run on static owners. §6 has the figures on owners by date and
+share (rerun 2026-10-03): the first stage gets stronger for Endesa and Naturgy, and
+the reading does not change.*
+
 ## 1. Design
 
 For each firm f, on the periods the legs use (`clean & ~zero_price`):
@@ -120,3 +124,21 @@ its own standard deviation, the price by 0.57, X by 0.04–0.20.
 - Revise §5.1's own-versus-rivals split. The forecasts are better described as
   shifters of the residual demand's level, which move p, n (through dispatch) and
   |RD′|.
+
+## 6. Rerun on owners by date and share (2026-10-03)
+
+n and X now count each co-owned reactor for every co-owner by share and dated
+sales at their dates. The price and the slope barely move; n moves where the
+reactors and the sales sit. F on the hourly era, static → dated:
+
+| firm | F on n | b_W / b_S on n (MW per GW) | F on X |
+|---|---|---|---|
+| EDP | 241 → 261 | −142 / −208 → −134 / −207 | 63.7 → 66.4 |
+| Endesa | 87 → 115 | −43 / −56 → −42 / −46 | 9.8 → 14.6 |
+| Iberdrola | 109 → 114 | −79 / −248 → −74 / −255 | 53.0 → 53.0 |
+| Naturgy | 24 → 31 | −40 / −86 → −47 / −89 | 18.2 → 20.9 |
+| Repsol | 33 → 33 | unchanged | 14.3 → 14.3 |
+
+Over all periods (the handoff's figures): F on n Endesa 87 → 115, Naturgy 17 → 23,
+Iberdrola 79 → 79, EDP 112 → 115. Every firm's n still falls with a windy or
+sunny forecast.

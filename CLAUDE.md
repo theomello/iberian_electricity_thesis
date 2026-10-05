@@ -85,7 +85,7 @@ scripts/
 | `fetch/fetch_omie_interconnection.py` | OMIE `capacidad_inter_pbc` | no | `data/omie/interconnection/omie_interconnection_capacity.parquet` |
 | `fetch/fetch_omip_forwards.py` | OMIP | no | `data/omip/parquet/omip_forwards_{zone}_{YYYY}.parquet` |
 | `fetch/fetch_hydro_reservoirs.py` | MITECO Boletín Hidrológico | no | `data/miteco/embalses_historico.parquet` |
-| `fetch/fetch_jrc_ppdb_efficiency.py` | JRC-PPDB-OPEN (Zenodo) | no | `data/jrc_ppdb/jrc_spain_units.parquet` |
+| `fetch/fetch_jrc_ppdb_efficiency.py` | JRC-PPDB-OPEN (Zenodo) | no | `data/jrc_ppdb/jrc_{spain,portugal}_units.parquet` |
 | `fetch/fetch_mibgas_prices.py` | MIBGAS | no | `data/mibgas/mibgas_price_index_daily.parquet` |
 | `fetch/fetch_eua_carbon_price.py` | investing.com (browser-captured) | no, but not resumable | `data/investing/eua_carbon_price_daily.parquet` |
 | `fetch/fetch_coal_price.py` | investing.com (browser-captured) | no, but not resumable | `data/investing/coal_price_daily.parquet` |
@@ -409,10 +409,16 @@ three differs from the static attribution by exactly the share changes.
 **The stored panels and legs C and D were rebuilt on it on 2026-10-03**
 (`.superpowers/sdd/2026-10-02-ownership-rerun/chain.sh`, 19 steps, all checks pass;
 old against new in `notes/handoff-2026-10-05.md`). Every builder of the leg C/D panels
-and instruments uses it. **Leg A and the descriptive scripts still read the static
-owner** (`edp_hydro_panel.py`, `hydro_within_day_probe.py`, `firm_net_position.py`,
-`own_demand_in_band.py`, `firm_shares_hourly.py`, `markdown_contract_test.py`,
-`iberdrola_contract_trace.py`, `iberdrola_self_supply.py` and older designs).
+and instruments uses it. **Leg A and the descriptive scripts followed on
+2026-10-05** (`edp_hydro_panel.py`, `hydro_within_day_probe.py`,
+`hydro_schedule_routes.py`, `firm_net_position.py`, `own_demand_in_band.py`,
+`firm_shares_hourly.py --tier owner`, `markdown_contract_test.py`,
+`iberdrola_contract_trace.py`, `iberdrola_self_supply.py`; old against new in the
+running notes). Older designs still read the static owner.
+**The listed shares are confirmed by the bilateral flows**: a co-owned reactor's
+bilateral output goes to each co-owner's retail arm in about its ownership share
+(Almaraz 1, June 2023: 0.557 / 0.330 / 0.113 to Iberdrola / Endesa / Naturgy
+against 0.527 / 0.360 / 0.113).
 Iberenergía (Trillo's 15.5%) is merged into EDP (`GROUP_MERGES`): a 100% subsidiary
 of Hidroeléctrica del Cantábrico (CNMC INF/DE/0178/14). Under dated ownership
 Endesa's Energía XXI and Repsol's Regsiti are caught as regulated pass-through
@@ -1011,8 +1017,16 @@ emission factor for natural gas, a regulatory constant, not fetched data.
   mean 55.38 €/tCO2, range 8.07–98.01. See the trap below on why this one
   fetcher is not resumable.
 
-**The match: `data/jrc_ppdb/jrc_cab_match.parquet`, 77 units** (rebuilt
-2026-08-18, up from an initial 53 — see below). JRC and OMIE share no key at
+**Portugal, added 2026-10-05: `jrc_portugal_units.parquet`, 75 units, 16
+thermal, every one with an efficiency** (gas 0.54–0.55 manufacturer-based: Lares,
+Ribatejo, Pego and Tapada do Outeiro combined cycles; coal 0.37–0.40 from emissions:
+Sines and Pego, both closed in 2021). JRC lists them generator by generator, one for
+one with OMIE's units, so they enter the match through a checked hand table
+(`PT_GENERATOR_MATCH`: capacity within 6%, same unit number, same fuel), not the
+plant aggregation Spain needs. OMIE's Turbogás units are JRC's "T.Outeiro C.C.".
+
+**The match: `data/jrc_ppdb/jrc_cab_match.parquet`, 77 Spanish units plus the 16
+Portuguese** (Spanish part rebuilt 2026-08-18, up from an initial 53 — see below). JRC and OMIE share no key at
 all, so this is name/capacity matching in the same spirit as
 `build_unit_agents.py` — three paths, all requiring positive evidence,
 nothing forced: 30 by exact code match (JRC's `name_g` sometimes *is* the
@@ -1058,8 +1072,15 @@ inside the mechanism, but the decree defines the adjustment on the gas price and
 converting it to a coal plant's fuel cost needs a consumption factor the decree
 does not give. Not invented here.
 
-**The output: `data/jrc_ppdb/implied_marginal_cost_daily.parquet`, 242,573
-unit-days (every calendar day), `fuel` column distinguishes gas/coal.** Until
+**The output: `data/jrc_ppdb/implied_marginal_cost_daily.parquet`, 292,979
+unit-days (every calendar day; 242,573 Spanish), `fuel` column distinguishes
+gas/coal.** **`marginal_cost_bid_eur_mwh` and `marginal_cost_capped_bid_eur_mwh`
+(2026-10-05) use only prices final when offers close at 12:00 on D-1**: each
+series' last value dated D-2 or earlier. MIBGAS's index for gas day D averages every
+completed session for D, intraday trades on D included, so D-1's is not final at
+noon; carbon, coal and the ECB rate settle in the afternoon. Against the delivery-day
+cost the gas difference is a median 1.5 €/MWh, 95th percentile 10.5 (22–27 in
+2021–2022). Use the `_bid` columns for anything that models the offer decision. Until
 2026-10-01 it held 170,402 and **no weekends**: carbon, coal and the exchange rate
 are quoted on trading days only and were inner-joined, so every Saturday and Sunday
 fell out, and any design reading the file silently dropped weekends. They are now

@@ -118,6 +118,21 @@ half of Naturgy's mean position and moves the hours in which Naturgy is a net
 seller. Every firm-level result so far uses these positions: legs C and D, the
 forecast first stage, and the leg D rerun.
 
+**Fixed 2026-10-02 (split by share), and the shares checked against the flows on
+2026-10-05.** Each co-owner nominates about its own share of a reactor's output to
+its own retail arm on bilateral contracts (PDBF role 4, buyers grouped by owner):
+
+| reactor, June 2023 | Iberdrola | Endesa | Naturgy | listed shares |
+|---|---|---|---|---|
+| Almaraz 1 | 0.557 | 0.330 | 0.113 | 0.527 / 0.360 / 0.113 |
+| Trillo | 0.579 | — | 0.421 | 0.49 / 0.01 / 0.345 (+ EDP 0.155) |
+| Vandellós II | 0.353 | 0.647 | — | 0.28 / 0.72 |
+| Ascó 2 | 0.162 | 0.838 | — | 0.15 / 0.85 |
+
+June 2019 gives the same pattern. Trillo's EDP and Endesa stakes reach no
+retail arm of their own on these contracts. So the split by share is what the
+firms themselves do with the energy.
+
 ## 5. Representation and pass-through
 
 - **Represented plant.** 75.8% of Axpo's sell volume comes from units named as

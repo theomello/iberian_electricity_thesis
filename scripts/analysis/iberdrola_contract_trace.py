@@ -18,8 +18,8 @@ same contract id is credited with
     seller MWh x (Iberdrola retail buy MWh / all buy MWh on that contract-period)
 
 so a contract shared with other buyers is not all attributed to Iberdrola.
-Sellers are labelled by the owner groups in force that day, each with its share
-(`lib/unit_ownership.py`, 2026-10-05; a co-owned reactor's sale is split), and by
+Sellers are labelled by the owner group in force that day
+(`lib/unit_ownership.py`, 2026-10-05; a reactor Iberdrola co-owns counts as Iberdrola's, see month_trace), and by
 technology (OMIE's listing, projected label, then the `cab` name), and the
 storage-hydro units already traced (HYDRO) are shown as their own row.
 
@@ -67,12 +67,20 @@ def month_trace(ym: str, retail: list[str], lab: pd.DataFrame, sp: pd.DataFrame)
     share = (ib / allb).rename("share").reset_index()
     sells = p[p.mwh > 0].merge(share, on=key, how="inner")
     sells["to_ib"] = sells.mwh * sells.share
-    # The seller's owners in force that day, each with its share of the energy
-    # (lib/unit_ownership.py, 2026-10-05): a co-owned reactor's sale is split.
+    # The seller's owner in force that day (lib/unit_ownership.py, 2026-10-05). A
+    # co-owned reactor's bilateral output goes to each co-owner's retail arm in about
+    # its ownership share (June 2023: Almaraz 1 0.557 / 0.330 / 0.113 to Iberdrola /
+    # Endesa / Naturgy against shares 0.527 / 0.360 / 0.113), so what reaches
+    # Iberdrola's retail from a unit Iberdrola co-owns is Iberdrola's own share:
+    # labelled IBERDROLA. Otherwise the largest owner.
     sells["date"] = pd.to_datetime(sells.date)
     sells["unit"] = sells.unit.astype(str)
-    sells = attach_owners(sells.drop(columns="share"), sp, value_cols=("to_ib",))
-    sells["owner"] = sells.group.fillna("UNMAPPED")
+    own = attach_owners(sells[["unit", "date"]].drop_duplicates(), sp, value_cols=())
+    ib = own[own.group == "IBERDROLA"][["unit", "date"]].assign(ib_owns=True)
+    top = (own.sort_values("share", ascending=False, kind="stable")
+              .drop_duplicates(["unit", "date"])[["unit", "date", "group"]])
+    sells = sells.merge(top, on=["unit", "date"], how="left").merge(ib, on=["unit", "date"], how="left")
+    sells["owner"] = sells.group.where(sells.ib_owns.isna(), "IBERDROLA").fillna("UNMAPPED")
     out = sells.groupby(["unit", "owner"]).agg(twh=("to_ib", "sum"),
                                                contracts=("unit_id", "nunique")).reset_index()
     out["twh"] /= 1e6

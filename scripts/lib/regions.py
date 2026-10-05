@@ -2,6 +2,7 @@
 
     from regions import locate
     r = locate(lat, lon)        # nuts_id, country, region, esios_geo_id, how
+    province_nuts2(["Zaragoza"])  # ES24: a Spanish province's autonomous community
 
 Needs data/gisco/nuts2_iberia.parquet (`fetch/fetch_gisco_nuts.py`). NUTS level 2 is
 Spain's autonomous communities and Portugal's seven regions; `esios_geo_id` is the
@@ -15,6 +16,7 @@ offshore).
 """
 from __future__ import annotations
 
+import unicodedata
 from pathlib import Path
 
 import numpy as np
@@ -28,6 +30,47 @@ NEAR_DEG = 0.05          # about 5.5 km north-south and 4 km east-west at 40 N
 ESIOS_GEO = {"ES61": 4, "ES24": 5, "ES13": 6, "ES42": 7, "ES41": 8, "ES51": 9, "ES21": 10, "ES12": 11,
              "ES63": 12, "ES30": 13, "ES22": 14, "ES52": 15, "ES43": 16, "ES11": 17, "ES53": 18, "ES70": 19,
              "ES23": 20, "ES62": 21, "ES64": 8746}
+
+
+# Spain's provinces by autonomous community (NUTS 2), for ESIOS's series by province.
+# Keys are the names ESIOS uses, accents and case stripped (see `province_nuts2`).
+_PROVINCES = {
+    "ES61": ["Almeria", "Cadiz", "Cordoba", "Granada", "Huelva", "Jaen", "Malaga", "Sevilla"],
+    "ES24": ["Huesca", "Teruel", "Zaragoza"],
+    "ES12": ["Asturias"],
+    "ES53": ["Baleares", "Illes Balears", "Islas Baleares"],
+    "ES70": ["Las Palmas", "Santa Cruz de Tenerife"],
+    "ES13": ["Cantabria"],
+    "ES41": ["Avila", "Burgos", "Leon", "Palencia", "Salamanca", "Segovia", "Soria", "Valladolid", "Zamora"],
+    "ES42": ["Albacete", "Ciudad Real", "Cuenca", "Guadalajara", "Toledo"],
+    "ES51": ["Barcelona", "Girona", "Gerona", "Lleida", "Lerida", "Tarragona"],
+    "ES52": ["Alicante", "Castellon", "Valencia"],
+    "ES43": ["Badajoz", "Caceres"],
+    "ES11": ["A Coruna", "La Coruna", "Lugo", "Ourense", "Orense", "Pontevedra"],
+    "ES30": ["Madrid"],
+    "ES62": ["Murcia"],
+    "ES22": ["Navarra"],
+    "ES21": ["Alava", "Guipuzcoa", "Vizcaya", "Bizkaia", "Gipuzkoa", "Araba"],
+    "ES23": ["La Rioja"],
+    "ES63": ["Ceuta"],
+    "ES64": ["Melilla"],
+}
+
+
+def _plain(s: str) -> str:
+    return "".join(c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn").strip().lower()
+
+
+PROVINCE_NUTS2 = {_plain(p): k for k, ps in _PROVINCES.items() for p in ps}
+
+
+def province_nuts2(names) -> pd.Series:
+    """NUTS 2 id of each Spanish province name; raises on a name it does not know."""
+    names = pd.Series(names)
+    out = names.map(lambda x: PROVINCE_NUTS2.get(_plain(x)))
+    if out.isna().any():
+        raise ValueError(f"unknown province names: {sorted(set(names[out.isna()]))}")
+    return out
 
 
 def locate(lat, lon) -> pd.DataFrame:

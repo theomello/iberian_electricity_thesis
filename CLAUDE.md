@@ -75,7 +75,7 @@ scripts/
 | `fetch/fetch_ree_realtime.py` | REE `demanda.ree.es` | no | `data/ree/ree_realtime_5min.parquet` |
 | `fetch/fetch_ree_demand_forecast.py` | REE `demanda.ree.es` | no | `data/ree/ree_demand_forecast_5min.parquet` |
 | `fetch/fetch_ren_portugal.py` | REN `servicebus.ren.pt` | no | `data/ren/ren_{production_15min,installed_power_monthly,market_prices,consumption_supply_daily}.parquet` |
-| `fetch/fetch_esios_spain.py` | ESIOS | **yes** | `data/esios/esios_{id}.parquet`, `esios_installed_capacity.parquet` |
+| `fetch/fetch_esios_spain.py` | ESIOS | **yes** | `data/esios/esios_{id}.parquet`, `esios_installed_capacity.parquet`, `esios_measured_generation_province.parquet` |
 | `fetch/fetch_entsoe_spain.py` | ENTSO-E | **yes** | `data/entsoe/entsoe_{series}_{zone}.parquet` |
 | `fetch/fetch_hydro_precipitation.py` | Open-Meteo ERA5 | no | `data/weather/precipitation_basins_daily.parquet` |
 | `fetch/fetch_eobs_precipitation.py` | E-OBS v33.0e (KNMI) | no | `data/eobs/eobs_rr_iberia_daily.parquet` |
@@ -945,6 +945,26 @@ test whether capacity is overstated. Not compared with REE's annual reports.
 Uses: dividing a forecast by capacity separates weather from the firms' own
 investment (step-offer design §5.1); it is the denominator of each firm's
 capacity share; the regions allow regional weather × regional capacity.
+
+**Measured wind and solar output by province — `data/esios/esios_measured_generation_province.parquet`**,
+fetched 2026-10-05 by `--provinces`: ESIOS 1159 (onshore wind) and 1161 (photovoltaic),
+**hourly MWh, 2018-01-01 → 2026-09-22, 5,853,962 rows**; 44 provinces carry wind, 47
+solar, none on the islands. Every hour is present, and it stays hourly after the
+15-minute switch. Requested a month at a time with **no region filter**, which returns
+one series per province (the catalogue says the indicator "can be broken down by
+provinces"). Published from M+1, so the last month is partial. Against REE's realtime
+peninsular output (to 2025-12-11): wind hourly correlation **0.999**, level 98.9%
+(0.98–1.00 every year); solar 0.999, level 98.1% (0.92–0.94 in 2018–2020, 0.99–1.00
+from 2022). `lib/regions.py` `province_nuts2` gives each province its autonomous
+community; ESIOS's capacity for Madrid is ~0 MW against some wind output there, so a
+capacity factor for Madrid is meaningless.
+
+Two fetcher rules came from this fetch. A month is about 5 MB of JSON, so these chunks
+are cached gzipped (`<YYYYMM>.json.gz`, 230 KB). And REE's API now and then answers
+**HTTP 404 `NoSuchKey`** for a large request (1161, February 2018): the answer is staged
+in a temporary file on REE's storage that was gone when served. The fetcher retries
+that error three times; a month still growing is asked for again on a later day, never
+twice on the same day.
 
 ENTSO-E's token is still pending (ticket #9472601); `fetch/fetch_entsoe_spain.py`
 is written but never executed.

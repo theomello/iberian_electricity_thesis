@@ -32,6 +32,16 @@ Pure pumped storage (1476, 3,331 MW) is in neither hydro (1475) nor the total
 (10300): REE counts it as storage. The other 16 technologies sum to the total
 to the megawatt; add 1476 and the sum exceeds it by 3,331 MW.
 
+Measured output by province (``--provinces``)
+---------------------------------------------
+Wind (1159) and photovoltaic (1161) generation as metered, hourly, in MWh, for every
+province with such plant, from 2018-01. Requested a month at a time with **no region
+filter**: the answer then carries one series per province (40 provinces for wind on
+2017-12-31). Published from M+1, so the last month or two are partial and re-requested
+on a later run. A month is about 5 MB of JSON, so these chunks are cached gzipped
+(``<YYYYMM>.json.gz``). Written together to ``esios_measured_generation_province.parquet``.
+It is output, not weather: it includes what farms shed at low prices.
+
 Indicator IDs are checked, not trusted
 --------------------------------------
 ESIOS indicator IDs are poorly documented, so the preset ids are checked
@@ -45,7 +55,7 @@ For anything else, search the catalogue by name::
     .venv/bin/python scripts/fetch/fetch_esios_spain.py --search "previsión"
 
     # 3. fetch by id, chunked by month
-    .venv/bin/python scripts/fetch/fetch_esios_spain.py --forecasts --capacity
+    .venv/bin/python scripts/fetch/fetch_esios_spain.py --forecasts --capacity --provinces
     .venv/bin/python scripts/fetch/fetch_esios_spain.py --ids 1293 10391
 
 The catalogue is cached to ``data/esios/indicator_catalogue.parquet``.
@@ -58,7 +68,9 @@ cached as REE returned it, in ``data/esios/raw/<id>/<YYYYMM>.json`` or
 requested again: REE issues the token on condition that the API is not asked for
 data already downloaded. A chunk is complete once it reaches its last unit (the
 last day, or the last month when aggregated), or was fetched long after it
-closed (see `chunk_is_final`). A refused request raises rather than leaving a silent hole.
+closed (see `chunk_is_final`); one still growing is asked for again on a later day,
+never twice on the same day. A refused request raises rather than leaving a silent hole,
+except REE's occasional HTTP 404 ``NoSuchKey`` on a large answer, which is retried.
 Values are kept at the indicator's native resolution -- the three forecasts are
 hourly, also after the market's 15-minute switch on 2025-10-01.
 """
@@ -66,6 +78,7 @@ hourly, also after the market's 15-minute switch on 2025-10-01.
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
 import sys
 import time
@@ -121,6 +134,13 @@ CAPACITY_START = date(2015, 1, 1)
 CAPACITY_OUT = OUT / "esios_installed_capacity.parquet"
 # ESIOS geo ids of the regions outside the peninsular system, which MIBEL does not clear
 NON_PENINSULAR = {12: "Ceuta", 18: "Islas Baleares", 19: "Islas Canarias", 8746: "Melilla"}
+
+# Measured generation by province, hourly, from 2018-01.
+PROVINCES = {
+    1159: "Generación medida Eólica terrestre",
+    1161: "Generación medida Solar fotovoltaica",
+}
+PROVINCES_OUT = OUT / "esios_measured_generation_province.parquet"
 
 COLUMNS = ["indicator_id", "indicator_name", "value", "datetime", "utc_timestamp", "geo_id", "geo_name"]
 
@@ -211,32 +231,53 @@ def fetch_chunk(sess, ind_id: int, first: date, last: date, geo: int | None, tru
         params["time_trunc"] = trunc
     if geo:
         params["geo_ids[]"] = geo
-    r = sess.get(f"{BASE}/indicators/{ind_id}", params=params, timeout=180)
+    for attempt in range(4):
+        r = sess.get(f"{BASE}/indicators/{ind_id}", params=params, timeout=180)
+        # A large answer is staged in a temporary file on REE's storage; now and then it
+        # is gone before it is served (HTTP 404 NoSuchKey, 1161 for 2018-02 on 2026-10-05).
+        if not (r.status_code == 404 and "NoSuchKey" in r.text):
+            break
+        time.sleep(15 * (attempt + 1))
     if r.status_code != 200:
         raise RuntimeError(f"ESIOS {ind_id} {first}..{last}: HTTP {r.status_code}: {r.text[:300]}")
     return r.json()
 
 
 def fetch_indicator(sess, ind_id: int, chunks: list[tuple[str, date, date]], geo: int | None,
-                    trunc: str | None = None, raw_dir: Path = RAW, today: date | None = None) -> pd.DataFrame:
-    """All `chunks` of one indicator, requesting only those not cached complete."""
+                    trunc: str | None = None, raw_dir: Path = RAW, today: date | None = None,
+                    gz: bool = False) -> pd.DataFrame:
+    """All `chunks` of one indicator, requesting only those not cached complete.
+    With `gz`, new chunks are cached gzipped; either form is read back."""
     today = today or date.today()
     folder = raw_dir / str(ind_id) / (trunc or "")
     folder.mkdir(parents=True, exist_ok=True)
     frames, requested = [], 0
     for key, first, last in chunks:
-        path, meta = folder / f"{key}.json", folder / f"{key}.fetched"
+        meta = folder / f"{key}.fetched"
+        plain, packed = folder / f"{key}.json", folder / f"{key}.json.gz"
+        path = packed if packed.exists() else plain
         cached = path.exists() and meta.exists()
         if cached:
-            payload = json.loads(path.read_text())
-        if not cached or not chunk_is_final(payload, last, date.fromisoformat(meta.read_text().strip()), trunc):
+            payload = json.loads(gzip.decompress(path.read_bytes()) if path.suffix == ".gz" else path.read_text())
+            fetched = date.fromisoformat(meta.read_text().strip())
+        # a chunk still growing is asked for again, but not on the day it was fetched
+        if not cached or (fetched < today and not chunk_is_final(payload, last, fetched, trunc)):
             payload = fetch_chunk(sess, ind_id, first, last, geo, trunc)
-            path.write_text(json.dumps(payload, ensure_ascii=False))
+            text = json.dumps(payload, ensure_ascii=False)
+            if gz:
+                packed.write_bytes(gzip.compress(text.encode("utf-8")))
+                plain.unlink(missing_ok=True)
+            else:
+                plain.write_text(text)
             meta.write_text(today.isoformat())
             requested += 1
             time.sleep(0.25)
+            if requested % 12 == 0:
+                print(f"  indicator {ind_id}: {requested} chunks requested, at {key}", flush=True)
         frames.append(parse_payload(payload))
     print(f"  indicator {ind_id}: {requested} of {len(chunks)} chunks requested, rest cached")
+    # an empty chunk (a month not yet published) would turn the timestamps into objects
+    frames = [f for f in frames if not f.empty] or frames[:1]
     df = pd.concat(frames, ignore_index=True)
     return df.drop_duplicates(["utc_timestamp", "geo_id"])
 
@@ -251,10 +292,13 @@ def main() -> int:
                          "(1775/1777/1779) from 2019-01-01 to today")
     ap.add_argument("--capacity", action="store_true",
                     help="fetch installed capacity by technology, monthly per region, from 2015-01")
+    ap.add_argument("--provinces", action="store_true",
+                    help="fetch measured wind and PV generation, hourly per province, from 2018-01")
     ap.add_argument("--start", type=date.fromisoformat, default=None,
-                    help=f"default {START}; {FORECAST_START} with --forecasts, {CAPACITY_START} with --capacity")
+                    help=f"default {START} (also with --provinces); {FORECAST_START} with --forecasts, "
+                         f"{CAPACITY_START} with --capacity")
     ap.add_argument("--end", type=date.fromisoformat, default=None,
-                    help=f"default {END}, or today with --forecasts and --capacity")
+                    help=f"default {END}, or today with --forecasts, --capacity and --provinces")
     ap.add_argument("--geo", type=int, default=GEO_PENINSULAR, help="region filter for --ids; 0 for none")
     ap.add_argument("--refresh-catalogue", action="store_true")
     args = ap.parse_args()
@@ -286,24 +330,27 @@ def main() -> int:
         return 0
 
     today = date.today()
-    jobs = []  # (ids, chunks, trunc, geo, combined output or None)
+    jobs = []  # (ids, chunks, trunc, geo, combined output or None, gzip the raw cache)
     if args.forecasts:
         jobs.append((resolve_ids(cat, FORECASTS),
-                     month_chunks(args.start or FORECAST_START, args.end or today), None, GEO_PENINSULAR, None))
+                     month_chunks(args.start or FORECAST_START, args.end or today), None, GEO_PENINSULAR, None, False))
     if args.capacity:
         jobs.append((resolve_ids(cat, CAPACITY),
-                     year_chunks(args.start or CAPACITY_START, args.end or today), "month", None, CAPACITY_OUT))
+                     year_chunks(args.start or CAPACITY_START, args.end or today), "month", None, CAPACITY_OUT, False))
+    if args.provinces:
+        jobs.append((resolve_ids(cat, PROVINCES),
+                     month_chunks(args.start or START, args.end or today), None, None, PROVINCES_OUT, True))
     if args.ids:
         jobs.append((args.ids, month_chunks(args.start or START, min(args.end or END, today)),
-                     None, args.geo or None, None))
+                     None, args.geo or None, None, False))
     if not jobs:
         print("\nNothing to fetch. Use --search to find indicator ids, then --ids.")
         return 0
 
-    for ids, chunks, trunc, geo, combined in jobs:
+    for ids, chunks, trunc, geo, combined, gz in jobs:
         frames = []
         for ind_id in ids:
-            df = fetch_indicator(sess, ind_id, chunks, geo, trunc)
+            df = fetch_indicator(sess, ind_id, chunks, geo, trunc, gz=gz)
             if df.empty:
                 print(f"  indicator {ind_id}: NO DATA")
                 continue

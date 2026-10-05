@@ -152,6 +152,8 @@ def main() -> int:
         fetch_indicator(g, 1777, jan_chunk, 8741, raw_dir=raw / "g", today=date(2019, 1, 10))
         fetch_indicator(g, 1777, jan_chunk, 8741, raw_dir=raw / "g", today=date(2019, 1, 11))
         check(g.calls == 2, "a month still growing is requested again")
+        fetch_indicator(g, 1777, jan_chunk, 8741, raw_dir=raw / "g", today=date(2019, 1, 11))
+        check(g.calls == 2, "but not twice on the same day")
         try:
             fetch_indicator(FakeSession({}, status=403), 1777, month_chunks(date(2019, 2, 1), date(2019, 2, 1)),
                             8741, raw_dir=raw, today=date(2019, 3, 2))
@@ -169,6 +171,13 @@ def main() -> int:
               "a monthly request asks for time_trunc=month and no region filter")
         check(len(c) == 24 and c.groupby("geo_id").size().eq(12).all(),
               "regions are kept apart, not dropped as duplicates")
+
+        z = FakeSession(payload(1159, jan))
+        zd = fetch_indicator(z, 1159, jan_chunk, None, raw_dir=raw, today=date(2019, 2, 2), gz=True)
+        zd2 = fetch_indicator(z, 1159, jan_chunk, None, raw_dir=raw, today=date(2019, 2, 3), gz=True)
+        check((raw / "1159" / "201901.json.gz").exists() and not (raw / "1159" / "201901.json").exists()
+              and z.calls == 1 and len(zd) == len(zd2) == 31 * 24,
+              "a gzipped cache is written, read back, and not requested again")
 
     # --- the forecasts --------------------------------------------------------
     rt = None

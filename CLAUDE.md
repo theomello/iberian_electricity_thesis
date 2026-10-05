@@ -1243,6 +1243,9 @@ a failing tile into quarters, skips what still fails (listed in
 `data/osm/missing_tiles.json`, exit code 2) and fetches only what is missing on a
 re-run. `country` in the OSM files is a crude guess from coordinates. OSM is ODbL
 1.0, GPPD CC BY 4.0: cite both.
+`osm_wind_turbines.parquet` holds **25,494 single turbines with coordinates** (17% named),
+not yet used; turbine clusters could place the wind farms that have no name to match.
+Ask Overpass for `out body` on nodes: `out tags` returns no coordinates.
 
 ### EDP moved ~1,000 MW from `ACAVADO` to `ALIMA` in March 2024
 `cab` max power goes 1,632 → 632 MW for `ACAVADO` ("CAVADO") and 652 → 1,652

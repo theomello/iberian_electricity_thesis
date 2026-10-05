@@ -62,7 +62,7 @@ QUERIES = {
     "plants": HEAD + '(nwr["power"="plant"]["plant:source"~"wind|solar"]({s},{w},{n},{e}););'
               'out center tags;',
     "turbines": HEAD + '(node["power"="generator"]["generator:source"="wind"]({s},{w},{n},{e}););'
-                'out tags;',
+                'out body;',            # body: a node's coordinates; 'out tags' drops them
 }
 
 

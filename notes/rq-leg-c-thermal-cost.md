@@ -6,6 +6,12 @@ Scripts: `build/build_rival_solar.py` (`--tech wind` and `--tech solar`),
 checks in `qa/` (`check_rival_solar.py`, `check_iv_two_endog.py`,
 `check_leg_c_panel.py`). Results: `outputs/tables/leg_c_results.csv`.
 
+**Resolved 2026-10-05 (§6): β ≈ 3 is not conduct.** The other owners' plants,
+whose X does not move, show the same fall in p − c as the five firms' when rivals'
+renewables rise. The price falls down the merit order for every plant, and the
+condition reads that fall as a change in markup. Conduct has to be read from the
+firms' own offers, net of price-takers' offers (leg D §7 does this: β 0.024).
+
 **In one line.** The condition in levels gives β ≈ 3, three times full Nash.
 That rejects a joint hypothesis, not conduct alone, and the leading candidate
 for the failure is that the price sits inside the gaps of the units' stepped
@@ -293,3 +299,71 @@ withholding blocks, give inequalities only.
   unit-specific efficiency error in specification 1 is not ruled out.
 - **Ramp-constrained rows** (870, mostly EDP's: in-the-money volume left
   uncleared, or cleared volume priced above p) are kept.
+
+## 6. Why β exceeds 1, and what replaces it (2026-10-05)
+
+Numbers in this section are from the rerun on owners by date (2026-10-03; pooled
+β 3.09). Script: the diagnostics of `analysis/leg_c_test.py`; one-off checks in
+`.superpowers/sdd/2026-10-05-beta-diagnosis/` (not committed).
+
+### 6.1 The cause: the price falls for every plant
+
+c is the cost of the plant in the row; the price is set by another plant in 98.6%
+of rows. When rivals' wind or solar rises, a cheaper plant sets the price and p − c
+falls for every plant, whether its firm has a stake in the price or not. The
+instrument is meant to move p − c only through X. This second path breaks that.
+
+Reduced forms per GW of rivals' wind / solar (unit effects, week clusters):
+
+| | p − c (€/MWh) | X (€/MWh) | n (MW) | the unit's cleared share (pp) |
+|---|---|---|---|---|
+| five firms' plants | −1.77 / −2.13 | −0.91 / −0.86 | −128 / −126 | −0.43 / +0.17 |
+| other owners' plants | **−2.56 / −1.31** | **0.00 / −0.02** | −6 / +2 | −1.09 / −0.05 |
+| all | −2.00 / −1.88 | −0.63 / −0.62 | −90 / −88 | −0.61 / +0.15 |
+
+The other owners are Cepsa, Engie, TotalEnergies, Bahía de Bizkaia, RWE and Axpo.
+Their X does not move; their p − c falls as much as the five firms'. With any β
+between 0 and 1 it could not move at all. The size matches the merit order: 1 GW
+over the median rivals' slope (504 MW per €/MWh) is 1.98 €/MWh.
+
+**β is then a ratio of two slopes, not conduct.** β̂ = Δ(p − c)/ΔX. With n alone
+moving, ΔX = Δn/|RD′|, so β̂ = |RD′| · Δp/Δn: rivals' slope over the firm's own
+response to the price. The firm's n moves 52–58 MW per €/MWh, about 9% of each GW;
+504/52 ≈ 9.7, and the estimate with n alone is 10.9. This is the identification
+problem of Bresnahan (1982): a shift of residual demand alone cannot separate
+conduct from the shape of the curve the firm is moved along.
+
+**The step gap of §3.2 is the same thing seen from one plant.** A plant whose
+offers are unchanged can see p − c fall by the whole price movement while its own
+output stays put (the other owners' cleared share barely moves with solar).
+
+### 6.2 Fixes tried on the price outcome, none of which works
+
+| attempt | β | why it fails |
+|---|---|---|
+| a cost slope in the unit's load, pinned by the other owners | 2.44 [2.08, 2.80] | their price moves at an unchanged load: not a cost curve |
+| rows where the unit's own step sets p, D-1 forecasts as instruments | 1.42, AR set empty | the other owners' offer − cost still falls 1.7–2.2 €/MWh per GW: a lower step of the same ladder sets p |
+| the step condition in product form, (b − c)·\|RD′\| = β·n | 3.5–10.7 | same |
+| date × period effects | 0.51 [0.12, 1.26] | with p absorbed, only fuel price × efficiency and which units are marginal remain: not conduct |
+
+### 6.3 What replaces it
+
+A parameter that differs by firm must be read from an outcome that differs by
+firm: the firm's own offers, compared with price-takers' offers facing the same
+shock, with instruments known when offers are submitted. Leg D §7 is that design
+(offer shape, unit × day effects, D-1 forecasts, net of the other owners'
+response): β 0.024 (F 60, overidentification p 0.92); leg A gives 0.03–0.14.
+
+Leg C's own contribution, the observed cost level, comes back by putting the
+offers on the left: the unit's offer price at fixed points of its ladder minus c,
+for all offered units (no selection on being at the margin), the other owners'
+gas and coal plants on the same day as the benchmark, D-1 forecasts as
+instruments. The built-in test is that the other owners' own β is about 0. The
+main threat is the benchmark (more gas, less coal, REN Trading's legacy contracts,
+Axpo and Engie bidding for third parties), not the cost panel: constant cost errors
+fall into unit effects and common daily ones into the comparison. Cost matters for
+the markup level; using D-1 fuel and carbon prices and JRC's Portuguese plants are
+the cheap improvements.
+
+**The β ≈ 3 stays as a result:** a conduct test with the market price as its
+outcome would, in this market, wrongly find more-than-Nash conduct.

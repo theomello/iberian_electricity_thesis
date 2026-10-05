@@ -35,6 +35,13 @@ of the unit's step curve, above its highest cleared offer (top), so p - c = (p -
 selected on p, so they are diagnostic only. Also: each instrument alone, by year, unit +
 year-month effects, and X's slope floor and its two parts (n and the slope).
 
+WHY BETA EXCEEDS 1 (2026-10-05). The reduced forms are printed for the five firms and for
+the other owners. The other owners' X does not move with rivals' renewables, yet their
+p - c falls as much as the five firms': c is the unit's own cost, the price is set by
+another unit, and more renewables move the price down the merit order for every unit.
+The condition attributes that movement to X. With n alone moving, beta is rivals' slope
+over the firm's own response dn/dp, which is printed beside it.
+
 THE MARKDOWN IN LEVELS. p - c tabulated by the sign of X: the spec's prediction is a
 price below observed cost when the firm is a net buyer and above it when a net seller.
 """
@@ -190,16 +197,28 @@ def diagnostics(d: pd.DataFrame, s1: pd.DataFrame) -> list[dict]:
     rows.append(iv(s1.assign(ym=s1.date.dt.strftime("%Y%m")), "pc", "unit + year-month effects", "spec 1",
                    fes=("unit", "ym")))
     xp = x_parts(s1)
+    xp["load"] = xp.cleared_mw / xp.offered_mw * 100
     print("  reduced forms on rivals' wind and solar, per GW (unit effects, week clusters):")
-    for y in ("p", "pc", "X", "net_exp_mw", "slope_exp_h5"):
-        w = demean(xp, [y, "zw", "zs"], ["unit"])
-        b, se = ols(w[y].to_numpy(), w[["zw", "zs"]].to_numpy(), xp.wk.to_numpy())
-        rows.append({"sample": f"reduced form: {y}", "spec": "spec 1", "n": len(xp), "rf_zw": b[0],
-                     "rf_zw_se": se[0], "rf_zs": b[1], "rf_zs_se": se[1]})
-        print(f"    {y:14s} zw {b[0]:+9.3f} ({se[0]:.3f})  zs {b[1]:+9.3f} ({se[1]:.3f})")
+    rf = {}
+    for lab, g in (("", xp), ("five firms", xp[xp.firm.isin(FIVE)]), ("other owners", xp[~xp.firm.isin(FIVE)])):
+        if lab:
+            print(f"   {lab}:")
+        for y in ("p", "pc", "X", "net_exp_mw", "slope_exp_h5", "load"):
+            w = demean(g, [y, "zw", "zs"], ["unit"])
+            b, se = ols(w[y].to_numpy(), w[["zw", "zs"]].to_numpy(), g.wk.to_numpy())
+            rf[lab, y] = b
+            rows.append({"sample": f"reduced form{', ' + lab if lab else ''}: {y}", "spec": "spec 1", "n": len(g),
+                         "rf_zw": b[0], "rf_zw_se": se[0], "rf_zs": b[1], "rf_zs_se": se[1]})
+            print(f"    {y:14s} zw {b[0]:+9.3f} ({se[0]:.3f})  zs {b[1]:+9.3f} ({se[1]:.3f})")
     print(f"    median rivals' slope {xp.slope_exp_h5.median():.1f} MW per EUR/MWh: 1 GW at that slope "
           f"moves p by {1000 / xp.slope_exp_h5.median():.2f}; mean of 1000/slope {(1000 / xp.slope_exp_h5).mean():.2f}, "
           f"1000/mean slope {1000 / xp.slope_exp_h5.mean():.2f}")
+    # With n alone moving, beta = rivals' slope over the firm's own response to the price (dn/dp): a
+    # ratio of slopes. The other owners' X does not move, yet their p - c falls as much: the price
+    # moves down the merit order for every unit, which the condition attributes to X.
+    s_f = rf["", "net_exp_mw"] / rf["", "p"]
+    print(f"    the firm's response dn/dp: zw {s_f[0]:.1f}, zs {s_f[1]:.1f} MW per EUR/MWh; median rivals' slope "
+          f"over it: zw {xp.slope_exp_h5.median() / s_f[0]:.2f}, zs {xp.slope_exp_h5.median() / s_f[1]:.2f}")
     print("  X at other half-widths of rivals' slope (+-1, 2, 10 EUR/MWh):")
     for h in (1, 2, 10):
         xh = xp.assign(X_h=(xp.net_exp_mw / xp[f"slope_exp_h{h}"]).where(xp[f"slope_exp_h{h}"] >= MIN_SLOPE))

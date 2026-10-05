@@ -520,7 +520,7 @@ y_ut = α_ud + δ_(tech × t) + γ · X_ft + ε_ut,        β = −γ / (offer d
 |---|---|---|---|---|---|
 | 1 | **outages of co-owned reactors, by share** | lost MW × listed share (Almaraz 1 down: Iberdrola −52.7%, Endesa −36%, Naturgy −11.3%) | 2018-01 → 2026-05 from PDBF: 145 outage spells of ≥ 2 days, 2,687 reactor-days, 79 of ≤ 10 days; Endesa's and Iberdrola's daily doses correlate 0.65. Shares confirmed by the bilateral flows (`report-ownership-mapping.md` §4) | output modulation and economic shutdowns at low prices since about 2023 are price responses, not shocks; refuelling dates are chosen months ahead | **first.** Keep declared refuelling and unplanned trips only (`indisp` reasons, PDBF schedules where `indisp` has gaps). The date choice is common to every co-owner in the period, so only the difference in doses identifies. Multi-week, so it also moves day-level X: **leg B's missing first stage** |
 | 2 | own-catchment rain × share | GW × share × catchment anomaly | complete data: pooled F 21.3 (90 days), quarter clusters 11.9, wild bootstrap over firms p 0.044 (`rq-hydro-rain-first-stage.md`) | six firms; EDP's, Iberdrola's, Movhera's and Naturgy's indices correlate 0.94–0.98, so the effective number of independent shocks (Borusyak, Hull & Jaravel 2022) is small | second; mostly for leg B and for EDP / Iberdrola |
-| 3 | own regional wind and solar | own capacity by region × regional weather | national forecasts lower every firm's n (displacement beats own fleet); with period effects only (own share − mean) × weather is left. **Locations 2026-10-05:** 54% of wind GW and 16% of PV matched by name to OSM and WRI; owner via the REE agent (2026 snapshot, undated), since REE's farm units are not OMIE units. **Regions 2026-10-05:** each farm and turbine placed in its autonomous community from Eurostat's NUTS polygons; located wind is 49–70% of ESIOS's capacity in the five largest wind regions (Cataluña 15%) | regional weather at the located farms; PV coverage | third; data-heavy |
+| 3 | own regional wind and solar | own capacity by region × regional weather | national forecasts lower every firm's n (displacement beats own fleet); with period effects only (own share − mean) × weather is left. **Locations 2026-10-05:** 54% of wind GW and 16% of PV matched by name to OSM and WRI; owner via the REE agent (2026 snapshot, undated), since REE's farm units are not OMIE units. **Regions 2026-10-05:** each farm and turbine placed in its autonomous community from Eurostat's NUTS polygons; located wind is 49–70% of ESIOS's capacity in the five largest wind regions (Cataluña 15%). **Run 2026-10-05** (`rq-reactor-outages.md` §9): own wind above the national rate, by region (ESIOS measured output by province), raises X by about 4 €/MWh per GW, F 22–28 at the unit level; thermal offers give β +0.9, set [−2.6, 4.5]; with the outages −1.6, [−4.3, 1.5]; weak from 2022 (F 3–8) | local grid constraints (answered by region × hour effects); the 2026 farm snapshot; PV coverage | third; strongest unit-level first stage, does not narrow β |
 | 4 | rivals' shocks for \|RD′\| | rivals' outages, interconnector capacity | moving only the slope gave β −16 at F 7 (leg C); interconnector capacity barely moved X in a probe | rival outages shift residual demand rather than rotate it | low; a rotation instrument has not been found |
 
 **Built 2026-10-05** (`notes/rq-reactor-outages.md`). 49 unplanned and 51 planned
@@ -592,6 +592,18 @@ That is what leg C in levels needs.
   combined cycles now have costs (JRC, 2026-10-05). Threats: July 2021 is the start
   of the gas crisis (common to both countries, absorbed by period effects); prices
   split by zone (use the zone price); Portugal's CESE levy is on assets, not output.
+  **The main threat, found 2026-10-05: Portugal's clawback** (*mecanismo de
+  equilíbrio concorrencial*, Decreto-Lei 74/2013, Portaria 282/2019) charges
+  Portuguese producers per MWh injected, by technology, for ERSE's estimate of the
+  price effect of Spain's IVPEE. It was suspended over the same months (2021 H2 →
+  2023) and came back in 2024 (ERSE, public consultation 129, documento
+  justificativo §2–4). So the Portuguese units are not untreated: the predicted
+  Spain − Portugal gap is c·τ/(1 − τ) minus the expected clawback per MWh (e.g. 2019
+  advance payment 2.71 €/MWh coal, 4.18 others; final 2019 2.24 renewables).
+  Combined cycles pay only above 2,000 equivalent hours a year, so a CCGT's marginal
+  MWh may be exempt. The government decided to abolish it on 2025-12-17. To check
+  before running: the clawback's yearly values, and whether it was also suspended
+  in 2018 Q4 – 2019 Q1 (RDL 15/2018 suspended the IVPEE then).
 - **The gas cap** (2022-06-15 → 2023-12-31): dose per unit (gas − reference) /
   efficiency; the sharpest window for the cost in levels.
 - **The 2021 windfall levy**: it acts through contracting (n via θ) and needs 2021
@@ -608,7 +620,10 @@ That is what leg C in levels needs.
    instrument (thermal units, unit × month effects): combined β −0.85, set
    [−4.0, 1.8], F 13.5; rain alone also negative. Event study of 21 clean trips: X
    falls at once (−3.5 per GW, days 0–3), offers show no break
-   (`rq-reactor-outages.md` §7–9).
+   (`rq-reactor-outages.md` §7–8). Regional wind added as a third instrument
+   (thermal units, unit × week effects): first stage F 22–28, β +0.9, set
+   [−2.6, 4.5]; with the outages β −1.6, [−4.3, 1.5] (§9). Every thermal set
+   contains 0 and 1.
 3. **IVPEE test** on thermal offers, Spanish against Portuguese, with `_bid` costs.
    It validates c before any levels estimate.
 4. **Day-ahead − intraday premium** against combined n (descriptive).

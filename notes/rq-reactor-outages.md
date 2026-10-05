@@ -17,6 +17,9 @@ is borderline at the unit level (F ≈ 10).
 **Rain as a second instrument and an event study, §7–8.** On thermal units, rain and
 outages together give β −0.9, 95% set [−4.0, 1.8] (F 13.5). Trips cut the owners' X
 at once, and their offers show no jump.
+**Regional wind as a third instrument, §9.** Wind on a firm's own farms above the
+national rate raises its X (F 22–28, the strongest unit-level first stage so far).
+Alone it gives β +0.9, set [−2.6, 4.5]; with the outages, β −1.6, [−4.3, 1.5].
 
 ## 1. What is built
 
@@ -298,13 +301,87 @@ Per GW of the owner's share:
   days 0–3 (se 2.3), against X −3.7: β ≈ 1.3, from 6,500 unit-days.
 - **With 21 events the bands are wide.** Read the pattern, not single days.
 
-## 9. Where this leaves the across-day margin
+## 9. Regional wind as a third instrument (2026-10-05)
 
-- **Two instruments move X and the offers do not follow.** Outages (F 121 on n at
-  the firm level, ≈ 10–15 on X at the unit level) and rain (F 9.5).
-- **β = 1 is rejected only on all units** (§6). On thermal units the combined set
-  is [−4.0, 1.8].
-- **Every point estimate is negative**, from two independent sources. That is a
-  pattern the single condition does not explain. It does not come from withdrawal
-  of volume (offered share flat), location (§6), or the timing of trips (§8).
+`analysis/regional_wind_offer_test.py` → `outputs/tables/regional_wind_offer_results.csv`.
+
+**Index.** On an hour when Galicia is windy and Aragón calm, a firm whose farms sit
+in Galicia sells more than one whose farms sit in Aragón, at the same national wind.
+The instrument is that difference, in GW:
+
+    Wdev_gt = sum over regions r of  K_gr × (cf_rt − cf_t)
+
+- K_gr: the group's located onshore wind in region r (`renewable_unit_locations`,
+  54% of wind GW, regions from Eurostat's NUTS polygons);
+- cf_rt: the region's measured wind output (ESIOS 1159, by province) over its wind
+  capacity that month (ESIOS 1485); cf_t the same for the peninsula.
+
+Wdev is zero when wind is spread across regions as capacity is. The forecast
+version splits REE's D-1 national wind forecast (1777) by the realised regional
+shares: the national level is what bidders knew, the split is realised.
+
+**Why the deviation and not the level.** National wind lowers every firm's n by
+pushing its gas and hydro out of the dispatch, by a different amount per firm
+(`rq-forecast-first-stage.md`). The level of own wind carries that displacement
+(F 0.1). The controls take out each group's response to REE's D-1 forecasts of
+wind, solar and demand, one slope per group and forecast.
+
+**Six groups have located wind.** Iberdrola (Castilla y León 1.5 GW, Castilla-La
+Mancha 1.1, Andalucía 0.7, …), Endesa (Aragón 0.8, …), Naturgy, EDP, ENGIE, and
+Repsol (Aragón 0.4 only). Hourly SD of Wdev: Iberdrola 0.13 GW, Endesa 0.08, the
+others 0.02–0.06. Each group's Wdev correlates −0.14 to 0.22 with the national
+forecast.
+
+**Local grid constraints.** A region's wind can reach a thermal unit's offer through
+technical constraints, not through its owner's n. Two answers:
+
+- A: technology × date × hour effects, plus the capacity factor in the unit's own
+  region as a control;
+- B: technology × region × date × hour effects, so a unit is compared only with
+  units of the same technology, region and hour owned by other groups.
+
+Thermal units with a plant-specific cost, unit × week effects, week clusters,
+2019-01 → 2026-05 (REE's forecasts start in 2019). Offer price at 50% of offered
+volume; the 25% point and offer minus `c_bid` agree in sign.
+
+| instruments | effects | first stage (X per GW) | β | 95% set (AR) | p, β = 1 | F |
+|---|---|---|---|---|---|---|
+| regional wind, forecast | A | +4.18 (0.85) | +0.88 | [−2.59, 4.53] | 0.94 | 24.1 |
+| regional wind, measured | A | +4.60 (0.87) | +1.37 | [−1.65, 4.70] | 0.81 | 27.8 |
+| **regional (forecast) + outages** | A | | **−1.56** | **[−4.32, 1.51]** | 0.10 | 13.3 |
+| regional wind, forecast | B | +3.97 (0.85) | +2.31 | [−2.13, 7.28] | 0.55 | 22.1 |
+| regional wind, measured | B | +4.39 (0.87) | +2.74 | [−1.11, 7.23] | 0.37 | 25.7 |
+| regional (forecast) + outages | B | | −1.21 | [−4.09, 2.99] | 0.18 | 14.2 |
+
+A: 2.51 M unit-hours, 64 units; B: 2.39 M, 62 units (region-hour cells with a single
+owner drop out).
+
+- **The first stage is strong and the right size.** One GW more wind on a firm's
+  own farms than the national rate raises its X by about 4 €/MWh (F 22–28). A GW of
+  its reactors going down lowers X by about 5 (§4). Adding or removing a GW of the
+  firm's own output moves X by about the same amount, from two unrelated sources.
+- **Regional wind alone gives a positive β**, +0.9 to +2.7, and its set contains
+  0 and 1. Outages and rain gave negative point estimates. The sets overlap, so the
+  instruments do not contradict each other, and none of them narrows β.
+- **With the outages, β is −1.2 to −1.6**, sets [−4.3, 1.5] and [−4.1, 3.0]: no
+  narrower than outages with rain (§7).
+- **From 2022 on the instrument is weak** (F 3–8: 47 units after the coal plants
+  closed, half the hours). Its estimates there say nothing; the first stage,
+  +2.7 (1.4), is within one standard error of the full sample's.
+- **Limits.** Farm locations and owners come from a 2026 snapshot, so farms built
+  after 2018 count from the start; that is error in the instrument, not a reason for
+  it to move offers. Only 15% of Cataluña's wind is located.
+
+## 10. Where this leaves the across-day margin
+
+- **Three instruments move X and the offers do not follow clearly.** Outages (F 121
+  on n at the firm level, ≈ 10–15 on X at the unit level), rain (F 9.5) and regional
+  wind (F 22–28).
+- **β = 1 is rejected only on all units** (§6). On thermal units every set contains
+  0 and 1: outages with rain [−4.0, 1.8], regional wind [−2.6, 4.5], regional wind
+  with outages [−4.3, 1.5].
+- **The point estimates split by instrument**: negative from outages and rain,
+  positive from regional wind. The negative ones do not come from withdrawal of
+  volume (offered share flat), location (§6), or the timing of trips (§8). With
+  sets this wide, thermal offers do not pin β between price-taking and Nash.
 

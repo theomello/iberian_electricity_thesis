@@ -1242,7 +1242,10 @@ an instrument. Detail and first stage in `notes/rq-reactor-outages.md`.
 Used in the §9.2 offer regression (`analysis/outage_offer_test.py`, 2026-10-05):
 β −0.9, 95% set [−4.2, 0.7], unit-level first stage F ≈ 10. With own-catchment rain as
 a second instrument on thermal units (`analysis/outage_rain_offer_test.py`): β −0.85,
-[−4.0, 1.8]. Event study of 21 trips: `analysis/outage_event_study.py`.
+[−4.0, 1.8]. Event study of 21 trips: `analysis/outage_event_study.py`. With the
+firm's own wind above the national rate, by region, as a third instrument
+(`analysis/regional_wind_offer_test.py`, ESIOS output by province × located farms):
+first stage F 22–28, β +0.9 [−2.6, 4.5]; with the outages −1.6 [−4.3, 1.5].
 
 ### Wind and solar farm locations — 54% of wind located, 16% of solar (2026-10-05)
 `data/osm/renewable_unit_locations.parquet`, built by `build/build_renewable_locations.py`:

@@ -110,6 +110,7 @@ import unicodedata
 from difflib import SequenceMatcher
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
@@ -148,6 +149,27 @@ MANUAL_ALIASES: dict[str, str] = {
     "CAMPGIB1": "CAMGI10",    # C.C. CAMPO DE GIBRALTAR 10, 392.6 vs 392.7 MW
     "CAMPGIB2": "CAMGI20",    # C.C. CAMPO DE GIBRALTAR 20, 387.9 vs 388.0 MW
 }
+
+# PORTUGAL (2026-10-05). JRC lists each Portuguese thermal plant generator by
+# generator, and the generators are OMIE's units one for one (Lares - G1 is LARES1),
+# so they are matched at the generator (eic_g), not aggregated to the plant as for
+# Spain. Hand-made, like MANUAL_ALIASES, because two names share nothing: OMIE's
+# Turbogas units are JRC's "T.Outeiro C.C." (Tapada do Outeiro, Turbogas's plant).
+# Each pairing is checked at build time: capacity within CAPACITY_TOL, the same
+# unit number, the same fuel.
+PT_GENERATOR_MATCH: dict[str, str] = {
+    "LARES1": "Lares - G1", "LARES2": "Lares - G2",                       # EDP, CCGT
+    "RIBATE1": "Ribatejo - G1", "RIBATE2": "Ribatejo - G2", "RIBATE3": "Ribatejo - G3",  # EDP, CCGT
+    "PEGO3": "Pego C.C. - G3", "PEGO4": "Pego C.C. - G4",                 # Elecgas, CCGT
+    "RTG01": "T.Outeiro C.C. - G1", "RTG02": "T.Outeiro C.C. - G2",       # Turbogas, CCGT
+    "RTG03": "T.Outeiro C.C. - G3",
+    "SINES1": "Sines - G1", "SINES2": "Sines - G2", "SINES3": "Sines - G3",  # EDP, coal (closed 2021)
+    "SINES4": "Sines - G4",
+    "RPG01": "Pego - G1", "RPG02": "Pego - G2",                           # Tejo Energia, coal (closed 2021)
+}
+CAPACITY_TOL = 0.06
+PT_FUEL = {"combined_cycle": "Fossil Gas", "thermal": "Fossil Hard coal"}
+
 
 BOILERPLATE = [
     "C.C.", "C.C", "C.T.", "C.T", "UOF", "CENTRAL", "TERMICA", "TÉRMICA",
@@ -438,6 +460,38 @@ def manual_alias_matches(cab: pd.DataFrame, jrc: pd.DataFrame) -> tuple[list[dic
     return accepted, used_cab, used_jrc
 
 
+def portugal_matches() -> pd.DataFrame:
+    """PT_GENERATOR_MATCH, checked: capacity, unit number and fuel must agree."""
+    ua = pd.read_parquet(DATA / "omie" / "registry" / "unit_agents.parquet")
+    ua = ua[ua.unit.isin(PT_GENERATOR_MATCH)].set_index("unit")
+    g = pd.read_parquet(DATA / "jrc_ppdb" / "jrc_portugal_units.parquet").set_index("name_g")
+    rows, bad = [], []
+    for unit, name_g in PT_GENERATOR_MATCH.items():
+        if unit not in ua.index or name_g not in g.index:
+            bad.append(f"{unit} / {name_g}: missing")
+            continue
+        c, j = ua.loc[unit], g.loc[name_g]
+        cap = abs(c.max_power_mw - j.capacity_g) / c.max_power_mw
+        if cap > CAPACITY_TOL:
+            bad.append(f"{unit} {c.max_power_mw} MW vs {name_g} {j.capacity_g} MW")
+        if re.sub(r"\D", "", unit)[-1] != re.sub(r"\D", "", name_g)[-1]:
+            bad.append(f"{unit} / {name_g}: unit numbers differ")
+        if PT_FUEL.get(c.tech) != j.type_g:
+            bad.append(f"{unit} ({c.tech}) / {name_g} ({j.type_g}): fuels differ")
+        rank = SOURCE_RANK.get(j.best_source, 99)
+        rows.append({
+            "unit": unit, "cab_descr": c.descr, "cab_max_power_mw": c.max_power_mw, "cab_tech": c.tech,
+            "jrc_eic_p": j.eic_p, "jrc_name_p": j.name_p, "jrc_capacity_mw": j.capacity_g,
+            "jrc_n_generators": 1, "jrc_name_g_list": name_g, "eff": j.eff,
+            "eff_source": j.best_source, "eff_is_generic": rank == SOURCE_RANK["Class_derived"],
+            "capacity_ratio_diff": cap, "name_similarity": np.nan, "match_path": "pt_generator",
+            "jrc_eic_g": j.eic_g, "country": "PT",
+        })
+    if bad:
+        raise SystemExit("Portuguese generator matches fail their checks:\n  " + "\n  ".join(bad))
+    return pd.DataFrame(rows)
+
+
 def find_matches(cab: pd.DataFrame, jrc: pd.DataFrame) -> tuple[pd.DataFrame, list, list]:
     exact_rows, used_cab, used_jrc = exact_code_matches(cab, jrc)
     print(f"  exact-code path: {len(exact_rows)} matches")
@@ -470,13 +524,19 @@ def main() -> int:
     print(f"  {len(jrc)} candidate JRC plants (Fossil Gas/Coal/Lignite, eff known, in-window)")
 
     matches, ambiguous_cab_idx, ambiguous_jrc_idx = find_matches(cab, jrc)
+    matches["country"] = "ES"
+    pt = portugal_matches()
+    print(f"  Portugal, generator-level hand match: {len(pt)} units, all checks passed")
+    matches = pd.concat([matches, pt], ignore_index=True)
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     matches.to_parquet(OUT, index=False)
     print(f"\n  wrote {OUT}")
 
-    print(f"\n{len(matches)} accepted matches (of {len(jrc)} JRC candidates, "
-          f"{len(matches)/len(jrc):.1%} of JRC plants; of {len(cab)} OMIE candidates)")
+    es = matches[matches.country == "ES"]
+    print(f"\n{len(matches)} accepted matches: {len(es)} Spanish (of {len(jrc)} JRC candidates, "
+          f"{len(es)/len(jrc):.1%} of JRC plants; of {len(cab)} OMIE candidates) and "
+          f"{len(matches) - len(es)} Portuguese")
     if len(matches):
         n_generic = int(matches.eff_is_generic.sum())
         print(f"  of which {len(matches) - n_generic} carry a plant-specific efficiency "

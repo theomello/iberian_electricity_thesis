@@ -90,6 +90,25 @@ series actually has, so a gas-unit-day and a coal-unit-day for the "same"
 date are not guaranteed to rest on the same set of underlying market
 closures.
 
+KNOWN AT BIDDING (2026-10-05)
+
+`marginal_cost_eur_mwh` values a delivery day D at D's own prices, which a firm
+bidding by 12:00 on D-1 did not know. `marginal_cost_bid_eur_mwh` (and its capped
+twin) uses only prices final by then: the last value dated D-2 or earlier, for all
+four series. MIBGAS's index for gas day D averages every completed session for D,
+intraday trades on D included, so gas day D-1's index is not final at noon on D-1
+(MIBGAS, "Benchmark indices according to Regulation (EU) 2016/1011"); carbon, coal
+and the ECB rate settle in the late afternoon, so D-1's value is not out yet. The
+gas cap's reference price is statutory and known in advance, so it stays on D.
+The `_bid` columns are NaN on the first days of each series, where no earlier value
+exists; nothing else changes.
+
+PORTUGAL (2026-10-05). The match now carries Portugal's 16 thermal units (EDP's
+Lares and Ribatejo, Elecgas's Pego and Turbogas's Tapada do Outeiro combined
+cycles; Sines and Pego coal, closed in 2021). They are valued at the MIBGAS-ES
+index like Spain's, and the cap applies to them too: RDL 10/2022 and Portugal's
+Decreto-Lei 33/2022 set one mechanism for MIBEL.
+
 STILL NOT IN THE FORMULA AT ALL
 
 O&M, water and startup-amortisation costs; part-load efficiency (every
@@ -169,8 +188,9 @@ COAL_CALORIFIC_VALUE_MWH_PER_TONNE = 6.978  # API2 spec, 6,000 kcal/kg NAR (S&P 
 
 def load_inputs() -> dict[str, pd.DataFrame]:
     match = pd.read_parquet(DATA / "jrc_ppdb" / "jrc_cab_match.parquet")
-    jrc_type = (pd.read_parquet(DATA / "jrc_ppdb" / "jrc_spain_units.parquet")
-                [["eic_p", "type_g"]].drop_duplicates())
+    jrc_type = (pd.concat([pd.read_parquet(DATA / "jrc_ppdb" / f, columns=["eic_p", "type_g"])
+                           for f in ("jrc_spain_units.parquet", "jrc_portugal_units.parquet")])
+                .drop_duplicates())
     match = match.merge(jrc_type, left_on="jrc_eic_p", right_on="eic_p", how="left")
 
     gas = pd.read_parquet(DATA / "mibgas" / "mibgas_price_index_daily.parquet")[
@@ -226,6 +246,18 @@ def build_fuel_panel(units: pd.DataFrame, prices: pd.DataFrame, fuel_col: str,
         effective / panel.eff
         + emission_factor * panel.co2_eur_tco2 / panel.eff
     )
+
+    # The same two costs on the prices known when the day's offers closed (12:00 on D-1).
+    bid = f"{fuel_col}_bid"
+    panel["marginal_cost_bid_eur_mwh"] = (
+        panel[bid] / panel.eff + emission_factor * panel.co2_eur_tco2_bid / panel.eff)
+    if fuel == "gas":
+        eff_bid = panel[[bid, "gas_reference_eur_mwh_th"]].min(axis=1).where(
+            panel.gas_reference_eur_mwh_th.notna(), panel[bid])
+    else:
+        eff_bid = panel[bid]
+    panel["marginal_cost_capped_bid_eur_mwh"] = (
+        eff_bid / panel.eff + emission_factor * panel.co2_eur_tco2_bid / panel.eff)
     return panel
 
 
@@ -245,6 +277,22 @@ def last_traded(days: pd.DataFrame, *quotes: pd.DataFrame) -> pd.DataFrame:
     return out.dropna().reset_index(drop=True)
 
 
+# Offers for delivery day D close at 12:00 on D-1; the last price final by then is
+# dated D-2 or earlier (see the docstring), so a value dated t is usable from t + 2.
+BID_LAG_DAYS = 2
+
+
+def known_at_bidding(days: pd.DataFrame, quote: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
+    """days with `<col>_bid`: each column's last value dated BID_LAG_DAYS or more before
+    the day, at most STALE_DAYS older than that. NaN where none exists."""
+    out = days.assign(date=pd.to_datetime(days.date).astype("datetime64[ns]")).sort_values("date")
+    q = quote[["date", *cols]].dropna()
+    q = q.assign(date=pd.to_datetime(q.date).astype("datetime64[ns]") + pd.Timedelta(days=BID_LAG_DAYS))
+    q = q.sort_values("date").rename(columns={c: f"{c}_bid" for c in cols})
+    return pd.merge_asof(out, q, on="date", direction="backward",
+                         tolerance=pd.Timedelta(days=STALE_DAYS)).reset_index(drop=True)
+
+
 def build() -> pd.DataFrame:
     d = load_inputs()
     match = d["match"]
@@ -256,6 +304,8 @@ def build() -> pd.DataFrame:
     # fetch_mibgas_prices.py); drop it rather than propagate a NaN cost.
     # MIBGAS publishes every calendar day, weekends included, so it sets the calendar.
     gas_prices = last_traded(d["gas"].dropna(subset=["mibgas_es_eur_mwh"]), d["co2"])
+    gas_prices = known_at_bidding(gas_prices, d["gas"], ["mibgas_es_eur_mwh"])
+    gas_prices = known_at_bidding(gas_prices, d["co2"], ["co2_eur_tco2"])
     gas_panel = build_fuel_panel(gas_units, gas_prices, "mibgas_es_eur_mwh",
                                   GAS_EMISSION_FACTOR_TCO2_PER_MWH_TH, "gas")
 
@@ -266,6 +316,12 @@ def build() -> pd.DataFrame:
     coal_prices = last_traded(cal, d["coal"], d["fx"], d["co2"])
     coal_prices["coal_eur_mwh_th"] = (
         coal_prices.coal_usd_tonne / coal_prices.usd_per_eur
+        / COAL_CALORIFIC_VALUE_MWH_PER_TONNE
+    )
+    for q, cols in ((d["coal"], ["coal_usd_tonne"]), (d["fx"], ["usd_per_eur"]), (d["co2"], ["co2_eur_tco2"])):
+        coal_prices = known_at_bidding(coal_prices, q, cols)
+    coal_prices["coal_eur_mwh_th_bid"] = (
+        coal_prices.coal_usd_tonne_bid / coal_prices.usd_per_eur_bid
         / COAL_CALORIFIC_VALUE_MWH_PER_TONNE
     )
     coal_panel = build_fuel_panel(coal_units, coal_prices, "coal_eur_mwh_th",

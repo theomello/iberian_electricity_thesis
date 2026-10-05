@@ -7,7 +7,10 @@ repo publishes.
     .venv/bin/python scripts/fetch/fetch_jrc_ppdb_efficiency.py --verify
 
 Writes data/jrc_ppdb/jrc_spain_units.parquet, one row per Spanish generating
-unit. Not resumable in the per-day sense the OMIE fetchers are -- the JRC
+unit, and since 2026-10-05 data/jrc_ppdb/jrc_portugal_units.parquet, the same for
+Portugal (75 units; its 10 gas and 6 coal generators all carry an efficiency).
+Portugal is inside MIBEL, so its thermal plants bid in the same auction; EDP's
+Lares and Ribatejo and Endesa's Pego combined cycles had no cost until then. Not resumable in the per-day sense the OMIE fetchers are -- the JRC
 publishes one static historical database, not a live archive -- so this just
 re-downloads and re-parses unless the output already exists.
 
@@ -99,6 +102,8 @@ OUT_DIR = DATA / "jrc_ppdb"
 RAW_DIR = OUT_DIR / "raw"
 OUT_UNITS = OUT_DIR / "jrc_spain_units.parquet"
 OUT_TEMPORAL = OUT_DIR / "jrc_spain_temporal.parquet"
+OUT_PT_UNITS = OUT_DIR / "jrc_portugal_units.parquet"
+OUT_PT_TEMPORAL = OUT_DIR / "jrc_portugal_temporal.parquet"
 ZIP_URL = "https://zenodo.org/records/3574566/files/JRC-PPDB-OPEN.ver1.0.zip?download=1"
 COUNTRY = "Spain"
 
@@ -116,13 +121,13 @@ def download(sess) -> Path:
     return zip_path
 
 
-def parse(zip_path: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
+def parse(zip_path: Path, country: str = COUNTRY) -> tuple[pd.DataFrame, pd.DataFrame]:
     with zipfile.ZipFile(zip_path) as z:
         units = pd.read_csv(io.BytesIO(z.read("JRC_OPEN_UNITS.csv")))
         perf = pd.read_csv(io.BytesIO(z.read("JRC_OPEN_PERFORMANCE.csv")))
         temporal = pd.read_csv(io.BytesIO(z.read("JRC_OPEN_TEMPORAL.csv")))
 
-    units = units[units.country == COUNTRY].copy()
+    units = units[units.country == country].copy()
     temporal_es = temporal[temporal.eic_g.isin(units.eic_g)].copy()
 
     # Join on eic_g, but only where it's a real key -- see the empty-eic_g
@@ -165,6 +170,10 @@ def main() -> int:
         temporal.to_parquet(OUT_TEMPORAL, index=False)
         print(f"  wrote {OUT_UNITS}")
         print(f"  wrote {OUT_TEMPORAL}")
+        pt, pt_temporal = parse(zip_path, "Portugal")
+        pt.to_parquet(OUT_PT_UNITS, index=False)
+        pt_temporal.to_parquet(OUT_PT_TEMPORAL, index=False)
+        print(f"  wrote {OUT_PT_UNITS} ({len(pt)} units, {int(pt.eff.notna().sum())} with an efficiency)")
 
     n_eff = df.eff.notna().sum()
     print(f"\n{len(df):,} Spanish generating units, {n_eff} with a non-null efficiency")
@@ -179,6 +188,10 @@ def main() -> int:
         assert gas.eff.notna().mean() > 0.9, "Fossil Gas (CCGT) efficiency coverage regressed"
         dupe = df.duplicated(["eic_p", "eic_g"]).sum()
         assert dupe == 0, "duplicate (eic_p, eic_g) rows -- not a key"
+        pt = pd.read_parquet(OUT_PT_UNITS)
+        fossil = pt[pt.type_g.str.startswith("Fossil", na=False)]
+        assert len(fossil) == 16 and fossil.eff.notna().all(), "Portugal: expected 16 fossil units, all with eff"
+        assert pt.duplicated(["eic_p", "eic_g"]).sum() == 0, "Portugal: duplicate (eic_p, eic_g) rows"
         print("\n  --verify passed")
     return 0
 

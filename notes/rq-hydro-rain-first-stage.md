@@ -78,3 +78,49 @@ Static → dated:
 The 90-day pooled first stage weakens and falls below 10 with quarter clusters.
 The next version is the complete-data one (catchment rain per plant × the owner's
 share that day; handoff 2026-10-05 job 4).
+
+## Complete data: catchment rain × ownership by date (2026-10-05)
+
+`analysis/hydro_rain_catchment_first_stage.py`; results
+`outputs/tables/hydro_rain_catchment_first_stage.csv`. Same panel, fixed effects and
+clusters as the probe; three things change:
+
+- **Rain** over each plant's whole upstream catchment (E-OBS, 0.25°; 387 JRC plants,
+  `build_catchment_rain.py`) instead of one ERA5 point per basin.
+- **Anomalies against 1991–2020**: each plant's K-day sum z-scored against its own
+  normal for that calendar month, not against 2018–2026.
+- **Exposure by date and share**: H_ft = Σ plants GW × the firm's share of the plant's
+  OMIE unit that day × z (`build_hydro_plant_units.owners_of_plants`). 155 linked
+  plants; mean linked GW: Iberdrola 7.1, EDP 6.1, Endesa 2.9, Naturgy 1.3, Movhera
+  0.9, Repsol 0.6. Mixed pumped storage stays in (natural inflow); a row drops it.
+
+| sample (n on H, week effects) | b (MW per GW·sd) | F | other |
+|---|---|---|---|
+| **pooled, 90 days** | **+56.4 (12.2)** | **21.3** | wild bootstrap over firms p 0.044 |
+| pooled, 30 days | +46.8 (9.9) | 22.5 | wild bootstrap over firms p 0.098 |
+| pooled, 90 days, sell volume q | +48.0 (7.9) | 37.1 | |
+| 90 days, quarter clusters | +56.4 (16.4) | 11.9 | |
+| 90 days, without Movhera | +60.9 (12.7) | 23.0 | |
+| 90 / 30 days, catchment mix only (no size) | +227 / +200 | 11.1 / 22.3 | |
+| 90 / 30 days, rescaled to REE capacity | +48.5 / +40.7 | 19.6 / 21.3 | |
+| 90 / 30 days, without pumped storage | +122 / +95 | 20.5 / 20.0 | |
+
+By firm (no week effects, size only): EDP +43.5 (F 37), Movhera +71.6 (F 66),
+Iberdrola +28.4 (F 8.4); Endesa, Naturgy and Repsol negative and insignificant.
+
+**Reading.**
+
+- **Complete data roughly doubles the first stage**: pooled 90-day F 11.6 → 21.3,
+  and with quarter clusters 6.6 → 11.9. It survives rescaling to REE capacity and
+  dropping pumped storage.
+- **It is thin across firms.** Six clusters; the wild bootstrap over firms gives
+  p 0.044 at 90 days and 0.098 at 30. The response comes from EDP, Movhera and
+  Iberdrola, whose catchments lie in the wet north-west.
+- **The firms' rain is highly correlated.** The share-weighted 90-day indices of
+  EDP, Iberdrola, Movhera and Naturgy correlate 0.94–0.98; only Repsol (0.55–0.70)
+  and Endesa (0.80–0.85) differ. Within a week, most of the contrast is hydro size
+  × common north-west rain. The no-size index still gives F 11.1 / 22.3, so catchment
+  differences carry some of it.
+- **Next**, as designed: X instrumented by own rain in the thermal-offer equation,
+  split by the sign of n, with the size-versus-mix question answered by using S
+  (mix) and H (size) separately as instruments.

@@ -573,6 +573,12 @@ Steinsson 2018) maps onto the two auctions:
   error moves each firm's intraday position by its fleet exposure: its wind share ×
   the national surprise, a shift-share across firms within the hour. Same condition,
   intraday n. Data on disk (`curva_pibc_uof`, `marginalpibc`, REE forecasts).
+  **Run 2026-10-06; fails** (`rq-intraday-surprise.md`). The surprise reaches each firm
+  through its whole fleet: hydro owners buy back output (EDP −52, Iberdrola −30 MW per
+  GW of wind surprise), Acciona sells (+38), so the wind-share shift-share has F 3.3.
+  Firm-specific instruments have a first stage (F 28 at firm level, 5–6 at unit level)
+  but an empty Anderson–Rubin set on thermal offers, and the day-ahead placebo fails
+  (F 6–31, also at prices above 40 €/MWh): firms know part of REE's forecast error.
 - **The buyers' test** (Ito & Reguant 2016): the day-ahead − intraday price premium
   should rise with the five firms' combined exposed n and turn negative when they are
   net buyers. Cheap; a market-level time series, so a description, not an estimate.
@@ -661,7 +667,10 @@ That is what leg C in levels needs.
 4. **Day-ahead − intraday premium** against combined n (descriptive). *Run
    2026-10-06* (`rq-da-id-premium.md`): flat in N; +0.95 (0.39) per GW when N is
    moved by planned reactor outages.
-5. **Intraday surprise design.**
+5. **Intraday surprise design.** *Run 2026-10-06, fails* (`rq-intraday-surprise.md`):
+   no first stage on wind shares, contradictory instruments firm by firm, and the
+   day-ahead placebo fails. A firm's own surprise (located farms' output minus its own
+   day-ahead wind schedule) would be the next attempt; not built.
 6. **Step estimator** with the non-strategic ladder netted (§9.1), once steps 2–3
    pin β's range and c.
 

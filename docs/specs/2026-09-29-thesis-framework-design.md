@@ -669,8 +669,12 @@ That is what leg C in levels needs.
    moved by planned reactor outages.
 5. **Intraday surprise design.** *Run 2026-10-06, fails* (`rq-intraday-surprise.md`):
    no first stage on wind shares, contradictory instruments firm by firm, and the
-   day-ahead placebo fails. A firm's own surprise (located farms' output minus its own
-   day-ahead wind schedule) would be the next attempt; not built.
+   day-ahead placebo fails. *The firm's own surprise, run 2026-10-06*
+   (`rq-intraday-surprise.md` §6): located farms' output minus its own day-ahead wind
+   schedule (`pdbf`, bilateral included). First stage strong (intraday n F 120, unit
+   level F 24), but X moves only 0.40 €/MWh per GW (thermal set [−19.2, 13.6]), and the
+   day-ahead placebo fails with the schedule and the forecast levels held (five firms'
+   day-ahead X F 12, 18 at prices above 40). Stopped after three variants.
 6. **Step estimator** with the non-strategic ladder netted (§9.1), once steps 2–3
    pin β's range and c. *Run 2026-10-06* (`rq-step-estimator.md`), gas and coal
    2019–2023. Offered curves re-clear to the published price only on the effective

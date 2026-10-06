@@ -121,3 +121,60 @@ firm's own forecast, which is not published.
 - **What could rescue it**: a firm's own surprise, its farms' realised output (located
   farms × provincial output) minus its own day-ahead wind schedule. That needs the
   firm's wind units in OMIE and leans on the 54% of wind that is located; not built.
+
+## 6. The own surprise (run 2026-10-06): a first stage, no exclusion
+
+Scripts `analysis/own_wind_surprise.py` (builds S) and
+`analysis/intraday_own_surprise_test.py`; results
+`outputs/tables/intraday_own_surprise_results.csv`.
+
+**The idea.** Measure the surprise against the firm's own forecast, not REE's. A firm's
+day-ahead wind schedule is its forecast, so
+
+    S = the firm's realised wind − its own day-ahead wind schedule
+
+- **The schedule** is OMIE's operating schedule (`pdbf`, all roles) of the units OMIE
+  labels wind, by the owners in force that day. It includes bilateral contracts:
+  Iberdrola sells 93% of its wind bilaterally (March 2022), so its auction offers miss
+  almost all of it.
+- **Realised wind** is the firm's located farms' capacity factor by region (as in
+  `regional_wind_offer_test.py`), scaled to its scheduled fleet group-month by group-month.
+- For the five large firms and Acciona the schedule tracks the located farms closely
+  (correlation 0.83–0.96). S has a spread of 110–310 MW.
+
+**Check one, the first stage, passes.** With firm × REE's errors as controls:
+
+- The firm's intraday position rises 35 MW per GW of S in each session (F 120); X rises
+  0.28 €/MWh per GW (F 27).
+- Summed over sessions, firms sell part of their surplus: Acciona 26%, Iberdrola 17%,
+  Endesa 14%, EDP 8%, Naturgy none.
+- At the unit level, on thermal offers: F 24.
+
+**Check two, the thermal offers, is uninformative.** S moves X by only 0.40 €/MWh per
+GW. With S pooled, β −3.1 (se 7.7) and the Anderson–Rubin set is [−19.2, 13.6]. With S
+by firm, F 6.6 and the set is [−0.02, +∞]. Even a valid S could not narrow β here.
+
+**Check three, the day-ahead placebo, fails three times.** S comes after the day-ahead
+offers close, so day-ahead positions and offers must not respond to it.
+
+| S, controlling for | five firms' day-ahead X: F (coefficient per GW) | at prices > €40 | thermal day-ahead offer at 50%: F (per GW) |
+|---|---|---|---|
+| firm × REE's errors | 21.5 (−3.6) | 26.4 | 44.7 (−€23.8) |
+| + the firm's own schedule | 4.1 (−1.6) | 15.8 | 42.7 (−€23.9) |
+| + firm × REE's forecast levels | 12.3 (−3.3) | 17.7 | 1.6 (−€7.8, se 6.2) |
+
+- The first row is partly built in: S subtracts the schedule, which is part of the
+  day-ahead position.
+- The forecast levels take out the thermal offers' response. A firm's farms are windy
+  when the forecast is windy, and the forecast moves day-ahead offers.
+- The firms' day-ahead X still responds, including at prices above €40.
+- So given its schedule and the national forecast, a firm's day-ahead position still
+  moves with how much its farms will produce. Either it schedules its wind
+  conservatively and plans the rest of its position on a better forecast, or S carries
+  a choice. In both cases S is not news at noon on D-1.
+
+**Stopped after three variants** (each one controlling for what the previous one left
+open). The intraday market does not give a clean shock to n in these data: REE's error
+is partly known to the firms, and a firm's own error depends on its own schedule. What
+the own surprise does show: firms sell 8–26% of an unexpected wind surplus in the
+intraday auctions.

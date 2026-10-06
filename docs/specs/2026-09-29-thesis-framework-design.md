@@ -604,6 +604,18 @@ That is what leg C in levels needs.
   MWh may be exempt. The government decided to abolish it on 2025-12-17. To check
   before running: the clawback's yearly values, and whether it was also suspended
   in 2018 Q4 – 2019 Q1 (RDL 15/2018 suspended the IVPEE then).
+  **The 2024 steps escape it (checked 2026-10-06).** From PDBF, every Portuguese
+  combined cycle ran under 1,200 equivalent hours in 2024 (14–1,190), against
+  1,400–5,700 in 2018–2022: none of their 2024 output reached the 2,000-hour
+  threshold, so they were untreated when the IVPEE came back (3.5% from 2024-01-01,
+  5.25% from 04-01, 7% from 07-01). The earlier events need the clawback's values.
+  **Use the declared minimum-income variable term as the outcome**, not the offer
+  price: Portuguese combined cycles offered at a median 0 €/MWh at half their volume
+  in 2024, while 89–100% of combined cycles in both countries declared a variable
+  term (`cab`, median 79–144 €/MWh in 2023–2024), until it ended on 2025-03-18. The
+  tax is on revenue, so the declared term should rise by τ/(1 − τ) relative to
+  Portugal's: +3.6%, +5.5%, +7.5% at the three steps. Raw quarterly medians show no
+  obvious jump; that is before any control.
 - **The gas cap** (2022-06-15 → 2023-12-31): dose per unit (gas − reference) /
   efficiency; the sharpest window for the cost in levels.
 - **The 2021 windfall levy**: it acts through contracting (n via θ) and needs 2021

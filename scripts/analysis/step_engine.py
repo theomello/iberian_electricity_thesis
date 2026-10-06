@@ -9,7 +9,8 @@ step curve before it knows its residual demand. Each step's price and length sat
 a first-order condition in expectation over the residual demands it could face
 (Wolak 2007; Kastl 2011; Reguant 2014). This script builds those expectations.
 
-FOR EACH TARGET (group f, hour H) where f offers a gas or coal step:
+FOR EACH TARGET (group f, hour H) where f offers a gas or coal step (`--kind thermal`), or
+a storage or pumped-storage hydro step above MIN_PRICE_HYDRO (`--kind hydro`, 2026-10-06):
   own curve   f's exposed offers in H (effective curve, `step_curves.py`), both sides
   draws       N_DRAWS hours at the same clock hour within ±WINDOW days (H's own day
               left out), valid, nearest to H in REE's D-1 forecast of net load
@@ -30,9 +31,11 @@ FOR EACH TARGET (group f, hour H) where f offers a gas or coal step:
 THE REALISED DRAW. The same clearing on H's own rivals with no shift is the one-draw
 (ex-post) case; it must reproduce p*, which `realised_ok` checks.
 
-WRITES outputs/cache/step/moments_YYYYMM.parquet, one row per (H, f, own price q_k)
-at which f offers gas or coal: v_sell, v_buy, q_next, n_draws, and over the draws:
-  m_n, m_s, m_x, m_xn        marginal: count; sums of n, |RD′|, X; count with X defined
+WRITES outputs/cache/step/moments_YYYYMM.parquet (hydro: hmoments_YYYYMM), one row per
+(H, f, own price q_k) at which f offers gas or coal (hydro): v_sell, v_buy, q_next, n_draws, and over the draws:
+  m_n, m_sn, m_s, m_x, m_xn  marginal: count; sums of n, |RD′|, X; count with X defined
+  m_s_rel                    sum of |RD′| on a band of ±5% of p (at least ±2.5 €/MWh),
+                             which keeps the window's width relative to the price level
   g_n, g_p, g_x, g_xn, g_s   gap above q_k: count; sums of p*, X; X defined; |RD′|
 and realised: r_event (1 marginal at q_k, 2 gap above q_k, 0 neither), r_p, r_n, r_s.
 Also moments_targets_YYYYMM.parquet: per target, the draws' mean and sd of p*, H's p*
@@ -56,6 +59,8 @@ CACHE = ROOT / "outputs/cache/step"
 N_DRAWS = 40
 WINDOW = 28            # days
 H_BAND = 5.0           # €/MWh
+REL_BAND = 0.05        # the price-scaled band: ±5% of p ...
+MIN_REL_BAND = 2.5     # ... and at least ±2.5 €/MWh (equal to H_BAND at p = 100)
 MIN_SLOPE = 5.0        # MW per €/MWh
 OFF, W = 1000.0, 20000.0          # price keys: hour_index * W + price + OFF
 OFF2, W2 = 2.0e5, 1.0e6           # value keys: hour_index * W2 + ES + OFF2
@@ -67,13 +72,19 @@ def months_around(ym: str) -> list[str]:
     return [str(p + k).replace("-", "") for k in (-1, 0, 1)]
 
 
-def load(ym: str) -> tuple:
+KINDS = {"thermal": ("units", "moments"), "hydro": ("hydro", "hmoments")}
+MIN_PRICE_HYDRO = 1.0   # €/MWh: hydro blocks at zero tie with every renewable and never carry a choice
+
+
+def load(ym: str, kind: str = "thermal") -> tuple:
     have = [m for m in months_around(ym) if (CACHE / f"hours_{m}.parquet").exists()]
     hours = pd.concat([pd.read_parquet(CACHE / f"hours_{m}.parquet") for m in have], ignore_index=True)
     hours = hours.sort_values("hid", ignore_index=True)
     market = pd.concat([pd.read_parquet(CACHE / f"market_{m}.parquet") for m in have], ignore_index=True)
     own = pd.concat([pd.read_parquet(CACHE / f"own_{m}.parquet") for m in have], ignore_index=True)
-    units = pd.read_parquet(CACHE / f"units_{ym}.parquet")
+    units = pd.read_parquet(CACHE / f"{KINDS[kind][0]}_{ym}.parquet")
+    if kind == "hydro":
+        units = units[units.price > MIN_PRICE_HYDRO]
     return hours, market, own, units
 
 
@@ -159,13 +170,18 @@ def clear(blk: Block, g: str, q: np.ndarray, vs: np.ndarray, vb: np.ndarray, dra
     lo = np.searchsorted(blk.kp, draws * W + p - H_BAND + OFF, side="left") - 1
     hi = np.searchsorted(blk.kp, draws * W + p + H_BAND + OFF, side="right") - 1
     s = (a_r[hi] - a_r[lo]) / (2 * H_BAND)
+    # the same with a band that scales with the price: ±REL_BAND of p, at least ±MIN_REL_BAND
+    h_rel = np.maximum(MIN_REL_BAND, REL_BAND * np.abs(p))
+    lo = np.searchsorted(blk.kp, draws * W + p - h_rel + OFF, side="left") - 1
+    hi = np.searchsorted(blk.kp, draws * W + p + h_rel + OFF, side="right") - 1
+    s_rel = (a_r[hi] - a_r[lo]) / (2 * h_rel)
     kstar = np.where(at_q, kk, -1)
     kgap = np.where(at_q, -1, k - 1)          # -1: below every own price
-    return {"p": p, "n": n, "s": s, "kstar": kstar, "kgap": kgap}
+    return {"p": p, "n": n, "s": s, "s_rel": s_rel, "kstar": kstar, "kgap": kgap}
 
 
-def month(ym: str, sh: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    hours, market, own, units = load(ym)
+def month(ym: str, sh: pd.DataFrame, kind: str = "thermal") -> tuple[pd.DataFrame, pd.DataFrame]:
+    hours, market, own, units = load(ym, kind)
     blk = Block(hours, market, own)
     h = hours.copy()
     h["nl"] = h.F_demand - h.F_wind - h.F_solar
@@ -215,7 +231,8 @@ def month(ym: str, sh: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
                 "hid": H.hid, "group": g, "price": q, "v_sell": vs, "v_buy": vb,
                 "q_next": np.append(q[1:], np.inf), "n_draws": len(cand),
                 "m_n": acc(mk[mm], np.ones(mm.sum())), "m_sn": acc(mk[mm], r["n"][mm]),
-                "m_s": acc(mk[mm], r["s"][mm]), "m_x": acc(mk[mm & xd], x[mm & xd]),
+                "m_s": acc(mk[mm], r["s"][mm]), "m_s_rel": acc(mk[mm], r["s_rel"][mm]),
+                "m_x": acc(mk[mm & xd], x[mm & xd]),
                 "m_xn": acc(mk[mm & xd], np.ones((mm & xd).sum())),
                 "g_n": acc(gk[gm], np.ones(gm.sum())), "g_p": acc(gk[gm], r["p"][gm]),
                 "g_x": acc(gk[gm & xd], x[gm & xd]), "g_xn": acc(gk[gm & xd], np.ones((gm & xd).sum())),
@@ -239,15 +256,17 @@ def month(ym: str, sh: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
 def main() -> int:
     ap = ArgumentParser(description=__doc__)
     ap.add_argument("--months", nargs="+", required=True)
+    ap.add_argument("--kind", choices=list(KINDS), default="thermal")
     args = ap.parse_args()
     sh = shares()
+    out = KINDS[args.kind][1]
     for ym in args.months:
         t0 = time.time()
-        m, t = month(ym, sh)
-        m.to_parquet(CACHE / f"moments_{ym}.parquet", index=False)
-        t.to_parquet(CACHE / f"moments_targets_{ym}.parquet", index=False)
+        m, t = month(ym, sh, args.kind)
+        m.to_parquet(CACHE / f"{out}_{ym}.parquet", index=False)
+        t.to_parquet(CACHE / f"{out}_targets_{ym}.parquet", index=False)
         ok = (t.r_p - t.p_clear).abs() < 0.011
-        print(f"  {ym}: {len(t):,} targets, {len(m):,} thermal own prices; realised clearing reproduces the "
+        print(f"  {ym}: {len(t):,} targets, {len(m):,} {args.kind} own prices; realised clearing reproduces the "
               f"re-clear in {ok.mean():.3f}; draws' mean p* − p* median {(t.draw_p_mean - t.p_star).median():+.2f}, "
               f"sd of p* across draws median {t.draw_p_sd.median():.2f} ({time.time() - t0:.0f} s)", flush=True)
     return 0

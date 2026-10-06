@@ -685,6 +685,11 @@ That is what leg C in levels needs.
    −0.16, [−0.60, 0.19] (F 23), full Nash rejected. **Length of a step** fails
    (β −0.84, [−1.58, −0.17]): units repeat yesterday's step boundaries on 48–82% of
    days, so lengths follow the plant and their condition is an inequality.
+   *Hydro, run 2026-10-06* (`rq-step-estimator.md` §6), 2019-01 → 2025-09, the water
+   value differenced out by unit × day effects: reactor outages β +0.06, set
+   [−0.73, 0.37] (F 5); regional wind −0.17, [−0.83, 0.38] (F 11); Nash rejected by
+   both. Firm × forecast instruments (F 45–127) give an empty set in every sample: they
+   reach hydro offers by routes other than X.
 
 *To verify before use*: the IVPEE decree chain and dates; the reasons OMIE's
 `indisp` gives for each reactor outage; whether Portugal's CESE has any per-MWh

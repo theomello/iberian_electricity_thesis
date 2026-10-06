@@ -3,9 +3,9 @@
 
     .venv/bin/python scripts/analysis/step_curves.py [--months 201906 ...]
 
-Input to `step_estimator.py` (framework spec §9.7 step 6; step-offer design
-`docs/specs/2026-10-01-step-offer-design.md` §3). Hourly day-ahead market,
-2019-01 (REE's D-1 forecasts start) → 2024-01 (draws for December 2023).
+Input to `step_estimator.py` and `step_estimator_hydro.py` (framework spec §9.7 step 6;
+step-offer design `docs/specs/2026-10-01-step-offer-design.md` §3). Hourly day-ahead
+market, 2019-01 (REE's D-1 forecasts start) → 2025-09 (the last hourly month).
 
 THE EFFECTIVE CURVE. Clearing OMIE's offered curves (status O) does not reproduce the
 published price: in June 2019 it comes out 13 €/MWh too low. Two reasons, both
@@ -29,7 +29,7 @@ OWNERSHIP. Rows are split across the owners in force that day by share
 (`lib/unit_ownership.attach_owners`); a group's OWN curve is its exposed rows
 (regulated pass-through suppliers count as rivals, framework spec §2.4). Groups: every
 group that is the largest owner of a gas or coal unit with a plant-specific efficiency
-on some day.
+on some day, or of a storage or pumped-storage hydro unit of leg D (added 2026-10-06).
 
 WRITES outputs/cache/step/ (gitignored), one set per month:
   hours_YYYYMM   hid, date, period, utc, p_star, p_clear, valid, d_tot (MW of buy
@@ -39,6 +39,8 @@ WRITES outputs/cache/step/ (gitignored), one set per month:
   own_YYYYMM     hid, group, price, v_sell, v_buy: each group's own MW at each price
   units_YYYYMM   hid, unit, group, fuel, price, mw, mw_below, cap_mw, cost, cleared_mw,
                  withdrawn: every sell step of the gas and coal units
+  hydro_YYYYMM   hid, date, unit, group, cls, price, mw, mw_below, cap_mw, cleared_mw,
+                 withdrawn: every sell step of storage hydro and pumped-storage turbines
 hid = days since 2018-01-01 × 24 + period − 1. Days without 24 periods (DST) are left out.
 """
 from __future__ import annotations
@@ -55,6 +57,7 @@ import pyarrow.parquet as pq
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 sys.path.insert(0, str(ROOT / "scripts" / "analysis"))
+from leg_d_panel import leg_d_units  # noqa: E402
 from regional_wind_offer_test import forecasts  # noqa: E402
 from residual_demand import IDENTITY_TOL, cleared_by_period  # noqa: E402
 from unit_ownership import attach_owners, majority_group, spells  # noqa: E402
@@ -62,7 +65,7 @@ from unit_ownership import attach_owners, majority_group, spells  # noqa: E402
 DATA = ROOT / "data"
 BIDS = DATA / "omie/bids/parquet"
 CACHE = ROOT / "outputs/cache/step"
-FIRST, LAST = "201901", "202401"
+FIRST, LAST = "201901", "202509"     # the day-ahead market is hourly until 2025-09-30
 EPOCH = pd.Timestamp("2018-01-01")
 EPS = 0.005            # €/MWh: OMIE prices have two decimals
 VALID_ERR = 0.5        # €/MWh
@@ -84,10 +87,47 @@ def thermal_costs() -> pd.DataFrame:
     return c.rename(columns={"marginal_cost_capped_bid_eur_mwh": "cost"})[["unit", "date", "fuel", "cost"]]
 
 
-def owner_groups(sp: pd.DataFrame, tc: pd.DataFrame) -> list[str]:
-    ud = tc[["unit", "date"]].drop_duplicates()
+def hydro_units() -> pd.DataFrame:
+    """unit, cls: storage hydro and pumped-storage turbines of leg D (`leg_d_units`: every
+    such unit one of the five owns, and any other of 50 MW or more)."""
+    u = leg_d_units()
+    return u[u.cls.isin(["hydro", "pumped"])][["unit", "cls"]].reset_index(drop=True)
+
+
+def owner_groups(sp: pd.DataFrame, tc: pd.DataFrame, hu: pd.DataFrame) -> list[str]:
+    ud = pd.concat([tc[["unit", "date"]].drop_duplicates(),
+                    pd.DataFrame({"unit": hu.unit.repeat(4).to_numpy(),
+                                  "date": np.tile(pd.to_datetime(["2019-06-01", "2021-06-01", "2023-06-01",
+                                                                  "2025-06-01"]), len(hu))})])
     g = majority_group(ud, sp)
     return sorted(g.dropna().unique())
+
+
+def sell_steps(b: pd.DataFrame, units: set, ym: str, sp: pd.DataFrame) -> pd.DataFrame:
+    """Every offered sell step of `units`: hid, date, unit, group (largest owner that day),
+    price, mw, mw_below, cap_mw (`cab`), cleared_mw (the hour), withdrawn (offered below
+    the price in some hour of the day, accepted in none)."""
+    t = b[(b.status == "O") & (b.side == "V") & b.unit.isin(units) & (b.power_mw > 0)]
+    t = t.groupby(["hid", "date", "unit", "price_eur_mwh"]).power_mw.sum().reset_index()
+    t = t.sort_values(["hid", "unit", "price_eur_mwh"], kind="stable")
+    t["mw_below"] = t.groupby(["hid", "unit"]).power_mw.cumsum() - t.power_mw
+    ud = t[["unit", "date"]].drop_duplicates()
+    ud["group"] = majority_group(ud, sp).to_numpy()
+    t = t.merge(ud, on=["unit", "date"], how="left")
+    cab = pq.read_table(DATA / f"omie/cab/parquet/cab_{ym}.parquet", columns=["date", "unit", "max_power_mw"]).to_pandas()
+    cab["date"] = pd.to_datetime(cab.date)
+    cab["unit"] = cab.unit.astype(str)
+    cab = cab.groupby(["unit", "date"]).max_power_mw.max().rename("cap_mw").reset_index()
+    t = t.merge(cab, on=["unit", "date"], how="left")
+    cl = b[(b.status == "C") & (b.side == "V") & b.unit.isin(units)]
+    t = t.merge(cl.groupby(["hid", "unit"]).power_mw.sum().rename("cleared_mw").reset_index(),
+                on=["hid", "unit"], how="left")
+    t["cleared_mw"] = t.cleared_mw.fillna(0.0)
+    itm = b[(b.status == "O") & (b.side == "V") & (b.price_eur_mwh < b.p_star - EPS) & b.unit.isin(units)]
+    itm_d = set(zip(itm.unit, itm.date))
+    clr_d = set(zip(cl.unit, cl.date))
+    t["withdrawn"] = [(u, d) in itm_d and (u, d) not in clr_d for u, d in zip(t.unit, t.date)]
+    return t.rename(columns={"price_eur_mwh": "price", "power_mw": "mw"})
 
 
 def effective(b: pd.DataFrame) -> pd.DataFrame:
@@ -112,7 +152,7 @@ def reclear(e: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([hit, d_tot], axis=1).reset_index(), market
 
 
-def month(ym: str, sp: pd.DataFrame, groups: list[str], tc: pd.DataFrame, px: pd.DataFrame,
+def month(ym: str, sp: pd.DataFrame, groups: list[str], tc: pd.DataFrame, hu: pd.DataFrame, px: pd.DataFrame,
           fc: pd.DataFrame) -> dict[str, pd.DataFrame]:
     b = pq.read_table(BIDS / f"bids_{ym}.parquet",
                       columns=["date", "period", "unit", "side", "status", "power_mw", "price_eur_mwh"]).to_pandas()
@@ -143,37 +183,18 @@ def month(ym: str, sp: pd.DataFrame, groups: list[str], tc: pd.DataFrame, px: pd
            .rename(columns={"price_eur_mwh": "price"}))
 
     # gas and coal sell steps (the full offered ladder) with the unit's cost and owner
-    t = b[(b.status == "O") & (b.side == "V") & b.unit.isin(set(tc.unit)) & (b.power_mw > 0)]
-    t = t.groupby(["hid", "date", "unit", "price_eur_mwh"]).power_mw.sum().reset_index()
-    t = t.merge(tc, on=["unit", "date"], how="inner")
-    t = t.sort_values(["hid", "unit", "price_eur_mwh"], kind="stable")
-    t["mw_below"] = t.groupby(["hid", "unit"]).power_mw.cumsum() - t.power_mw
-    ud = t[["unit", "date"]].drop_duplicates()
-    ud["group"] = majority_group(ud, sp).to_numpy()
-    t = t.merge(ud, on=["unit", "date"], how="left")
-    cab = pq.read_table(DATA / f"omie/cab/parquet/cab_{ym}.parquet", columns=["date", "unit", "max_power_mw"]).to_pandas()
-    cab["date"] = pd.to_datetime(cab.date)
-    cab["unit"] = cab.unit.astype(str)
-    cab = cab.groupby(["unit", "date"]).max_power_mw.max().rename("cap_mw").reset_index()
-    t = t.merge(cab, on=["unit", "date"], how="left")
-    cl = b[(b.status == "C") & (b.side == "V") & b.unit.isin(set(tc.unit))]
-    cleared_h = cl.groupby(["hid", "unit"]).power_mw.sum().rename("cleared_mw")
-    t = t.merge(cleared_h.reset_index(), on=["hid", "unit"], how="left")
-    t["cleared_mw"] = t.cleared_mw.fillna(0.0)
-    # withdrawn on the day: offered below the price in some hour, accepted in none
-    itm = b[(b.status == "O") & (b.side == "V") & (b.price_eur_mwh < b.p_star - EPS) & b.unit.isin(set(tc.unit))]
-    itm_d = set(zip(itm.unit, itm.date))
-    clr_d = set(zip(cl.unit, cl.date))
-    t["withdrawn"] = [(u, d) in itm_d and (u, d) not in clr_d for u, d in zip(t.unit, t.date)]
-    units = t.rename(columns={"price_eur_mwh": "price", "power_mw": "mw"})[
-        ["hid", "unit", "group", "fuel", "price", "mw", "mw_below", "cap_mw", "cost", "cleared_mw", "withdrawn"]]
+    t = sell_steps(b, set(tc.unit), ym, sp).merge(tc, on=["unit", "date"], how="inner")
+    units = t[["hid", "unit", "group", "fuel", "price", "mw", "mw_below", "cap_mw", "cost", "cleared_mw", "withdrawn"]]
+    # storage hydro and pumped-storage turbines
+    h = sell_steps(b, set(hu.unit), ym, sp).merge(hu, on="unit")
+    hydro = h[["hid", "date", "unit", "group", "cls", "price", "mw", "mw_below", "cap_mw", "cleared_mw", "withdrawn"]]
 
     f32 = {"price": "float64", "a": "float64"}
     return {"hours": hours[["hid", "date", "period", "utc", "p_star", "p_clear", "valid", "d_tot",
                             "F_wind", "F_solar", "F_demand"]],
             "market": market.astype(f32),
             "own": own.astype({"v_sell": "float32", "v_buy": "float32"}),
-            "units": units}
+            "units": units, "hydro": hydro}
 
 
 def main() -> int:
@@ -187,8 +208,10 @@ def main() -> int:
     CACHE.mkdir(parents=True, exist_ok=True)
     sp = spells()
     tc = thermal_costs()
-    groups = owner_groups(sp, tc)
-    print(f"{len(groups)} groups own a gas or coal unit with a plant-specific efficiency: {groups}")
+    hu = hydro_units()
+    groups = owner_groups(sp, tc, hu)
+    print(f"{len(groups)} groups own a gas or coal unit with a plant-specific efficiency, or a storage or "
+          f"pumped-storage hydro unit: {groups}")
     px = pd.read_parquet(DATA / "omie/prices/omie_day_ahead_prices.parquet",
                          columns=["date", "period", "price_es", "price_pt", "utc_timestamp", "resolution_min"])
     px["date"] = pd.to_datetime(px.date)
@@ -200,14 +223,15 @@ def main() -> int:
         fc[c] = fc[c] * 1000.0        # GW -> MW
     for ym in months:
         t0 = time.time()
-        out = month(ym, sp, groups, tc, px, fc)
+        out = month(ym, sp, groups, tc, hu, px, fc)
         for k, v in out.items():
             v.to_parquet(CACHE / f"{k}_{ym}.parquet", index=False)
         h = out["hours"]
         err = (h.p_clear - h.p_star).abs()
         print(f"  {ym}: {len(h)} hours, valid {h.valid.mean():.3f}, re-clear exact {(err < 0.011).mean():.3f}, "
               f"within {VALID_ERR} {(err <= VALID_ERR).mean():.3f}; {len(out['market']):,} prices, "
-              f"{len(out['units']):,} unit steps ({time.time() - t0:.0f} s)", flush=True)
+              f"{len(out['units']):,} thermal and {len(out['hydro']):,} hydro unit steps ({time.time() - t0:.0f} s)",
+              flush=True)
     return 0
 
 

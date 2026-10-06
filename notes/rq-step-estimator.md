@@ -182,3 +182,64 @@ condition on the realised clearing, which the bidder did not know. They sit just
   start-up terms; the effects take the parts that are constant or common. Coal's cost
   is not validated (leg C).
 - **The 15-minute era** (from 2025-10) and hourly 2024–2025 are not run.
+
+## 6. Hydro, with the water value differenced out (run 2026-10-06)
+
+Script `analysis/step_estimator_hydro.py`; engine `step_engine.py --kind hydro`;
+results `outputs/tables/step_estimator_hydro_results.csv`. Storage hydro and
+pumped-storage turbines (leg D's units), 2019-01 → 2025-09 (the last hourly month).
+
+**The idea.** A reservoir's marginal cost is its water value, which nobody publishes.
+Within a day it is one number per unit (leg A's assumption A1), so unit × day effects
+take it out:
+
+    step price = water value (unit × day) + β · X̃ + hydro class × hour + class × ladder position
+
+β comes from how a unit's step prices move across the hours of one day against the
+firm's X̃ in those hours, compared with other owners' hydro in the same hour.
+
+**Who is in it.** The fringe's hydro units offer everything at €1/MWh or less, so no
+fringe hydro step ever sets the price. The rows are the five firms, Movhera (from
+2022) and a few Acciona and Ignis steps:
+
+- 661,669 unit-steps set the price in at least one draw, on 46 units.
+- 28% of them come from unit-days with the same curve in all 24 hours. Those are left
+  out of the main rows, which leaves 457,263.
+
+**Instruments that vary within the day:**
+
+- **Each firm's own response to REE's D-1 wind and solar forecasts** (16 instruments,
+  as in leg D §7).
+- **Reactor outages** and **regional wind deviation**, which vary little within a day.
+
+| instruments (sample) | least squares | β (2SLS) | F | 95% set (Anderson–Rubin) |
+|---|---|---|---|---|
+| firm × forecast (main) | +0.34 | +0.12 (0.04) | 71 | **empty** |
+| firm × forecast, flat unit-days in | +0.32 | +0.06 (0.04) | 88 | empty |
+| firm × forecast, 2019–2023 | +0.40 | +0.20 (0.06) | 45 | empty |
+| firm × forecast, 2024 – 2025-09 | +0.14 | −0.09 (0.05) | 105 | empty |
+| firm × forecast, storage only | +0.37 | +0.14 (0.05) | 97 | empty |
+| firm × forecast, slope floor 5 / 50, price-scaled band, \|X̃\| ≤ 30 | +0.15 to +0.49 | +0.03 to +0.14 | 53–127 | empty |
+| **reactor outages** | +0.34 | +0.06 (0.15) | 5.3 | **[−0.73, 0.37]** |
+| **regional wind deviation** | +0.34 | −0.17 (0.25) | 10.8 | **[−0.83, 0.38]** |
+
+- **The firm × forecast instruments do not agree on one β.** The first stage is strong,
+  but the Anderson–Rubin set is empty in every sample. Each firm's hydro answers the
+  forecasts in its own way, beyond what its X̃ explains. Water management, inflows and
+  the other plants in a cascade are candidate routes. This is the same failure as the
+  intraday firm-specific instruments, so the 2SLS point estimates here are not read.
+- **The two instruments whose exclusion is plausible give β near 0**: outages
+  [−0.73, 0.37] (weak, F 5) and regional wind [−0.83, 0.38]. Full Nash is rejected by
+  both (p 0.001 and 0.004); price-taking is not.
+- **By sign of X̃**, with the firm × forecast instruments: β⁺ −0.24, β⁻ +0.44 (equal
+  rejected, p < 0.001); in 2024–2025, −0.85 and +0.79. These rest on the same
+  instruments that fail above, so they are not read as conduct.
+- **Five firms only** is not identified: with the hour effects, the firms' forecast
+  instruments add nothing beyond them.
+
+**Reading.** Hydro step prices within the day move little with the firm's expected X̃.
+The least-squares slope is +0.14 to +0.49, and its bias probably runs upward (§3:
+other owners' gas and coal steps show +0.51 with no stake in the price). The two
+plausible instruments put β between about −0.8 and 0.4. That is the thermal result
+again: well below Nash, not separable from price-taking. It covers the within-day
+margin only; the water value's level, the across-day margin, is still untested.

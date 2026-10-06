@@ -100,6 +100,8 @@ scripts/
 | `fetch/fetch_wri_gppd.py` | WRI Global Power Plant Database v1.3 | no | `data/wri/wri_gppd_iberia.parquet` |
 | `fetch/fetch_gisco_nuts.py` | Eurostat GISCO NUTS 2021, 1:1 million | no | `data/gisco/nuts2_iberia.parquet` |
 | `build/build_renewable_locations.py` | REE physical units + OSM + WRI | no | `data/osm/renewable_unit_locations.parquet` |
+| `build/build_renewable_locations_v2.py` | the first pass + OSM turbine groups | no | `data/osm/renewable_unit_locations_v2.parquet` |
+| `build/build_renewable_locations_v3.py` | v2 + MITECO Electra register | no | `data/osm/renewable_unit_locations_v3.parquet` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
 `lib/config.py` loads tokens from a gitignored `.env`; `lib/regions.py` gives a
@@ -1272,6 +1274,18 @@ declares a 90 s timeout and 64 MiB (admitted where the defaults are refused), sp
 a failing tile into quarters, skips what still fails (listed in
 `data/osm/missing_tiles.json`, exit code 2) and fetches only what is missing on a
 re-run. OSM is ODbL 1.0, GPPD CC BY 4.0: cite both.
+**Two further passes raise located onshore wind to 78.5% (2026-10-06)**, onshore
+wind only; each keeps the previous file's rows and writes a new one. `_v2` (better
+REE-side names, unused OSM/GPPD plants, OSM turbines grouped into farms) reaches 745
+farms, 22.4 GW (69.5%). `_v3` places farms by **autonomous community only**, from
+MITECO's Electra producer register (`data/miteco/electra/raw/ElectraExp.csv`, 71,727
+rows of name, regime and community; no coordinates or capacity): 877 farms, 25.4 GW.
+Its rows have no lat/lon. Tested on farms already located, Electra's community agrees
+98.4% (543 of 552); the disagreements are border farms and three earlier-pass errors,
+two corrected and one dropped in `_v3`. By firm: Iberdrola 91%, EDP 88%, Acciona 83%,
+Endesa 82%, Naturgy 81%, Repsol 29%. **The instruments still read the first-pass
+file.** What is left (6.9 GW) is mostly farms named only by a code (4.45 GW, Repsol's
+among them), which no name register can place.
 `osm_wind_turbines.parquet` holds **25,494 single turbines with coordinates** (17% named),
 not yet used; turbine clusters could place the wind farms that have no name to match.
 Ask Overpass for `out body` on nodes: `out tags` returns no coordinates.

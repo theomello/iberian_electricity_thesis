@@ -577,6 +577,10 @@ Steinsson 2018) maps onto the two auctions:
   should rise with the five firms' combined exposed n and turn negative when they are
   net buyers. Cheap; a market-level time series, so a description, not an estimate.
   Control for the forecast errors, which also move the premium.
+  **Run 2026-10-06** (`rq-da-id-premium.md`): the premium is +0.6 €/MWh on average
+  although the five are net buyers in 92.5% of hours, and flat in N (−0.03 €/MWh per
+  GW, se 0.035). With N moved by planned reactor outages (F 17.9) it rises the
+  predicted way, +0.95 (0.39) per GW: a lead, one instrument.
 
 ### 9.6 Policies with a known prediction: tests of c, not of β
 
@@ -654,7 +658,9 @@ That is what leg C in levels needs.
    *Full 7% steps run 2026-10-06*: 2019-04-01, 2018-10-07, 2021-07-01 all move the
    predicted way; stacked θ 1.45, zero pass-through rejected, full not. The
    declared minimum-income term behaves like a cost.
-4. **Day-ahead − intraday premium** against combined n (descriptive).
+4. **Day-ahead − intraday premium** against combined n (descriptive). *Run
+   2026-10-06* (`rq-da-id-premium.md`): flat in N; +0.95 (0.39) per GW when N is
+   moved by planned reactor outages.
 5. **Intraday surprise design.**
 6. **Step estimator** with the non-strategic ladder netted (§9.1), once steps 2–3
    pin β's range and c.

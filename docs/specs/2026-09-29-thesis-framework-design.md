@@ -616,6 +616,11 @@ That is what leg C in levels needs.
   tax is on revenue, so the declared term should rise by τ/(1 − τ) relative to
   Portugal's: +3.6%, +5.5%, +7.5% at the three steps. Raw quarterly medians show no
   obvious jump; that is before any control.
+  **Run 2026-10-06** (`rq-ivpee-tax-test.md`): pass-through θ 0.04 (se 0.56; p 0.18
+  for θ = 1), with unit cost slopes, since the declared term does not scale with fuel
+  cost. On the step days the gap moves by about the predicted amount in July (+2.1%
+  against +1.9%), but ordinary month starts jump with an sd of 3.5–5.5%: the 2024
+  steps are too small to test c. Next: the full 7% return on 2019-04-01.
 - **The gas cap** (2022-06-15 → 2023-12-31): dose per unit (gas − reference) /
   efficiency; the sharpest window for the cost in levels.
 - **The 2021 windfall levy**: it acts through contracting (n via θ) and needs 2021
@@ -637,7 +642,10 @@ That is what leg C in levels needs.
    [−2.6, 4.5]; with the outages β −1.6, [−4.3, 1.5] (§9). Every thermal set
    contains 0 and 1.
 3. **IVPEE test** on thermal offers, Spanish against Portuguese, with `_bid` costs.
-   It validates c before any levels estimate.
+   It validates c before any levels estimate. *2024 steps run 2026-10-06*
+   (`rq-ivpee-tax-test.md`): declared variable cost of combined cycles, θ 0.04
+   (se 0.56); steps of 1.8–3.6% are inside the month-start noise (sd 3.5–5.5%).
+   Not yet run: the 7% return on 2019-04-01.
 4. **Day-ahead − intraday premium** against combined n (descriptive).
 5. **Intraday surprise design.**
 6. **Step estimator** with the non-strategic ladder netted (§9.1), once steps 2–3

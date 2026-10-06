@@ -1300,6 +1300,18 @@ Attribution: "© EuroGeographics for the administrative boundaries". `lib/region
 0.05° of a coastline gets the nearest region (`near`), anything farther stays blank.
 `esios_geo_id` maps each Spanish region onto ESIOS's installed capacity by region.
 
+### Combined cycles declare their cost daily; Turbogás left on 2024-03-30
+Measured 2026-10-06 on the 54 combined cycles with a plant-specific efficiency,
+2023-04 → 2025-03-18 (`analysis/ivpee_tax_test.py`). The minimum-income variable term
+in `cab` changes on 96% of Spanish and 88% of Portuguese unit-days, and sits at a
+median 1.3× (Spain) and 1.1× (Portugal) the implied cost (`_bid`). It is not
+proportional to fuel cost: within a unit it moves 0.95% (Spain) and 0.70% (Portugal)
+per 1% of implied cost. 999 means "never" (94 unit-days, mostly Turbogás).
+**Turbogás (`RTG01`–`RTG03`, Tapada do Outeiro) offered for the last time on
+2024-03-30**, and in February and March declared a quarter of its cost. In 2024
+Portuguese combined cycles offered most of their volume at 0 €/MWh, so for them the
+declared term, not the offer price, carries the cost.
+
 ### EDP moved ~1,000 MW from `ACAVADO` to `ALIMA` in March 2024
 `cab` max power goes 1,632 → 632 MW for `ACAVADO` ("CAVADO") and 652 → 1,652
 for `ALIMA` ("LIMA"), and offered volume moves between them from February to

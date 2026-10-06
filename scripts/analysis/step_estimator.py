@@ -60,12 +60,13 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "analysis"))
 from iv_two_endog import _ar_parts, sw_f, tsls_k  # noqa: E402
 from midday_hydro_iv import cluster_meat  # noqa: E402
-from regional_wind_offer_test import forecasts, own_capacity, regional_cf  # noqa: E402
+from regional_wind_offer_test import forecasts, own_capacity, regional_cf, tagged  # noqa: E402
 
 CACHE = ROOT / "outputs/cache/step"
 TABLES = ROOT / "outputs/tables"
-OUT = TABLES / "step_estimator_results.csv"
+OUT = tagged(TABLES / "step_estimator_results.csv")
 ROWS = TABLES / "step_estimator_rows.parquet"
+INSTRUMENTS = ["dose_unpl", "dose_plan", "Wdev_fc"]
 FIRMS = ("EDP", "IBERDROLA", "ENDESA", "NATURGY", "REPSOL")
 FIRST, LAST = "201901", "202312"
 GRID = np.round(np.arange(-20.0, 20.0 + 1e-9, 0.01), 2)
@@ -243,8 +244,8 @@ def describe(d: pd.DataFrame) -> None:
 
 
 def main() -> int:
-    if "--reuse" in sys.argv and ROWS.exists():
-        d = derive(pd.read_parquet(ROWS))
+    if "--reuse" in sys.argv and ROWS.exists():        # instruments recomputed: they depend on --locations
+        d = derive(instruments(pd.read_parquet(ROWS).drop(columns=INSTRUMENTS)))
     else:
         d = instruments(rows())
         d.to_parquet(ROWS, index=False)

@@ -372,14 +372,50 @@ owner drop out).
   after 2018 count from the start; that is error in the instrument, not a reason for
   it to move offers. Only 15% of Cataluña's wind is located.
 
+### 9.1 Rerun with 78.5% of wind located (2026-10-06)
+
+The table above uses the first location pass (54% of onshore wind GW). Two further
+passes (`build_renewable_locations_v2.py`, `_v3.py`; OSM turbines grouped into farms,
+then MITECO's Electra register by community) locate 78.5%. **The third pass is the
+main specification from here on**, fixed before the rerun; `--locations=v1` reproduces
+the table above (`regional_wind_offer_results_v1loc.csv`).
+
+Each group's index on old and new locations: correlation 0.99 for Iberdrola and
+Endesa, 1.00 Repsol, 0.93 Acciona, 0.89 Naturgy, **0.62 EDP**; its hourly SD rises
+most for EDP (0.021 → 0.036 GW) and Acciona (0.053 → 0.079). Where the new farms sit
+in the regions the old ones did, the index is only rescaled, which changes nothing.
+
+| instruments | effects | first stage (X per GW) | β | 95% set (AR) | p, β = 1 | F |
+|---|---|---|---|---|---|---|
+| regional wind, forecast | A | +3.91 (0.75) | +1.49 | [−1.61, 4.99] | 0.75 | 27.0 |
+| regional wind, measured | A | +4.46 (0.77) | +2.24 | [−0.34, 5.37] | 0.35 | 33.4 |
+| **regional (forecast) + outages** | A | | **−1.03** | **[−3.14, 1.53]** | 0.09 | 14.1 |
+| regional wind, forecast | B | +3.71 (0.74) | +2.71 | [−1.24, 7.36] | 0.39 | 25.0 |
+| regional wind, measured | B | +4.26 (0.76) | +3.37 | [0.07, 7.45] | 0.16 | 31.4 |
+| regional (forecast) + outages | B | | −0.80 | [−2.91, 2.99] | 0.16 | 14.8 |
+
+- **F rises 4–22%, the sets narrow 7–20%, and no conclusion changes.** Every main
+  set still contains 0 and 1. The forecast version's β moves +0.6, within one
+  standard error (1.7).
+- **Measured wind in B now excludes 0**, [0.07, 7.45]. It is a check, not the main
+  specification, and measured output includes what farms shed at low prices.
+- **From 2022 on it is still weak** (F 3–10).
+- **In the step estimator** regional wind alone stays useless on thermal steps
+  (F 0.08) and gains most on hydro steps: [−0.83, 0.38] → [−0.61, 0.31], F 10.8 → 14.4
+  (`rq-step-estimator.md` §6), as EDP's index changed most.
+- **Reading.** 45% more located capacity bought little precision for gas and coal:
+  the limit is how much regional weather moves a diversified portfolio, not the
+  locations.
+
 ## 10. Where this leaves the across-day margin
 
 - **Three instruments move X and the offers do not follow clearly.** Outages (F 121
   on n at the firm level, ≈ 10–15 on X at the unit level), rain (F 9.5) and regional
   wind (F 22–28).
 - **β = 1 is rejected only on all units** (§6). On thermal units every set contains
-  0 and 1: outages with rain [−4.0, 1.8], regional wind [−2.6, 4.5], regional wind
-  with outages [−4.3, 1.5].
+  0 and 1: outages with rain [−4.0, 1.8], regional wind [−1.6, 5.0], regional wind
+  with outages [−3.1, 1.5] (§9.1; on the first location pass [−2.6, 4.5] and
+  [−4.3, 1.5]).
 - **The point estimates split by instrument**: negative from outages and rain,
   positive from regional wind. The negative ones do not come from withdrawal of
   volume (offered share flat), location (§6), or the timing of trips (§8). With

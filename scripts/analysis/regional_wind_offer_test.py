@@ -12,8 +12,12 @@ national wind. The instrument is that difference:
 
     Wdev_gt = sum over regions r of  K_gr x (cf_rt - cf_t)          (GW)
 
-K_gr   group g's located onshore wind capacity in region r (renewable_unit_locations,
-       REE's 2026-08-12 register; owner via the farm's agent; 54% of wind located)
+K_gr   group g's located onshore wind capacity in region r (REE's 2026-08-12 register;
+       owner via the farm's agent). Main specification since 2026-10-06: the third
+       location pass, renewable_unit_locations_v3 (78.5% of onshore wind GW). With
+       `--locations=v1` the first pass (54%) is used instead, as a check, and every
+       output of this script, step_estimator.py and step_estimator_hydro.py gets the
+       suffix _v1loc.
 cf_rt  region r's capacity factor in UTC hour t: measured wind output of its provinces
        (ESIOS 1159) over its installed wind capacity that month (ESIOS 1485)
 cf_t   the same for the peninsula: national wind relative to national capacity
@@ -74,7 +78,17 @@ DATA = ROOT / "data"
 TABLES = ROOT / "outputs/tables"
 PANEL = TABLES / "outage_offer_panel.parquet"
 PROV = DATA / "esios/esios_measured_generation_province.parquet"
-OUT = TABLES / "regional_wind_offer_results.csv"
+LOC = "v1" if "--locations=v1" in sys.argv else "v3"
+LOCATIONS = DATA / ("osm/renewable_unit_locations.parquet" if LOC == "v1"
+                    else "osm/renewable_unit_locations_v3.parquet")
+
+
+def tagged(path: Path) -> Path:
+    """An output path, with _v1loc added when the first location pass is used."""
+    return path.with_name(f"{path.stem}_v1loc{path.suffix}") if LOC == "v1" else path
+
+
+OUT = tagged(TABLES / "regional_wind_offer_results.csv")
 START = "2019-01-01"      # REE's D-1 forecasts (1775, 1777, 1779) start here
 MIN_PROVINCES = 30        # an hour with fewer reporting provinces is a gap, not calm
 MIN_CAP_MW = 10.0         # Madrid reports wind output against ~0 MW of capacity
@@ -131,7 +145,8 @@ def regional_cf(fc: pd.DataFrame) -> pd.DataFrame:
 
 def own_capacity(groups) -> pd.DataFrame:
     """group, nuts_id, K_gw: located onshore wind capacity by group and region."""
-    m = pd.read_parquet(DATA / "osm/renewable_unit_locations.parquet")
+    m = pd.read_parquet(LOCATIONS)
+    print(f"farm locations: {LOCATIONS.name}")
     m = m[(m.tech == "Eólica terrestre") & m.firm.isin(groups) & m.nuts_id.notna()]
     k = m.groupby(["firm", "nuts_id"]).max_power_mw.sum().div(1000).rename("K_gw").reset_index()
     print("\nlocated wind GW by group and region:")

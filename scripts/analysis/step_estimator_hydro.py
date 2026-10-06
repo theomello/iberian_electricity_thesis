@@ -48,11 +48,11 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "analysis"))
 from iv_two_endog import sw_f, tsls_k  # noqa: E402
 from midday_hydro_iv import cluster_meat  # noqa: E402
-from regional_wind_offer_test import forecasts  # noqa: E402
-from step_estimator import CACHE, FIRMS, FLOORS, ar_grid, instruments, wdemean  # noqa: E402
+from regional_wind_offer_test import FORECASTS, forecasts, tagged  # noqa: E402
+from step_estimator import CACHE, FIRMS, FLOORS, INSTRUMENTS, ar_grid, instruments, wdemean  # noqa: E402
 
 TABLES = ROOT / "outputs/tables"
-OUT = TABLES / "step_estimator_hydro_results.csv"
+OUT = tagged(TABLES / "step_estimator_hydro_results.csv")
 ROWS = TABLES / "step_estimator_hydro_rows.parquet"
 FIRST, LAST = "201901", "202509"
 HYDRO_SHARE = 0.9
@@ -196,8 +196,8 @@ def describe(d: pd.DataFrame) -> None:
 
 
 def main() -> int:
-    if "--reuse" in sys.argv and ROWS.exists():
-        d = pd.read_parquet(ROWS)
+    if "--reuse" in sys.argv and ROWS.exists():        # instruments recomputed: they depend on --locations
+        d = add_instruments(pd.read_parquet(ROWS).drop(columns=INSTRUMENTS + list(FORECASTS)))
     else:
         d = add_instruments(rows())
         d.to_parquet(ROWS, index=False)

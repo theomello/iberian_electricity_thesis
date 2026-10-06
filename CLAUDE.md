@@ -1250,7 +1250,9 @@ a second instrument on thermal units (`analysis/outage_rain_offer_test.py`): β 
 [−4.0, 1.8]. Event study of 21 trips: `analysis/outage_event_study.py`. With the
 firm's own wind above the national rate, by region, as a third instrument
 (`analysis/regional_wind_offer_test.py`, ESIOS output by province × located farms):
-first stage F 22–28, β +0.9 [−2.6, 4.5]; with the outages −1.6 [−4.3, 1.5].
+first stage F 22–28, β +0.9 [−2.6, 4.5]; with the outages −1.6 [−4.3, 1.5]. On the
+third location pass (78.5% of wind, the main specification since 2026-10-06): F 27–33,
+β +1.5 [−1.6, 5.0]; with the outages −1.0 [−3.1, 1.5].
 
 ### Wind and solar farm locations — 54% of wind located, 16% of solar (2026-10-05)
 `data/osm/renewable_unit_locations.parquet`, built by `build/build_renewable_locations.py`:
@@ -1283,8 +1285,9 @@ rows of name, regime and community; no coordinates or capacity): 877 farms, 25.4
 Its rows have no lat/lon. Tested on farms already located, Electra's community agrees
 98.4% (543 of 552); the disagreements are border farms and three earlier-pass errors,
 two corrected and one dropped in `_v3`. By firm: Iberdrola 91%, EDP 88%, Acciona 83%,
-Endesa 82%, Naturgy 81%, Repsol 29%. **The instruments still read the first-pass
-file.** What is left (6.9 GW) is mostly farms named only by a code (4.45 GW, Repsol's
+Endesa 82%, Naturgy 81%, Repsol 29%. **The instruments read `_v3` since 2026-10-06**
+(`LOCATIONS` in `regional_wind_offer_test.py`; `--locations=v1` for the first pass,
+outputs suffixed `_v1loc`). What is left (6.9 GW) is mostly farms named only by a code (4.45 GW, Repsol's
 among them), which no name register can place.
 `osm_wind_turbines.parquet` holds **25,494 single turbines with coordinates** (17% named),
 not yet used; turbine clusters could place the wind farms that have no name to match.

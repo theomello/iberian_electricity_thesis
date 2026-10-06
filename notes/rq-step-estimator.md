@@ -100,7 +100,7 @@ firm's planned and unplanned reactor outages (GW, by share).
 | sample | least squares | β (2SLS) | se | F | 95% set (Anderson–Rubin) | p(β = 0) | p(β = 1) |
 |---|---|---|---|---|---|---|---|
 | **all, outages** | +0.14 | **+0.07** | 0.31 | 9.9 | **[−0.68, 1.01]** | 0.41 | 0.053 |
-| + regional wind | | +0.07 | 0.31 | 6.8 | [−0.90, 1.22] | 0.56 | 0.12 |
+| + regional wind | | +0.07 | 0.31 | 6.7 | [−0.90, 1.23] | 0.53 | 0.12 |
 | fuel × date and hour effects | +0.18 | −0.11 | 0.32 | 8.9 | [−1.13, 0.74] | 0.94 | 0.014 |
 | no ladder effects | +0.20 | +0.03 | 0.33 | 9.2 | [−0.79, 0.98] | 0.30 | 0.047 |
 | slope floor 5 | +0.08 | +0.00 | 0.23 | 9.6 | [−0.56, 0.69] | 0.76 | 0.009 |
@@ -125,7 +125,7 @@ owners, €2–7 at X̃ of 0 to 4. Part of that level is cost the implied cost l
 (operation and maintenance, part-load efficiency, start-ups), which the effects absorb.
 
 **Length of a step** (gap draws, unit's last step and blocks at €5 or less left out):
-β −0.84 (se 0.27), F 21.9, set [−1.58, −0.17]; −0.83 with regional wind; −0.85 on gas.
+β −0.84 (se 0.27), F 21.9, set [−1.58, −0.17]; −0.75 with regional wind; −0.85 on gas.
 Both 0 and 1 are rejected, with the wrong sign. The length condition assumes the firm
 re-chooses its step lengths when an outage shortens its curve.
 
@@ -221,7 +221,7 @@ fringe hydro step ever sets the price. The rows are the five firms, Movhera (fro
 | firm × forecast, storage only | +0.37 | +0.14 (0.05) | 97 | empty |
 | firm × forecast, slope floor 5 / 50, price-scaled band, \|X̃\| ≤ 30 | +0.15 to +0.49 | +0.03 to +0.14 | 53–127 | empty |
 | **reactor outages** | +0.34 | +0.06 (0.15) | 5.3 | **[−0.73, 0.37]** |
-| **regional wind deviation** | +0.34 | −0.17 (0.25) | 10.8 | **[−0.83, 0.38]** |
+| **regional wind deviation** | +0.34 | −0.12 (0.20) | 14.4 | **[−0.61, 0.31]** |
 
 - **The firm × forecast instruments do not agree on one β.** The first stage is strong,
   but the Anderson–Rubin set is empty in every sample. Each firm's hydro answers the
@@ -229,8 +229,10 @@ fringe hydro step ever sets the price. The rows are the five firms, Movhera (fro
   the other plants in a cascade are candidate routes. This is the same failure as the
   intraday firm-specific instruments, so the 2SLS point estimates here are not read.
 - **The two instruments whose exclusion is plausible give β near 0**: outages
-  [−0.73, 0.37] (weak, F 5) and regional wind [−0.83, 0.38]. Full Nash is rejected by
-  both (p 0.001 and 0.004); price-taking is not.
+  [−0.73, 0.37] (weak, F 5) and regional wind [−0.61, 0.31]. Full Nash is rejected by
+  both (p 0.001 and 0.001); price-taking is not. Regional wind is on the third location
+  pass (78.5% of wind located, 2026-10-06); on the first (54%) it gave −0.17 (0.25),
+  F 10.8, [−0.83, 0.38], p(β = 1) 0.004.
 - **By sign of X̃**, with the firm × forecast instruments: β⁺ −0.24, β⁻ +0.44 (equal
   rejected, p < 0.001); in 2024–2025, −0.85 and +0.79. These rest on the same
   instruments that fail above, so they are not read as conduct.

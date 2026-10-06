@@ -620,7 +620,13 @@ That is what leg C in levels needs.
   for θ = 1), with unit cost slopes, since the declared term does not scale with fuel
   cost. On the step days the gap moves by about the predicted amount in July (+2.1%
   against +1.9%), but ordinary month starts jump with an sd of 3.5–5.5%: the 2024
-  steps are too small to test c. Next: the full 7% return on 2019-04-01.
+  steps are too small to test c. **The full 7% steps do** (`ivpee_2019_test.py`,
+  same note §5): on 2019-04-01, 2018-10-07 and 2021-07-01 the gap moves the
+  predicted way by more than on 95–100% of ordinary month starts; stacked θ 1.45
+  (p < 0.001 for θ = 0, 0.18 for θ = 1). Spanish declared costs move 5–10% the
+  predicted way at every event and fuel (coal on 1 April 2019: +8.0% on the day,
+  cost flat, Portugal flat); Portuguese moves on the same days, unexplained, make
+  the gap overshoot.
 - **The gas cap** (2022-06-15 → 2023-12-31): dose per unit (gas − reference) /
   efficiency; the sharpest window for the cost in levels.
 - **The 2021 windfall levy**: it acts through contracting (n via θ) and needs 2021
@@ -645,7 +651,9 @@ That is what leg C in levels needs.
    It validates c before any levels estimate. *2024 steps run 2026-10-06*
    (`rq-ivpee-tax-test.md`): declared variable cost of combined cycles, θ 0.04
    (se 0.56); steps of 1.8–3.6% are inside the month-start noise (sd 3.5–5.5%).
-   Not yet run: the 7% return on 2019-04-01.
+   *Full 7% steps run 2026-10-06*: 2019-04-01, 2018-10-07, 2021-07-01 all move the
+   predicted way; stacked θ 1.45, zero pass-through rejected, full not. The
+   declared minimum-income term behaves like a cost.
 4. **Day-ahead − intraday premium** against combined n (descriptive).
 5. **Intraday surprise design.**
 6. **Step estimator** with the non-strategic ladder netted (§9.1), once steps 2–3

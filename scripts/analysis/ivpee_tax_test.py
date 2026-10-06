@@ -91,22 +91,22 @@ def tau(dates: pd.Series) -> np.ndarray:
     return t
 
 
-def units() -> pd.DataFrame:
+def units(techs=("combined_cycle",)) -> pd.DataFrame:
     m = pd.read_parquet(DATA / "jrc_ppdb/jrc_cab_match.parquet")
-    u = m[(m.cab_tech == "combined_cycle") & ~m.eff_is_generic][["unit", "country", "eff"]]
+    u = m[m.cab_tech.isin(techs) & ~m.eff_is_generic][["unit", "country", "eff", "cab_tech"]]
     if u.unit.duplicated().any():
         raise SystemExit("a unit appears twice in jrc_cab_match")
     return u
 
 
-def declared(u: pd.DataFrame, start: str = START) -> pd.DataFrame:
+def declared(u: pd.DataFrame, start: str = START, end: str = END) -> pd.DataFrame:
     files = [f for f in sorted(glob.glob(str(DATA / "omie/cab/parquet/cab_*.parquet")))
-             if start[:7].replace("-", "") <= Path(f).stem[-6:] <= END[:7].replace("-", "")]
+             if start[:7].replace("-", "") <= Path(f).stem[-6:] <= end[:7].replace("-", "")]
     d = pd.concat([pd.read_parquet(f, columns=["date", "unit", "side", "min_income_var_eur_mwh",
                                                "min_income_fixed_eur"],
                                    filters=[("unit", "in", u.unit.tolist())]) for f in files])
     d["date"] = pd.to_datetime(d.date)
-    d = d[(d.date >= start) & (d.date <= END) & (d.side == "V")]
+    d = d[(d.date >= start) & (d.date <= end) & (d.side == "V")]
     if d.duplicated(["unit", "date"]).any():
         raise SystemExit("more than one sell header per unit and day")
     c = pd.read_parquet(DATA / "jrc_ppdb/implied_marginal_cost_daily.parquet",
@@ -175,10 +175,11 @@ def wild_p(y: np.ndarray, x: np.ndarray, cl: np.ndarray, theta0: float, rng) -> 
     return float((np.abs(tb) >= abs(t)).mean())
 
 
-def fit(d: pd.DataFrame, y: str, xs: list[str], slopes: bool, extra: list[str] = ()):
+def fit(d: pd.DataFrame, y: str, xs: list[str], slopes: bool, extra: list[str] = (), time: str = "date"):
     """Unit and date effects; with `slopes`, each unit's own slope on its log cost is
-    partialled out too (Frisch–Waugh). Returns y and the xs net of all of it."""
-    codes = [pd.factorize(d.unit)[0], pd.factorize(d.date)[0]]
+    partialled out too (Frisch–Waugh). Returns y and the xs net of all of it. `time`
+    names the column of the time effects (date, or date × fuel)."""
+    codes = [pd.factorize(d.unit)[0], pd.factorize(d[time])[0]]
     cols = [y] + xs
     S = d[list(extra)].to_numpy(float) if extra else None
     if slopes:

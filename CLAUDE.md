@@ -957,7 +957,10 @@ peninsular output (to 2025-12-11): wind hourly correlation **0.999**, level 98.9
 (0.98–1.00 every year); solar 0.999, level 98.1% (0.92–0.94 in 2018–2020, 0.99–1.00
 from 2022). `lib/regions.py` `province_nuts2` gives each province its autonomous
 community; ESIOS's capacity for Madrid is ~0 MW against some wind output there, so a
-capacity factor for Madrid is meaningless.
+capacity factor for Madrid is meaningless. **Zero output is omitted, not reported**:
+at night PV comes from fewer than 30 provinces or none (2019 – 2025 Q1: 38% of hours,
+whose D-1 forecast averages 0.1 MWh), so a missing PV province-hour is zero output, not
+a gap. A minimum-province rule written for wind drops every night hour of PV.
 
 Two fetcher rules came from this fetch. A month is about 5 MB of JSON, so these chunks
 are cached gzipped (`<YYYYMM>.json.gz`, 230 KB). And REE's API now and then answers

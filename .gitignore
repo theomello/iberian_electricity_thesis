@@ -32,3 +32,4 @@ outputs/tables/*.parquet
 *.toc
 *.out
 slides/*.log
+outputs/cache/

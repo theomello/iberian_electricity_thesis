@@ -1626,6 +1626,23 @@ Applied to bids, intraday, `cab` and the registry build on the zip, and to
 **`indisp` deliberately keeps the old rule** — its short months are short at
 source, not frontier snapshots. See the `indisp` section.
 
+### OMIE's offered curves do not re-clear to the published price
+Found 2026-10-06 (`analysis/step_curves.py`). Crossing the offered supply and demand
+(status `O`) of an hour gives a price €13 too low in June 2019, for two reasons:
+
+- **Units withdrawn by their minimum-income condition stay in the offered curve.**
+  About 9 GW an hour of sell offers priced below the price are not accepted; 93% come
+  from units accepted in no hour that day, and every one of those declares the condition.
+- **The flow with France under market coupling (unit `MIEU`) appears only among the
+  accepted rows** (status `C`), sold at −500 / −300 €/MWh or bought at high bid prices,
+  with no offered row at all.
+
+**Re-clear on the effective curve:** on each side, the accepted rows on the accepted
+side of the price and the offered rows at and beyond it (sell: `C` below p*, `O` at or
+above; buy: `C` above p*, `O` at or below). Over 2019–2023 that reproduces the price
+exactly in 61–97% of hours a month and within €0.50 in 80–99.6%. Any counterfactual
+clearing (resampled residual demand, a competitive benchmark) must start from it.
+
 ### The two OMIE files use different decimal separators
 `marginalpdbc` uses a **dot** (`77.7`). `curva_pbc_uof` uses a **comma**
 decimal with a **dot** thousands separator (`1.500,00` = 1500.0). Do not

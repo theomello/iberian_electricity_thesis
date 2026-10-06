@@ -672,7 +672,15 @@ That is what leg C in levels needs.
    day-ahead placebo fails. A firm's own surprise (located farms' output minus its own
    day-ahead wind schedule) would be the next attempt; not built.
 6. **Step estimator** with the non-strategic ladder netted (§9.1), once steps 2–3
-   pin β's range and c.
+   pin β's range and c. *Run 2026-10-06* (`rq-step-estimator.md`), gas and coal
+   2019–2023. Offered curves re-clear to the published price only on the effective
+   curve (accepted rows below the price, offered rows above; France's coupling flow
+   is in the accepted rows only). Residual demand is resampled: 40 nearby hours per
+   firm-hour, shifted to the target hour's forecasts. **Price of a step**, with
+   reactor outages as instruments: β +0.07, set [−0.68, 1.01] (F 9.9); 2019 – 2021 H1
+   −0.16, [−0.60, 0.19] (F 23), full Nash rejected. **Length of a step** fails
+   (β −0.84, [−1.58, −0.17]): units repeat yesterday's step boundaries on 48–82% of
+   days, so lengths follow the plant and their condition is an inequality.
 
 *To verify before use*: the IVPEE decree chain and dates; the reasons OMIE's
 `indisp` gives for each reactor outage; whether Portugal's CESE has any per-MWh

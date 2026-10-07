@@ -187,7 +187,7 @@ spec §5.
 
 **Verdict: within-day market power in storage hydro is at most small.**
 
-### Leg B — hydro across days: cost modelled by the Euler equation. **First pass withdrawn; run in levels 2026-10-07: β −0.26 [−0.72, 0.04] with reactor outages (F 21.5), Nash rejected (`rq-leg-b-levels.md`).**
+### Leg B — hydro across days: cost modelled by the Euler equation. **First pass withdrawn; run in levels 2026-10-07: β −0.26 [−0.72, 0.04] with reactor outages (F 21.5); at-cost instrument −0.22 [−0.30, −0.15] (F 407), 2024–25 −0.16; Nash rejected (`rq-leg-b-levels.md`).**
 
 **Withdrawn 2026-09-30** (`rq-midday-hydro.md` §3.20). On the exposed position
 the day's offered solar has no first stage for EDP's day-mean X (F 0.4–1.9 in
@@ -235,6 +235,14 @@ control.
   2024–2025 not identified (F 2–3). The stored-water paper (Arzhintar et al.
   2025) recovers λ by assuming β = 1; on the hours a storage unit sets the price here,
   X is under €1–6, so that assumption moves λ̂ by a euro or two and cannot test conduct.
+- **The at-cost instrument on hydro, 2026-10-07** (`rq-leg-b-levels.md` §5). X re-read
+  with each firm's hydro at λ*30s (`step_engine.py --kind hydro --comp`), at the day's
+  median λ*: F 90–410. Unit × month −0.22 [−0.30, −0.15]; unit × day −0.37; unit only
+  −0.01 [−0.12, 0.09]; outages agree (overidentified set nonempty). **2024–2025
+  identified: −0.16 [−0.25, −0.06].** 2019 – 2021H1 +0.14 [0.02, 0.26]. Nash rejected
+  everywhere; upper bound 0.12 outside 2019 – 2021H1. The sign moves with the fixed effects
+  and period exactly as for thermal plant; the negative values come from net sellers'
+  steps (β⁺ −0.35, β⁻ ≈ 0), cause open.
 - **Second pass, 2026-09-30 (§3.19): zero-price middays included — withdrawn with the first.** X is
   rebuilt from the bids for every clean period and reproduces the panel's X
   exactly where the panel has it. At a zero price, X ≈ 0: rivals' slope is nine

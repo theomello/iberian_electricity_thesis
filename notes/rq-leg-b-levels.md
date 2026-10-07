@@ -10,7 +10,9 @@ leg B.
 rise with the firm's stake in a higher price across days either: with reactor outages as
 the instrument (F 21.5, against 5.6 within the day) β is −0.26, 95% set [−0.72, 0.04].
 Full market power (β = 1) is rejected in every specification that compares firms on the
-same hour and has a usable first stage; price-taking is not.
+same hour and has a usable first stage; price-taking is not. **With the at-cost
+instrument (§5, F 90–410) the bound tightens to β ≤ 0.12 outside 2019 – 2021H1, and
+2024–2025 is identified for the first time: −0.16 [−0.25, −0.06].**
 
 ## 1. The idea, with an example
 
@@ -135,7 +137,67 @@ least squares on futures, reservoir volume and snow. They find a futures coeffic
   these units lands on capacity with no water behind it (`rq-water-value-forward.md`
   §5.3). The step that sets the price is the marginal water, and it sits near λ*.
 
-## 5. Limits
+## 5. The at-cost instrument on hydro (2026-10-07)
+
+`step_engine.py --kind hydro --comp` re-clears the same 40 resampled draws with each
+firm's hydro steps above €1 moved to its units' λ*30s (hcompcost_YYYYMM, 81 months,
+~100,000 unit-hours each), and reads X over the 5 draws whose price is nearest the cost
+point, as for thermal plant (`rq-step-estimator.md` §7). **Zb** takes the cost point at
+the day's median λ* of the hydro class, so no unit's own benchmark error enters it; **Zc**
+at the unit's own λ*. `leg_b_levels.py --atcost`; `leg_b_atcost_results.csv`. Defined on
+98% of price-setting rows; correlation with X̃ 0.44.
+
+| fixed effects | instrument | β | F | 95% set (Anderson–Rubin) |
+|---|---|---|---|---|
+| unit × day (within the day) | Zb | −0.37 | 322 | [−0.52, −0.25] |
+| unit × day | Zb + outages | −0.37 | 115 | [−0.50, −0.20] |
+| **unit × month (across days)** | **Zb** | **−0.22** | **407** | **[−0.30, −0.15]** |
+| unit × month | Zc | −0.20 | 260 | [−0.30, −0.11] |
+| unit × month | Zb + outages | −0.23 | 151 | [−0.34, −0.12] |
+| unit (every day) | Zb | −0.01 | 349 | [−0.12, 0.09] |
+| unit | Zb + outages | −0.02 | 131 | [−0.15, 0.12] |
+| unit | Zc | −0.61 | 415 | [−0.72, −0.52] |
+
+Unit × month, Zb:
+
+| sample | β | F | 95% set |
+|---|---|---|---|
+| units with a storage series | −0.16 | 255 | [−0.27, −0.05] |
+| flat unit-days left out | −0.23 | 321 | [−0.32, −0.15] |
+| storage hydro only, no pumped | −0.22 | 331 | [−0.30, −0.14] |
+| six owners only | −0.23 | 399 | [−0.31, −0.15] |
+| 2019 – 2021H1 | **+0.14** | 297 | [0.02, 0.26] |
+| 2021H2 – 2023 | −0.25 | 321 | [−0.36, −0.15] |
+| **2024 – 2025-09** | **−0.16** | **91** | **[−0.25, −0.06]** |
+| 2024 – 2025-09, unit × day | −0.40 | 94 | [−0.51, −0.30] |
+| by sign: β⁺ (net sellers) / β⁻ (net buyers) | −0.35 (0.08) / −0.02 (0.06) | 179 / 597 | equal rejected, p 0.004 |
+| by sign, 2024 – 2025-09 | −0.28 (0.07) / +0.04 (0.08) | 93 / 218 | p 0.002 |
+
+- **The instrument is strong where the others were weak**, including 2024–2025, where
+  outages gave F 2–3. The solar years are now identified.
+- **Full market power is rejected everywhere** (p below 10⁻¹⁵); the highest upper bound
+  in any row is 0.26 (2019 – 2021H1), and 0.12 in the rest.
+- **The outages agree with it**: used together the overidentification test passes and the
+  set barely moves (unit × month [−0.34, −0.12]).
+- **The sign moves with the fixed effects and the period, as for thermal plant**
+  (thermal: −0.27 unit × month, −0.08 unit × day, +0.10 fuel × date; in 2019 – 2021H1
+  −0.03, +0.12 and +0.46). Here: negative within the day and within the month, zero across all days,
+  and **positive in 2019 – 2021H1 (+0.14, set [0.02, 0.26])**, about a seventh of Nash,
+  close to what EDP's within-day response gave (3–14% of Nash, leg A). From 2021H2 on,
+  negative.
+- **The negative values come from net sellers' steps** (β⁺ −0.35, β⁻ ≈ 0). Untested
+  candidate: a firm's zero-priced volume (run-of-river, its wind) raises its net position
+  and arrives with plentiful water, when its true water value sits below λ*; the curve at
+  cost keeps that volume, so X there carries it. A control for the firm's own inflow or
+  zero-priced volume would test it.
+- Zc in pure levels (−0.61) uses each unit's own λ*, so its error enters; not read.
+
+**Reading.** On hydro, across days as within them: β is bounded well below Nash
+(upper 0.12 outside 2019 – 2021H1), in every period including the solar years. Whether
+it is zero, slightly positive (as before mid-2021) or slightly negative depends on which
+variation is used, as for thermal; the cause of the negative values is open.
+
+## 6. Limits
 
 - e contains the benchmark's error (option value, forward risk premium, a wrong capacity
   factor). Outages are known at D−2 and partly in the forward, so they move the market's

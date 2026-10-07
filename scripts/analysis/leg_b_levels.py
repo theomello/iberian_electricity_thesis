@@ -45,6 +45,12 @@ anomaly with unit effects. Compared with λ*.
 
 Writes outputs/tables/leg_b_levels_results.csv and leg_b_paper_method.csv. `--checks` reruns
 only the checks, `--paper` only the paper's method.
+
+AT-COST INSTRUMENT (`--atcost`, after `step_engine.py --kind hydro --comp`): X evaluated on
+the same resampled draws with the firm's hydro steps moved to λ*30s, as for thermal plant
+(`rq-step-estimator.md` §7; Berry, Levinsohn & Pakes 1999 approximate optimal
+instruments). Zb reads X at the day's median λ* of the hydro class, so a unit's own
+benchmark error cannot enter it; Zc at the unit's own λ*. Writes leg_b_atcost_results.csv.
 """
 from __future__ import annotations
 
@@ -58,12 +64,14 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "analysis"))
 from midday_hydro_iv import cluster_meat  # noqa: E402
 from regional_wind_offer_test import FORECASTS  # noqa: E402
+from step_engine import NEAR  # noqa: E402
 from step_estimator import INSTRUMENTS, wdemean  # noqa: E402
 import step_estimator_hydro as sh  # noqa: E402
 
 TABLES = ROOT / "outputs/tables"
 OUT = TABLES / "leg_b_levels_results.csv"
 OUT_PAPER = TABLES / "leg_b_paper_method.csv"
+OUT_ATCOST = TABLES / "leg_b_atcost_results.csv"
 WV = TABLES / "water_value_forward.parquet"
 SIX = ["EDP", "IBERDROLA", "ENDESA", "NATURGY", "REPSOL", "MOVHERA"]
 
@@ -146,6 +154,49 @@ def checks(d: pd.DataFrame) -> list[dict]:
     return res
 
 
+def at_cost(d: pd.DataFrame) -> pd.DataFrame:
+    """Zb, Zc: X on the curve with the firm's hydro steps at λ*30s (`step_engine.py --kind
+    hydro --comp`), over the NEAR draws nearest the day's median λ* of the class (Zb) or the
+    unit's own λ* (Zc); NaN below the slope floor."""
+    cols = ["hid", "group", "unit", "kn_sn", "kn_s", "kb_sn", "kb_s"]
+    fs = sorted(sh.CACHE.glob("hcompcost_2*.parquet"))
+    c = pd.concat([pd.read_parquet(f, columns=cols) for f in fs], ignore_index=True)
+    d = d.merge(c.drop_duplicates(["hid", "group", "unit"]), on=["hid", "group", "unit"], how="left")
+    d["Zc"] = np.where(d.kn_s / NEAR >= sh.FLOOR, d.kn_sn / d.kn_s.where(d.kn_s > 0), np.nan)
+    d["Zb"] = np.where(d.kb_s / NEAR >= sh.FLOOR, d.kb_sn / d.kb_s.where(d.kb_s > 0), np.nan)
+    d["Zbp"], d["Zbm"] = d.Zb.clip(lower=0), d.Zb.clip(upper=0)
+    p = d[d.m_n > 0]
+    print(f"at-cost instrument: {len(fs)} months; joined on {p.kn_s.notna().mean():.3f} of price-setting rows, "
+          f"Zb defined on {p.Zb.notna().mean():.3f}; corr(X̃, Zb) {p[['Xt', 'Zb']].corr().iat[0, 1]:.2f}")
+    return d
+
+
+def at_cost_estimates(d: pd.DataFrame) -> list[dict]:
+    res = []
+    print("\nAT-COST INSTRUMENT (X̃ instrumented by its value with the firm's hydro at λ*):")
+    for fe_name in ("unit × day", "unit × month", "unit"):
+        y = "price" if fe_name == "unit × day" else "gap30"
+        for z_name, z in [("at cost, day median λ* (Zb)", ["Zb"]), ("at cost, own λ* (Zc)", ["Zc"]),
+                          ("Zb + outages", ["Zb", "dose_unpl", "dose_plan"])]:
+            res.append(sh.est(d, f"{fe_name} | {z_name}", z, y=y, fe=FES[fe_name])
+                       | {"fe": fe_name, "z": z_name, "y": y})
+    um = UNIT_MONTH
+    for label, s in [("units with a storage series", d[d.storage != "none"]), ("flat unit-days left out", d[~d.flat]),
+                     ("storage hydro only (no pumped)", d[d.cls == "hydro"]), ("six owners only", d[d.group.isin(SIX)]),
+                     ("2019–2021H1", d[d.date < "2021-07-01"]), ("2021H2–2023", d[(d.date >= "2021-07-01") & (d.date < "2024-01-01")]),
+                     ("2024 – 2025-09", d[d.date >= "2024-01-01"])]:
+        res.append(sh.est(s, f"unit × month | Zb | {label}", ["Zb"], y="gap30", fe=um)
+                   | {"fe": "unit × month", "z": "Zb", "y": "gap30"})
+    res.append(sh.est(d[d.date >= "2024-01-01"], "unit × day | Zb | 2024 – 2025-09", ["Zb"], y="price", fe=UNIT_DAY)
+               | {"fe": "unit × day", "z": "Zb", "y": "price"})
+    res.append(sh.est(d, "unit × month | Zb⁺, Zb⁻ | two slopes", ["Zbp", "Zbm"], xs2=("Xp", "Xm"), y="gap30", fe=um)
+               | {"fe": "unit × month", "z": "Zbp, Zbm", "y": "gap30"})
+    res.append(sh.est(d[d.date >= "2024-01-01"], "unit × month | Zb⁺, Zb⁻ | two slopes, 2024 – 2025-09",
+                      ["Zbp", "Zbm"], xs2=("Xp", "Xm"), y="gap30", fe=um)
+               | {"fe": "unit × month", "z": "Zbp, Zbm", "y": "gap30"})
+    return res
+
+
 def ols(s: pd.DataFrame, y: str, xs: list[str]) -> tuple[np.ndarray, np.ndarray]:
     """OLS with unit effects, week clusters."""
     M = wdemean(s[[y, *xs]].to_numpy(float), [pd.factorize(s.unit)[0]], np.ones(len(s)))
@@ -205,6 +256,10 @@ def paper_method(d: pd.DataFrame) -> pd.DataFrame:
 
 def main() -> int:
     d = load()
+    if "--atcost" in sys.argv:                  # the at-cost instrument (needs hcompcost_YYYYMM)
+        pd.DataFrame(at_cost_estimates(at_cost(d))).to_csv(OUT_ATCOST, index=False)
+        print(f"\nwrote {OUT_ATCOST.relative_to(ROOT)}")
+        return 0
     if "--paper" in sys.argv:                   # rerun only the paper's method
         paper_method(d).to_csv(OUT_PAPER, index=False)
         print(f"wrote {OUT_PAPER.relative_to(ROOT)}")

@@ -41,7 +41,7 @@ and realised: r_event (1 marginal at q_k, 2 gap above q_k, 0 neither), r_p, r_n,
 Also moments_targets_YYYYMM.parquet: per target, the draws' mean and sd of p*, H's p*
 and the realised clearing price.
 
-AT COST (`--comp`, thermal only; 2026-10-07). The same draws, with f's own gas and coal
+AT COST (`--comp`; thermal 2026-10-07, hydro `--kind hydro --comp` the same day). The same draws, with f's own gas and coal
 steps moved from their offer prices to their unit's cost (`cost` in units_YYYYMM): the
 curve f would offer as a price-taker in its thermal plant, everything else as offered.
 X evaluated there does not depend on f's thermal offer prices, so it does not carry an
@@ -57,6 +57,10 @@ Pakes 1999 approximate optimal instruments). Writes compcost_YYYYMM.parquet, one
   cbar, kb_sn, kb_s   the same at the day's median cost of the unit's fuel instead of its own
                       cost, so that an error in one unit's cost cannot enter
   moved_mw, offer_mw  thermal MW found in f's curve at the unit's offer prices and moved
+HYDRO AT COST writes hcompcost_YYYYMM.parquet, the same columns: f's storage and pumped
+hydro steps above MIN_PRICE_HYDRO moved to the unit's price-taking water value λ*30s
+(`build_water_value_forward.py`, known at D−2), and "fuel" is the hydro class, so cbar is
+the day's median λ* over the class. Units without λ* keep their offers.
 """
 from __future__ import annotations
 
@@ -91,6 +95,8 @@ def months_around(ym: str) -> list[str]:
 
 
 KINDS = {"thermal": ("units", "moments"), "hydro": ("hydro", "hmoments")}
+COMP_OUT = {"thermal": "compcost", "hydro": "hcompcost"}
+WATER_VALUE = ROOT / "outputs/tables/water_value_forward.parquet"
 MIN_PRICE_HYDRO = 1.0   # €/MWh: hydro blocks at zero tie with every renewable and never carry a choice
 
 
@@ -220,6 +226,11 @@ def at_cost(q: np.ndarray, vs: np.ndarray, vb: np.ndarray, uu: pd.DataFrame) -> 
 def month(ym: str, sh: pd.DataFrame, kind: str = "thermal",
           comp: bool = False) -> tuple[pd.DataFrame, pd.DataFrame]:
     hours, market, own, units = load(ym, kind)
+    if comp and kind == "hydro":                 # cost = λ*30s, fuel = hydro class
+        w = pd.read_parquet(WATER_VALUE, columns=["unit", "date", "lam30s"])
+        w["date"] = w.date.astype("datetime64[ns]")
+        units = units.assign(date=units.date.astype("datetime64[ns]")).merge(w, on=["unit", "date"], how="left")
+        units = units.rename(columns={"lam30s": "cost"}).assign(fuel=units.cls)
     blk = Block(hours, market, own)
     h = hours.copy()
     h["nl"] = h.F_demand - h.F_wind - h.F_solar
@@ -259,6 +270,9 @@ def month(ym: str, sh: pd.DataFrame, kind: str = "thermal",
                      - (1 - s_f) * (H.F_solar - dF.F_solar.to_numpy()))
             if comp:
                 uu = t_units[(t_units.hid == H.hid) & (t_units.group == g)]
+                uu = uu[uu.cost.notna()]
+                if uu.empty:
+                    continue
                 q2, vs2, vb2, moved = at_cost(q, vs, vb, uu)
                 rc = clear(blk, g, q2, vs2, vb2, cand, shift)
                 ra = clear(blk, g, q, vs, vb, cand, shift)
@@ -328,15 +342,16 @@ def main() -> int:
     ap = ArgumentParser(description=__doc__)
     ap.add_argument("--months", nargs="+", required=True)
     ap.add_argument("--kind", choices=list(KINDS), default="thermal")
-    ap.add_argument("--comp", action="store_true", help="thermal steps at cost (compcost_YYYYMM)")
+    ap.add_argument("--comp", action="store_true",
+                    help="own steps at cost: thermal (compcost_YYYYMM) or, with --kind hydro, at λ* (hcompcost)")
     args = ap.parse_args()
     sh = shares()
     out = KINDS[args.kind][1]
     for ym in args.months:
         t0 = time.time()
         if args.comp:
-            m, _ = month(ym, sh, "thermal", comp=True)
-            m.to_parquet(CACHE / f"compcost_{ym}.parquet", index=False)
+            m, _ = month(ym, sh, args.kind, comp=True)
+            m.to_parquet(CACHE / f"{COMP_OUT[args.kind]}_{ym}.parquet", index=False)
             print(f"  {ym}: {len(m):,} unit-hours; MW moved {m.moved_mw.sum() / m.offer_mw.sum():.3f} of offered; "
                   f"cost point sets p in ≥1 draw {(m.cm_n > 0).mean():.3f}, price within ±{H_BAND:g} of cost in "
                   f"≥1 draw {(m.ck_n > 0).mean():.3f} ({time.time() - t0:.0f} s)", flush=True)

@@ -427,6 +427,15 @@ then **observed p minus re-cleared p**, by hour and year, and can be split into
 the part due to solar-driven changes in X. This needs nothing beyond the bid
 archive and β̂.
 
+**Hydro, run 2026-10-07** (`rq-counterfactual-hydro.md`). β is small, so the β̂·X shift
+moves little; the counterfactual run instead re-clears each valid hour with storage hydro
+offered at the frozen hydro cost (`hydro_cost_daily.parquet`). Holding each unit's monthly
+water at what it used and pricing it as a price-taker: −€0.83/MWh on average (1.0%), −€2.2
+(3.1%) in 2025, all in the evening peak (−€9 to −15 at 20:00–22:00 in 2024–2025); EDP and
+Iberdrola most of it. An upper bound on the pricing of given water (it assumes a cascade
+can run full capacity at the peak); not shown to be market power (leg B). Most of
+Iberdrola's, Endesa's and Naturgy's hydro is sold bilaterally, outside the auction.
+
 ## 8. Plan
 
 1. ~~**Leg B**~~ — first and second passes done 2026-09-29/30 (§3.18–3.19),

@@ -696,7 +696,9 @@ That is what leg C in levels needs.
    full Nash rejected in every specification (p < 10⁻¹¹). With unit × day effects
    β −0.08, [−0.19, 0.02]; the sign moves with the fixed effects (−0.27 to +0.10 on all
    years, +0.46 in 2019–2021 H1 with fuel × date and hour), so it bounds β from above
-   (below 0.6 everywhere) and leaves the sign open. Outages agree with it.
+   (below 0.6 everywhere) and leaves the sign open. Outages agree with it. Start-up cost
+   does not explain the sign (§7.1): on running units declaring a minimum-income
+   condition the same pattern holds (−0.32, −0.04, +0.10).
 
 *To verify before use*: the IVPEE decree chain and dates; the reasons OMIE's
 `indisp` gives for each reactor outage; whether Portugal's CESE has any per-MWh

@@ -318,3 +318,36 @@ five firms −0.25 [−0.35, −0.15] (unit × day −0.08 [−0.20, 0.03]); oth
 - **What it settles: the upper bound, not the sign.** β is small: [−0.19, 0.02] with
   unit × day effects, and below 0.6 in every specification. Price-taking is not
   rejected in the preferred one; a small negative β is not ruled out.
+
+### 7.1 Start-up cost does not explain the sign (2026-10-07)
+
+`analysis/step_startup_check.py` → `outputs/tables/step_startup_check.csv`. The candidate
+in §7: a firm short on a day starts more plant, and start-up costs raise its step
+prices. Two splits, known at noon on D-1: whether the unit was cleared in D-1's last
+hour (**running**, 74% of marginal draws), and whether it declares a minimum-income
+condition for D in `cab` (**MIC**, 74%). The condition recovers the start-up cost
+separately, so a unit declaring it can offer its steps at cost; one that does not must
+put the start-up into its step prices. And it does: markups (b − c) are 3.1 €/MWh on
+running MIC units, 9.0 off MIC, 15.3 running without MIC, 20.9 off without MIC.
+
+| steps | unit × month, fuel × hour | unit × day, fuel × hour | fuel × date and hour |
+|---|---|---|---|
+| all | −0.27 [−0.37, −0.18] | −0.08 [−0.19, 0.02] | +0.10 [0.04, 0.17] |
+| **running, MIC** (no start-up in the step price) | −0.32 [−0.47, −0.17] | −0.04 [−0.22, 0.14] | +0.10 [0.00, 0.19] |
+| off, no MIC (start-up in the step price) | −0.22 [−0.41, −0.03] | +0.09 [−0.18, 0.32] (F 7) | +0.24 [0.13, 0.35] |
+| MIC | −0.35 [−0.49, −0.22] | −0.11 [−0.29, 0.06] | +0.07 [−0.03, 0.17] |
+| no MIC | +0.03 [−0.08, 0.17] | +0.38 [0.10, 0.88] (F 19) | +0.29 [0.21, 0.37] |
+
+- **The sign moves the same way where no start-up cost can enter the step price**
+  (running, MIC: −0.32, −0.04, +0.10). Start-up cost is not the explanation.
+- **What differs between the columns is which variation is used.** Going from the first
+  to the second column removes each unit's day-to-day variation within the month and
+  takes β from about −0.3 to about 0: something that varies by day and moves with the
+  firm's position lowers its step prices relative to measured cost. The third column
+  uses each day's hourly shape and gives about +0.1. Not identified yet; candidates are
+  the firm's daily hydro and nuclear position (its portfolio, not its start-ups) and the
+  timing of the gas price in the cost (prices dated D-2).
+- **Units without a minimum-income condition** lean positive (+0.03 to +0.38). They are
+  a quarter of the draws, with weaker first stages; not read further.
+- **Unchanged:** full Nash is rejected in every row, and the preferred column stays near
+  0. The bound holds; the sign is open.

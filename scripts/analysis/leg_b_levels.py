@@ -44,7 +44,7 @@ reservoir volume and snow. Here: steps that set the realised price (r_event = 1)
 anomaly with unit effects. Compared with λ*.
 
 Writes outputs/tables/leg_b_levels_results.csv and leg_b_paper_method.csv. `--checks` reruns
-only the checks.
+only the checks, `--paper` only the paper's method.
 """
 from __future__ import annotations
 
@@ -186,6 +186,17 @@ def paper_method(d: pd.DataFrame) -> pd.DataFrame:
     pd.set_option("display.width", 240)
     print(t[["group", "hours", "units", "X_real", "lam_star", "lam0_p", "lam1_paper", "lam1_below_0",
              "corr_lam1_star", "corr_lam0_star"]].round(2).to_string(index=False))
+    v = pd.read_parquet(TABLES / "water_value_revealed.parquet", columns=["unit", "date", "lambda50"])
+    v["date"] = pd.to_datetime(v.date)
+    e = r.merge(v, on=["unit", "date"])
+    allv = v[v.date >= "2019-01-01"].groupby("unit").lambda50.median().rename("revealed_all_days")
+    same = e.groupby("unit").agg(hours=("lam1", "size"), price=("r_p", "median"), lam1_paper=("lam1", "median"),
+                                 revealed_same_day=("lambda50", "median"), lam_star=("lam30s", "median"))
+    print("\nagainst EDP's and Movhera's revealed λ̂50 (water_value_revealed) on the same days:")
+    print(same.join(allv).round(1).to_string())
+    print(f"paper λ̂ / revealed λ̂50, same day: median {(e.lam1 / e.lambda50).median():.2f}, "
+          f"corr {e[['lam1', 'lambda50']].corr().iat[0, 1]:.2f}; revealed / λ*: on these days "
+          f"{(e.lambda50 / e.lam30s).median():.2f}")
     cols = [c for c in t.columns if c.endswith(("_fwd", "_fill")) and not c.endswith("_se")]
     print("\nfitted on the D−2 forward and the fill anomaly, unit effects (week-clustered se in the csv):")
     print(t[["group", "n_fit", *cols]].round(2).to_string(index=False))
@@ -194,6 +205,10 @@ def paper_method(d: pd.DataFrame) -> pd.DataFrame:
 
 def main() -> int:
     d = load()
+    if "--paper" in sys.argv:                   # rerun only the paper's method
+        paper_method(d).to_csv(OUT_PAPER, index=False)
+        print(f"wrote {OUT_PAPER.relative_to(ROOT)}")
+        return 0
     if "--checks" in sys.argv:                  # rerun only the checks, appended to the results
         old = pd.read_csv(OUT)
         old = old[old.z.isin(list(ZSETS)) & (old["sample"].str.count(r"\|") == 1)]   # the main grid

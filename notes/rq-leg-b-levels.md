@@ -125,6 +125,15 @@ least squares on futures, reservoir volume and snow. They find a futures coeffic
   the water value as well as its cause.
 - **Selection**: λ̂ sits 3–18% below λ* in these hours (EDP 9%, Iberdrola 7%), because a
   storage unit sets the price when its step is cheap relative to its usual level.
+- **On the same days it agrees with the water value EDP's offers reveal**
+  (`water_value_revealed`, 12,817 unit-hours): λ̂ over λ̂50 has median 0.95, correlation
+  0.79 (Cávado 69 against 71, Guadiana 89 against 92, Tejo-Mondego 83 against 83). On
+  those days λ̂50 over λ* is 1.01, against 1.05 on all days. They are low-water-value
+  days (Cávado's λ̂50 is 71 there, 102 over all days), and λ* is lower on them too.
+- **Movhera and Hidrocantábrico are the exception**: the paper's λ̂ is 104 and 65, the
+  revealed λ̂50 225 and 119. λ̂50 is the price at half of the offered volume, which for
+  these units lands on capacity with no water behind it (`rq-water-value-forward.md`
+  §5.3). The step that sets the price is the marginal water, and it sits near λ*.
 
 ## 5. Limits
 

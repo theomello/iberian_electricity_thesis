@@ -12,7 +12,9 @@ the instrument (F 21.5, against 5.6 within the day) β is −0.26, 95% set [−0
 Full market power (β = 1) is rejected in every specification that compares firms on the
 same hour and has a usable first stage; price-taking is not. **With the at-cost
 instrument (§5, F 90–410) the bound tightens to β ≤ 0.12 outside 2019 – 2021H1, and
-2024–2025 is identified for the first time: −0.16 [−0.25, −0.06].**
+2024–2025 is identified for the first time: −0.16 [−0.25, −0.06].** The negative values are not
+caused by the firm's own zero-priced output or its water (§6.1), and the paper's wrong
+storage sign comes from comparing years, not from incomplete storage data (§6.2).
 
 ## 1. The idea, with an example
 
@@ -185,11 +187,8 @@ Unit × month, Zb:
   and **positive in 2019 – 2021H1 (+0.14, set [0.02, 0.26])**, about a seventh of Nash,
   close to what EDP's within-day response gave (3–14% of Nash, leg A). From 2021H2 on,
   negative.
-- **The negative values come from net sellers' steps** (β⁺ −0.35, β⁻ ≈ 0). Untested
-  candidate: a firm's zero-priced volume (run-of-river, its wind) raises its net position
-  and arrives with plentiful water, when its true water value sits below λ*; the curve at
-  cost keeps that volume, so X there carries it. A control for the firm's own inflow or
-  zero-priced volume would test it.
+- **The negative values come from net sellers' steps** (β⁺ −0.35, β⁻ ≈ 0). The
+  candidate that the firm's own zero-priced volume and water drive them is ruled out (§6.1).
 - Zc in pure levels (−0.61) uses each unit's own λ*, so its error enters; not read.
 
 **Reading.** On hydro, across days as within them: β is bounded well below Nash
@@ -197,7 +196,103 @@ Unit × month, Zb:
 it is zero, slightly positive (as before mid-2021) or slightly negative depends on which
 variation is used, as for thermal; the cause of the negative values is open.
 
-## 6. Limits
+## 6. Two checks: the negative sign and the storage sign (2026-10-07)
+
+`analysis/leg_b_water_checks.py`; `outputs/tables/leg_b_water_checks.csv`.
+
+### 6.1 The negative β is not the firm's own zero-priced volume or its water
+
+**The candidate.** On a wet or windy day a firm sells more energy offered at zero
+(run-of-river, wind), so its net position n and X are high; if its water is worth less
+than λ* on the same days, its steps sit below λ* exactly when X is high, and β is
+pulled down. The at-cost curve keeps that volume, so Zb would carry it too.
+
+**The test.** Add controls known when offers close:
+- **V0**: the firm's own sell offers at or below €1 in the hour (nuclear, wind, solar,
+  run-of-river, cogeneration), GW, less its storage and pumped hydro offered there (a
+  water-value choice, not weather).
+- **Unit rain**: rain over the catchments of the unit's own plants in the 90 and 30 days
+  to D−2 (E-OBS, `build_catchment_rain.py`), as a z-score against 1991–2020.
+- **Firm rain H90**: the same over the firm's whole hydro fleet, GW × ownership share.
+
+The first link holds: X̃ and Zb rise by about 2 per GW of V0, and hydro steps sit €2.7
+lower against λ* per GW. Rain moves neither within a month. But **the controls do not
+move β**:
+
+| | controls | β | 95% set |
+|---|---|---|---|
+| hydro, unit × month | none / V0 | −0.22 / −0.21 | [−0.30, −0.15] / [−0.29, −0.13] |
+| hydro, six owners, unit × month | none / V0 + rain + H90 | −0.21 / −0.20 | [−0.29, −0.13] / [−0.28, −0.12] |
+| hydro, unit × day | none / V0 | −0.37 / −0.38 | [−0.52, −0.25] / [−0.54, −0.25] |
+| hydro, net sellers β⁺ | none / V0 / V0 + rain + H90 (six owners) | −0.35 / −0.33 / −0.37 | |
+| hydro, unit only, six owners | none / V0 + rain + H90 | +0.17 / +0.17 | [0.04, 0.30] / [0.05, 0.30] |
+| thermal, unit × month | none / V0 | −0.27 / −0.26 | [−0.37, −0.18] / [−0.36, −0.17] |
+| thermal, five firms, unit × month | none / V0 + H90 | −0.25 / −0.25 | [−0.35, −0.15] both |
+| thermal, unit × day | none / V0 | −0.08 / −0.09 | [−0.19, 0.02] / [−0.20, 0.02] |
+
+So the negative sign is not water and not the firm's own zero-priced output, in hydro
+or in thermal plant. Its cause is still open; what is known is that it sits in net
+sellers' steps and appears only when comparisons are within a month or a day. (With unit
+effects only, the six owners give +0.17 where all owners give −0.01: the small owners'
+units pull that row down, not the controls.)
+
+### 6.2 The wrong storage sign comes from the years, not from incomplete storage data
+
+The paper's fit (§4) gives fuller reservoirs a higher λ̂: +0.9 €/MWh per 10 points of
+fill. The fill series are incomplete: MITECO is the whole demarcation, irrigation and
+supply dams included; SNIRH covers only EDP's and Movhera's own reservoirs; and 9 of the
+28 units (2,118 of 19,059 hours) have no series, among them Iberdrola's Tâmega (986 hours)
+and Repsol's Viesgo (616). Classical noise in fill would only
+shrink the coefficient toward zero, not flip it; error correlated with the water value
+could. Catchment rain needs no storage data, covers 23 of the 28 units, and is not
+chosen by the firm.
+
+| fit of λ̂ (β = 1) | water term | coefficient | se |
+|---|---|---|---|
+| fill, unit effects (§4) | per 10 points | +0.90 | 0.45 |
+| fill, units with own-reservoir data (SNIRH, 7 units) | per 10 points | +0.33 | 0.43 |
+| fill, units with basin data (MITECO, 12 units) | per 10 points | +2.71 | 0.83 |
+| **fill, unit + year effects** | per 10 points | **−0.94** | 0.41 |
+| **rain over 90 days instead of fill** (23 units) | per sd | **−2.41** | 0.81 |
+| fill instrumented by 90-day rain (F 122) | per 10 points | −5.12 | 1.97 |
+| rain over 365 days | per sd | +1.50 | 0.92 |
+| 90- and 365-day rain, unit + year effects | per sd of 90-day rain | −4.48 | 0.78 |
+
+With year effects, fill takes the right sign for EDP (−2.3), Iberdrola (−3.5) and Naturgy
+(−2.1); Endesa −0.4 and Movhera +3.0 (one unit) are not different from zero.
+
+- **Data quality matters, but it is not what flips the sign.** Basin data gives a more
+  positive slope than own-reservoir data (+2.7 against +0.3), as a looser proxy would.
+  But neither turns negative across years, and both do within years.
+- **What flips it is a coincidence across seven years.** Year by year, within units:
+
+| year | λ̂ less 1.10 × forward | fill (10-point units) | price-setting hours at midday | price there over the day's mean |
+|---|---|---|---|---|
+| 2019 | −5.6 | −0.5 | 31% | 1.05 |
+| 2020 | −4.8 | +0.3 | 29% | 1.05 |
+| 2021 | −4.3 | −0.2 | 25% | 1.04 |
+| 2022 | +2.1 | −1.5 | 17% | 1.09 |
+| 2023 | +4.9 | +0.6 | 14% | 1.11 |
+| 2024 | +7.0 | +0.8 | 13% | 1.13 |
+| 2025 | +9.2 | +0.7 | 9% | 1.26 |
+
+  λ̂ rose against the forward by about €15 over the period, because solar pushed the
+  hours in which storage hydro sets the price out of midday and into the evening, which
+  is dearer than the baseload forward. Reservoirs happened to be fuller in 2023–2025
+  than in 2019–2022 (the 2022 drought). Across years the two move together, and that is
+  the +0.9.
+- **Rain over a year carries the same across-year confound** (+1.5); rain over 90 days
+  mostly varies within years and gives the right sign.
+- **Every day, not only price-setting hours**: the offer at the expected running share
+  over λ*s falls with fill (−0.021 log points per 10 points) and with rain (−0.041 per
+  sd), beyond λ*s's own storage adjustment. Iberdrola (+0.07) and Naturgy (+0.05) are the
+  exception, as in `rq-water-value-forward.md` §5.3.
+
+**Reading.** The paper's method recovers the right storage sign on these data once the
+comparison is within years, or with rain in place of storage. Fill is the paper's own
+regressor, so the comparison with Murray (negative on volume) needs year effects here.
+
+## 7. Limits
 
 - e contains the benchmark's error (option value, forward risk premium, a wrong capacity
   factor). Outages are known at D−2 and partly in the forward, so they move the market's

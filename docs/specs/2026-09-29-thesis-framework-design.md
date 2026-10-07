@@ -242,7 +242,13 @@ control.
   identified: −0.16 [−0.25, −0.06].** 2019 – 2021H1 +0.14 [0.02, 0.26]. Nash rejected
   everywhere; upper bound 0.12 outside 2019 – 2021H1. The sign moves with the fixed effects
   and period exactly as for thermal plant; the negative values come from net sellers'
-  steps (β⁺ −0.35, β⁻ ≈ 0), cause open.
+  steps (β⁺ −0.35, β⁻ ≈ 0), cause open. **Not the firm's own zero-priced output or its
+  water** (§6.1): controls for its zero-priced offers and its catchments' rain leave β at
+  −0.20 (hydro) and −0.26 (thermal). **The paper's wrong storage sign is the years, not
+  incomplete storage data** (§6.2): with year effects fill gives −0.9 per 10 points, and
+  90-day catchment rain in its place −2.4 per sd; across years λ̂ rose €15 against the
+  baseload forward as solar moved hydro's price-setting hours to the evening, while
+  2023–2025 were wetter than 2019–2022.
 - **Second pass, 2026-09-30 (§3.19): zero-price middays included — withdrawn with the first.** X is
   rebuilt from the bids for every clean period and reproduces the panel's X
   exactly where the panel has it. At a zero price, X ≈ 0: rivals' slope is nine

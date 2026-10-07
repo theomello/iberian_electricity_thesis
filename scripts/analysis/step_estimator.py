@@ -220,26 +220,32 @@ def fe_codes(s: pd.DataFrame, fe: str) -> list[np.ndarray]:
     return [pd.factorize(c)[0] for c in sets[fe]]
 
 
-def est(d: pd.DataFrame, y: str, x: str, w: str, label: str, zs=("dose_unpl", "dose_plan"), fe: str = "main") -> dict:
-    zs = list(zs)
-    s = d.dropna(subset=[y, x, w, *zs])
-    s = s[(s[w] > 0) & np.isfinite(s[[y, x, *zs]].to_numpy(float)).all(axis=1)]
+def est(d: pd.DataFrame, y: str, x: str, w: str, label: str, zs=("dose_unpl", "dose_plan"), fe: str = "main",
+        ws=()) -> dict:
+    zs, ws = list(zs), list(ws)
+    s = d.dropna(subset=[y, x, w, *zs, *ws])
+    s = s[(s[w] > 0) & np.isfinite(s[[y, x, *zs, *ws]].to_numpy(float)).all(axis=1)]
     if len(s) < 1000:
         print(f"  {label:52s} too few rows ({len(s)})")
         return {"sample": label, "y": y, "x": x, "n": len(s), "status": "too few rows"}
     row = {"sample": label, "y": y, "x": x, "weight": w, "fe": fe, "instruments": "+".join(zs) or "none",
-           "n": len(s), "units": s.unit.nunique(), "groups": s.group.nunique(),
+           "controls": "+".join(ws), "n": len(s), "units": s.unit.nunique(), "groups": s.group.nunique(),
            "mean_y": np.average(s[y], weights=s[w]), "mean_x": np.average(s[x], weights=s[w]),
            "sd_x": float(np.sqrt(np.cov(s[x], aweights=s[w])))}
     wt = s[w].to_numpy(float)
-    M = wdemean(s[[y, x, *zs]].to_numpy(float), fe_codes(s, fe), wt)
+    M = wdemean(s[[y, x, *zs, *ws]].to_numpy(float), fe_codes(s, fe), wt)
     r = np.sqrt(wt)
-    Y, X, Z = M[:, 0] * r, M[:, [1]] * r[:, None], M[:, 2:] * r[:, None]
-    W0 = np.zeros((len(s), 0))
+    L = len(zs)
+    Y, X, Z = M[:, 0] * r, M[:, [1]] * r[:, None], M[:, 2:2 + L] * r[:, None]
+    W0 = M[:, 2 + L:] * r[:, None]
     cl = s.date.dt.strftime("%G%V").to_numpy()
-    inv = 1.0 / (X[:, 0] @ X[:, 0])
-    b_ols = inv * (X[:, 0] @ Y)
-    V_ols = inv * cluster_meat(X, Y - X[:, 0] * b_ols, cl)[0, 0] * inv
+    Yl, Xl = Y, X
+    if W0.shape[1]:                         # controls partialled out of the least-squares fit too
+        Pw = W0 @ np.linalg.lstsq(W0, np.column_stack([Y, X]), rcond=None)[0]
+        Yl, Xl = Y - Pw[:, 0], X - Pw[:, 1:]
+    inv = 1.0 / (Xl[:, 0] @ Xl[:, 0])
+    b_ols = inv * (Xl[:, 0] @ Yl)
+    V_ols = inv * cluster_meat(Xl, Yl - Xl[:, 0] * b_ols, cl)[0, 0] * inv
     row |= {"b_ols": b_ols, "se_ols": np.sqrt(V_ols)}
     txt = f"LS {b_ols:+.3f} ({np.sqrt(V_ols):.3f})"
     if zs:

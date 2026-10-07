@@ -136,33 +136,39 @@ def fe_codes(s: pd.DataFrame) -> list[np.ndarray]:
 
 
 def est(d: pd.DataFrame, label: str, zs: list[str] | str, x: str = "Xt", xs2: tuple | None = None,
-        y: str = "price", fe=fe_codes) -> dict:
+        y: str = "price", fe=fe_codes, ws: tuple = ()) -> dict:
     """Weighted 2SLS of the step price (or `y`) on X̃ (or on X̃⁺ and X̃⁻ when xs2 is given),
-    with the fixed effects `fe(rows)` (unit × day, class × hour, class × position by default)."""
+    with the fixed effects `fe(rows)` (unit × day, class × hour, class × position by default)
+    and the exogenous controls `ws`."""
     s = d.dropna(subset=[x, "m_n", y]).copy()
     if isinstance(zs, str) and zs == "firm forecasts":
         zs = zf(s)
-    zs = list(zs)
+    zs, ws = list(zs), list(ws)
     xs = list(xs2) if xs2 else [x]
-    s = s[(s.m_n > 0) & np.isfinite(s[[y, *xs, *zs]].to_numpy(float)).all(axis=1)]
+    s = s[(s.m_n > 0) & np.isfinite(s[[y, *xs, *zs, *ws]].to_numpy(float)).all(axis=1)]
     row = {"sample": label, "x": "+".join(xs), "instruments": ", ".join(zs) if len(zs) <= 3 else f"{len(zs)} firm × forecast",
-           "n": len(s), "units": s.unit.nunique(), "groups": s.group.nunique(),
+           "controls": ", ".join(ws), "n": len(s), "units": s.unit.nunique(), "groups": s.group.nunique(),
            "mean_x": np.average(s[xs[0]], weights=s.m_n)}
     if len(s) < 5000:
         print(f"  {label:58s} too few rows ({len(s):,})")
         return row | {"status": "too few rows"}
     wt = s.m_n.to_numpy(float)
-    M = wdemean(s[[y, *xs, *zs]].to_numpy(float), fe(s), wt)
+    M = wdemean(s[[y, *xs, *zs, *ws]].to_numpy(float), fe(s), wt)
     r = np.sqrt(wt)
-    k = len(xs)
-    Y, X, Z = M[:, 0] * r, M[:, 1:1 + k] * r[:, None], M[:, 1 + k:] * r[:, None]
+    k, L = len(xs), len(zs)
+    Y, X, Z = M[:, 0] * r, M[:, 1:1 + k] * r[:, None], M[:, 1 + k:1 + k + L] * r[:, None]
+    W0 = M[:, 1 + k + L:] * r[:, None]
     keep = np.abs(Z).sum(axis=0) > 0
     Z = Z[:, keep]
-    W0 = np.zeros((len(s), 0))
+    if W0.shape[1]:                         # controls partialled out of the least-squares fit too
+        Pw = W0 @ np.linalg.lstsq(W0, np.column_stack([Y, X]), rcond=None)[0]
+        Yl, Xl = Y - Pw[:, 0], X - Pw[:, 1:]
+    else:
+        Yl, Xl = Y, X
     cl = s.date.dt.strftime("%G%V").to_numpy()
-    inv = np.linalg.inv(X.T @ X)
-    b_ls = inv @ X.T @ Y
-    V_ls = inv @ cluster_meat(X, Y - X @ b_ls, cl) @ inv
+    inv = np.linalg.inv(Xl.T @ Xl)
+    b_ls = inv @ Xl.T @ Yl
+    V_ls = inv @ cluster_meat(Xl, Yl - Xl @ b_ls, cl) @ inv
     for j, xn in enumerate(xs):
         row |= {f"b_ls_{xn}": b_ls[j], f"se_ls_{xn}": np.sqrt(V_ls[j, j])}
     txt = "LS " + " ".join(f"{b_ls[j]:+.3f} ({np.sqrt(V_ls[j, j]):.3f})" for j in range(k))

@@ -9,7 +9,15 @@ shape and each unit's usual capacity factor reproduces the water value EDP revea
 offers: for its four big storage cascades the medians agree within 6% (Cávado 102 against
 98, Lima 96 against 99, Guadiana 96 against 102, Mondego 104 against 100 €/MWh), with
 correlations of 0.81–0.91 over 2019 – May 2026. Iberdrola, Naturgy and Movhera offer well
-above it.
+above it at half of their offered volume, but not at the volume they expect to run: there
+all five groups sit at 0.90–1.19 times it (§5.3).
+
+**Addendum, storage (§5.2–§5.3).** Adding each unit's reservoir fill (MITECO by basin for
+Spain, SNIRH for Portugal) improves the forecast of its monthly capacity factor for 18 of
+20 units (median 11% less error) but moves λ* by only €1–4. The 2–3× gap of Iberdrola,
+Naturgy and Movhera is not scarce water: it is the price of turbine capacity with no water
+behind it. Read at each unit's expected running share, offers over λ* are EDP 0.90,
+Endesa 0.92, Movhera 0.93, Naturgy 1.13, Iberdrola 1.19.
 
 ## 1. The idea, with an example
 
@@ -131,6 +139,68 @@ is partly the firm's choice, so this shows the basin series carries unit-specifi
 information, not that it is exogenous.
 - Forward risk premia move λ* with the forward.
 - Unit contents change: EDP moved ~1,000 MW from ACAVADO to ALIMA in March 2024.
+
+### 5.2 Storage in the benchmark (2026-10-07)
+
+`build_water_value_forward.py` now also writes `cf_s`, `lam30s`, `lam90s`. A unit whose
+reservoirs are fuller than usual for the week of the year expects to release more, so it
+values its water less:
+
+    cf_s(u, D) = α_m + b × (fill(u, D) − normal fill for D's ISO week)
+
+fill is MITECO's stored over capacity in the unit's demarcation(s) (Spain; units whose
+basin ranked top three in §5.1, so not JUCA, TEES or VIES) or SNIRH's volume of the
+unit's own reservoirs (Portugal; EDP's seven cascades and Movhera, by river after
+`build_storage_hours.py`; Iberdrola's TAMEGA has no volume series). The reading is the
+latest on or before D−2. The normal and α_m, b are fitted on the other years only, b on
+the fill anomaly on the month's first day. Example: Duero 10 points fuller than usual,
+b = 0.43 for DUER, so cf 0.19 becomes 0.23 and λ moves from the 81st to the 77th
+percentile of expected prices.
+
+**Out of sample it forecasts the month's capacity factor better** for 18 of 20 units
+(median 11% less root mean squared error; 14–27% for DUER, TAJO, SIL, EBRFEN, TERE,
+ALIMA, TEMON). Worse for EBRA (−0.4%) and HCHI (−2.5%).
+
+**It moves λ* little**: yearly medians by €0–4 (2022 +3.5, 2026 −2.5). Against EDP's
+revealed λ̂50 correlations are unchanged or up to 0.03 higher, and three slopes move
+toward one (ALIMA 1.20 → 0.99, ADOURO 1.25 → 1.09, TEMON 1.55 → 1.32).
+
+### 5.3 The gap is turbine capacity without water, not scarce water
+
+`analysis/water_value_forward_check.py`. If scarce water drove Iberdrola's and Naturgy's
+high offers, their offers would sit further above λ* when their reservoirs are low.
+They do not: the within unit × month slope of log(offer / λ*30s) on the fill anomaly is
++0.49 (Iberdrola) and +1.15 (Naturgy) at o50, against −0.26 (EDP) and −0.63 (Endesa).
+
+What does explain it: a cascade unit offers all its turbine capacity, but has water for
+about a fifth of the hours. A price-taker offers the water it expects to use at λ; how it
+prices the capacity beyond that says little about λ. The price at half of the offered
+volume (o50, §4) mixes the two. Read instead at the unit's expected running share cf_s
+(ocf):
+
+| group (storage units) | unit-days | o50 / λ*30s | ocf / λ*30s | within-unit slope at ocf |
+|---|---|---|---|---|
+| EDP | 16,666 | 1.04 | 0.90 | 0.77 |
+| Endesa | 9,454 | 1.03 | 0.92 | 0.56 |
+| Iberdrola | 9,576 | 2.75 | 1.19 | 1.02 |
+| Naturgy | 7,179 | 1.22 | 1.13 | 0.77 |
+| Movhera | 1,358 | 1.84 | 0.93 | 1.09 |
+
+By unit at ocf: Iberdrola DUER 1.12, SIL 1.13, TAJO 1.02, EBRA 3.37 (a 220 MW unit
+offered at a flat ~€380); Naturgy UFMI 1.19, UFGC 1.11, UFTA 0.77; Endesa's GDLQ offers
+everything at ~0.
+
+- **The 2–3× gap was the measure.** At the volume each unit expects to run, every group
+  is within 0.9–1.2 of the price-taking benchmark.
+- **What is left: Iberdrola and Naturgy sit 20–30% above EDP and Endesa** (1.19 and 1.13
+  against 0.90 and 0.92). That is the leg B question, and it is a modest gap.
+- **The groups respond to storage differently.** At ocf the slope of the gap on fill is
+  −0.42 (EDP) and −0.80 (Endesa) but +0.70 (Iberdrola) and +0.54 (Naturgy): EDP and
+  Endesa cut their offers more than λ*s when reservoirs fill, Iberdrola and Naturgy less.
+- **Steep offer curves beyond cf_s** (Iberdrola: p10 1.11, ocf 1.19, o50 2.75 times λ*)
+  are consistent both with withholding capacity and with a marginal water value that
+  rises with the volume committed within the day (a cascade cannot run every plant at
+  once). Not separated here.
 
 ## 6. What it enables
 

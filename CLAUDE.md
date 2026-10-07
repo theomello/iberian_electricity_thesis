@@ -102,7 +102,7 @@ scripts/
 | `build/build_renewable_locations.py` | REE physical units + OSM + WRI | no | `data/osm/renewable_unit_locations.parquet` |
 | `build/build_renewable_locations_v2.py` | the first pass + OSM turbine groups | no | `data/osm/renewable_unit_locations_v2.parquet` |
 | `build/build_renewable_locations_v3.py` | v2 + MITECO Electra register | no | `data/osm/renewable_unit_locations_v3.parquet` |
-| `build/build_water_value_forward.py` | OMIP + day-ahead prices + PDBF + `cab` | no | `outputs/tables/water_value_forward.parquet`, `forward_price_quantiles.parquet` |
+| `build/build_water_value_forward.py` | OMIP + day-ahead prices + PDBF + `cab` + MITECO + SNIRH | no | `outputs/tables/water_value_forward.parquet`, `forward_price_quantiles.parquet` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
 `lib/config.py` loads tokens from a gitignored `.env`; `lib/regions.py` gives a

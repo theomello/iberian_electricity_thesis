@@ -108,7 +108,8 @@ Here λ̂ is the volume-weighted median of a unit's offered hydro steps over the
 ## 5. Limits
 
 - No inflow uncertainty, so no option value: the benchmark should sit below a
-  competitive water value when inflows are uncertain, never above.
+  competitive water value when inflows are uncertain, never above. Tested within the month in §5.4:
+  under 1%.
 - Capacity factor from the unit's own history, not its reservoir: a dry year lowers the
   true release share and raises λ, and this misses it. Inflows and storage (SNIRH for
   Portugal; MITECO by basin for Spain, §5.1) are the next refinement.
@@ -201,6 +202,50 @@ everything at ~0.
   are consistent both with withholding capacity and with a marginal water value that
   rises with the volume committed within the day (a cascade cannot run every plant at
   once). Not separated here.
+
+### 5.4 Option value is under 1%; the horizon matters more (2026-10-07)
+
+`build_water_value_forward.py`, columns `cf_w`, `lam30w`, `lam30o`. λ* assumes the unit
+knows how much water the month brings. It does not, and if λ is convex in the running
+share, uncertainty raises the expected value of the water. Example: a unit expecting to
+run 20% of the hours prices at the 80th percentile; if it may run 10% or 30%, its water
+is worth the average of the 90th and 70th percentiles, not the 80th.
+
+Built as the mean of λ over each unit's own forecast errors: realised over forecast
+capacity factor on the month's first day, in the other years and calendar months within
+±1 (median 18 scenarios), applied to a forecast that adds catchment rain to the fill.
+
+- **Rain adds nothing to fill**: out of sample the month's capacity factor is forecast
+  0.7% better (median; 13 of 24 units better). For the four units with no storage series
+  it helps TEES (8%) and JUCA (1%) and hurts TAMEGA (−16%).
+- **The option value is under 1%**: λ30o over λ30w has median 0.99–1.01 for every group
+  and 0.996–1.007 by year 2019–2025 (2026, five months: 1.03). The forecast errors are wide
+  (realised over forecast, p10 0.40, p90 1.74), but over that range λ is close to linear in
+  the running share: λ at half and at 1.5 times the share average to within 0.3–0.9% of λ
+  at the share. On the actual price distributions the 70th and 90th percentiles average to
+  about the 80th. **λ*30s stays the cost.**
+- **It cannot explain the gap of Iberdrola and Naturgy**. A longer horizon explains more.
+  Offer at the expected running share over λ*, storage units, days offered above €1:
+
+| group | unit-days | over λ*30s | over λ*30o | over λ*90s |
+|---|---|---|---|---|
+| EDP | 14,301 | 0.95 | 0.96 | 0.90 |
+| Endesa | 6,065 | 1.14 | 1.12 | 1.09 |
+| Iberdrola | 9,619 | 1.21 | 1.22 | 1.12 |
+| Naturgy | 5,105 | 1.40 | 1.47 | 1.35 |
+| Movhera | 1,281 | 0.95 | 0.99 | 0.91 |
+
+  (Different from §5.3 because days offered at or below €1 are left out here.)
+- **The gap opened after 2021.** Over λ*30s: Iberdrola 1.13 (2019), 0.96 (2021), 1.29
+  (2023), 1.62 (2025); Naturgy 1.01–1.03 (2019–2021), 1.87 (2022), 2.46 (2023), 1.39 (2025);
+  Endesa 0.93–1.04 to 2022, 1.45–2.03 from 2023. EDP 0.81–1.00 throughout.
+
+**Reading.** Uncertain water within the month does not lift the competitive water value
+enough to matter. What remains between Iberdrola's, Naturgy's and Endesa's offers and
+λ* — opened from 2022 — is either a planning horizon longer than 90 days (large
+interannual reservoirs), the cascade's within-day constraints (§5.3), or holding water
+back. Leg B (`rq-leg-b-levels.md` §5) finds the last does not move with the firm's
+incentive X.
 
 ## 6. What it enables
 

@@ -55,14 +55,31 @@ and λ moves from the 81st to the 77th percentile of expected prices.
 Units without storage keep cf. Iberdrola's TAMEGA has no SNIRH volume; pumped storage
 is left unadjusted.
 
-WHAT IT LEAVES OUT. Inflow uncertainty and the option value it gives the water, spill
-and minimum-flow rules, the head's dependence on the level, and the reservoir's own
-bounds (κ, κ̄ in §2.2). Pumped storage is included but its λ is an arbitrage value:
+OPTION VALUE (lam30w, lam30o; 2026-10-07): a test, not the cost. A unit does not know how
+much water the month will bring. If λ is convex in the running share, the expected λ over
+the possible shares exceeds λ at the expected share, and the gap is the water's option
+value. Example: a unit expecting to run 20% of hours prices at the 80th percentile; if it
+may run 10% or 30%, its water is worth the average of the 90th and 70th percentiles.
+  cf_w       cf_s with the unit's catchment rain added (RAIN_K days to D−2, z-score against
+             1991–2020, `build_catchment_rain.py`), or rain alone for units with no storage
+             series (JUCA, TAMEGA, TEES, VIES); fitted like cf_s.
+  lam30o     the mean of λ over the unit's own out-of-sample forecast errors (realised over
+             forecast capacity factor on the month's first day, the other years, calendar
+             months within ±SCENARIO_MONTHS) applied to cf_w; pumped storage left out.
+Result: under 1% (median λ30o / λ30w 0.99–1.01 by group, 1.00 by year to 2025). The errors
+are wide (realised over forecast: p10 0.40, p90 1.74) but λ is close to linear in the
+running share over that range. Rain adds nothing to fill (median 0.7% less error). So
+lam30s stays the cost.
+
+WHAT IT LEAVES OUT. Option value beyond the month (inflow uncertainty within it is
+tested above, and small), the reservoir's bounds (κ, κ̄ in §2.2), spill and minimum-flow
+rules, and the head's dependence on the level. Pumped storage is included but its λ is an arbitrage value:
 read it separately. It is a benchmark, not a measurement: under price-taking with
 unbiased forwards and the unit's usual release, this is what λ would be.
 
 WRITES outputs/tables/water_value_forward.parquet (unit, date, group, cls, zone, cf,
-cf_years, fwd, lam30, lam90, storage, fill, fill_anom, b_fill, cf_s, lam30s, lam90s) and
+cf_years, fwd, lam30, lam90, storage, fill, fill_anom, b_fill, cf_s, lam30s, lam90s, rain,
+b_fill_w, b_rain, cf_w, water, lam30w, lam30o, n_scen) and
 forward_price_quantiles.parquet (zone, date, H, q, price).
 """
 from __future__ import annotations
@@ -113,6 +130,9 @@ PT_SPELLS = [
 ]
 KNOWN_LAG = 2      # a reading is used from two days after its date
 STALE = 21         # days after which a reading is no longer used
+RAIN_K = 90        # days of catchment rain in the water forecast
+NORMAL = ("1991-01-01", "2020-12-31")
+SCENARIO_MONTHS = 1    # option value: forecast errors from calendar months within ±1 of the month
 
 
 def delivery(contract: str, maturity: str) -> tuple[pd.Timestamp, pd.Timestamp] | None:
@@ -319,6 +339,89 @@ def storage_cf(fill: pd.DataFrame, cf_raw: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def catchment_rain(days: pd.DatetimeIndex) -> pd.DataFrame:
+    """unit, date, rain: rain over the catchments of the unit's linked plants in the RAIN_K
+    days to D − KNOWN_LAG, as a z-score against the plant's 1991-2020 RAIN_K-day sums in the
+    same calendar month, capacity-weighted over the unit's plants (`build_catchment_rain.py`,
+    `build_hydro_plant_units.py`)."""
+    r = pd.read_parquet(DATA / "eobs/catchment_rain_daily.parquet")
+    w = r.pivot(index="date", columns="plant_id", values="rr").sort_index()
+    s = w.rolling(RAIN_K, min_periods=RAIN_K).sum()             # days (t − K, t]
+    base = s.loc[NORMAL[0]:NORMAL[1]]
+    mo = s.index.month
+    z = (s - base.groupby(base.index.month).mean().reindex(mo).to_numpy()) / \
+        base.groupby(base.index.month).std().reindex(mo).to_numpy()
+    z.index = z.index + pd.Timedelta(days=KNOWN_LAG)          # rain to D − 2 is known for D
+    z = z.reindex(days).rename_axis(index="date", columns="plant_id").stack().rename("z").reset_index()
+    links = pd.read_parquet(DATA / "omie/registry/hydro_plant_units.parquet",
+                            columns=["plant_id", "unit", "start", "end", "jrc_mw"])
+    m = z.merge(links, on="plant_id")
+    m = m[(m.date >= m.start) & (m.date < m.end)]
+    m["wz"] = m.jrc_mw * m.z
+    g = m.groupby(["unit", "date"])
+    return (g.wz.sum() / g.jrc_mw.sum()).rename("rain").reset_index()
+
+
+def water_cf(state: pd.DataFrame, cf_raw: pd.DataFrame) -> pd.DataFrame:
+    """unit, year, month, alpha_w, b_fill_w, b_rain: the monthly capacity factor on month
+    dummies, the fill anomaly and catchment rain on the month's first day, whichever the unit
+    has, fitted per unit on the other years."""
+    a = state[state.date.dt.day == 1].assign(year=lambda x: x.date.dt.year, month=lambda x: x.date.dt.month)
+    p = cf_raw.merge(a[["unit", "year", "month", "fill_anom", "rain"]], on=["unit", "year", "month"])
+    rows = []
+    for unit, pu in p.groupby("unit"):
+        xs = [c for c in ("fill_anom", "rain") if pu[c].notna().mean() > 0.8]
+        if not xs:
+            continue
+        pu = pu.dropna(subset=xs)
+        for Y in sorted(pu.year.unique()):
+            o = pu[pu.year != Y]
+            if Y < 2019 or len(o) < 36:
+                continue
+            X = (o[xs] - o.groupby("month")[xs].transform("mean")).to_numpy()
+            y = (o.cf - o.groupby("month").cf.transform("mean")).to_numpy()
+            b = np.linalg.lstsq(X, y, rcond=None)[0]
+            bb = dict(zip(xs, b))
+            alpha = o.groupby("month").cf.mean() - sum(bb[c] * o.groupby("month")[c].mean() for c in xs)
+            rows += [{"unit": unit, "year": Y, "month": mo, "alpha_w": al, "b_fill_w": bb.get("fill_anom", 0.0),
+                      "b_rain": bb.get("rain", 0.0)} for mo, al in alpha.items()]
+    return pd.DataFrame(rows)
+
+
+def scenarios(d: pd.DataFrame, cf_raw: pd.DataFrame, pred: str) -> pd.DataFrame:
+    """unit, year, month, ratios: the unit's forecast errors of its monthly capacity factor,
+    as realised over forecast on the month's first day, from the OTHER years and calendar
+    months within ±SCENARIO_MONTHS. Each is out of sample (the forecast for a year is fitted
+    on the other years)."""
+    f = d[d.date.dt.day == 1][["unit", "date", pred]].assign(year=lambda x: x.date.dt.year,
+                                                              month=lambda x: x.date.dt.month)
+    e = f.merge(cf_raw.rename(columns={"cf": "real"}), on=["unit", "year", "month"]).dropna(subset=[pred, "real"])
+    e["ratio"] = np.maximum(e.real, 0.005) / np.maximum(e[pred], 0.005)
+    by_unit = dict(tuple(e.groupby("unit")))
+    out = []
+    for (unit, Y, m), _ in f.groupby(["unit", "year", "month"]).size().items():
+        eu = by_unit.get(unit)
+        if eu is None:
+            continue
+        near = ((eu.month - m + 6) % 12 - 6).abs() <= SCENARIO_MONTHS
+        out.append((unit, Y, m, eu.loc[near & (eu.year != Y), "ratio"].to_numpy()))
+    return pd.DataFrame(out, columns=["unit", "year", "month", "ratios"])
+
+
+def lam_option(d: pd.DataFrame, cf: str, sc: pd.DataFrame, piv: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+    """λ with option value: the mean, over the unit's forecast-error scenarios, of the
+    1 − cf × ratio percentile of the zone-day's expected prices; and the number of scenarios."""
+    rows = piv.reindex(pd.MultiIndex.from_arrays([d.zone, d.date])).to_numpy()
+    k = d[["unit", "year", "month"]].merge(sc, on=["unit", "year", "month"], how="left").ratios
+    out, n = np.full(len(d), np.nan), np.zeros(len(d), int)
+    for i, (c, r, row) in enumerate(zip(d[cf].to_numpy(), k, rows)):
+        if not isinstance(r, np.ndarray) or len(r) < 6 or not np.isfinite(c) or not np.isfinite(row).all():
+            continue
+        t = np.clip(1 - np.clip(c * r, 0.0, 1.0), Q[0], Q[-1])
+        out[i], n[i] = np.interp(t, Q, row).mean(), len(r)
+    return out, n
+
+
 def lam(d: pd.DataFrame, cf: str, piv: pd.DataFrame) -> np.ndarray:
     """λ at the 1 − cf percentile of the zone-day's expected prices."""
     rows = piv.reindex(pd.MultiIndex.from_arrays([d.zone, d.date])).to_numpy()
@@ -335,8 +438,12 @@ def main() -> int:
     cf_raw = capacity_factors(u.unit.tolist())
     cf = leave_year_out(cf_raw)
     print(f"hydro units {len(u)} ({u.cls.value_counts().to_dict()}); with a leave-year-out cf: {cf.unit.nunique()}")
-    fill = storage_fill(pd.date_range("2018-01-01", END, freq="D"))
+    alldays = pd.date_range("2018-01-01", END, freq="D")
+    fill = storage_fill(alldays)
     fit = storage_cf(fill, cf_raw)
+    state = fill[["unit", "date", "fill_anom"]].merge(catchment_rain(alldays), on=["unit", "date"], how="outer")
+    state = state[state.unit.isin(u.unit[u.cls == "hydro"])]
+    fit_w = water_cf(state, cf_raw)
     days = pd.DataFrame({"date": pd.date_range(START, END, freq="D")})
     d = u.merge(days, how="cross")
     d["year"], d["month"] = d.date.dt.year, d.date.dt.month
@@ -347,18 +454,37 @@ def main() -> int:
     d["cf_s"] = (d.alpha + d.b_fill * d.fill_anom).clip(0.01, 0.99)
     d["cf_s"] = d.cf_s.fillna(d.cf)
     d["storage"] = np.where(d.alpha.notna() & d.fill_anom.notna(), d.storage, "none")
+    # WITH WATER AND OPTION VALUE (lam30w, lam30o): fill and catchment rain, then the forecast's
+    # own errors as scenarios
+    d = d.merge(state[["unit", "date", "rain"]], on=["unit", "date"], how="left")
+    d = d.merge(fit_w, on=["unit", "year", "month"], how="left")
+    d.loc[d.cls != "hydro", ["rain", "alpha_w"]] = np.nan
+    cw = d.alpha_w + d.b_fill_w * d.fill_anom.fillna(0.0).where(d.b_fill_w != 0, 0.0) \
+        + d.b_rain * d.rain.fillna(0.0).where(d.b_rain != 0, 0.0)
+    has = d.alpha_w.notna() & ~((d.b_fill_w != 0) & d.fill_anom.isna()) & ~((d.b_rain != 0) & d.rain.isna())
+    d["cf_w"] = cw.where(has).clip(0.01, 0.99).fillna(d.cf)
+    d["water"] = np.select([has & (d.b_fill_w != 0) & (d.b_rain != 0), has & (d.b_rain != 0),
+                            has & (d.b_fill_w != 0)], ["fill + rain", "rain", "fill"], "none")
+    sc = scenarios(d, cf_raw, "cf_w")
     for H in HORIZONS:
         piv = qs[qs.H == H].pivot_table(index=["zone", "date"], columns="q", values="price")
         d[f"lam{H}"] = lam(d, "cf", piv)
         d[f"lam{H}s"] = lam(d, "cf_s", piv)
+        if H == 30:
+            d["lam30w"] = lam(d, "cf_w", piv)
+            d["lam30o"], d["n_scen"] = lam_option(d, "cf_w", sc, piv)
+            d.loc[d.cls != "hydro", "lam30o"] = np.nan
     fw = qs[qs.H == HORIZONS[0]].drop_duplicates(["zone", "date"]).set_index(["zone", "date"]).fwd
     d["fwd"] = fw.reindex(pd.MultiIndex.from_arrays([d.zone, d.date])).to_numpy()
-    d = d.drop(columns=["year", "month", "alpha"])
+    d = d.drop(columns=["year", "month", "alpha", "alpha_w"])
     d.to_parquet(OUT, index=False)
     print(f"wrote {OUT.relative_to(ROOT)}: {len(d):,} unit-days, {d.unit.nunique()} units; "
-          f"λ30 defined on {d.lam30.notna().mean():.3f}; storage {d.storage.value_counts().to_dict()}")
-    print(d.groupby(d.date.dt.year)[["fwd", "lam30", "lam90", "lam30s", "cf", "cf_s"]].median().round(2).to_string())
+          f"λ30 defined on {d.lam30.notna().mean():.3f}; storage {d.storage.value_counts().to_dict()}; "
+          f"water forecast {d[d.cls == 'hydro'].drop_duplicates('unit').water.value_counts().to_dict()} units")
+    print(d.groupby(d.date.dt.year)[["fwd", "lam30", "lam90", "lam30s", "lam30w", "lam30o", "cf", "cf_s", "cf_w"]]
+          .median().round(2).to_string())
     check_storage(d, cf_raw, cf)
+    check_option(d)
     return 0
 
 
@@ -376,6 +502,27 @@ def check_storage(d: pd.DataFrame, cf_raw: pd.DataFrame, cf: pd.DataFrame) -> No
     print("\nstorage: the month's capacity factor predicted on its first day, out of sample")
     print(g.round(3).to_string())
     print(f"error falls for {(g.gain > 0).sum()} of {len(g)} units; median fall {g.gain.median():.1%}")
+    w = d[(d.date.dt.day == 1) & (d.water != "none")][["unit", "date", "water", "cf", "cf_s", "cf_w"]]
+    w = w.assign(year=w.date.dt.year, month=w.date.dt.month).merge(cf_raw.rename(columns={"cf": "real"}),
+                                                                    on=["unit", "year", "month"])
+    h = w.groupby(["water", "unit"]).apply(lambda x: pd.Series({
+        "months": len(x), **{f"rmse_{c}": np.sqrt(((x.real - x[c]) ** 2).mean()) for c in ("cf", "cf_s", "cf_w")}}),
+        include_groups=False)
+    h["gain_w_vs_s"] = 1 - h.rmse_cf_w / h.rmse_cf_s
+    print("\nwater (fill and catchment rain): the month's capacity factor predicted on its first day, out of sample")
+    print(h.round(3).to_string())
+    print(f"against cf_s, error falls for {(h.gain_w_vs_s > 0).sum()} of {len(h)} units; "
+          f"median {h.gain_w_vs_s.median():.1%}")
+
+
+def check_option(d: pd.DataFrame) -> None:
+    """Size of the option value: λ*30o over λ*30w by group and year (storage hydro)."""
+    x = d[(d.cls == "hydro") & d.lam30o.notna() & d.lam30w.notna() & (d.lam30w > 0)]
+    x = x.assign(ov=x.lam30o - x.lam30w, ratio=x.lam30o / x.lam30w)
+    print(f"\noption value: {len(x):,} unit-days, {x.unit.nunique()} units, median scenarios {x.n_scen.median():.0f}")
+    print(x.groupby("group")[["lam30w", "lam30o", "ov", "ratio"]].median().round(3)
+          .join(x.groupby("group").unit.nunique().rename("units")).to_string())
+    print(x.groupby(x.date.dt.year)[["lam30w", "lam30o", "ov", "ratio"]].median().round(3).to_string())
 
 
 if __name__ == "__main__":

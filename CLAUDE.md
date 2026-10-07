@@ -972,6 +972,28 @@ in a temporary file on REE's storage that was gone when served. The fetcher retr
 that error three times; a month still growing is asked for again on a later day, never
 twice on the same day.
 
+**Stored hydro energy — `data/esios/esios_623.parquet`**, fetched 2026-10-07 by
+`--ids 623 --geo 0 --start 2018-01-01 --end <today>`: **454 weeks, 2018-01-01 →
+2026-09-28, MWh, stamped on Mondays**; the weeks of 2025-01-20, 2025-01-27 and
+2025-05-26 are absent. Median 6.9 TWh in 2022 (the drought), 14.1 in 2026. **One
+peninsular series, not one per agent**, although the catalogue describes it as the
+storage "of each market agent": the API answers `disaggregated: False`, a request with
+no region filter returns only `Península`, and no other ESIOS indicator carries
+storage. It tracks MITECO's weekly total (below), which is dated one day later: level
+correlation 0.92, weekly change 0.91 (0.67 and 0.77 a week either side). Published on
+the third working day of the following week, so a week stamped Monday M is known for
+offers from about M + 10 days.
+
+**Per firm, Spanish storage comes from MITECO by basin** (`qa/check_hydro_storage_spain.py`).
+The large Spanish hydro units are registered by basin (`DUER` "UGH. DUERO", `UFMI`
+"UGH. UF-MIÑO", `TERE` "UGH. TER"), and a unit's monthly capacity factor moves with
+its own demarcation's fill (all reservoirs; `hydro_flag` misses Guadiana): correlation
+0.52–0.74 for 12 of 16 units, own basin first of 16 for 8 and top three for 13, above
+the national series for 11 (Ter 0.67 against 0.18, Hidrocantábrico 0.52 against 0.09).
+**Iberdrola's `JUCA` fails** (−0.17; the Júcar's large reservoirs serve irrigation),
+and `TEES`, `VIES` and `GDNA` are weak. It is the basin's fill, not the firm's own
+reservoirs: shared with other owners and with the state's irrigation and supply dams.
+
 ENTSO-E's token is still pending (ticket #9472601); `fetch/fetch_entsoe_spain.py`
 is written but never executed.
 
@@ -1152,7 +1174,8 @@ It is reported for 63–77% of Portuguese reservoir and pumped plants but only
 `build_storage_hours.py` turns it into hours of full output per OMIE cascade,
 for EDP's Portuguese units and Movhera, via a hand-checked plant→unit map (river
 plus a capacity sum matching `cab`). Every figure is a **lower bound**; see the
-script and `notes/rq-midday-hydro.md` §3.17. Spain is not built.
+script and `notes/rq-midday-hydro.md` §3.17. Spain is not built here; for Spanish
+storage over time use MITECO by basin or ESIOS 623 (see the ESIOS section).
 
 ### SNIRH — Portuguese reservoirs: weekly volume, hourly level, daily flows
 `data/snirh/snirh_reservoir_series.parquet`, fetched 2026-09-30 by

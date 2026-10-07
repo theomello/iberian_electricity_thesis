@@ -103,7 +103,32 @@ Here λ̂ is the volume-weighted median of a unit's offered hydro steps over the
   competitive water value when inflows are uncertain, never above.
 - Capacity factor from the unit's own history, not its reservoir: a dry year lowers the
   true release share and raises λ, and this misses it. Inflows and storage (SNIRH for
-  Portugal; ESIOS 623 or MITECO for Spain) are the next refinement.
+  Portugal; MITECO by basin for Spain, §5.1) are the next refinement.
+
+### 5.1 Spanish storage (2026-10-07)
+
+ESIOS 623 turned out to be one peninsular series, not one per market agent (CLAUDE.md,
+ESIOS section). The per-unit route is MITECO's weekly reservoirs by demarcation, since
+Spain's hydro units are registered by basin. `qa/check_hydro_storage_spain.py`: the
+monthly capacity-factor anomaly of each big Spanish unit against its own basin's fill
+anomaly, against the national series and against every other basin.
+
+| unit | basin | own | national | rank of 16 |
+|---|---|---|---|---|
+| DUER (Iberdrola) | Duero | 0.67 | 0.69 | 1 |
+| TAJO (Iberdrola) | Tajo | 0.68 | 0.57 | 1 |
+| SIL (Iberdrola) | Miño-Sil | 0.65 | 0.61 | 1 |
+| JUCA (Iberdrola) | Júcar | −0.17 | 0.39 | 16 |
+| EBRFEN (Endesa) | Ebro | 0.72 | 0.57 | 1 |
+| SBEU (Endesa) | Miño-Sil + Galicia Costa | 0.74 | 0.62 | 1 |
+| TERE (Endesa) | Catalan internal basins | 0.67 | 0.18 | 1 |
+| UFMI (Naturgy) | Miño-Sil | 0.66 | 0.45 | 1 |
+| HCHI (EDP) | Cantábrico Occidental | 0.52 | 0.09 | 2 |
+
+(Full table, 16 units, in the script's output.) Own basin ranks first for 8 of 16,
+top three for 13. Usable for every Spanish UGH except Júcar. Realised capacity factor
+is partly the firm's choice, so this shows the basin series carries unit-specific
+information, not that it is exogenous.
 - Forward risk premia move λ* with the forward.
 - Unit contents change: EDP moved ~1,000 MW from ACAVADO to ALIMA in March 2024.
 

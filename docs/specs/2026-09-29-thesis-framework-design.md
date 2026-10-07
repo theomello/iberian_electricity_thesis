@@ -218,6 +218,12 @@ control.
   independent-owner instrument. 2024–26 alone cannot reject Nash (F = 12), and a
   slow, weeks-long withholding is absorbed by the week fixed effect and left
   untested.
+- **The water value's level, 2026-10-07** (`rq-water-value-forward.md`): a price-taker's
+  λ* from OMIP forwards, last year's hourly price shape and the unit's usual capacity
+  factor (λ* = the 1 − cf percentile of expected prices over 30 or 90 days). It matches
+  the water value EDP's four big cascades reveal within 6% (correlations 0.81–0.91);
+  Iberdrola, Naturgy and Movhera offer half again to double it. Leg B in levels can use
+  λ̂ − λ*; the at-cost instrument can use λ* on hydro.
 - **Second pass, 2026-09-30 (§3.19): zero-price middays included — withdrawn with the first.** X is
   rebuilt from the bids for every clean period and reproduces the panel's X
   exactly where the panel has it. At a zero price, X ≈ 0: rivals' slope is nine

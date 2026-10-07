@@ -103,6 +103,7 @@ scripts/
 | `build/build_renewable_locations_v2.py` | the first pass + OSM turbine groups | no | `data/osm/renewable_unit_locations_v2.parquet` |
 | `build/build_renewable_locations_v3.py` | v2 + MITECO Electra register | no | `data/osm/renewable_unit_locations_v3.parquet` |
 | `build/build_water_value_forward.py` | OMIP + day-ahead prices + PDBF + `cab` + MITECO + SNIRH | no | `outputs/tables/water_value_forward.parquet`, `forward_price_quantiles.parquet` |
+| `build/build_hydro_cost.py` | `water_value_forward` + step caches + `cab` | no | `outputs/tables/hydro_cost_daily.parquet` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
 `lib/config.py` loads tokens from a gitignored `.env`; `lib/regions.py` gives a
@@ -1156,6 +1157,33 @@ amortisation, and uses static full-load efficiency, not the part-load
 figure a unit actually runs at) — API2 is the Rotterdam *import* benchmark,
 and some plants may have burned domestic Spanish coal at a different price
 before the mines closed.
+
+### The hydro cost — a price-taking water value per unit and day (frozen 2026-10-07)
+`outputs/tables/hydro_cost_daily.parquet`, built by `build/build_hydro_cost.py` from
+`build_water_value_forward.py`: **200,673 unit-days, 79 units (71 storage, 8 pumped),
+2019-01-01 → 2026-05-31**, cost defined on 98%. The storage-hydro counterpart of the
+implied gas and coal cost, and like it known when offers close (forwards and reservoir
+fill as of D−2). Use `cost_eur_mwh` (λ*30s); `cost_90_eur_mwh` is the check.
+
+What it is: the price a price-taker would put on its water, the (1 − running share)
+percentile of the prices expected over 30 days (OMIP Spanish settlement × last year's
+hourly shape), the running share being the unit's own capacity factor for that calendar
+month in the other years, moved by its reservoir fill (MITECO basin for Spain, SNIRH own
+reservoirs for Portugal). Detail in `notes/rq-water-value-forward.md`.
+
+- **Validated on the firm that behaves competitively**: EDP's revealed water value on its
+  four large cascades is within 6% of it (correlation 0.81–0.91).
+- **A lower bound**: no option value beyond the month and no reservoir bounds. Option value
+  from uncertain water within the month was tested and is under 1% (§5.4); storage moves
+  it by €0–4; catchment rain adds nothing to the fill.
+- **Not a measurement of any firm's water value**: the gap between offers and it is what
+  leg B tests (`notes/rq-leg-b-levels.md`).
+
+Flags: `pumped` (an arbitrage value, read apart); `zero_share` (offered hydro MW at ≤ €1
+that month; above 0.5 the cost does not describe the unit's offers: Endesa's `GDLQ` and
+34 mostly small aggregated units); `spell` (a >25% move in `cab` max power; it finds
+`ALIMA` 2024-03, `ACAVADO` 2024-04 and `ADOURO` 2021-10); `storage` (miteco, snirh, none:
+147,753 of the unit-days have no fill series and keep the unadjusted running share).
 
 ### JRC hydro plants and storage-hours — Portugal only, and a lower bound
 `data/jrc_hydro/jrc_hydro_plants.parquet`, fetched 2026-09-29, token-free: the

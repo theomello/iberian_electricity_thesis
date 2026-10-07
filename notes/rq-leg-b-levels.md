@@ -1,0 +1,137 @@
+# Leg B in levels: hydro offers against the price-taking water value
+
+Run 2026-10-07. Script `analysis/leg_b_levels.py`; results
+`outputs/tables/leg_b_levels_results.csv` and `leg_b_paper_method.csv`. Inputs: the
+hydro step rows of `step_estimator_hydro.py` (`rq-step-estimator.md` §6) and λ*30s from
+`build_water_value_forward.py` (`rq-water-value-forward.md` §5.2). Framework spec §2.2,
+leg B.
+
+**In one line.** Measured from the price-taking water value, hydro step prices do not
+rise with the firm's stake in a higher price across days either: with reactor outages as
+the instrument (F 21.5, against 5.6 within the day) β is −0.26, 95% set [−0.72, 0.04].
+Full market power (β = 1) is rejected in every specification that compares firms on the
+same hour and has a usable first stage; price-taking is not.
+
+## 1. The idea, with an example
+
+Iberdrola's Duero unit offers a step at €110 on a day when the price-taking water value
+λ* is €100: a gap of €10. If, at the price that step sets, Iberdrola gains from a higher
+price by X̃ = €20 (its net position over the slope of its residual demand), full market
+power predicts a gap of €20 and price-taking predicts zero on average. Leg A asked this
+within a day, with each unit's day level removed. Here the day's level stays in:
+
+    b_k − λ*_ud = β · X̃_k + e,     e = (λ_ud − λ*_ud) + error
+
+A firm holding water back raises the level of its offers for whole days, which unit ×
+day effects absorb. With λ* as the cost, unit × month effects suffice, so the variation
+across days within a month enters.
+
+## 2. Instruments
+
+The firm × forecast instruments again fail the overidentification test in every sample
+(empty Anderson–Rubin sets), as in §6 of the step note, and are not read. Two remain:
+
+- **Reactor outages by ownership share** (unplanned and planned dose). Multi-week, so they
+  barely move within a day (F 5.6 with unit × day effects) but move the day level:
+  **F 21.5 with unit × month effects**. This is the first stage leg B lacked since its
+  first pass was withdrawn (spec §4, §9.3).
+- **Regional wind deviation** (third location pass). F 16.8 within the day, 8.8 across
+  days.
+
+## 3. Results
+
+661,575 hydro steps set the price in at least one resampled draw, 46 units, 2019 →
+2025-09; 77% on units with a storage series; flat unit-days kept (their choice is the
+day's level).
+
+| fixed effects | instruments | β | F | 95% set (Anderson–Rubin) | p(β = 1) |
+|---|---|---|---|---|---|
+| unit × day (leg A; λ* cancels) | outages | −0.07 | 5.6 | [−0.78, 0.24] | 0.001 |
+| unit × day | regional wind | −0.31 | 16.8 | [−0.78, 0.04] | <0.001 |
+| **unit × month** | **outages** | **−0.26** | **21.5** | **[−0.72, 0.04]** | <10⁻¹⁴ |
+| unit × month | regional wind | −1.16 | 8.8 | [−3.78, −0.37] | <0.001 |
+| unit × month | outages + wind | −0.35 | 17.3 | [−0.83, −0.15] | <10⁻¹⁵ |
+| unit | outages | −0.30 | 15.3 | [−0.80, 0.31] | <0.001 |
+| unit | outages + wind | −0.35 | 10.3 | [−0.40, 0.20] | <0.001 |
+| unit, clock-hour effects only | outages | +0.30 | 15.1 | [−1.99, 2.36] | 0.52 |
+
+Least squares is +0.29 to +0.33 throughout (biased upward, step note §3). Every row but
+the last has class × hour-of-sample effects, so firms are compared on the same hour; the
+last relies on λ* alone for the common cost and is too noisy to read.
+
+**Checks, unit × month, outages** (outages + wind in brackets):
+
+| sample | β | 95% set |
+|---|---|---|
+| λ*90 instead of λ*30 | +0.07 (−0.06) | [−0.46, 0.43] (empty) |
+| λ* without storage | −0.27 (−0.35) | [−0.75, 0.03] ([−0.86, −0.14]) |
+| units with a storage series | −0.07 (−0.09) | [−0.97, 0.34], F 10 (empty, F 7) |
+| flat unit-days left out | −0.18 (−0.28) | [−0.91, 0.21] ([−0.98, −0.39]) |
+| storage hydro only, no pumped | −0.13 (−0.23) | [−0.82, 0.23] ([−0.93, −0.08]) |
+| six owners only | −0.24 (−0.33) | [−0.71, 0.05] ([−0.82, −0.16]) |
+| 2019–2023 | −0.17 (−0.25) | [−0.56, 0.12] ([−0.67, −0.04]) |
+| 2024 – 2025-09 | −1.00 (−1.15) | weak, F 3 (F 2) |
+| two slopes, β⁺ and β⁻ | | weak, F < 1 |
+
+- **Full market power is rejected across days** in every specification with hour
+  effects and F above 10, as it is within the day (leg A) and for thermal plant. The
+  upper end of every such set is at most 0.43.
+- **Price-taking is not rejected with outages alone** in any sample with F above 10.
+- **With outages and wind together the sets lie below zero** (−0.9 to −0.1), but that
+  set is empty with λ*90 and with the storage units alone, so the negative sign rests on
+  the instrument combination and the benchmark horizon. Not read as a finding. The point
+  estimates are negative in the same way as thermal plant after own reactor outages
+  (`rq-reactor-outages.md` §6): a firm that loses its own nuclear output prices its other
+  plant higher relative to cost, which the static condition does not predict.
+- **Storage in the benchmark changes nothing** (−0.26 with, −0.27 without).
+- **The solar years are not identified**: 2024–2025 has F 2–3.
+
+## 4. The paper's method on the same data
+
+Arzhintar, Leslie, Neill & Wyrwoll (2025, SSRN 5736763) recover the water value of the
+Snowy scheme from its offers: in intervals where its own plant sets the price, they
+assume full market power, λ̂ = p − n/|RD′| with contracts estimated, and fit λ̂ by
+least squares on futures, reservoir volume and snow. They find a futures coefficient of
+1.26 (Murray), negative on volume and snow.
+
+**The two approaches go in opposite directions.** They assume conduct (β = 1) and recover
+λ; this leg builds λ* without the offers and tests conduct. Their method cannot test
+β, and if β is below 1, as every test here finds, their λ̂ is biased down by
+(1 − β) · X.
+
+**Applied here** (steps that set the realised price, 19,059 unit-hours, 28 storage units):
+
+| group | hours | X at the price, median | λ* | λ̂ at β = 0 (the price) | λ̂ at β = 1 (the paper) |
+|---|---|---|---|---|---|
+| all | 19,059 | −0.49 | 93.3 | 76.2 | 77.6 |
+| EDP | 10,644 | −0.93 | 72.6 | 65.9 | 67.4 |
+| Iberdrola | 4,203 | +0.29 | 106.5 | 99.5 | 94.5 |
+| Endesa | 958 | −5.71 | 60.7 | 59.0 | 66.6 |
+| Naturgy | 919 | −2.07 | 52.5 | 50.5 | 52.6 |
+| Movhera | 1,557 | +1.89 | 120.2 | 105.0 | 104.4 |
+
+- **In the hours a storage unit sets the price, its firm's X is under €1–6/MWh.** So
+  assuming β = 1 or 0 changes λ̂ by a euro or two: the method recovers the price, and
+  in Iberia it could not tell conduct apart even if it tried.
+- **λ̂ tracks the forward one for one**, as in the paper: coefficient 1.10 (β = 1)
+  and 1.07 (β = 0) on the D−2 forward with unit effects, against 1.26 for Murray. It
+  correlates 0.92 with λ*.
+- **The storage coefficient has the wrong sign**: fuller reservoirs go with higher λ̂
+  (+0.9 €/MWh per 10 points of fill, se 0.45; Iberdrola +2.9, Naturgy +3.0, EDP +0.1), where
+  the paper finds lower (λ*s: −2.6 per 10 points, by construction). This is the
+  2026-08-18 finding again
+  (`hydro-water-value-design.md`): a firm that values its water highly offers high and
+  stays full for that reason, so volume in an ex post regression is a consequence of
+  the water value as well as its cause.
+- **Selection**: λ̂ sits 3–18% below λ* in these hours (EDP 9%, Iberdrola 7%), because a
+  storage unit sets the price when its step is cheap relative to its usual level.
+
+## 5. Limits
+
+- e contains the benchmark's error (option value, forward risk premium, a wrong capacity
+  factor). Outages are known at D−2 and partly in the forward, so they move the market's
+  λ*; the class × hour effects absorb that common move, and only the difference between
+  co-owners' doses identifies.
+- X̃ is defined on resampled draws; the slope floor (20 MW per €/MWh) drops thin bands.
+- The across-day margin is read within months; withholding spread over months is in the
+  unit-effect rows only, which are less precise.

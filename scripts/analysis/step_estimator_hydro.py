@@ -135,14 +135,16 @@ def fe_codes(s: pd.DataFrame) -> list[np.ndarray]:
     return [pd.factorize(c)[0] for c in (ud, ch, cp)]
 
 
-def est(d: pd.DataFrame, label: str, zs: list[str] | str, x: str = "Xt", xs2: tuple | None = None) -> dict:
-    """Weighted 2SLS of the step price on X̃ (or on X̃⁺ and X̃⁻ when xs2 is given)."""
-    s = d.dropna(subset=[x, "m_n"]).copy()
+def est(d: pd.DataFrame, label: str, zs: list[str] | str, x: str = "Xt", xs2: tuple | None = None,
+        y: str = "price", fe=fe_codes) -> dict:
+    """Weighted 2SLS of the step price (or `y`) on X̃ (or on X̃⁺ and X̃⁻ when xs2 is given),
+    with the fixed effects `fe(rows)` (unit × day, class × hour, class × position by default)."""
+    s = d.dropna(subset=[x, "m_n", y]).copy()
     if isinstance(zs, str) and zs == "firm forecasts":
         zs = zf(s)
     zs = list(zs)
     xs = list(xs2) if xs2 else [x]
-    s = s[(s.m_n > 0) & np.isfinite(s[["price", *xs, *zs]].to_numpy(float)).all(axis=1)]
+    s = s[(s.m_n > 0) & np.isfinite(s[[y, *xs, *zs]].to_numpy(float)).all(axis=1)]
     row = {"sample": label, "x": "+".join(xs), "instruments": ", ".join(zs) if len(zs) <= 3 else f"{len(zs)} firm × forecast",
            "n": len(s), "units": s.unit.nunique(), "groups": s.group.nunique(),
            "mean_x": np.average(s[xs[0]], weights=s.m_n)}
@@ -150,7 +152,7 @@ def est(d: pd.DataFrame, label: str, zs: list[str] | str, x: str = "Xt", xs2: tu
         print(f"  {label:58s} too few rows ({len(s):,})")
         return row | {"status": "too few rows"}
     wt = s.m_n.to_numpy(float)
-    M = wdemean(s[["price", *xs, *zs]].to_numpy(float), fe_codes(s), wt)
+    M = wdemean(s[[y, *xs, *zs]].to_numpy(float), fe(s), wt)
     r = np.sqrt(wt)
     k = len(xs)
     Y, X, Z = M[:, 0] * r, M[:, 1:1 + k] * r[:, None], M[:, 1 + k:] * r[:, None]

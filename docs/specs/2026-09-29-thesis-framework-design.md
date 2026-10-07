@@ -187,7 +187,7 @@ spec §5.
 
 **Verdict: within-day market power in storage hydro is at most small.**
 
-### Leg B — hydro across days: cost modelled by the Euler equation. **First pass withdrawn; untested.**
+### Leg B — hydro across days: cost modelled by the Euler equation. **First pass withdrawn; run in levels 2026-10-07: β −0.26 [−0.72, 0.04] with reactor outages (F 21.5), Nash rejected (`rq-leg-b-levels.md`).**
 
 **Withdrawn 2026-09-30** (`rq-midday-hydro.md` §3.20). On the exposed position
 the day's offered solar has no first stage for EDP's day-mean X (F 0.4–1.9 in
@@ -223,7 +223,18 @@ control.
   factor (λ* = the 1 − cf percentile of expected prices over 30 or 90 days). It matches
   the water value EDP's four big cascades reveal within 6% (correlations 0.81–0.91);
   Iberdrola, Naturgy and Movhera offer half again to double it. Leg B in levels can use
-  λ̂ − λ*; the at-cost instrument can use λ* on hydro.
+  λ̂ − λ*; the at-cost instrument can use λ* on hydro. With reservoir storage in it
+  (MITECO by basin, SNIRH), every group offers 0.90–1.19 × λ* at the volume it expects
+  to run: the 2–3× gap was turbine capacity without water (§5.3 of that note).
+- **Leg B in levels, 2026-10-07** (`rq-leg-b-levels.md`). The hydro step condition with
+  λ*30s as the cost, b_k − λ* = β·X̃_k, unit × month and class × hour effects, so the
+  day's level stays in. Reactor outages move the day level (F 21.5, against 5.6 within
+  the day): β −0.26, Anderson–Rubin [−0.72, 0.04]; with regional wind too −0.35
+  [−0.83, −0.15], a sign that does not survive λ*90. Nash rejected in every usable
+  specification, upper bound ≤ 0.43; price-taking not rejected with outages alone.
+  2024–2025 not identified (F 2–3). The stored-water paper (Arzhintar et al.
+  2025) recovers λ by assuming β = 1; on the hours a storage unit sets the price here,
+  X is under €1–6, so that assumption moves λ̂ by a euro or two and cannot test conduct.
 - **Second pass, 2026-09-30 (§3.19): zero-price middays included — withdrawn with the first.** X is
   rebuilt from the bids for every clean period and reproduces the panel's X
   exactly where the panel has it. At a zero price, X ≈ 0: rivals' slope is nine

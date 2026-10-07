@@ -36,6 +36,17 @@ firm's n, not the unit's cost: the firm's planned and unplanned reactor outages 
 `reactor_outage_dose.parquet`) and its regional wind deviation (`Wdev_fc`, as in
 `regional_wind_offer_test.py`). The least-squares fit is reported as a description.
 
+THE AT-COST INSTRUMENT (2026-10-07). Outside shocks to n are weak after mid-2021. The
+model gives an instrument of its own: X̃ evaluated on the curve the firm would offer
+as a price-taker in its thermal plant (`step_engine.py --comp`): its gas and coal steps
+moved to their cost, the same draws, X averaged over the NEAR draws whose price is
+nearest the cost. It shares the firm's position and the rivals' slopes with X̃ but
+not the step's own price, so an unmeasured cost that raises b_k does not move it.
+Two versions: at the unit's own cost (Zc), and at the day's median cost of the unit's
+fuel (Zb, main), so that an error in one unit's measured cost cannot enter either.
+Valid if the unmeasured cost is unrelated to rivals' curves on other days and to the
+firm's position, given the fixed effects; the outages give an overidentification check.
+
 SLOPE FLOOR. X̃ is undefined when rivals' mean slope over the active draws is below FLOOR
 (20 MW per €/MWh; 5 and 50 as checks). The ±5 €/MWh band is thin at the 150–300 €/MWh
 prices of 2021–2023 (median slope over marginal draws 76–190, against 450–485 in
@@ -46,6 +57,7 @@ Weights: number of draws in which the moment is active. Week clusters. Anderson�
 sets on GRID. 2019-01 → 2023-12, hourly.
 
 Writes outputs/tables/step_estimator_results.csv and step_estimator_rows.parquet.
+The at-cost instrument is joined from compcost_YYYYMM.parquet on every run.
 """
 from __future__ import annotations
 
@@ -76,6 +88,7 @@ TOP = 0.98
 FLOOR = 20             # MW per €/MWh: rivals' mean slope over the active draws (X undefined below)
 FLOORS = (5, 20, 50)
 WEAK_F = 10.0
+NEAR = 5               # draws per at-cost average (step_engine.NEAR)
 
 
 def months() -> list[str]:
@@ -138,6 +151,21 @@ def instruments(d: pd.DataFrame) -> pd.DataFrame:
     return d
 
 
+def at_cost(d: pd.DataFrame) -> pd.DataFrame:
+    """Zc, Zb: X on the price-taking thermal curve, over the NEAR draws nearest the unit's
+    cost (Zc) or its fuel's median cost that day (Zb); NaN below the slope floor."""
+    cols = ["hid", "group", "unit", "kn_sn", "kn_s", "kb_sn", "kb_s"]
+    c = pd.concat([pd.read_parquet(CACHE / f"compcost_{m}.parquet", columns=cols) for m in months()
+                   if (CACHE / f"compcost_{m}.parquet").exists()], ignore_index=True)
+    d = d.drop(columns=[x for x in cols[3:] + ["Zc", "Zb"] if x in d], errors="ignore")
+    d = d.merge(c.drop_duplicates(["hid", "group", "unit"]), on=["hid", "group", "unit"], how="left")
+    d["Zc"] = np.where(d.kn_s / NEAR >= FLOOR, d.kn_sn / d.kn_s.where(d.kn_s > 0), np.nan)
+    d["Zb"] = np.where(d.kb_s / NEAR >= FLOOR, d.kb_sn / d.kb_s.where(d.kb_s > 0), np.nan)
+    print(f"at-cost instrument: joined on {d.kn_s.notna().mean():.3f} of rows; Zb defined on "
+          f"{d.Zb.notna().mean():.3f}")
+    return d
+
+
 def wdemean(M: np.ndarray, codes: list[np.ndarray], w: np.ndarray, tol: float = 1e-8, maxit: int = 500) -> np.ndarray:
     """Weighted alternating projections."""
     M = M.astype(float).copy()
@@ -187,7 +215,8 @@ def fe_codes(s: pd.DataFrame, fe: str) -> list[np.ndarray]:
     fd = s.fuel + "_" + s.date.dt.strftime("%Y%m%d")
     fp = s.fuel + "_" + s.pos.astype(str)
     hr = s.period.astype(str)
-    sets = {"main": [um, fdh, fp], "date": [um, fd, fp, hr], "noladder": [um, fdh]}
+    ud = s.unit + "_" + s.date.dt.strftime("%Y%m%d")
+    sets = {"main": [um, fdh, fp], "date": [um, fd, fp, hr], "noladder": [um, fdh], "unitday": [ud, fdh, fp]}
     return [pd.factorize(c)[0] for c in sets[fe]]
 
 
@@ -250,6 +279,7 @@ def main() -> int:
         d = instruments(rows())
         d.to_parquet(ROWS, index=False)
         d = derive(d)
+    d = at_cost(d)
     describe(d)
     res = []
     p = d[d.m_n > 0]
@@ -268,6 +298,36 @@ def main() -> int:
     res.append(est(p[p.date >= "2021-07-01"], "mk", "Xt", "m_n", "2021 H2 – 2023, doses"))
     res.append(est(p[p.five], "mk", "Xt", "m_n", "five firms, doses"))
     res.append(est(p[~p.five], "mk", "Xt", "m_n", "other owners (LS only)", zs=()))
+
+    print("\nAT-COST INSTRUMENT: X̃ on the price-taking thermal curve (fuel-day cost unless stated)")
+    zb, zd = ("Zb",), ("Zb", "dose_unpl", "dose_plan")
+    res.append(est(p, "mk", "Xt", "m_n", "at cost, all", zs=zb))
+    res.append(est(p, "mk", "Xt", "m_n", "at cost (unit's own cost), all", zs=("Zc",)))
+    res.append(est(p[p.Zb.notna()], "mk", "Xt", "m_n", "doses alone, at-cost rows"))
+    res.append(est(p, "mk", "Xt", "m_n", "at cost + doses (overidentified)", zs=zd))
+    res.append(est(p, "mk", "Xt", "m_n", "at cost, fuel×date + hour effects", zs=zb, fe="date"))
+    res.append(est(p, "mk", "Xt", "m_n", "at cost, no ladder effects", zs=zb, fe="noladder"))
+    res.append(est(p, "mk", "Xt", "m_n", "at cost, unit × day effects", zs=zb, fe="unitday"))
+    res.append(est(p[p.date < "2021-07-01"], "mk", "Xt", "m_n", "at cost, unit × day effects, 2019 – 2021 H1",
+                   zs=zb, fe="unitday"))
+    res.append(est(p[p.date >= "2021-07-01"], "mk", "Xt", "m_n", "at cost, unit × day effects, 2021 H2 – 2023",
+                   zs=zb, fe="unitday"))
+    res.append(est(p[p.five], "mk", "Xt", "m_n", "at cost, unit × day effects, five firms", zs=zb, fe="unitday"))
+    res.append(est(p[~p.five], "mk", "Xt", "m_n", "at cost, unit × day effects, other owners", zs=zb, fe="unitday"))
+    res.append(est(p[p.fuel == "gas"], "mk", "Xt", "m_n", "at cost, unit × day effects, gas", zs=zb, fe="unitday"))
+    res.append(est(p[p.date < "2021-07-01"], "mk", "Xt", "m_n", "at cost, fuel×date + hour effects, 2019 – 2021 H1",
+                   zs=zb, fe="date"))
+    res.append(est(p[p.date >= "2021-07-01"], "mk", "Xt", "m_n", "at cost, fuel×date + hour effects, 2021 H2 – 2023",
+                   zs=zb, fe="date"))
+    res.append(est(p, "mk", "Xt5", "m_n", "at cost, slope floor 5", zs=zb))
+    res.append(est(p, "mk", "Xt50", "m_n", "at cost, slope floor 50", zs=zb))
+    res.append(est(p[p.Xt.abs() <= 30], "mk", "Xt", "m_n", "at cost, |X̃| ≤ 30", zs=zb))
+    res.append(est(p[p.fuel == "gas"], "mk", "Xt", "m_n", "at cost, gas", zs=zb))
+    res.append(est(p[p.fuel == "coal"], "mk", "Xt", "m_n", "at cost, coal", zs=zb))
+    res.append(est(p[p.date < "2021-07-01"], "mk", "Xt", "m_n", "at cost, 2019 – 2021 H1", zs=zb))
+    res.append(est(p[p.date >= "2021-07-01"], "mk", "Xt", "m_n", "at cost, 2021 H2 – 2023", zs=zb))
+    res.append(est(p[p.five], "mk", "Xt", "m_n", "at cost, five firms", zs=zb))
+    res.append(est(p[~p.five], "mk", "Xt", "m_n", "at cost, other owners", zs=zb))
 
     gp = d[(d.g_n > 0) & ~d.top & ~d.minload]
     print("\nLENGTH MOMENTS: p̄ − c = β·X̄ over gap draws, chosen boundaries only (weights: gap draws)")

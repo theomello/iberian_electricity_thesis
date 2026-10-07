@@ -13,6 +13,12 @@ in 2019 – mid-2021, where the instrument is strongest (F 23) and full Nash is
 rejected. The step-length conditions fail, which says the lengths are set by the
 plants, not chosen.
 
+**Added 2026-10-07 (§7).** An instrument built from the model, X̃ on the curve the firm
+would offer at cost, is strong (F 200–700) and rejects full Nash in every
+specification: β −0.08, set [−0.19, 0.02], with unit × day effects. Its sign moves with
+the fixed effects (−0.27 to +0.10 on all years), so it settles the upper bound, not the
+sign.
+
 ## 1. The idea, with an example
 
 A gas plant offers its first 200 MW at €60 and the next 100 MW at €90. It does not
@@ -245,3 +251,70 @@ other owners' gas and coal steps show +0.51 with no stake in the price). The two
 plausible instruments put β between about −0.8 and 0.4. That is the thermal result
 again: well below Nash, not separable from price-taking. It covers the within-day
 margin only; the water value's level, the across-day margin, is still untested.
+
+## 7. An instrument from the model: X̃ at cost (2026-10-07)
+
+**The idea, with an example.** Iberdrola offers a gas step at €95 against a measured
+cost of €90. A step priced higher sets the price only in tighter draws, so its X̃ is
+computed there. If the extra €5 is a cost we do not see, least squares reads it as
+market power, which is why X̃ needs an instrument. Now move Iberdrola's gas and coal
+steps to their cost and clear the same 40 draws again. X in the draws whose price
+lands nearest €90 depends on Iberdrola's position and on rivals' slopes, which is what
+X̃ measures, but not on the €95. That is the instrument: X̃ on the curve the firm would
+offer as a price-taker in its thermal plant. It evaluates the endogenous term with the
+unobserved cost set to zero, as Berry, Levinsohn & Pakes (1999) approximate optimal
+instruments. It needs no outside shock, so it is not limited by how rarely reactors trip.
+
+**Built.** `step_engine.py --comp` (60 months, about 95 s each): the same draws and
+shifts as §2; the firm's non-withdrawn gas and coal steps moved to their unit's cost
+(97% of their MW is found in the effective curve and moved). A unit's cost point sets
+the price in at least one draw for only 14% of unit-hours (June 2019), so X is averaged
+over the 5 draws whose price is nearest the cost: the unit's own cost (Zc) or the
+median cost of its fuel that day (Zb, used below unless stated), so that an error in
+one unit's measured cost cannot enter the instrument. Also written, not used: the
+exact events at the cost point and a ±5 €/MWh band. The draws' prices sit a median
+1.2 €/MWh from the cost.
+
+**Results** (price moments of §3, same rows, weights and week clusters):
+
+| fixed effects | least squares | β (2SLS) | F | 95% set (AR) |
+|---|---|---|---|---|
+| unit × month, fuel × hour, ladder (as §3) | +0.14 | −0.27 (0.05) | 492 | [−0.37, −0.18] |
+| same, at the unit's own cost (Zc) | +0.14 | −0.23 (0.05) | 543 | [−0.32, −0.13] |
+| same, at cost + reactor outages | | −0.27 (0.05) | 201 | [−0.38, −0.17] |
+| fuel × date and hour | +0.18 | +0.10 (0.04) | 602 | [0.04, 0.17] |
+| **unit × day, fuel × hour, ladder** | +0.16 | **−0.08 (0.06)** | 222 | **[−0.19, 0.02]** |
+
+| period | unit × month (as §3) | unit × day | fuel × date and hour |
+|---|---|---|---|
+| 2019 – 2021 H1 | −0.03 [−0.10, 0.04] | +0.12 [0.03, 0.20] | +0.46 [0.35, 0.57] |
+| 2021 H2 – 2023 | −0.29 [−0.38, −0.19] | −0.09 [−0.20, 0.01] | −0.03 [−0.11, 0.05] |
+
+Other checks, §3 effects: slope floor 5 −0.20 [−0.28, −0.12], floor 50 −0.40
+[−0.52, −0.27], |X̃| ≤ 30 −0.53 [−0.72, −0.35]; gas −0.27, coal +0.04 [−0.39, 0.28];
+five firms −0.25 [−0.35, −0.15] (unit × day −0.08 [−0.20, 0.03]); other owners +1.55
+[−0.92, 3.83] (unit × day +1.18 [−0.31, 2.93]; their X̃ is small, so β is imprecise).
+
+**Reading.**
+
+- **The instrument is strong**: F 200–700, against 10 for the outages. Full Nash
+  (β = 1) is rejected in every specification on all steps, on gas, on coal and on
+  the five firms, with p below 10⁻¹¹. The highest upper bound among them is 0.57;
+  with unit × day effects it is 0.20. Only the other owners' set includes 1.
+- **The outages agree with it**: together the set is [−0.38, −0.17], not empty; the
+  outages alone give [−0.68, 1.02] on the same rows.
+- **The sign depends on which variation is used.** Within the hour and across days of
+  a month (§3 effects) β is negative; holding each unit's day fixed takes it to −0.08,
+  which contains 0; using the shape of each day (fuel × date and hour) makes it
+  positive, +0.46 in 2019 – mid-2021. With a strong instrument, estimates that move
+  with the fixed effects mean that something tied to the firm's position also moves
+  its step prices in some dimensions. One candidate is commitment: a firm that is
+  short on a day (reactor or hydro output low) starts more thermal plant, and start-up
+  costs show in its step prices. That is the same pattern outages and rain gave
+  (`rq-reactor-outages.md` §10: a shock cutting a firm's cheap output raises its
+  thermal offers). Unit × day effects take out each unit's daily commitment state, as
+  the hydro rows of §6 do, and are preferred on that ground. That choice was made
+  after seeing the §3-effects estimate, so all three columns are reported.
+- **What it settles: the upper bound, not the sign.** β is small: [−0.19, 0.02] with
+  unit × day effects, and below 0.6 in every specification. Price-taking is not
+  rejected in the preferred one; a small negative β is not ruled out.

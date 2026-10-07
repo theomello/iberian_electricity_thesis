@@ -40,6 +40,23 @@ WRITES outputs/cache/step/moments_YYYYMM.parquet (hydro: hmoments_YYYYMM), one r
 and realised: r_event (1 marginal at q_k, 2 gap above q_k, 0 neither), r_p, r_n, r_s.
 Also moments_targets_YYYYMM.parquet: per target, the draws' mean and sd of p*, H's p*
 and the realised clearing price.
+
+AT COST (`--comp`, thermal only; 2026-10-07). The same draws, with f's own gas and coal
+steps moved from their offer prices to their unit's cost (`cost` in units_YYYYMM): the
+curve f would offer as a price-taker in its thermal plant, everything else as offered.
+X evaluated there does not depend on f's thermal offer prices, so it does not carry an
+unobserved part of their cost; it is the instrument for X̃ in `step_estimator.py`
+(evaluating the endogenous term at the unobservable's value zero, as Berry, Levinsohn &
+Pakes 1999 approximate optimal instruments). Writes compcost_YYYYMM.parquet, one row per
+(H, f, unit) for f's non-withdrawn thermal units:
+  cm_n, cm_sn, cm_s   draws in which the unit's cost point sets the price: count, sums of n, |RD′|
+  ck_n, ck_sn, ck_s   draws whose price lies within ±H_BAND of the unit's cost
+  ak_n, ak_sn, ak_s   the same band on the ACTUAL curve (a check: it keeps f's other offers)
+  kn_sn, kn_s, kn_dist  the NEAR draws whose price is nearest the cost: sums of n, |RD′|, and
+                      their mean distance from it (always defined)
+  cbar, kb_sn, kb_s   the same at the day's median cost of the unit's fuel instead of its own
+                      cost, so that an error in one unit's cost cannot enter
+  moved_mw, offer_mw  thermal MW found in f's curve at the unit's offer prices and moved
 """
 from __future__ import annotations
 
@@ -65,6 +82,7 @@ MIN_SLOPE = 5.0        # MW per €/MWh
 OFF, W = 1000.0, 20000.0          # price keys: hour_index * W + price + OFF
 OFF2, W2 = 2.0e5, 1.0e6           # value keys: hour_index * W2 + ES + OFF2
 SENTINEL = -999.0
+NEAR = 5               # --comp: draws nearest the unit's cost
 
 
 def months_around(ym: str) -> list[str]:
@@ -180,7 +198,27 @@ def clear(blk: Block, g: str, q: np.ndarray, vs: np.ndarray, vb: np.ndarray, dra
     return {"p": p, "n": n, "s": s, "s_rel": s_rel, "kstar": kstar, "kgap": kgap}
 
 
-def month(ym: str, sh: pd.DataFrame, kind: str = "thermal") -> tuple[pd.DataFrame, pd.DataFrame]:
+def at_cost(q: np.ndarray, vs: np.ndarray, vb: np.ndarray, uu: pd.DataFrame) -> tuple:
+    """Own curve with the thermal steps in `uu` (price, mw, cost) moved to their cost.
+    Only the MW actually present at a step's price is moved (the effective curve can hold
+    less than offered). Returns q, vs, vb of the new curve and the moved MW per uu row."""
+    pr = uu.price.to_numpy(float)
+    th = pd.Series(uu.mw.to_numpy(float), index=pr).groupby(level=0).sum()
+    have = pd.Series(vs, index=q).groupby(level=0).sum()
+    scale = (np.minimum(th, have.reindex(th.index).fillna(0.0)) / th).fillna(0.0)
+    moved = uu.mw.to_numpy(float) * scale.reindex(pr).to_numpy()
+    take = pd.Series(moved, index=pr).groupby(level=0).sum()
+    vs2 = vs - take.reindex(q).fillna(0.0).to_numpy()
+    c = np.round(uu.cost.to_numpy(float), 2)
+    cur = pd.DataFrame({"price": np.concatenate([q, c]), "vs": np.concatenate([vs2, moved]),
+                        "vb": np.concatenate([vb, np.zeros(len(c))])})
+    cur = cur.groupby("price", sort=True)[["vs", "vb"]].sum()
+    cur = cur[(cur.vs > 1e-9) | (cur.vb > 1e-9)]
+    return cur.index.to_numpy(float), cur.vs.to_numpy(float), cur.vb.to_numpy(float), moved
+
+
+def month(ym: str, sh: pd.DataFrame, kind: str = "thermal",
+          comp: bool = False) -> tuple[pd.DataFrame, pd.DataFrame]:
     hours, market, own, units = load(ym, kind)
     blk = Block(hours, market, own)
     h = hours.copy()
@@ -189,6 +227,9 @@ def month(ym: str, sh: pd.DataFrame, kind: str = "thermal") -> tuple[pd.DataFram
     valid = h.valid.fillna(False).to_numpy()
     t_units = units[units.group.notna() & ~units.withdrawn]
     own_idx = own.set_index(["hid", "group"]).sort_index()
+    # --comp: the day's typical cost of each fuel, median over the units offering it
+    cbar = (t_units.assign(date=t_units.hid.map(h.set_index("hid").date))
+            .groupby(["date", "fuel"]).cost.median())
     shw = sh.set_index("group")
     out, tg = [], []
     in_month = pd.to_datetime(h.date).dt.strftime("%Y%m") == ym
@@ -216,6 +257,34 @@ def month(ym: str, sh: pd.DataFrame, kind: str = "thermal") -> tuple[pd.DataFram
             shift = ((1 - d_f) * (H.F_demand - dF.F_demand.to_numpy())
                      - (1 - w_f) * (H.F_wind - dF.F_wind.to_numpy())
                      - (1 - s_f) * (H.F_solar - dF.F_solar.to_numpy()))
+            if comp:
+                uu = t_units[(t_units.hid == H.hid) & (t_units.group == g)]
+                q2, vs2, vb2, moved = at_cost(q, vs, vb, uu)
+                rc = clear(blk, g, q2, vs2, vb2, cand, shift)
+                ra = clear(blk, g, q, vs, vb, cand, shift)
+                cu = np.round(uu.cost.to_numpy(float), 2)
+                ku = np.minimum(np.searchsorted(q2, cu), len(q2) - 1)
+                ku = np.where(q2[ku] == cu, ku, -2)                 # -2: nothing offered at the cost
+                cm = rc["kstar"][None, :] == ku[:, None]             # units x draws
+                ck = np.abs(rc["p"][None, :] - cu[:, None]) <= H_BAND
+                ak = np.abs(ra["p"][None, :] - cu[:, None]) <= H_BAND
+                dist = np.abs(rc["p"][None, :] - cu[:, None])
+                near = np.zeros_like(dist, dtype=bool)
+                np.put_along_axis(near, np.argsort(dist, axis=1, kind="stable")[:, :NEAR], True, axis=1)
+                cb = np.round(uu.fuel.map(cbar.loc[H.date]).to_numpy(float), 2)
+                distb = np.abs(rc["p"][None, :] - cb[:, None])
+                nearb = np.zeros_like(distb, dtype=bool)
+                np.put_along_axis(nearb, np.argsort(distb, axis=1, kind="stable")[:, :NEAR], True, axis=1)
+                out.append(pd.DataFrame({
+                    "hid": H.hid, "group": g, "unit": uu.unit.to_numpy(), "offer": uu.price.to_numpy(float),
+                    "cost": cu, "n_draws": len(cand),
+                    "cm_n": cm.sum(1), "cm_sn": cm @ rc["n"], "cm_s": cm @ rc["s"],
+                    "ck_n": ck.sum(1), "ck_sn": ck @ rc["n"], "ck_s": ck @ rc["s"],
+                    "ak_n": ak.sum(1), "ak_sn": ak @ ra["n"], "ak_s": ak @ ra["s"],
+                    "kn_sn": near @ rc["n"], "kn_s": near @ rc["s"], "kn_dist": (near * dist).sum(1) / NEAR,
+                    "cbar": cb, "kb_sn": nearb @ rc["n"], "kb_s": nearb @ rc["s"],
+                    "moved_mw": moved, "offer_mw": uu.mw.to_numpy(float)}))
+                continue
             r = clear(blk, g, q, vs, vb, cand, shift)
             rr = clear(blk, g, q, vs, vb, np.array([hi_]), np.zeros(1))
             K = len(q)
@@ -250,6 +319,8 @@ def month(ym: str, sh: pd.DataFrame, kind: str = "thermal") -> tuple[pd.DataFram
             tg.append({"hid": H.hid, "group": g, "p_star": H.p_star, "p_clear": H.p_clear,
                        "r_p": rr["p"][0], "draw_p_mean": r["p"].mean(), "draw_p_sd": r["p"].std(),
                        "n_own_prices": K, "shift_abs_mean": np.abs(shift).mean()})
+    if comp:
+        return pd.concat(out, ignore_index=True), pd.DataFrame()
     return pd.concat(out, ignore_index=True), pd.DataFrame(tg)
 
 
@@ -257,11 +328,19 @@ def main() -> int:
     ap = ArgumentParser(description=__doc__)
     ap.add_argument("--months", nargs="+", required=True)
     ap.add_argument("--kind", choices=list(KINDS), default="thermal")
+    ap.add_argument("--comp", action="store_true", help="thermal steps at cost (compcost_YYYYMM)")
     args = ap.parse_args()
     sh = shares()
     out = KINDS[args.kind][1]
     for ym in args.months:
         t0 = time.time()
+        if args.comp:
+            m, _ = month(ym, sh, "thermal", comp=True)
+            m.to_parquet(CACHE / f"compcost_{ym}.parquet", index=False)
+            print(f"  {ym}: {len(m):,} unit-hours; MW moved {m.moved_mw.sum() / m.offer_mw.sum():.3f} of offered; "
+                  f"cost point sets p in ≥1 draw {(m.cm_n > 0).mean():.3f}, price within ±{H_BAND:g} of cost in "
+                  f"≥1 draw {(m.ck_n > 0).mean():.3f} ({time.time() - t0:.0f} s)", flush=True)
+            continue
         m, t = month(ym, sh, args.kind)
         m.to_parquet(CACHE / f"{out}_{ym}.parquet", index=False)
         t.to_parquet(CACHE / f"{out}_targets_{ym}.parquet", index=False)

@@ -689,7 +689,14 @@ That is what leg C in levels needs.
    value differenced out by unit × day effects: reactor outages β +0.06, set
    [−0.73, 0.37] (F 5); regional wind −0.17, [−0.83, 0.38] (F 11); Nash rejected by
    both. Firm × forecast instruments (F 45–127) give an empty set in every sample: they
-   reach hydro offers by routes other than X.
+   reach hydro offers by routes other than X. Regional wind on 78.5% located wind
+   (2026-10-06): −0.12, [−0.61, 0.31] (F 14).
+   *At-cost instrument, run 2026-10-07* (`rq-step-estimator.md` §7): X̃ on the curve
+   the firm would offer with its gas and coal at cost, the same draws. F 200–700;
+   full Nash rejected in every specification (p < 10⁻¹¹). With unit × day effects
+   β −0.08, [−0.19, 0.02]; the sign moves with the fixed effects (−0.27 to +0.10 on all
+   years, +0.46 in 2019–2021 H1 with fuel × date and hour), so it bounds β from above
+   (below 0.6 everywhere) and leaves the sign open. Outages agree with it.
 
 *To verify before use*: the IVPEE decree chain and dates; the reasons OMIE's
 `indisp` gives for each reactor outage; whether Portugal's CESE has any per-MWh

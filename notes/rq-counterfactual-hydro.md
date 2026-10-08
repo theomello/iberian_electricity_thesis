@@ -97,10 +97,12 @@ bound: it removes every markup over the benchmark and releases more water than w
 
 **The comparison of offers with the cost at the expected running share** (`rq-water-value-forward.md`
 §5.3–5.4: Iberdrola 1.19–1.21, Naturgy 1.13–1.40) reads the auction curve at the unit's
-running share. For units selling most of their hydro bilaterally the auction curve is only
-the capacity left after the contracts, so the share of it the unit expects to sell is
-smaller, the read point lower and the offer price lower. Those ratios overstate the gap
-for Iberdrola, Endesa and Naturgy. Not yet redone.
+running share. Expected here: for units selling most of their hydro bilaterally, the
+water left for the auction is smaller, so the read point and the offer price are lower and
+those ratios overstate the gap. Redone 2026-10-08 (§5.5 of that note), this holds for
+Iberdrola only (1.16 → 1.11 on the same days; 1.21 → 1.07 in 2025). Endesa and Naturgy
+offer only part of their capacity in the auction, so their read point rises: Endesa 1.13 →
+1.35, Naturgy 1.19 → 1.22. Their gaps from 2022 stay.
 
 ## 6. Limits
 

@@ -19,6 +19,12 @@ Naturgy and Movhera is not scarce water: it is the price of turbine capacity wit
 behind it. Read at each unit's expected running share, offers over λ* are EDP 0.90,
 Endesa 0.92, Movhera 0.93, Naturgy 1.13, Iberdrola 1.19.
 
+**Addendum, bilateral contracts (§5.5).** Reading the auction offer at the water left after
+each unit's bilateral contracts narrows Iberdrola's gap (1.16 → 1.11; 1.21 → 1.07 in 2025)
+but not Naturgy's (1.19 → 1.22) and widens Endesa's (1.13 → 1.35), because those two offer
+only part of their capacity in the auction. On 29–31% of Iberdrola's and Naturgy's days
+the contracts alone take all the expected water.
+
 ## 1. The idea, with an example
 
 A reservoir whose turbines can run 25% of the hours of the coming month, on the water it
@@ -246,6 +252,60 @@ enough to matter. What remains between Iberdrola's, Naturgy's and Endesa's offer
 interannual reservoirs), the cascade's within-day constraints (§5.3), or holding water
 back. Leg B (`rq-leg-b-levels.md` §5) finds the last does not move with the firm's
 incentive X.
+
+### 5.5 Net of bilateral contracts (2026-10-08)
+
+`analysis/water_value_forward_check.py`, rows `net of contracts`. Much of Iberdrola's and
+Endesa's hydro, and from mid-2022 almost all of Naturgy's (90–100% of UFMI, UFGC and UFTA
+output), is delivered under bilateral contracts (PDBF role 4), outside the auction
+(`rq-counterfactual-hydro.md` §2). §5.3 read the auction curve at the running share cf_s
+of the volume offered, which assumes the auction offer is the unit's whole capacity and
+its whole water. Net of contracts, the read point is the water left after the contracts
+over what was offered.
+
+Example: a unit expecting 100 MWh of water on a day sells 70 MWh bilaterally and offers
+150 MWh in the auction. Its water for the auction is 30 MWh, so the curve is read at
+30 / 150 = 20%. Water and contracts are pooled over the month (the cost is a 30-day
+value, and contracts move volume between days); the daily version gives the same ratios
+to within 0.03.
+
+**The correction moves the read point in both directions.** Subtracting the contracts
+lowers it. But Endesa and Naturgy offer only part of their capacity in the auction (Endesa's
+Ebro unit, January 2020: 9% of its capacity-hours, the rest sold bilaterally or not
+offered), so their water is a larger share of what they offer, and that raises it. Median
+read point against cf_s: Iberdrola 0.07 against 0.19, Endesa 0.70 against 0.17, Naturgy 0.25
+against 0.13, EDP 0.20 against 0.17. On some days the contracts alone take all the
+expected water, and no read point exists: Iberdrola 29% of unit-days, Naturgy 31% (52–59%
+from 2022), Endesa 15%. On those days the offers at cf_s are high (Iberdrola 1.37 × λ*,
+Naturgy 1.93), consistent with offering water beyond the expected volume at a higher
+value.
+
+Offer over λ*30s, storage units, on the days both read points exist and are above €1:
+
+| group | unit-days | at cf_s (§5.3) | net of contracts |
+|---|---|---|---|
+| EDP | 13,786 | 0.94 | 0.95 |
+| Endesa | 4,900 | 1.13 | 1.35 |
+| Iberdrola | 6,523 | 1.16 | 1.11 |
+| Naturgy | 2,888 | 1.19 | 1.22 |
+| Movhera | 1,279 | 0.95 | 0.98 |
+
+By year, at cf_s → net: Iberdrola 1.48 → 1.35 (2023), 1.27 → 1.17 (2024), 1.21 → 1.07
+(2025); Naturgy 1.60 → 1.62, 2.72 → 2.82, 1.38 → 1.43, 1.29 → 1.33 (2022–2025); Endesa
+2.10 → 2.11, 1.87 → 1.88, 1.51 → 1.61 (2023–2025).
+
+**Reading.**
+- **The contracts explain part of Iberdrola's gap, not Naturgy's or Endesa's.** Of
+  Iberdrola's 2025 ratio of 1.62 in §5.4, about 0.4 comes from days left out here, mostly
+  the 33% of its days on which its contracts take all its expected water; on the remaining
+  days the ratio falls from 1.21 to 1.07 once the contracts are subtracted. Naturgy's and
+  Endesa's gaps from 2022 stay.
+- **The §5.4 ratios mixed in the fully contracted days.** For Naturgy those are half of its
+  days from 2022, so its 1.40 is partly the price of water it was not expected to have.
+- Reading the expected water against declared capacity (`cab` max power) assumes the whole
+  cascade is available. If part of the capacity is out of service, or held back for the
+  intraday and balancing markets, which this water budget does not count, the read point
+  for Endesa and Naturgy is overstated.
 
 ## 6. What it enables
 

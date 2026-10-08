@@ -26,7 +26,9 @@ only part of their capacity in the auction. On 29–31% of Iberdrola's and Natur
 the contracts alone take all the expected water.
 That unoffered capacity is not out of service (§5.6): declared outages explain 96% of what
 Iberdrola leaves unoffered but 17% of Endesa's and Naturgy's. Nor is most of it offered in
-the intraday sessions (§5.7): Endesa 2–4% of the rest, Naturgy 16–42%.
+the intraday sessions (§5.7): Endesa 2–4% of the rest, Naturgy 16–42%. Reserves cannot
+hold most of Endesa's: Spain's whole upward secondary band covers at most 42% of it
+(§5.8).
 
 ## 1. The idea, with an example
 
@@ -308,7 +310,7 @@ By year, at cf_s → net: Iberdrola 1.48 → 1.35 (2023), 1.27 → 1.17 (2024), 
 - Reading the expected water against declared capacity (`cab` max power) assumes the whole
   cascade is available. Declared outages explain little of what Endesa and Naturgy leave
   unoffered, and taking them out barely moves the ratios (§5.6); little of it is offered
-  intraday (§5.7). Balancing reserves are not tested.
+  intraday (§5.7); reserves cannot hold most of Endesa's (§5.8).
 
 ### 5.6 Is the unoffered capacity out of service? Mostly not (2026-10-08)
 
@@ -385,9 +387,38 @@ Example: a unit leaves 290 MW unexplained in an hour, and offered 420 MW day-ahe
   intraday**: about 80% of Endesa's unoffered capacity and 48–70% of Naturgy's.
 
 Not tested: the continuous intraday market (trades between the auction sessions; OMIE's
-`trades`, not on disk) and balancing reserves (no per-unit data on disk; REE publishes
-reserve allocations by programming unit in ESIOS, which would need a download). A
-cascade unit can hold turbine capacity for upward reserves without offering its energy.
+`pibcic`, one month on disk). Reserves: §5.8.
+
+### 5.8 Reserves cannot hold Endesa's; Naturgy's only if it held most of Spain's (2026-10-08)
+
+A cascade unit can keep turbine capacity free for upward reserve without offering its
+energy. Per-unit reserve allocations are in REE's I90DIA workbook (sheet I90DIA05), not
+on disk (`continuous-intraday-data.md` §4). A bound needs only the system total: the
+upward secondary regulation band REE allocated to the whole peninsula each hour (ESIOS
+632, every technology and firm). If that is smaller than a group's unoffered capacity left
+after outages and the intraday upper bound, reserves cannot explain the rest even if every
+MW of the band came from that group's hydro.
+
+Example: in an hour Endesa's units leave 1,800 MW unoffered that no outage or intraday
+offer accounts for, and REE allocates 760 MW of upward band to the whole system. Reserves
+can explain at most 760 MW, 42%.
+
+| | left unexplained, mean MW | whole system's upward band, mean MW | band over what is left | hours the band covers it |
+|---|---|---|---|---|
+| Endesa | 1,789 | 758 | 0.42 (0.30–0.61 by year) | 7% |
+| Naturgy | 442 | 759 | 1.72 (1.19–2.53) | 91% |
+| Endesa + Naturgy | 2,206 | 759 | 0.34 (0.25–0.48) | 4% |
+
+- **Reserves cannot explain most of Endesa's unoffered capacity.** Even if Endesa's hydro
+  supplied all of Spain's upward secondary band, at least 58% would remain.
+- **They could explain Naturgy's, but only if its three units held about 60% of the whole
+  peninsula's upward band** on average, alongside every combined cycle and every other
+  firm's hydro. Not ruled out without per-unit data.
+- The additional upward reserve (ESIOS 627) was allocated in 602 hours, all between
+  January and November 2019, and changes nothing. Tertiary regulation is energy offered
+  from capacity already free, not capacity held back, so it is not counted.
+
+The direct test is I90DIA05 by unit (a test day first: about 5 MB).
 
 ## 6. What it enables
 

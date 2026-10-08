@@ -5,8 +5,8 @@
 
 `rq-water-value-forward.md` §5.5 found that Endesa and Naturgy offer only part of their
 hydro capacity in the day-ahead auction, and sell part of the rest bilaterally. This asks
-whether what is left was declared unavailable (§5.6), and whether it was offered in the
-intraday auction sessions instead (§5.7).
+whether what is left was declared unavailable (§5.6), whether it was offered in the
+intraday auction sessions instead (§5.7), and whether reserves could hold it (§5.8).
 
 THE TEST, WITH AN EXAMPLE. Endesa's Ebro unit declares 1,899 MW (`cab` max power). In an
 hour it offers 150 MW in the auction and delivers 400 MW under bilateral contracts, so
@@ -40,6 +40,14 @@ so the share of R offered intraday is bounded:
   lower   Σ min(max(I − (O − A), 0), R) / Σ R   (intraday offers first re-offer O − A)
 and the share of R sold intraday is at most Σ min(max(S, 0), R) / Σ R. The continuous
 intraday market (trades between sessions) is not in these files.
+
+RESERVES (§5.8). No per-unit reserve data is on disk, so a bound: what is left after the
+intraday upper bound, R − min(I, R), summed over a group's units each hour, against the
+upward secondary regulation band REE allocated to the whole peninsula that hour (ESIOS
+632, every technology and firm; 15-minute values averaged to the hour). If the whole
+system's band is smaller, reserves cannot explain the rest even if every MW of it came
+from this group's hydro. The additional upward reserve (ESIOS 627) was allocated in 602
+hours, all in 2019, and is left out.
 
 CAUSE, by keyword in the declaration's reason (first match wins):
   water     water or authority: reservoir level, minimum reserve, water quality, anoxia,
@@ -186,6 +194,29 @@ def summary(d: pd.DataFrame, by: list[str]) -> pd.DataFrame:
     return t.join(hours.rename("hours"))
 
 
+def reserves(d: pd.DataFrame) -> pd.DataFrame:
+    """By year: the group's hourly unoffered capacity left after the intraday upper bound,
+    against the whole peninsula's allocated upward secondary band (ESIOS 632)."""
+    b = pd.read_parquet(DATA / "esios/esios_632.parquet", columns=["value", "datetime"])
+    t = pd.to_datetime(b.datetime.str[:19])                                # Madrid local
+    b["hid"] = (t.dt.normalize() - EPOCH).dt.days * 24 + t.dt.hour
+    band = b.groupby("hid").value.mean().rename("band")
+    d = d.assign(rest=d.R - d.I_up)
+    rows = []
+    for name, grp in [("ENDESA", ["ENDESA"]), ("NATURGY", ["NATURGY"]), ("ENDESA + NATURGY", ["ENDESA", "NATURGY"]),
+                      ("ENDESA + NATURGY + EDP", ["ENDESA", "NATURGY", "EDP"])]:
+        h = d[d.group.isin(grp)].groupby(["hid", "year"]).rest.sum().reset_index().merge(band, on="hid")
+        for yr, x in [("all", h), *h.groupby("year")]:
+            rows.append({"table": "reserves", "group": name, "year": yr, "hours": len(x), "rest": x.rest.mean(),
+                         "band": x.band.mean(), "band_over_rest": x.band.sum() / x.rest.sum(),
+                         "hours_band_covers_rest": (x.band >= x.rest).mean()})
+    t = pd.DataFrame(rows)
+    print("\nleft after outages and the intraday upper bound (mean MW, group total) against the whole "
+          "peninsula's upward secondary band (ESIOS 632):")
+    print(t.drop(columns="table").round(2).to_string(index=False))
+    return t
+
+
 def main() -> int:
     g = groups()
     dec, covered = declarations(g)
@@ -209,6 +240,7 @@ def main() -> int:
         print(f"\nby {name} (mean MW; shares of unoffered capacity G):")
         print(t.round(2).to_string(index=False))
         rows.append(t.assign(table=name))
+    rows.append(reserves(d))
     d["hour"] = d.hid % 24
     t = (d[d.year >= 2023].groupby(["group", "hour"])[["G", "C", "E"]].sum()
          .assign(G_share_of_C=lambda x: x.G / x.C, unexplained_share_of_C=lambda x: (x.G - x.E) / x.C)

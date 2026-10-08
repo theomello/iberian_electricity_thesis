@@ -995,6 +995,15 @@ the national series for 11 (Ter 0.67 against 0.18, Hidrocantábrico 0.52 against
 and `TEES`, `VIES` and `GDNA` are weak. It is the basin's fill, not the firm's own
 reservoirs: shared with other owners and with the state's irrigation and supply dams.
 
+**Upward reserve allocated, whole system — `data/esios/esios_{632,627}.parquet`**,
+fetched 2026-10-08 by `--ids 632 627 --geo 0 --start 2019-01-01 --end 2025-09-30` (27 MB of
+raw JSON). 632 is the upward secondary regulation band (aFRR) allocated, MW, `Península`
+only: **147,263 values, hourly to 2022-05-24 and quarter-hourly from 2022-05-25**; mean
+594 MW (2019) rising to 1,180 (2025). 627, the additional upward reserve, holds **602
+hours, all 2019-01-02 → 2019-11-08**, and nothing after. **Neither is by unit or firm**:
+no reserve indicator in the catalogue is. Per-unit allocations are in REE's I90DIA
+workbook (ESIOS archive 34, sheet I90DIA05; `notes/continuous-intraday-data.md` §4).
+
 ENTSO-E's token is still pending (ticket #9472601); `fetch/fetch_entsoe_spain.py`
 is written but never executed.
 

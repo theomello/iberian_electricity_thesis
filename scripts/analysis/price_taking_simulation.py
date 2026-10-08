@@ -190,19 +190,78 @@ def intervals(ar: str) -> list[tuple[float, float]]:
     return [tuple(float(v) for v in part.strip(" []").split(",")) for part in ar.split(" U ")]
 
 
-def reading(t: pd.DataFrame, control: str = "level") -> pd.DataFrame:
+DELTA = 0.1     # largest β still called price-taking (fixed by the user 2026-10-08, before the test was read)
+
+
+def reading(t: pd.DataFrame, control: str = "level", by: tuple = ("base",)) -> pd.DataFrame:
     """The reading rule fixed before the actual offers were run (notes §5): the null band is
     [min, max] of the simulated estimates with the same control; the actual offers differ from
-    price-takers only if the actual AR set does not touch it."""
+    price-takers only if the actual AR set does not touch it.
+    Equivalence (notes §7): β's set allowing any bias in the null band is [lo − null_hi,
+    hi − null_lo]; price-taking is accepted when its upper end is below DELTA (one-sided:
+    market power means β > 0; the 95% set's upper end makes it a 2.5% test)."""
+    by = list(by)
     c = t[t.control == control]
-    sim = c[c.seed > 0].groupby("base").b_iv.agg(["min", "max", "mean"])
-    act = c[c.seed == 0].set_index("base")[["b_iv", "ar_set"]]
+    sim = c[c.seed > 0].groupby(by).b_iv.agg(["min", "max", "mean"])
+    act = c[c.seed == 0].set_index(by)[["b_iv", "ar_set"]]
     r = act.join(sim, how="inner")
     r["differs"] = [not any(lo <= hi_band and hi >= lo_band for lo, hi in intervals(ar))
                     if isinstance(ar, str) else None
                     for ar, lo_band, hi_band in zip(r.ar_set, r["min"], r["max"])]
     r["actual_minus_null"] = r.b_iv - r["mean"]
+    one = [iv[0] if len(iv) == 1 else (np.nan, np.nan) for iv in map(intervals, r.ar_set)]
+    r["beta_lo_adj"] = [lo - h for (lo, _), h in zip(one, r["max"])]
+    r["beta_hi_adj"] = [hi - l for (_, hi), l in zip(one, r["min"])]
+    r["price_taking_within_delta"] = [h < DELTA if np.isfinite(h) else None for h in r.beta_hi_adj]
     return r.rename(columns={"b_iv": "actual", "min": "null_lo", "max": "null_hi", "mean": "null_mean"})
+
+
+FIRM_PARTS = se.CACHE / "price_taking_dropfirm_s{seed}.csv"
+
+
+def hydro_firms(seed: int, only: list[str] | None = None) -> list[dict]:
+    """Which firms carry the hydro departures: the pooled within-month specification and the
+    two departing periods without each firm in turn, control `level`; seed 0 = the actual offers.
+    Not firm by firm: Zb is one value per firm and hour, so within one firm the class × hour
+    effects absorb it (first-stage F 0, tried 2026-10-08); β comes from comparing firms in the
+    same hour."""
+    d = lb.load(sim=seed or None)
+    d = lb.at_cost(d[d.m_n > 0])
+    d = selection(d, "hydro", "lam30s").dropna(subset=["P_rel", "cp_sd"])
+    sl, by = CONTROLS["level"]
+    periods = {"unit × month | Zb": d.date.notna(), "unit × month | Zb | 2019–2021H1": d.date < "2021-07-01",
+               "unit × month | Zb | 2024 – 2025-09": d.date >= "2024-01-01"}
+    n = d.group.value_counts()
+    print("rows by firm:", n.to_dict(), flush=True)
+    res = []
+    for g in sorted(n[n >= 5000].index):          # the rest hold under 1% of the rows
+        for label, keep in periods.items():
+            if only and label not in only:
+                continue
+            s = d[keep & (d.group != g)]
+            res.append(sh.est(s, f"{label} | without {g}", ["Zb"], y="gap30", fe=lb.UNIT_MONTH, slopes=sl, slopes_by=by)
+                       | {"base": label, "without": g, "control": "level"})
+    return res
+
+
+def firms(seeds: list[int], only: list[str] | None, combine_only: bool) -> int:
+    """Each seed's part goes to the cache (seeds can run in parallel); the parts on disk are then
+    combined into the table and read firm by firm."""
+    for seed in [] if combine_only else seeds:
+        print(f"\n=== {'ACTUAL OFFERS' if seed == 0 else f'SEED {seed}: simulated price-takers'} ===", flush=True)
+        part = pd.DataFrame([r | {"seed": seed} for r in hydro_firms(seed, only)])
+        part.rename(columns={"b_iv_Xt": "b_iv", "se_iv_Xt": "se_iv", "F_Xt": "F", "b_ls_Xt": "b_ls"}).to_csv(
+            str(FIRM_PARTS).format(seed=seed), index=False)
+    parts = sorted(se.CACHE.glob("price_taking_dropfirm_s*.csv"))
+    t = pd.concat([pd.read_csv(p) for p in parts], ignore_index=True)
+    t.to_csv(TABLES / "price_taking_simulation_hydro_without_firm.csv", index=False)
+    print(f"\ncombined {len(parts)} seed parts: {sorted(t.seed.unique())}")
+    if (t.seed == 0).any() and (t.seed > 0).any():
+        r = reading(t[t.b_iv.notna()], by=("base", "without"))
+        r.to_csv(TABLES / "price_taking_simulation_hydro_without_firm_reading.csv")
+        pd.set_option("display.width", 250)
+        print(r.round(3).to_string())
+    return 0
 
 
 def corrected(kind: str, seeds: list[int], variants: list[str], only: list[str] | None = None) -> int:
@@ -242,7 +301,12 @@ def main() -> int:
                     help="with --corrected: the selection controls to run (default all)")
     ap.add_argument("--only", nargs="+", help="with --corrected: run only these specifications (base labels), "
                     "e.g. for a seed simulated on part of the months")
+    ap.add_argument("--firms", action="store_true", help="hydro only: the departures without each firm in turn "
+                    "(control level)")
+    ap.add_argument("--combine", action="store_true", help="with --firms: only combine the seed parts on disk")
     args = ap.parse_args()
+    if args.firms:
+        return firms(args.seeds, args.only, args.combine)
     if args.corrected:
         return corrected(args.kind, args.seeds, args.controls, args.only)
     out = TABLES / f"price_taking_simulation_{args.kind}.csv"

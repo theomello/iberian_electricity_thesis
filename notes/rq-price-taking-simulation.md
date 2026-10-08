@@ -204,6 +204,75 @@ they cannot bring the thermal departure back; for the hydro ones the AR sets cle
 are unlikely to change either verdict (for 2024 – 25, three more seeds would each have to exceed
 the band by 2.4 sd; chance about 2%).
 
+## 7. Are they price-takers? An equivalence test (δ = 0.1, fixed 2026-10-08)
+
+Not rejecting β = 0 does not show β = 0. The test of price-taking fixes in advance the largest
+β still called price-taking, δ = 0.1 (a firm adds at most a tenth of the markup a Cournot firm
+facing the same residual demand would add: €0.30 if that markup were €3/MWh), and asks whether
+β is below it. One-sided: market power means β > 0, and no conduct in the model gives β < 0.
+The set for β allows any bias in the null band, [AR low − null max, AR high − null min];
+price-taking is accepted when its upper end is below 0.1 (the 95% set's upper end makes this
+a 2.5% test). Columns `beta_lo_adj`, `beta_hi_adj`, `price_taking_within_delta` in
+`price_taking_simulation_{kind}_reading.csv`.
+
+| | β, bias allowed for | price-taking (β < 0.1) |
+|---|---|---|
+| thermal, pooled | −0.14 … +0.08 | **accepted** |
+| thermal, five firms | −0.14 … +0.05 | **accepted** |
+| thermal, 2021H2 – 2023 | −0.20 … +0.04 | **accepted** |
+| thermal, fuel × date | −0.19 … −0.04 | accepted (weak specification) |
+| thermal, unit × day | −0.07 … +0.20 | not shown |
+| thermal, 2019 – 2021H1 | −0.02 … +0.26 | not shown |
+| hydro, unit × month | −0.10 … +0.15 | not shown |
+| hydro, unit × day | −0.39 … +0.00 | accepted (but the actual sits below price-takers) |
+| hydro, 2021H2 – 2023 | −0.20 … +0.11 | not shown (just) |
+| hydro, 2019 – 2021H1 | +0.17 … +0.52 | not shown; β = 0 rejected, β above 0.1 |
+| hydro, 2024 – 2025-09 | +0.06 … +0.36 | not shown; β = 0 rejected |
+
+Thermal pooled over the window is price-taking to within a tenth of the Cournot markup; within
+days and in 2019 – 2021H1 the data cannot say. This tests only the prices of offered steps: a
+firm could still withhold quantity, which a separate test would have to look at.
+
+## 8. Which firms carry the hydro departures (2026-10-08)
+
+**Firm by firm the estimator identifies nothing.** Zb is one value per firm and hour (the
+firm's X̃ at a common cost point), and the estimator removes class × hour effects; inside one
+firm's sample those effects absorb Zb entirely (first-stage F 0.0 for every firm, actual and
+simulated). So in the pooled estimate β comes from comparing firms in the same hour: when one
+firm has more at stake than another in that hour, does it price its water further above λ*,
+relative to its own month? Two consequences: a water-value error common to all firms (the
+30- against 90-day horizon) cancels in the hour effects, and only a firm-specific error that
+moves with a firm's relative stake can make a spurious β.
+
+Instead, leave one firm out: the pooled specification and the two departing periods without
+each of EDP, Endesa, Iberdrola, Movhera, Naturgy and Repsol in turn, against the same
+simulated bands (`price_taking_simulation.py --kind hydro --firms`;
+`price_taking_simulation_hydro_without_firm{,_reading}.csv`).
+
+Actual β (control `level`) and the price-taker band from the same sample without that firm:
+
+| without | 2019 – 2021H1 | band | 2024 – 2025-09 | band | pooled | band |
+|---|---|---|---|---|---|---|
+| nobody (§6) | **+0.31** [0.17, 0.46] | −0.06 … 0.00 | **+0.20** [0.10, 0.34] | −0.02 … +0.04 | +0.07 | +0.02 … +0.07 |
+| EDP | **+0.20** [0.10, 0.31] | −0.03 … +0.03 | **+0.25** [0.11, 0.41] | +0.03 … +0.08 | +0.04 | 0.00 … +0.07 |
+| Endesa | **+0.40** [0.23, 0.58] | −0.06 … +0.03 | +0.15 [0.02, 0.29] | −0.03 … +0.03 | +0.08 | +0.02 … +0.07 |
+| Iberdrola | **+0.02** [−0.10, 0.13] | −0.18 … −0.12 | +0.12 [−0.02, 0.26] | −0.10 … +0.08 | +0.06 | −0.01 … +0.06 |
+| Movhera | **+0.31** [0.17, 0.46] | −0.06 … 0.00 | **+0.21** [0.11, 0.34] | −0.02 … 0.00 | +0.11 | +0.02 … +0.07 |
+| Naturgy | **+0.37** [0.20, 0.54] | −0.04 … +0.04 | **+0.23** [0.12, 0.37] | −0.02 … +0.04 | +0.08 | +0.03 … +0.07 |
+| Repsol | **+0.38** [0.20, 0.57] | −0.06 … +0.02 | **+0.19** [0.08, 0.34] | −0.03 … +0.06 | +0.03 | +0.01 … +0.07 |
+
+Bold: the AR set misses the band. (Movhera has no rows before its 2022 purchase, so 2019 – 2021H1
+without it is the full sample.)
+
+- **2019 – 2021H1 survives every leave-out.** Iberdrola carries about half of it: without it the
+  gap to price-takers falls from +0.34 to +0.16 (the band moves down too) and only just clears it.
+- **2024 – 2025 rests on Iberdrola and Endesa together**: without either the estimate falls to
+  +0.12 – 0.15 and its set touches the band; without any other firm it stands.
+- **Pooled, no single firm changes the reading.**
+- Iberdrola and Endesa are also the firms whose offers sit furthest above λ* in level (§5.5 of
+  `rq-water-value-forward.md`: 1.11 and 1.35 at the expected running share, net of contracts),
+  so a firm-specific water value is the alternative to rule out next.
+
 Computation: the unit slopes are absorbed with the unit × month (day) effect
 (`step_estimator.slope_step`, exact) with Irons–Tuck acceleration (`accelerated`); on 27,550
 rows the IV estimate equals the one with explicit unit × P_rel columns to 12 digits.

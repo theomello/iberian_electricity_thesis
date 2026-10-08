@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Was the hydro capacity the firms did not offer out of service?
+"""Was the hydro capacity the firms did not offer out of service, or offered intraday?
 
     .venv/bin/python scripts/analysis/hydro_unoffered_capacity.py
 
 `rq-water-value-forward.md` §5.5 found that Endesa and Naturgy offer only part of their
 hydro capacity in the day-ahead auction, and sell part of the rest bilaterally. This asks
-whether what is left was declared unavailable.
+whether what is left was declared unavailable (§5.6), and whether it was offered in the
+intraday auction sessions instead (§5.7).
 
 THE TEST, WITH AN EXAMPLE. Endesa's Ebro unit declares 1,899 MW (`cab` max power). In an
 hour it offers 150 MW in the auction and delivers 400 MW under bilateral contracts, so
@@ -26,6 +27,20 @@ DATA, per Spanish hydro unit of the six large groups and hour (step caches, 2019
   G   C − O − B, at least 0
 Explained share = Σ min(U, G) / Σ G.
 
+INTRADAY. What is neither declared out nor explained, R = G − min(U, G), against the
+unit's sell offers in the intraday auction sessions (`curva_pibc_uof`, status O, side V;
+quarter-hours averaged to the hour):
+  I   MW offered to sell in the hour, the largest over the sessions (each session re-offers
+      the same capacity, so they are not added)
+  S   MW sold net over the sessions (cleared sell less cleared buy)
+  A   MW cleared in the day-ahead auction (step caches)
+A unit can offer intraday what it offered day-ahead and did not sell (O − A) as well as G,
+so the share of R offered intraday is bounded:
+  upper   Σ min(I, R) / Σ R
+  lower   Σ min(max(I − (O − A), 0), R) / Σ R   (intraday offers first re-offer O − A)
+and the share of R sold intraday is at most Σ min(max(S, 0), R) / Σ R. The continuous
+intraday market (trades between sessions) is not in these files.
+
 CAUSE, by keyword in the declaration's reason (first match wins):
   water     water or authority: reservoir level, minimum reserve, water quality, anoxia,
             flow, drought, concessions, and orders of the basin authority or the
@@ -40,6 +55,7 @@ the 23- and 25-hour days).
 
 WRITES outputs/tables/hydro_unoffered_capacity.csv (by group and year; by unit; by hour of
 day) and hydro_unavailable_daily.parquet (unit, date, mean U, gitignored).
+Runs in about a minute.
 """
 from __future__ import annotations
 
@@ -110,35 +126,63 @@ def unavailable(dec: pd.DataFrame, g: pd.DataFrame, hids: np.ndarray) -> pd.Data
             .add_prefix("U_").reindex(columns=["U_technical", "U_water"], fill_value=0.0)
 
 
+def intraday(ym: str, units: list[str]) -> pd.DataFrame:
+    """(hid, unit) -> I, S: the largest MW offered to sell in any intraday session, and the
+    MW sold net over the sessions; quarter-hours averaged to the hour."""
+    x = pd.read_parquet(DATA / f"omie/intraday/parquet/intraday_{ym}.parquet",
+                        columns=["session", "date", "hour", "quarter", "unit", "side", "status", "power_mw"],
+                        filters=[("unit", "in", units)])
+    x = x.assign(unit=x.unit.astype(str), side=x.side.astype(str), status=x.status.astype(str))
+    x["hid"] = (pd.to_datetime(x.date) - EPOCH).dt.days * 24 + x.hour - 1
+    k = ["session", "hid", "unit", "quarter"]
+    q = lambda m, v: x[m].groupby(k).power_mw.sum().rename(v)              # MW per session-quarter
+    sell = q((x.side == "V") & (x.status == "O"), "I")
+    net = q((x.side == "V") & (x.status == "C"), "s").sub(q((x.side == "C") & (x.status == "C"), "b"), fill_value=0)
+    i = sell.groupby(["session", "hid", "unit"]).mean().groupby(["hid", "unit"]).max()
+    s = net.rename("S").groupby(["session", "hid", "unit"]).mean().groupby(["hid", "unit"]).sum()
+    return pd.concat([i, s], axis=1)
+
+
 def month(ym: str, g: pd.DataFrame, dec: pd.DataFrame) -> pd.DataFrame:
     units = g.unit.unique().tolist()
-    h = pd.read_parquet(CACHE / f"hydro_{ym}.parquet", columns=["hid", "date", "unit", "mw", "withdrawn"])
+    h = pd.read_parquet(CACHE / f"hydro_{ym}.parquet", columns=["hid", "date", "unit", "mw", "cleared_mw", "withdrawn"])
     hids = np.arange(h.hid.min(), h.hid.max() + 1)
-    o = h[(~h.withdrawn) & (h.mw > 0) & h.unit.isin(units)].groupby(["hid", "unit"]).mw.sum().rename("O")
+    h = h[h.unit.isin(units)]
+    o = h[(~h.withdrawn) & (h.mw > 0)].groupby(["hid", "unit"]).mw.sum().rename("O")
+    a = h.groupby(["hid", "unit"]).cleared_mw.sum().rename("A")
     c = pd.read_parquet(DATA / f"omie/cab/parquet/cab_{ym}.parquet", columns=["date", "unit", "max_power_mw"],
                         filters=[("unit", "in", units)])
     c = c.groupby(["unit", pd.to_datetime(c.date).rename("date")]).max_power_mw.max().rename("C").reset_index()
     grid = pd.MultiIndex.from_product([hids, units], names=["hid", "unit"]).to_frame(index=False)
     grid["date"] = EPOCH + pd.to_timedelta(grid.hid // 24, "D")
     d = grid.merge(c, on=["unit", "date"]).set_index(["hid", "unit"])
-    d = d.join(o).join(bilateral(ym, units).rename("B")).join(unavailable(dec, g, hids)).fillna(0.0)
+    d = d.join(o).join(a).join(bilateral(ym, units).rename("B")).join(unavailable(dec, g, hids))
+    d = d.join(intraday(ym, units)).fillna(0.0)
     d = d[d.C > 0].reset_index()
     d["U"] = (d.U_technical + d.U_water).clip(upper=d.C)
     d["G"] = (d.C - d.O - d.B).clip(lower=0)
     d["E"] = np.minimum(d.U, d.G)
     d["E_water"] = np.minimum(d.U_water.clip(upper=d.C), d.G)              # water and authority first
+    d["R"] = d.G - d.E
+    d["I_up"] = np.minimum(d.I, d.R)
+    d["I_lo"] = np.minimum((d.I - (d.O - d.A).clip(lower=0)).clip(lower=0), d.R)
+    d["S_R"] = np.minimum(d.S.clip(lower=0), d.R)
     return d
 
 
 def summary(d: pd.DataFrame, by: list[str]) -> pd.DataFrame:
-    s = d.groupby(by)[["C", "O", "B", "G", "U", "E", "E_water", "E_cov", "G_cov"]].sum()
+    s = d.groupby(by)[["C", "O", "A", "B", "G", "U", "E", "E_water", "E_cov", "G_cov", "R", "I", "S",
+                       "I_up", "I_lo", "S_R"]].sum()
     hours = d.groupby(by).size()
-    t = s[["C", "O", "B", "G", "U"]].div(hours, axis=0)                       # mean MW
+    t = s[["C", "O", "B", "G", "U", "R", "I", "S"]].div(hours, axis=0)       # mean MW
     t["G_share_of_C"] = s.G / s.C
     t["explained"] = s.E / s.G
     t["explained_water"] = s.E_water / s.G
     t["explained_covered_days"] = s.E_cov / s.G_cov
     t["U_over_offered_or_contracted"] = (s.U - s.E) / s.U.where(s.U > 0)      # declared out yet offered/contracted
+    t["R_intraday_upper"] = s.I_up / s.R
+    t["R_intraday_lower"] = s.I_lo / s.R
+    t["R_sold_intraday"] = s.S_R / s.R
     return t.join(hours.rename("hours"))
 
 

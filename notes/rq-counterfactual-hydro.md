@@ -102,7 +102,8 @@ water left for the auction is smaller, so the read point and the offer price are
 those ratios overstate the gap. Redone 2026-10-08 (§5.5 of that note), this holds for
 Iberdrola only (1.16 → 1.11 on the same days; 1.21 → 1.07 in 2025). Endesa and Naturgy
 offer only part of their capacity in the auction (not because it is out of service: declared
-outages explain 17% of what they leave unoffered, §5.6), so their read point rises: Endesa 1.13 →
+outages explain 17% of what they leave unoffered, §5.6, and little of the rest is offered
+intraday, §5.7), so their read point rises: Endesa 1.13 →
 1.35, Naturgy 1.19 → 1.22. Their gaps from 2022 stay.
 
 ## 6. Limits

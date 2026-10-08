@@ -25,7 +25,8 @@ but not Naturgy's (1.19 → 1.22) and widens Endesa's (1.13 → 1.35), because t
 only part of their capacity in the auction. On 29–31% of Iberdrola's and Naturgy's days
 the contracts alone take all the expected water.
 That unoffered capacity is not out of service (§5.6): declared outages explain 96% of what
-Iberdrola leaves unoffered but 17% of Endesa's and Naturgy's.
+Iberdrola leaves unoffered but 17% of Endesa's and Naturgy's. Nor is most of it offered in
+the intraday sessions (§5.7): Endesa 2–4% of the rest, Naturgy 16–42%.
 
 ## 1. The idea, with an example
 
@@ -306,8 +307,8 @@ By year, at cf_s → net: Iberdrola 1.48 → 1.35 (2023), 1.27 → 1.17 (2024), 
   days from 2022, so its 1.40 is partly the price of water it was not expected to have.
 - Reading the expected water against declared capacity (`cab` max power) assumes the whole
   cascade is available. Declared outages explain little of what Endesa and Naturgy leave
-  unoffered, and taking them out barely moves the ratios (§5.6). Capacity held back for
-  the intraday and balancing markets is not tested.
+  unoffered, and taking them out barely moves the ratios (§5.6); little of it is offered
+  intraday (§5.7). Balancing reserves are not tested.
 
 ### 5.6 Is the unoffered capacity out of service? Mostly not (2026-10-08)
 
@@ -349,9 +350,44 @@ On the 73% of days `indisp` holds a snapshot for, the explained shares differ by
   contains average outages), same days: Endesa 1.37 → 1.31, Naturgy 1.21 → 1.21,
   Iberdrola 1.13 → 1.09 (Spanish units).
 
-Not tested: whether the unoffered capacity is offered in the intraday sessions or held for
-balancing reserves (no per-unit reserve data on disk), and groups never named in `indisp`
-count as available (Endesa's Ebro: 1,025 of 1,858 MW of its groups appear in `indisp`).
+Groups never named in `indisp` count as available (Endesa's Ebro: 1,025 of 1,858 MW of its
+groups appear in `indisp`).
+
+### 5.7 Nor is it offered intraday (2026-10-08)
+
+Same script. What is neither offered day-ahead, contracted nor declared out of service,
+against the unit's sell offers in the intraday auction sessions: per hour, the most MW
+offered in any one session (sessions re-offer the same capacity, so they are not added),
+and the MW sold net over all sessions. An intraday offer may also be capacity offered
+day-ahead that did not sell, so the share is bounded: the upper bound counts every
+intraday offer against the unoffered capacity, the lower bound only what exceeds the
+unsold day-ahead offer.
+
+Example: a unit leaves 290 MW unexplained in an hour, and offered 420 MW day-ahead of which
+150 MW sold. If it offers 300 MW in an intraday session, at most 290 MW and at least
+300 − 270 = 30 MW of that is the unoffered capacity.
+
+| group | unexplained unoffered, mean MW | offered intraday, share | sold intraday, at most |
+|---|---|---|---|
+| Endesa | 328 | 0.02–0.04 | 0.01 |
+| Naturgy | 255 | 0.16–0.42 | 0.05 |
+| EDP (Spain, `HCHI`) | 262 | 0.07–0.10 | 0.05 |
+| Repsol (`VIES`) | 80 | 0.42–0.48 | 0.11 |
+| Iberdrola | 11 | — | — |
+
+- **Endesa does not offer it intraday.** The upper bound is 0.01–0.13 by year (0.13 in 2021,
+  0.01–0.02 from 2023) and at most 0.11 by unit. Over the sessions Endesa buys back slightly more hydro than it sells (net −3
+  MW an hour).
+- **Naturgy offers some of it, mostly at Miño** (0.24–0.74; Tajo 0.05–0.09), less since its
+  contracts began: 0.25–0.33 to 0.46–0.52 in 2019–2021, 0.03–0.05 to 0.38–0.41 in 2023–2025.
+  It sells at most 5% of it.
+- **So most of what Endesa and Naturgy leave unoffered is neither out of service nor offered
+  intraday**: about 80% of Endesa's unoffered capacity and 48–70% of Naturgy's.
+
+Not tested: the continuous intraday market (trades between the auction sessions; OMIE's
+`trades`, not on disk) and balancing reserves (no per-unit data on disk; REE publishes
+reserve allocations by programming unit in ESIOS, which would need a download). A
+cascade unit can hold turbine capacity for upward reserves without offering its energy.
 
 ## 6. What it enables
 

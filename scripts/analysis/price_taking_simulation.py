@@ -264,6 +264,28 @@ def firms(seeds: list[int], only: list[str] | None, combine_only: bool) -> int:
     return 0
 
 
+PLANTED_SPECS = ("unit × month | Zb | 2019–2021H1", "unit × month | Zb | 2024 – 2025-09")
+
+
+def planted(seed: int) -> int:
+    """Price-takers whose water value is m × λ* per firm (`step_engine.py --sim SEED --sim-scale`,
+    hsimw<SEED>_*, simulated on the two departing periods only), estimated with λ* as the cost.
+    Same random draws as seed SEED, so the difference from it is the planted water value alone.
+    Could firms that simply value water differently make β look positive?"""
+    rows = hydro_corrected(f"w{seed}", ["none", "level"], list(PLANTED_SPECS))
+    t = pd.DataFrame([r | {"seed": seed, "planted": "firm water value m × λ*"} for r in rows]).rename(
+        columns={"b_iv_Xt": "b_iv", "se_iv_Xt": "se_iv", "F_Xt": "F", "b_ls_Xt": "b_ls"})
+    t.to_csv(TABLES / "price_taking_simulation_hydro_planted.csv", index=False)
+    c = pd.read_csv(TABLES / "price_taking_simulation_hydro_corrected.csv")
+    ref = c[c.base.isin(PLANTED_SPECS) & c.control.isin(["none", "level"])]
+    show = pd.concat([ref.assign(planted=np.where(ref.seed == 0, "actual offers", "β = 0 at λ*")), t])
+    pd.set_option("display.width", 250)
+    print("\nPLANTED WATER VALUE against the plain null (same seed) and the actual offers:")
+    print(show.sort_values(["base", "control", "planted", "seed"])[
+        ["base", "control", "planted", "seed", "n", "b_iv", "se_iv", "F", "ar_set"]].round(3).to_string(index=False))
+    return 0
+
+
 def corrected(kind: str, seeds: list[int], variants: list[str], only: list[str] | None = None) -> int:
     out = TABLES / f"price_taking_simulation_{kind}_corrected.csv"
     res = []
@@ -304,7 +326,11 @@ def main() -> int:
     ap.add_argument("--firms", action="store_true", help="hydro only: the departures without each firm in turn "
                     "(control level)")
     ap.add_argument("--combine", action="store_true", help="with --firms: only combine the seed parts on disk")
+    ap.add_argument("--planted", action="store_true",
+                    help="hydro only: price-takers at a firm-specific water value (hsimw<SEED>), the two periods")
     args = ap.parse_args()
+    if args.planted:
+        return planted(args.seeds[0])
     if args.firms:
         return firms(args.seeds, args.only, args.combine)
     if args.corrected:

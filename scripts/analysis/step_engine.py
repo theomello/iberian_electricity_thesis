@@ -116,6 +116,11 @@ COMP_OUT = {"thermal": "compcost", "hydro": "hcompcost"}
 SIM_OUT = {"thermal": "sim", "hydro": "hsim"}
 WATER_VALUE = ROOT / "outputs/tables/water_value_forward.parquet"
 MIN_PRICE_HYDRO = 1.0   # €/MWh: hydro blocks at zero tie with every renewable and never carry a choice
+# --sim-scale: a firm-specific water value m × λ*30s for the simulated price-takers, m the firm's
+# offer / λ*30s at its expected running share net of bilateral contracts (rq-water-value-forward.md
+# §5.5; Movhera gross, §5; others 1). Tests whether firms that simply value water differently
+# from λ* make β look positive.
+WATER_SCALE = {"EDP": 0.95, "IBERDROLA": 1.11, "NATURGY": 1.22, "ENDESA": 1.35, "MOVHERA": 0.93}
 
 
 def load(ym: str, kind: str = "thermal") -> tuple:
@@ -250,7 +255,8 @@ def draw(pool_key: np.ndarray, vals: np.ndarray, key: np.ndarray, rng: np.random
     return vals[o][start[i] + (rng.random(len(key)) * size[i]).astype(int)]
 
 
-def simulate(t: pd.DataFrame, ym: str, seed: int, flat: pd.DataFrame | None) -> pd.DataFrame:
+def simulate(t: pd.DataFrame, ym: str, seed: int, flat: pd.DataFrame | None,
+             scale: dict[str, float] | None = None) -> pd.DataFrame:
     """Price-taking offers, β = 0 within the month by construction: every step of `t` (rows
     with a cost and a date) moved to cost + μ + δ + ε, rounded to cents. Not bounded: holding
     a price at the unit's lowest or highest offer would tie its gap to the cost (a fixed cap
@@ -266,11 +272,15 @@ def simulate(t: pd.DataFrame, ym: str, seed: int, flat: pd.DataFrame | None) -> 
     month, split the same way between days and steps, and independent of the hour it lands
     in. Within an hour the draws are sorted onto the steps in their order, which keeps the
     ladder (mw_below); on a flat unit-day (one curve for all 24 hours) the draws are made
-    once for the day."""
+    once for the day.
+
+    `scale` (firm → m): the price-takers' true cost is m × cost, while `cost` stays as it was
+    for the estimators. The random draws are the same as without it for the same seed."""
     rng = np.random.default_rng([seed, int(ym)])
     s = t.reset_index(drop=True).copy()
     unit = s.unit.astype(str).to_numpy()
-    s["g"] = s.price.astype(float) - s.cost
+    s["true"] = s.cost * (s.group.map(scale).fillna(1.0) if scale else 1.0)
+    s["g"] = s.price.astype(float) - s.true
     s["mu"] = s.groupby("unit").g.transform("mean")
     s["a"] = s.groupby(["unit", "date"]).g.transform("mean")
     dy = s.groupby(["unit", "date"]).a.first().reset_index()
@@ -288,16 +298,16 @@ def simulate(t: pd.DataFrame, ym: str, seed: int, flat: pd.DataFrame | None) -> 
     cr = cr.sort_values(["c", "eps"], kind="stable")
     cr["r"] = cr.groupby("c").cumcount().to_numpy()
     s = s.merge(cr[["c", "r", "eps"]], on=["c", "r"], how="left")
-    raw = np.round(s.cost + s.mu + s.delta + s.eps, 2)
+    raw = np.round(s.true + s.mu + s.delta + s.eps, 2)
     lo = np.round(s.groupby("unit").price.transform("min").astype(float), 2)
     hi = np.round(s.groupby("unit").price.transform("max").astype(float), 2)
     s["sim_out"] = (raw < lo) | (raw > hi)
     s["sim"] = raw
-    return s.drop(columns=["g", "mu", "a", "delta", "r", "c", "eps"])
+    return s.drop(columns=["true", "g", "mu", "a", "delta", "r", "c", "eps"])
 
 
 def month(ym: str, sh: pd.DataFrame, kind: str = "thermal", comp: bool = False, sim: int | None = None,
-          price_only: bool = False) -> tuple[pd.DataFrame, pd.DataFrame]:
+          price_only: bool = False, sim_scale: bool = False) -> tuple[pd.DataFrame, pd.DataFrame]:
     hours, market, own, units = load(ym, kind)
     if (comp or sim is not None) and kind == "hydro":    # cost = λ*30s, fuel = hydro class
         w = pd.read_parquet(WATER_VALUE, columns=["unit", "date", "lam30s"])
@@ -320,7 +330,7 @@ def month(ym: str, sh: pd.DataFrame, kind: str = "thermal", comp: bool = False, 
             flat = flat_days(fh)
         else:
             t_units["date"] = t_units.hid.map(h.set_index("hid").date).astype("datetime64[ns]")
-        t_units = simulate(t_units, ym, sim, flat)
+        t_units = simulate(t_units, ym, sim, flat, WATER_SCALE if sim_scale else None)
     own_idx = own.set_index(["hid", "group"]).sort_index()
     # --comp: the day's typical cost of each fuel, median over the units offering it
     cbar = (t_units.assign(date=t_units.hid.map(h.set_index("hid").date))
@@ -447,7 +457,11 @@ def main() -> int:
                     help="own steps at simulated price-taking prices (sim<SEED>_*, hydro hsim<SEED>_*)")
     ap.add_argument("--comp-price", action="store_true",
                     help="only the draws' prices on the at-cost curve (compcostprice_YYYYMM, hydro hcompcostprice)")
+    ap.add_argument("--sim-scale", action="store_true",
+                    help="with --sim, hydro: price-takers at WATER_SCALE × λ*30s (hsimw<SEED>_*)")
     args = ap.parse_args()
+    if args.sim_scale and (args.sim is None or args.kind != "hydro"):
+        ap.error("--sim-scale needs --sim and --kind hydro")
     sh = shares()
     out = KINDS[args.kind][1]
     for ym in args.months:
@@ -459,8 +473,8 @@ def main() -> int:
                   f"sd median {m.cp_sd.median():.1f} ({time.time() - t0:.0f} s)", flush=True)
             continue
         if args.sim is not None:
-            m, u = month(ym, sh, args.kind, sim=args.sim)
-            pre = f"{SIM_OUT[args.kind]}{args.sim}"
+            m, u = month(ym, sh, args.kind, sim=args.sim, sim_scale=args.sim_scale)
+            pre = f"{SIM_OUT[args.kind]}{'w' if args.sim_scale else ''}{args.sim}"
             m.to_parquet(CACHE / f"{pre}_moments_{ym}.parquet", index=False)
             u.to_parquet(CACHE / f"{pre}_units_{ym}.parquet", index=False)
             sets = m.groupby(["hid", "group", "price"]).m_n.first() > 0

@@ -271,8 +271,50 @@ without it is the full sample.)
 - **Pooled, no single firm changes the reading.**
 - Iberdrola and Endesa are also the firms whose offers sit furthest above λ* in level (§5.5 of
   `rq-water-value-forward.md`: 1.11 and 1.35 at the expected running share, net of contracts),
-  so a firm-specific water value is the alternative to rule out next.
+  so a firm-specific water value is the alternative to rule out next. §9 does: it is not it.
 
 Computation: the unit slopes are absorbed with the unit × month (day) effect
 (`step_estimator.slope_step`, exact) with Irons–Tuck acceleration (`accelerated`); on 27,550
 rows the IV estimate equals the one with explicit unit × P_rel columns to 12 digits.
+
+## 9. A firm-specific water value does not make the departures (2026-10-08)
+
+**The test.** Plant the alternative in the simulation and see whether the estimator turns it
+into a positive β. The simulated price-takers value water at m × λ*30s, with m the firm's
+offers over λ* at the expected running share, net of contracts (§5.5 of
+`rq-water-value-forward.md`): EDP 0.95, Iberdrola 1.11, Naturgy 1.22, Endesa 1.35, Movhera
+0.93 (gross); every other firm 1. The estimator still takes λ* as the cost, so it mistakes the
+firm's own water value for a markup. Example: on a day with λ* at €60, Endesa's water is worth
+€81, and its price-taking offer of €81 reads as €21 above cost.
+
+Everything else is seed 1 (same random draws), so planted minus plain is the effect of the water
+value alone. Check on 202401: firms with m = 1 get identical offers; for the others the offers
+differ by a mean of about 0 (the unit-month mean gap is matched to the offers, as before) and an
+sd of €14.4 (Endesa), 6.7 (Naturgy), 3.9 (Iberdrola), 1.2 (Movhera), 1.0 (EDP): a firm with
+m > 1 now moves its offers m times as much as λ* from day to day.
+(`step_engine.py --sim 1 --sim-scale` → `hsimw1_*`; `price_taking_sim.sh` with `SCALE=1`;
+`price_taking_simulation.py --kind hydro --planted --seeds 1` →
+`price_taking_simulation_hydro_planted.csv`.)
+
+β, unit × month, control `level`:
+
+| | 2019 – 2021H1 | 2024 – 2025-09 |
+|---|---|---|
+| actual offers | **+0.314** [0.17, 0.46] | **+0.203** [0.10, 0.34] |
+| price-takers at λ* (seeds 1, 2, 3) | −0.058, +0.004 | +0.037, −0.021, +0.039 |
+| price-takers at m × λ* (seed 1's draws) | −0.071 [−0.16, 0.01] | −0.012 [−0.09, 0.08] |
+| planted minus plain, same draws | −0.013 | −0.049 |
+
+Without the control the planted β is −0.086 (plain −0.080) and −0.171 (plain −0.143).
+
+**The planted water value moves β by −0.01 and −0.05: the wrong sign, and small against
+departures of +0.3 and +0.2.** So the firm water values the offers show, held as a fixed multiple
+of λ*, explain none of the departures. The reason is in §8. The level of a firm's water value
+within a month goes into its unit × month effect. What is left is that its offers move more
+with λ* from day to day, and that is the same for all of the firm's hours. β compares firms within
+the hour, so it reads only a gap that rises with the firm's stake against its rivals in that hour.
+
+Still not excluded: a firm-specific error that changes with the hour or with the firm's own
+stake, for example a firm that saves water for the evening hours in which it also has more at
+stake. The 90-day horizon error is common to all firms and cancels in the hour effects (§8);
+reservoir bounds are untested.

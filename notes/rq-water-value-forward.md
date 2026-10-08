@@ -418,7 +418,12 @@ can explain at most 760 MW, 42%.
   January and November 2019, and changes nothing. Tertiary regulation is energy offered
   from capacity already free, not capacity held back, so it is not counted.
 
-The direct test is I90DIA05 by unit (a test day first: about 5 MB).
+**Test day, 2023-06-15 (REE's I90DIA workbook, sheet I90DIA05, upward band by unit).**
+Summed over units the sheet equals ESIOS 632 in every hour (difference 0.0 MW), so it is
+the same band. That day Endesa's units held 56 MW of upward band against about 2,400 MW
+unoffered and unexplained (Ebro 42 MW against 1,201, 3%), and **Naturgy's held none**.
+The band was mostly combined cycles; the 21 hydro units here held 21% of it, Iberdrola
+most (Duero 76 MW). One day, so a sample of days is the next step, not a result.
 
 ## 6. What it enables
 

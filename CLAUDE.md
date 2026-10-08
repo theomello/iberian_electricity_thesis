@@ -28,7 +28,8 @@ deliberately, restated in Spanish-market terms.
 Python lives in `.venv` (Python 3.14, pandas 3.0, pyarrow 25). Always use
 `.venv/bin/python`, never bare `python3`. Added 2026-10-02 for the rainfall data:
 xarray 2026.9.0 and netCDF4 1.7.4 (E-OBS), shapely 2.1.2 and pyshp 3.1.6
-(HydroBASINS). There is no requirements file.
+(HydroBASINS). Added 2026-10-08: xlrd 2.0.2, to read REE's I90DIA workbooks (.xls).
+There is no requirements file.
 
 ```bash
 .venv/bin/python scripts/fetch/fetch_omie_prices.py
@@ -1003,6 +1004,12 @@ only: **147,263 values, hourly to 2022-05-24 and quarter-hourly from 2022-05-25*
 hours, all 2019-01-02 → 2019-11-08**, and nothing after. **Neither is by unit or firm**:
 no reserve indicator in the catalogue is. Per-unit allocations are in REE's I90DIA
 workbook (ESIOS archive 34, sheet I90DIA05; `notes/continuous-intraday-data.md` §4).
+**One I90DIA day is on disk**, `data/esios/raw/archives/34/I90DIA_20230615.zip` (2026-10-08,
+token; 6.7 MB zipped, one 28 MB .xls of 37 sheets, the 2023 list in
+`notes/continuous-intraday-data.md` §4). Route: `/archives/34/download?date=<day>T23:59:59+02:00&locale=es`
+with `Accept: */*`; `date` is the **data** day (the member is `I90DIA_20230615.xls`), and
+the archive is published 90 days late. Sheet I90DIA05 summed over units equals ESIOS 632
+in every hour of that day. REE's UP codes for hydro are OMIE's (`DUER`, `EBRFEN`).
 
 ENTSO-E's token is still pending (ticket #9472601); `fetch/fetch_entsoe_spain.py`
 is written but never executed.

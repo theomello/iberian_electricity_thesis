@@ -162,7 +162,14 @@ Where these sit on ESIOS (*e·sios*, REE's information system):
   the hourly secondary regulation band (aFRR) allocated to each UP; I90DIA29 the
   additional upward reserve; I90DIA07 tertiary energy; I90DIA06 deviation management;
   I90DIA03 day-ahead technical constraints. The layout may have changed since (aFRR
-  through PICASSO from 2022, 15-minute products from 2025). REE's UP codes for hydro
+  through PICASSO from 2022, 15-minute products from 2025).
+  **Checked on a real file, 2026-10-08** (`data/esios/raw/archives/34/I90DIA_20230615.zip`,
+  6.7 MB zipped, one 28 MB .xls, 37 sheets; sheet I90DIA00 lists them). In 2023 sheet 29
+  is declared start-up times, not additional reserve; 05 is the secondary band allocated
+  by UP and direction in 96 quarter-hour columns, and its sum equals ESIOS 632 to the MW;
+  13 is the secondary band offers; 02 the P48 (final schedule by UP, after every market);
+  36 the PHFC (final intraday schedule, continuous trading included); 12 and 16
+  unavailability; 27 bilateral contracts. So P48 and PHFC by UP are in the same file. REE's UP codes for hydro
   are OMIE's (`DUER`, `EBRFEN`: the `up` of archive 81). The ESIOS indicator catalogue
   (`indicator_catalogue.parquet`, 1,983 indicators) has reserves only as system totals
   (632/633 secondary band up/down, 627 additional upward reserve) and qualified aFRR

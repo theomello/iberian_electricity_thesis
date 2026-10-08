@@ -1910,6 +1910,16 @@ on which fleet is being asked about:
 headline is the wrong number for every design that would reach for this
 dataset, and the 80.9% is the right one for a thermal markup design.
 
+**The namespace is REE's physical units, and that register links them to OMIE
+units** (found 2026-10-08). **1,342 of the 1,529 codes (87.8%) are `uf` codes in
+`esios_physical_units.parquet`** (ESIOS archive 81), whose `up` names the OMIE unit
+that offers each one: 503 reach a unit in the registry that way, against 75
+directly. For hydro this is the route: a cascade unit's outages are declared group
+by group (`DUER`'s 57 generator groups, 46 of them in `indisp`, 3,513 of its
+3,533 MW). Lost MW = the group's `max_power_mw` minus the declared `available_mw`.
+The register is a 2026-08-12 snapshot applied to the whole window.
+`analysis/hydro_unoffered_capacity.py` uses it.
+
 ### JRC's `eic_g` is not always a valid join key
 A handful of Spanish units (La Muela's pumped-storage generators among
 them) are registered twice in JRC's own source data — once under a

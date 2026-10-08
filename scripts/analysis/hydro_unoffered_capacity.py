@@ -6,7 +6,9 @@
 `rq-water-value-forward.md` §5.5 found that Endesa and Naturgy offer only part of their
 hydro capacity in the day-ahead auction, and sell part of the rest bilaterally. This asks
 whether what is left was declared unavailable (§5.6), whether it was offered in the
-intraday auction sessions instead (§5.7), and whether reserves could hold it (§5.8).
+intraday auction sessions instead (§5.7), whether reserves could hold it (§5.8), and,
+on a sample of days, how much REE's per-unit files show held as reserve or used later
+(§5.9).
 
 THE TEST, WITH AN EXAMPLE. Endesa's Ebro unit declares 1,899 MW (`cab` max power). In an
 hour it offers 150 MW in the auction and delivers 400 MW under bilateral contracts, so
@@ -48,6 +50,15 @@ upward secondary regulation band REE allocated to the whole peninsula that hour 
 system's band is smaller, reserves cannot explain the rest even if every MW of it came
 from this group's hydro. The additional upward reserve (ESIOS 627) was allocated in 602
 hours, all in 2019, and is left out.
+
+BY UNIT, ON A SAMPLE OF DAYS (§5.9). REE's I90DIA workbooks for the 15th of each month
+(`fetch/fetch_esios_i90.py --parse`): per unit and hour, the upward secondary band
+allocated (I90DIA05), and the energy scheduled after the day-ahead market, P48 − PDBF
+(I90DIA02, I90DIA26): intraday auctions and continuous trading (PHFC − PDBF, I90DIA36) and
+REE's balancing and real-time processes (P48 − PHFC). Against R, the unoffered capacity
+outages do not explain, the shares Σ min(x, R) / Σ R for x = the band, the energy added
+later, and both. Upper bounds: energy added later may also come from capacity offered
+day-ahead that did not sell.
 
 CAUSE, by keyword in the declaration's reason (first match wins):
   water     water or authority: reservoir level, minimum reserve, water quality, anoxia,
@@ -157,7 +168,7 @@ def month(ym: str, g: pd.DataFrame, dec: pd.DataFrame) -> pd.DataFrame:
     hids = np.arange(h.hid.min(), h.hid.max() + 1)
     h = h[h.unit.isin(units)]
     o = h[(~h.withdrawn) & (h.mw > 0)].groupby(["hid", "unit"]).mw.sum().rename("O")
-    a = h.groupby(["hid", "unit"]).cleared_mw.sum().rename("A")
+    a = h.groupby(["hid", "unit"]).cleared_mw.first().rename("A")              # the hour's total, on every step
     c = pd.read_parquet(DATA / f"omie/cab/parquet/cab_{ym}.parquet", columns=["date", "unit", "max_power_mw"],
                         filters=[("unit", "in", units)])
     c = c.groupby(["unit", pd.to_datetime(c.date).rename("date")]).max_power_mw.max().rename("C").reset_index()
@@ -217,6 +228,61 @@ def reserves(d: pd.DataFrame) -> pd.DataFrame:
     return t
 
 
+def i90_sample(d: pd.DataFrame) -> pd.DataFrame:
+    """By group, on the I90 sample days: R against the upward band held and the energy
+    scheduled after the day-ahead market. The band is by unit to 2024-11-15; on the
+    participant days after it, a firm's whole band (every technology) bounds its hydro's."""
+    f = DATA / "esios/i90/i90_sample_hourly.parquet"
+    if not f.exists():
+        print("\nno I90 sample on disk (fetch/fetch_esios_i90.py --parse); §5.9 skipped")
+        return pd.DataFrame()
+    i = pd.read_parquet(f)
+    unit_days = set(i[(i.sheet == "band") & (i.level == "unit")].date)
+    s_ = i[(i.sheet != "band") & i.unit.isin(d.unit.unique())]
+    w = s_.groupby(["date", "hour", "unit", "sheet"]).mw.sum().unstack("sheet").fillna(0.0).reset_index()
+    band = (i[(i.sheet == "band") & (i.level == "unit") & (i.kind == "Subir")]
+            .groupby(["date", "hour", "unit"]).mw.sum().rename("band").reset_index())
+    x = d.assign(hour=d.hid % 24).merge(w, on=["date", "hour", "unit"]).merge(band, on=["date", "hour", "unit"], how="left")
+    x["unit_day"] = x.date.isin(unit_days)
+    x["band"] = x.band.fillna(0.0).where(x.unit_day)
+    x["later"] = (x.p48 - x.pdbf).clip(lower=0)
+    x["intraday"] = (x.phfc - x.pdbf).clip(lower=0)
+    x["balancing"] = (x.p48 - x.phfc).clip(lower=0)
+    for c in ("band", "later", "intraday", "balancing"):
+        x[f"{c}_R"] = np.minimum(x[c], x.R)
+    x["both_R"] = np.minimum(x.band + x.later, x.R)
+    x["pdbf_gap"] = (x.pdbf - (x.A + x.B)).abs()
+    rows = []
+    for (grp, yr), z in [*(((k, "all"), v) for k, v in x.groupby("group")), *x.groupby(["group", "year"])]:
+        u = z[z.unit_day]
+        rows.append({"table": "i90 sample", "group": grp, "year": yr, "days": z.date.nunique(),
+                     "band_days": u.date.nunique(), "R": z.R.mean(), "later": z.later.mean(),
+                     "R_later": z.later_R.sum() / z.R.sum(), "R_intraday": z.intraday_R.sum() / z.R.sum(),
+                     "R_balancing": z.balancing_R.sum() / z.R.sum(),
+                     "band": u.band.mean(), "R_band": u.band_R.sum() / u.R.sum() if len(u) else np.nan,
+                     "R_both": u.both_R.sum() / u.R.sum() if len(u) else np.nan,
+                     "pdbf_check_mw": z.pdbf_gap.mean()})
+    # participant days: the firm's whole band against its units' R, summed each hour
+    firm = {"END": "ENDESA", "GN": "NATURGY", "HC": "EDP"}
+    pb = (i[(i.sheet == "band") & (i.level == "participant") & (i.kind == "Subir") & i.unit.isin(firm)]
+          .assign(group=lambda v: v.unit.map(firm)).groupby(["date", "hour", "group"]).mw.sum().rename("band_firm"))
+    g = x[~x.unit_day].groupby(["date", "hour", "group"])[["R", "later"]].sum().join(pb, how="inner").reset_index()
+    for grp, z in g.groupby("group"):
+        rows.append({"table": "i90 sample, participant days", "group": grp, "year": "2024-12 to 2025-09",
+                     "days": z.date.nunique(), "R": z.R.mean(), "band": z.band_firm.mean(),
+                     "R_band": np.minimum(z.band_firm, z.R).sum() / z.R.sum(),
+                     "R_both": np.minimum(z.band_firm + z.later, z.R).sum() / z.R.sum()})
+    t = pd.DataFrame(rows)
+    print("\nI90 sample (15th of each month): unoffered capacity outages do not explain (R, mean MW per unit-hour) "
+          "against the upward band held (unit-level days) and the energy added after the day-ahead market; shares of R:")
+    print(t[(t.table == "i90 sample") & (t.year == "all")].drop(columns=["table", "year"]).round(2).to_string(index=False))
+    print(t[(t.table == "i90 sample") & t.group.isin(["ENDESA", "NATURGY"]) & (t.year != "all")]
+          [["group", "year", "days", "R", "R_band", "R_later", "R_both"]].round(2).to_string(index=False))
+    print("\nparticipant days: firm's whole upward band against its hydro units' R (group total, MW):")
+    print(t[t.table != "i90 sample"][["group", "days", "R", "band", "R_band", "R_both"]].round(2).to_string(index=False))
+    return t
+
+
 def main() -> int:
     g = groups()
     dec, covered = declarations(g)
@@ -241,6 +307,7 @@ def main() -> int:
         print(t.round(2).to_string(index=False))
         rows.append(t.assign(table=name))
     rows.append(reserves(d))
+    rows.append(i90_sample(d))
     d["hour"] = d.hid % 24
     t = (d[d.year >= 2023].groupby(["group", "hour"])[["G", "C", "E"]].sum()
          .assign(G_share_of_C=lambda x: x.G / x.C, unexplained_share_of_C=lambda x: (x.G - x.E) / x.C)

@@ -26,9 +26,9 @@ only part of their capacity in the auction. On 29–31% of Iberdrola's and Natur
 the contracts alone take all the expected water.
 That unoffered capacity is not out of service (§5.6): declared outages explain 96% of what
 Iberdrola leaves unoffered but 17% of Endesa's and Naturgy's. Nor is most of it offered in
-the intraday sessions (§5.7): Endesa 2–4% of the rest, Naturgy 16–42%. Reserves cannot
-hold most of Endesa's: Spain's whole upward secondary band covers at most 42% of it
-(§5.8).
+the intraday sessions (§5.7): Endesa 1–4% of the rest, Naturgy 3–42%. REE's per-unit files
+for one day a month (§5.9) show 2% of Endesa's and 7% of Naturgy's held as reserve or used
+in a later market: about 80% of their unoffered hydro capacity is not used anywhere.
 
 ## 1. The idea, with an example
 
@@ -310,7 +310,7 @@ By year, at cf_s → net: Iberdrola 1.48 → 1.35 (2023), 1.27 → 1.17 (2024), 
 - Reading the expected water against declared capacity (`cab` max power) assumes the whole
   cascade is available. Declared outages explain little of what Endesa and Naturgy leave
   unoffered, and taking them out barely moves the ratios (§5.6); little of it is offered
-  intraday (§5.7); reserves cannot hold most of Endesa's (§5.8).
+  intraday (§5.7), held as reserve or used later (§5.8–5.9).
 
 ### 5.6 Is the unoffered capacity out of service? Mostly not (2026-10-08)
 
@@ -371,20 +371,25 @@ Example: a unit leaves 290 MW unexplained in an hour, and offered 420 MW day-ahe
 
 | group | unexplained unoffered, mean MW | offered intraday, share | sold intraday, at most |
 |---|---|---|---|
-| Endesa | 328 | 0.02–0.04 | 0.01 |
-| Naturgy | 255 | 0.16–0.42 | 0.05 |
-| EDP (Spain, `HCHI`) | 262 | 0.07–0.10 | 0.05 |
-| Repsol (`VIES`) | 80 | 0.42–0.48 | 0.11 |
+| Endesa | 328 | 0.01–0.04 | 0.01 |
+| Naturgy | 255 | 0.03–0.42 | 0.05 |
+| EDP (Spain, `HCHI`) | 262 | 0.04–0.10 | 0.05 |
+| Repsol | 51 | 0.17–0.48 | 0.11 |
 | Iberdrola | 11 | — | — |
 
 - **Endesa does not offer it intraday.** The upper bound is 0.01–0.13 by year (0.13 in 2021,
-  0.01–0.02 from 2023) and at most 0.11 by unit. Over the sessions Endesa buys back slightly more hydro than it sells (net −3
-  MW an hour).
-- **Naturgy offers some of it, mostly at Miño** (0.24–0.74; Tajo 0.05–0.09), less since its
-  contracts began: 0.25–0.33 to 0.46–0.52 in 2019–2021, 0.03–0.05 to 0.38–0.41 in 2023–2025.
-  It sells at most 5% of it.
+  0.01–0.02 from 2023) and at most 0.11 by unit. Over the sessions Endesa buys back slightly
+  more hydro than it sells (net −3 MW an hour).
+- **Naturgy's intraday offers are mostly its unsold day-ahead offer again.** The upper bound
+  is 0.30–0.52 by year (Miño 0.74), the lower 0.02–0.05 in every year. It sells at most 5%.
 - **So most of what Endesa and Naturgy leave unoffered is neither out of service nor offered
-  intraday**: about 80% of Endesa's unoffered capacity and 48–70% of Naturgy's.
+  intraday**: 80–83% of Endesa's unoffered capacity and 48–81% of Naturgy's.
+
+*Corrected 2026-10-08.* The lower bounds first given here (Endesa 0.02, Naturgy 0.16, EDP
+0.07, Repsol 0.42, and for Naturgy a fall from 0.25–0.33 to 0.03–0.05 after its contracts
+began) counted each hour's day-ahead sales once per offer step: the step cache repeats the
+unit-hour total on every step. Taken once, the day-ahead base schedule equals REE's own
+(I90DIA26) to the MW on every sample day (§5.9). The upper bounds did not use it and stand.
 
 Not tested: the continuous intraday market (trades between the auction sessions; OMIE's
 `pibcic`, one month on disk). Reserves: §5.8.
@@ -424,6 +429,55 @@ the same band. That day Endesa's units held 56 MW of upward band against about 2
 unoffered and unexplained (Ebro 42 MW against 1,201, 3%), and **Naturgy's held none**.
 The band was mostly combined cycles; the 21 hydro units here held 21% of it, Iberdrola
 most (Duero 76 MW). One day, so a sample of days is the next step, not a result.
+
+### 5.9 REE's per-unit files: neither held as reserve nor used later (2026-10-08)
+
+REE's I90DIA workbook (ESIOS archive 34) for the 15th of every month, 2019-01 → 2025-09:
+81 days, about 450 MB (`fetch/fetch_esios_i90.py`; formats in CLAUDE.md). Per unit and
+hour it gives the upward secondary band allocated (to 2024-11-15; by market participant
+after it) and the schedule at each stage: the day-ahead base (PDBF), the final intraday
+(PHFC, the auction sessions and continuous trading) and the final one after REE's
+balancing and real-time processes (P48). So it shows what happened to the unoffered
+capacity after the day-ahead market, continuous trading included.
+
+Example: a unit leaves 1,200 MW unoffered that outages do not explain. If REE's files show
+40 MW of upward band and its final schedule 20 MW above its day-ahead schedule, at most 60
+MW of the 1,200, 5%, was held or used later. The rest was not used in any market.
+
+Against the unoffered capacity outages do not explain (§5.6), sample days:
+
+| group | unexplained, mean MW per unit-hour | held as upward band (71 days) | energy added after day-ahead | both (71 days) |
+|---|---|---|---|---|
+| Endesa | 349 | 0.02 | 0.01 | **0.02** |
+| Naturgy | 258 | 0.00 | 0.07 | **0.07** |
+| EDP (Spain, `HCHI`) | 265 | 0.04 | 0.05 | 0.08 |
+| Repsol | 53 | 0.11 | 0.05 | 0.16 |
+| Iberdrola | 7 | 0.29 | 0.08 | 0.36 |
+
+Energy added after the day-ahead market splits into intraday (auctions and continuous)
+and balancing: Endesa 0.01 and 0.00, Naturgy 0.05 and 0.02. The day-ahead base schedule in
+REE's files equals ours (day-ahead sales plus bilateral contracts) to 0.0 MW on average.
+
+- **Endesa: 0.02–0.04 in every year 2019–2024.** Its units held a mean 5 MW of upward band
+  each.
+- **Naturgy: 0.02–0.11 by year, almost all of it energy sold later**; its band share is
+  0.00 in every year but 2024 (0.01).
+- **From December 2024 the band is reported by market participant**, so only a firm-level
+  bound is possible: Endesa's whole upward band, every technology included (277 MW), would
+  cover at most 15% of its hydro's unexplained unoffered capacity (1,909 MW, group total);
+  Naturgy's (93 MW) at most 12%, 17% with energy added later.
+- **Put together**: outages explain 17% of what Endesa and Naturgy leave unoffered (§5.6);
+  of the rest, reserves and every later market account for 2% (Endesa) and 7% (Naturgy).
+  About 80% of their unoffered hydro capacity is neither out of service, nor held as
+  reserve, nor used in any market after the day-ahead.
+
+**Reading.** Unused turbine capacity is normal for storage hydro: a unit with water for a
+fifth of the hours leaves its turbines idle most of the time. What these tests show is how
+Endesa and Naturgy ration their water: by offering only part of their capacity, not by
+offering all of it at a price. EDP's Spanish unit does the same; Iberdrola offers all it
+has. Whether the water they hold back is water a price-taker would have used is what §5.5's
+read point measures, and there the gap stays (Endesa 1.35, Naturgy 1.22). Limits: one day
+a month; the 15th is never a DST day; the band after 2024-11 is not by unit.
 
 ## 6. What it enables
 

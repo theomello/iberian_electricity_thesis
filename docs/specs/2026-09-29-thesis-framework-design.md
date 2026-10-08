@@ -229,8 +229,10 @@ control.
   bilateral contracts (§5.5, 2026-10-08) Iberdrola's gap narrows (1.16 → 1.11), Naturgy's
   stays (1.22) and Endesa's widens (1.35). The capacity Endesa and Naturgy leave unoffered
   is mostly not declared out of service (17% is; Iberdrola's 96%, §5.6) nor offered in the
-  intraday sessions (Endesa 2–4% of the rest, Naturgy 16–42%, §5.7); Spain's whole upward
-  secondary band could hold at most 42% of Endesa's, §5.8).
+  intraday sessions (Endesa 1–4% of the rest, Naturgy 3–42%, §5.7); REE's per-unit files
+  (I90DIA, one day a month) show 2% (Endesa) and 7% (Naturgy) of the rest held as reserve or
+  used in a later market (§5.9). About 80% is not used anywhere: they ration water by
+  offering part of their capacity.
 - **Leg B in levels, 2026-10-07** (`rq-leg-b-levels.md`). The hydro step condition with
   λ*30s as the cost, b_k − λ* = β·X̃_k, unit × month and class × hour effects, so the
   day's level stays in. Reactor outages move the day level (F 21.5, against 5.6 within

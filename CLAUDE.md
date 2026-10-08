@@ -105,6 +105,7 @@ scripts/
 | `build/build_renewable_locations_v3.py` | v2 + MITECO Electra register | no | `data/osm/renewable_unit_locations_v3.parquet` |
 | `build/build_water_value_forward.py` | OMIP + day-ahead prices + PDBF + `cab` + MITECO + SNIRH | no | `outputs/tables/water_value_forward.parquet`, `forward_price_quantiles.parquet` |
 | `build/build_hydro_cost.py` | `water_value_forward` + step caches + `cab` | no | `outputs/tables/hydro_cost_daily.parquet` |
+| `fetch/fetch_esios_i90.py` | ESIOS archive 34 (I90DIA), 15th of each month | **yes** | `data/esios/raw/archives/34/`, `data/esios/i90/i90_sample_hourly.parquet` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
 `lib/config.py` loads tokens from a gitignored `.env`; `lib/regions.py` gives a
@@ -1004,12 +1005,29 @@ only: **147,263 values, hourly to 2022-05-24 and quarter-hourly from 2022-05-25*
 hours, all 2019-01-02 → 2019-11-08**, and nothing after. **Neither is by unit or firm**:
 no reserve indicator in the catalogue is. Per-unit allocations are in REE's I90DIA
 workbook (ESIOS archive 34, sheet I90DIA05; `notes/continuous-intraday-data.md` §4).
-**One I90DIA day is on disk**, `data/esios/raw/archives/34/I90DIA_20230615.zip` (2026-10-08,
-token; 6.7 MB zipped, one 28 MB .xls of 37 sheets, the 2023 list in
-`notes/continuous-intraday-data.md` §4). Route: `/archives/34/download?date=<day>T23:59:59+02:00&locale=es`
-with `Accept: */*`; `date` is the **data** day (the member is `I90DIA_20230615.xls`), and
-the archive is published 90 days late. Sheet I90DIA05 summed over units equals ESIOS 632
-in every hour of that day. REE's UP codes for hydro are OMIE's (`DUER`, `EBRFEN`).
+**REE's I90DIA workbooks, a sample: the 15th of every month, 2019-01 → 2025-09** (81 days,
+about 450 MB, `data/esios/raw/archives/34/I90DIA_YYYYMMDD.zip`; fetched 2026-10-08 by
+`fetch/fetch_esios_i90.py`, token). Per programming unit and hour: every schedule stage
+(PDBF, the PHF sessions, PHFC, P48), the reserve and balancing results and offers, and
+unavailability; the 2023 sheet list is in `notes/continuous-intraday-data.md` §4. Route:
+`/archives/34/download?date=<day>T23:59:59+02:00&locale=es` with `Accept: */*`; `date` is the
+**data** day, and the archive is published 90 days late. `--parse` writes
+`data/esios/i90/i90_sample_hourly.parquet` (10.7 M rows: band, PDBF, PHFC, P48, every unit,
+hourly). Checks: sheet I90DIA05 summed over units equals ESIOS 632 in every hour of
+2023-06-15; its PDBF equals OMIE's day-ahead sales plus bilateral contracts to 0.0 MW on the
+six groups' hydro. REE's UP codes for hydro are OMIE's (`DUER`, `EBRFEN`).
+
+Three format changes, all silent:
+- **To July 2025 one .xls of 37 sheets (4 MB zipped in 2019, 11 MB in 2025); from August
+  2025 one CSV per sheet**, 43 sheets (`I90DIA00_YYYYMMDD.csv` …), semicolon-separated,
+  **comma decimal**, UTF-8 with a byte-order mark. Sheet numbers 02, 05, 26, 36 keep their
+  meaning; 29 was additional upward reserve in 2019 and is declared start-up times by 2023.
+- **Periods follow the sheet and the year**: hourly columns `00-01` or quarter-hours `1..96`
+  (P48 quarter-hourly in 2023 while PDBF and PHFC were still hourly). Schedules are MWh per
+  period (sum quarters to the hour); the band is MW (average them).
+- **The secondary band (I90DIA05) is by programming unit to 2024-11-15 and by market
+  participant from 2024-12-15** (`END` Endesa, `GN` Naturgy, `HC` Hidrocantábrico, …): per-unit
+  reserve ends there.
 
 ENTSO-E's token is still pending (ticket #9472601); `fetch/fetch_entsoe_spain.py`
 is written but never executed.

@@ -157,6 +157,16 @@ Where these sit on ESIOS (*e·sios*, REE's information system):
 - **I90DIA** (ESIOS archive 34) is the daily per-UP workbook released at 90 days.
   Secondary sources list sheets I90DIA19–25 as PHF-1 to PHF-7 and I90DIA26 as
   PBF. Whether it has a PHFC or continuous-market sheet was **not confirmed**.
+  **Reserve sheets (2026-10-08, from a 2018 master's thesis, Rodríguez López, Oviedo,
+  p. 21; nothing downloaded):** 36 tabs in one .xls, about 5 MB a day. I90DIA05 is
+  the hourly secondary regulation band (aFRR) allocated to each UP; I90DIA29 the
+  additional upward reserve; I90DIA07 tertiary energy; I90DIA06 deviation management;
+  I90DIA03 day-ahead technical constraints. The layout may have changed since (aFRR
+  through PICASSO from 2022, 15-minute products from 2025). REE's UP codes for hydro
+  are OMIE's (`DUER`, `EBRFEN`: the `up` of archive 81). The ESIOS indicator catalogue
+  (`indicator_catalogue.parquet`, 1,983 indicators) has reserves only as system totals
+  (632/633 secondary band up/down, 627 additional upward reserve) and qualified aFRR
+  capacity by technology (2329–2337; hydro 2335), none by unit or agent.
 - **P48cierre** is a daily XML file of schedules by UP (energychisquared.com
   works with it).
 

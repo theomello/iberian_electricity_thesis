@@ -95,12 +95,17 @@ def months() -> list[str]:
     return [m for m in sorted(p.stem.split("_")[1] for p in CACHE.glob("moments_2*.parquet")) if FIRST <= m <= LAST]
 
 
-def rows() -> pd.DataFrame:
+def rows(sim: int | None = None) -> pd.DataFrame:
+    """Thermal unit-steps with their moments; with `sim`, the simulated price-takers of
+    `step_engine.py --sim` (steps at their simulated prices)."""
     parts = []
-    for ym in months():
-        m = pd.read_parquet(CACHE / f"moments_{ym}.parquet")
-        u = pd.read_parquet(CACHE / f"units_{ym}.parquet")
-        u = u[~u.withdrawn & u.group.notna()]
+    ms = [ym for ym in months() if sim is None or (CACHE / f"sim{sim}_moments_{ym}.parquet").exists()]
+    if len(ms) < len(months()):
+        print(f"  simulated seed {sim}: {len(ms)} of {len(months())} months on disk ({ms[0]}–{ms[-1]})", flush=True)
+    for ym in ms:
+        m = pd.read_parquet(CACHE / (f"sim{sim}_moments_{ym}.parquet" if sim is not None else f"moments_{ym}.parquet"))
+        u = pd.read_parquet(CACHE / (f"sim{sim}_units_{ym}.parquet" if sim is not None else f"units_{ym}.parquet"))
+        u = u[~u.withdrawn & u.group.notna()].drop(columns=["date"], errors="ignore")   # dated by hours below
         tot = u.groupby(["hid", "group", "price"]).mw.sum().rename("th_mw").reset_index()
         m = m.merge(tot, on=["hid", "group", "price"], how="inner")
         m = m[m.th_mw >= THERMAL_SHARE * m.v_sell]
@@ -166,10 +171,62 @@ def at_cost(d: pd.DataFrame) -> pd.DataFrame:
     return d
 
 
-def wdemean(M: np.ndarray, codes: list[np.ndarray], w: np.ndarray, tol: float = 1e-8, maxit: int = 500) -> np.ndarray:
-    """Weighted alternating projections."""
+def slope_step(g: np.ndarray, u: np.ndarray, V: np.ndarray, w: np.ndarray):
+    """The exact projection onto group effects g plus a slope on each column of V for every
+    unit u, g nested in u: V is demeaned within g once, and the two parts are then orthogonal,
+    so a column is demeaned within g and regressed on demeaned V unit by unit. Equivalent to
+    adding unit × V as regressors, without demeaning one column per unit."""
+    if len(np.unique(g * (u.max() + 1) + u)) != len(np.unique(g)):
+        raise ValueError("slopes need the first fixed effect nested in the unit")
+    sg = np.bincount(g, weights=w)
+    sg = np.where(sg > 0, sg, 1)
+    Vd = V - np.column_stack([np.bincount(g, weights=w * v) / sg for v in V.T])[g]
+    k, nu = V.shape[1], u.max() + 1
+    G = np.empty((nu, k, k))
+    for a in range(k):
+        for b in range(a, k):
+            G[:, a, b] = G[:, b, a] = np.bincount(u, weights=w * Vd[:, a] * Vd[:, b], minlength=nu)
+    Ginv = np.linalg.pinv(G)
+
+    def step(x: np.ndarray) -> tuple[np.ndarray, float]:
+        m = np.bincount(g, weights=w * x, minlength=len(sg)) / sg
+        x = x - m[g]
+        c = np.column_stack([np.bincount(u, weights=w * Vd[:, a] * x, minlength=nu) for a in range(k)])
+        fit = (Vd * np.einsum("uab,ub->ua", Ginv, c)[u]).sum(axis=1)
+        return x - fit, max(float(np.abs(m).max()), float(np.abs(fit).max()))
+    return step
+
+
+def accelerated(x: np.ndarray, codes: list, sw: list, w: np.ndarray, tol: float, maxit: int) -> np.ndarray:
+    """Alternating projections of one column with Irons–Tuck extrapolation (as in fixest).
+    Unit slopes on a variable that moves with the hour are nearly collinear with the hour
+    effects, and plain sweeps creep: a step of 1e-8 can sit far from the limit. Every
+    extrapolated point stays in x + span(effects), so the limit is the same projection."""
+    def sweep(v):
+        for c, s in zip(codes, sw):
+            v = c(v)[0] if callable(c) else v - (np.bincount(c, weights=w * v, minlength=len(s)) / s)[c]
+        return v
+    for _ in range(maxit):
+        x1 = sweep(x)
+        x2 = sweep(x1)
+        d1, d2 = x1 - x, x2 - x1
+        if np.abs(d2).max() < tol * (1 + np.abs(x2).max()):
+            return x2
+        dd = d2 - d1
+        den = dd @ dd
+        x = x2 - (d2 @ dd) / den * d2 if den > 0 else x2
+    print(f"  wdemean: no convergence in {maxit} accelerated iterations", flush=True)
+    return x
+
+
+def wdemean(M: np.ndarray, codes: list, w: np.ndarray, tol: float = 1e-8, maxit: int = 500) -> np.ndarray:
+    """Weighted alternating projections. An element of `codes` may be a `slope_step` instead
+    of an array of group codes; the projections are then accelerated (`accelerated`)."""
     M = M.astype(float).copy()
-    sw = [np.bincount(c, weights=w) for c in codes]
+    sw = [None if callable(c) else np.bincount(c, weights=w) for c in codes]
+    if any(callable(c) for c in codes):         # tol / 100: within 1e-6 of the exact projection (tested);
+        sw = [s if s is None else np.where(s > 0, s, 1) for s in sw]    # ~650–700 iterations on 214k rows
+        return np.column_stack([accelerated(M[:, j], codes, sw, w, tol / 100, 4 * maxit) for j in range(M.shape[1])])
     for _ in range(maxit):
         delta = 0.0
         for c, s in zip(codes, sw):
@@ -220,20 +277,31 @@ def fe_codes(s: pd.DataFrame, fe: str) -> list[np.ndarray]:
     return [pd.factorize(c)[0] for c in sets[fe]]
 
 
+def with_slopes(codes: list, s: pd.DataFrame, slopes, w: np.ndarray, by: str | None = None) -> list:
+    """Unit-specific slopes on the columns `slopes`, absorbed with the first fixed effect;
+    `by` a date format ("%Y", "%Y%m") gives each unit a slope per year or month instead."""
+    if not slopes:
+        return codes
+    u = pd.factorize(s.unit + (s.date.dt.strftime(by) if by else ""))[0]
+    return [slope_step(codes[0], u, s[list(slopes)].to_numpy(float), w), *codes[1:]]
+
+
 def est(d: pd.DataFrame, y: str, x: str, w: str, label: str, zs=("dose_unpl", "dose_plan"), fe: str = "main",
-        ws=()) -> dict:
-    zs, ws = list(zs), list(ws)
-    s = d.dropna(subset=[y, x, w, *zs, *ws])
-    s = s[(s[w] > 0) & np.isfinite(s[[y, x, *zs, *ws]].to_numpy(float)).all(axis=1)]
+        ws=(), slopes=(), slopes_by: str | None = None) -> dict:
+    """`ws` exogenous controls; `slopes` columns given a slope for every unit (or unit ×
+    `slopes_by` period), absorbed."""
+    zs, ws, slopes = list(zs), list(ws), list(slopes)
+    s = d.dropna(subset=[y, x, w, *zs, *ws, *slopes])
+    s = s[(s[w] > 0) & np.isfinite(s[[y, x, *zs, *ws, *slopes]].to_numpy(float)).all(axis=1)]
     if len(s) < 1000:
         print(f"  {label:52s} too few rows ({len(s)})")
         return {"sample": label, "y": y, "x": x, "n": len(s), "status": "too few rows"}
     row = {"sample": label, "y": y, "x": x, "weight": w, "fe": fe, "instruments": "+".join(zs) or "none",
-           "controls": "+".join(ws), "n": len(s), "units": s.unit.nunique(), "groups": s.group.nunique(),
-           "mean_y": np.average(s[y], weights=s[w]), "mean_x": np.average(s[x], weights=s[w]),
-           "sd_x": float(np.sqrt(np.cov(s[x], aweights=s[w])))}
+           "controls": "+".join(ws), "unit_slopes": "+".join(slopes), "n": len(s), "units": s.unit.nunique(),
+           "groups": s.group.nunique(), "mean_y": np.average(s[y], weights=s[w]),
+           "mean_x": np.average(s[x], weights=s[w]), "sd_x": float(np.sqrt(np.cov(s[x], aweights=s[w])))}
     wt = s[w].to_numpy(float)
-    M = wdemean(s[[y, x, *zs, *ws]].to_numpy(float), fe_codes(s, fe), wt)
+    M = wdemean(s[[y, x, *zs, *ws]].to_numpy(float), with_slopes(fe_codes(s, fe), s, slopes, wt, slopes_by), wt)
     r = np.sqrt(wt)
     L = len(zs)
     Y, X, Z = M[:, 0] * r, M[:, [1]] * r[:, None], M[:, 2:2 + L] * r[:, None]

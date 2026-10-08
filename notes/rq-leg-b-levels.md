@@ -141,6 +141,12 @@ least squares on futures, reservoir volume and snow. They find a futures coeffic
 
 ## 5. The at-cost instrument on hydro (2026-10-07)
 
+> **Superseded in part, 2026-10-08** (`rq-price-taking-simulation.md`): simulated price-takers
+> (β = 0) give −0.14 / −0.18 with unit × month effects, so the negative estimates below are
+> mostly the estimator. With a slope per unit on the at-cost draws' price, the actual estimate
+> is +0.07 [−0.03, 0.17], like price-takers; it departs in 2019 – 2021H1 (+0.31) and 2024 – 2025
+> (+0.20). Nash is still rejected.
+
 `step_engine.py --kind hydro --comp` re-clears the same 40 resampled draws with each
 firm's hydro steps above €1 moved to its units' λ*30s (hcompcost_YYYYMM, 81 months,
 ~100,000 unit-hours each), and reads X over the 5 draws whose price is nearest the cost
@@ -201,6 +207,9 @@ variation is used, as for thermal; the cause of the negative values is open.
 `analysis/leg_b_water_checks.py`; `outputs/tables/leg_b_water_checks.csv`.
 
 ### 6.1 The negative β is not the firm's own zero-priced volume or its water
+
+> 2026-10-08: the negative β is produced by the estimator itself (`rq-price-taking-simulation.md`
+> §2–3), which is why no candidate cause here moved it.
 
 **The candidate.** On a wet or windy day a firm sells more energy offered at zero
 (run-of-river, wind), so its net position n and X are high; if its water is worth less

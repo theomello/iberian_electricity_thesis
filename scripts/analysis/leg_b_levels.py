@@ -93,9 +93,15 @@ ZSETS = {"firm × forecast": "firm forecasts", "reactor outages": ["dose_unpl", 
          "regional wind": ["Wdev_fc"], "outages + wind": ["dose_unpl", "dose_plan", "Wdev_fc"]}
 
 
-def load() -> pd.DataFrame:
-    d = sh.add_instruments(pd.read_parquet(sh.ROWS).drop(columns=INSTRUMENTS + list(FORECASTS)))
-    d = sh.derive(d)
+def load(sim: int | None = None) -> pd.DataFrame:
+    """Hydro step rows with λ*; with `sim`, the simulated price-takers' rows that set the
+    price in a draw (`price_taking_simulation.py`)."""
+    if sim is None:
+        d = pd.read_parquet(sh.ROWS).drop(columns=INSTRUMENTS + list(FORECASTS))
+    else:
+        d = sh.rows(sim)
+        d = d[d.m_n > 0]
+    d = sh.derive(sh.add_instruments(d))
     w = pd.read_parquet(WV, columns=["unit", "date", "lam30", "lam30s", "lam90s", "fwd", "fill", "fill_anom",
                                      "storage", "cf_s"])
     w["date"] = pd.to_datetime(w.date)

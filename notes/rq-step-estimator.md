@@ -254,6 +254,12 @@ margin only; the water value's level, the across-day margin, is still untested.
 
 ## 7. An instrument from the model: X̃ at cost (2026-10-07)
 
+> **Superseded in part, 2026-10-08** (`rq-price-taking-simulation.md`): simulated price-takers
+> (β = 0) reproduce these at-cost estimates almost exactly (−0.26 / −0.21 against −0.27 with the
+> main effects, +0.27 against +0.10 with fuel × date), including the sign flip. With a slope per
+> unit on the at-cost draws' price, thermal offers cannot be told apart from price-takers in any
+> period (pooled +0.01 [−0.08, 0.10]). Nash is still rejected.
+
 **The idea, with an example.** Iberdrola offers a gas step at €95 against a measured
 cost of €90. A step priced higher sets the price only in tighter draws, so its X̃ is
 computed there. If the extra €5 is a cost we do not see, least squares reads it as
@@ -320,6 +326,8 @@ five firms −0.25 [−0.35, −0.15] (unit × day −0.08 [−0.20, 0.03]); oth
   rejected in the preferred one; a small negative β is not ruled out.
 
 ### 7.1 Start-up cost does not explain the sign (2026-10-07)
+
+> 2026-10-08: the sign is the estimator's (`rq-price-taking-simulation.md` §2–3).
 
 `analysis/step_startup_check.py` → `outputs/tables/step_startup_check.csv`. The candidate
 in §7: a firm short on a day starts more plant, and start-up costs raise its step

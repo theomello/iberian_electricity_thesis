@@ -61,6 +61,23 @@ HYDRO AT COST writes hcompcost_YYYYMM.parquet, the same columns: f's storage and
 hydro steps above MIN_PRICE_HYDRO moved to the unit's price-taking water value λ*30s
 (`build_water_value_forward.py`, known at D−2), and "fuel" is the hydro class, so cbar is
 the day's median λ* over the class. Units without λ* keep their offers.
+
+SIMULATED PRICE-TAKERS (`--sim SEED`, 2026-10-08). Is a negative β an artefact of the
+estimator? f's thermal (hydro: storage and pumped above MIN_PRICE_HYDRO, with λ*30s) steps
+are moved to cost + noise that ignores f's stake in the price, so β = 0 by construction,
+and the moments are rebuilt on that curve with the same draws (rivals as offered). The
+noise is the unit's own offers reshuffled (`simulate`). Writes sim<SEED>_units_YYYYMM
+(hydro: hsim<SEED>_units), the units file with `price` the simulated price and
+`price_offer` the offer, and sim<SEED>_moments_YYYYMM (hsim<SEED>_moments), the moments
+file's columns at the simulated prices (the realised-draw columns left out). The
+estimators read them with `--sim SEED` (`price_taking_simulation.py`).
+
+DRAW PRICES AT COST (`--comp-price`, 2026-10-08). The simulation shows the cause: a step
+enters only where draws' prices reach it, so the kept steps' gap rises with where the
+hour's prices sit above the unit's cost, and the instruments move with that too. The
+correction controls for it, read where f's own offers cannot enter: the same draws as
+`--comp`, f at cost, and per target (H, f) the mean, sd and 10/50/90th percentiles of the
+draws' prices (cp_*). Writes compcostprice_YYYYMM (hydro hcompcostprice_YYYYMM).
 """
 from __future__ import annotations
 
@@ -96,6 +113,7 @@ def months_around(ym: str) -> list[str]:
 
 KINDS = {"thermal": ("units", "moments"), "hydro": ("hydro", "hmoments")}
 COMP_OUT = {"thermal": "compcost", "hydro": "hcompcost"}
+SIM_OUT = {"thermal": "sim", "hydro": "hsim"}
 WATER_VALUE = ROOT / "outputs/tables/water_value_forward.parquet"
 MIN_PRICE_HYDRO = 1.0   # €/MWh: hydro blocks at zero tie with every renewable and never carry a choice
 
@@ -223,10 +241,65 @@ def at_cost(q: np.ndarray, vs: np.ndarray, vb: np.ndarray, uu: pd.DataFrame) -> 
     return cur.index.to_numpy(float), cur.vs.to_numpy(float), cur.vb.to_numpy(float), moved
 
 
-def month(ym: str, sh: pd.DataFrame, kind: str = "thermal",
-          comp: bool = False) -> tuple[pd.DataFrame, pd.DataFrame]:
+def draw(pool_key: np.ndarray, vals: np.ndarray, key: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+    """For each entry of `key`, one of `vals` drawn at random (with replacement) from the
+    entries whose `pool_key` equals it."""
+    o = np.argsort(pool_key, kind="stable")
+    uniq, start, size = np.unique(pool_key[o], return_index=True, return_counts=True)
+    i = np.searchsorted(uniq, key)
+    return vals[o][start[i] + (rng.random(len(key)) * size[i]).astype(int)]
+
+
+def simulate(t: pd.DataFrame, ym: str, seed: int, flat: pd.DataFrame | None) -> pd.DataFrame:
+    """Price-taking offers, β = 0 within the month by construction: every step of `t` (rows
+    with a cost and a date) moved to cost + μ + δ + ε, rounded to cents. Not bounded: holding
+    a price at the unit's lowest or highest offer would tie its gap to the cost (a fixed cap
+    step's gap falls as λ* rises), a second mechanism; the estimators' own rules (hydro above
+    €1, price-setting in a draw) select rows as for offers. `sim_out` marks prices outside the
+    unit's offers that month, for a check.
+
+    μ is the unit's mean gap (offer − cost) in the month, so the level is the unit's own and
+    unit × month effects remove it; across months the simulated offers keep whatever the
+    actual means carry, so only within-month estimates test the estimator. δ is a day effect
+    drawn from the unit's day means in the month less their mean, ε a step deviation drawn
+    from its steps less their day mean: the noise is as dispersed as the unit's offers that
+    month, split the same way between days and steps, and independent of the hour it lands
+    in. Within an hour the draws are sorted onto the steps in their order, which keeps the
+    ladder (mw_below); on a flat unit-day (one curve for all 24 hours) the draws are made
+    once for the day."""
+    rng = np.random.default_rng([seed, int(ym)])
+    s = t.reset_index(drop=True).copy()
+    unit = s.unit.astype(str).to_numpy()
+    s["g"] = s.price.astype(float) - s.cost
+    s["mu"] = s.groupby("unit").g.transform("mean")
+    s["a"] = s.groupby(["unit", "date"]).g.transform("mean")
+    dy = s.groupby(["unit", "date"]).a.first().reset_index()
+    du = dy.unit.astype(str).to_numpy()
+    dev = (dy.a - dy.groupby("unit").a.transform("mean")).to_numpy()
+    dy["delta"] = draw(du, dev, du, rng)
+    s = s.merge(dy[["unit", "date", "delta"]], on=["unit", "date"], how="left")
+    s["r"] = s.groupby(["unit", "hid"]).price.rank(method="first").astype(int) - 1
+    fl = np.zeros(len(s), dtype=bool)
+    if flat is not None:
+        fl = s[["unit", "date"]].merge(flat, on=["unit", "date"], how="left").flat.fillna(False).to_numpy(bool)
+    s["c"] = np.where(fl, unit + "|d" + s.date.dt.strftime("%Y%m%d").to_numpy(), unit + "|h" + s.hid.astype(str).to_numpy())
+    cr = s[["c", "unit", "r"]].drop_duplicates(["c", "r"]).reset_index(drop=True)
+    cr["eps"] = draw(unit, (s.g - s.a).to_numpy(), cr.unit.astype(str).to_numpy(), rng)
+    cr = cr.sort_values(["c", "eps"], kind="stable")
+    cr["r"] = cr.groupby("c").cumcount().to_numpy()
+    s = s.merge(cr[["c", "r", "eps"]], on=["c", "r"], how="left")
+    raw = np.round(s.cost + s.mu + s.delta + s.eps, 2)
+    lo = np.round(s.groupby("unit").price.transform("min").astype(float), 2)
+    hi = np.round(s.groupby("unit").price.transform("max").astype(float), 2)
+    s["sim_out"] = (raw < lo) | (raw > hi)
+    s["sim"] = raw
+    return s.drop(columns=["g", "mu", "a", "delta", "r", "c", "eps"])
+
+
+def month(ym: str, sh: pd.DataFrame, kind: str = "thermal", comp: bool = False, sim: int | None = None,
+          price_only: bool = False) -> tuple[pd.DataFrame, pd.DataFrame]:
     hours, market, own, units = load(ym, kind)
-    if comp and kind == "hydro":                 # cost = λ*30s, fuel = hydro class
+    if (comp or sim is not None) and kind == "hydro":    # cost = λ*30s, fuel = hydro class
         w = pd.read_parquet(WATER_VALUE, columns=["unit", "date", "lam30s"])
         w["date"] = w.date.astype("datetime64[ns]")
         units = units.assign(date=units.date.astype("datetime64[ns]")).merge(w, on=["unit", "date"], how="left")
@@ -237,6 +310,17 @@ def month(ym: str, sh: pd.DataFrame, kind: str = "thermal",
     h["day"] = (pd.to_datetime(h.date) - pd.Timestamp("2018-01-01")).dt.days
     valid = h.valid.fillna(False).to_numpy()
     t_units = units[units.group.notna() & ~units.withdrawn]
+    if sim is not None:
+        t_units = t_units[t_units.cost.notna()].copy()
+        flat = None
+        if kind == "hydro":
+            from step_estimator_hydro import flat_days          # heavy import, simulation only
+            fh = pd.read_parquet(CACHE / f"hydro_{ym}.parquet")
+            fh["date"] = fh.date.astype("datetime64[ns]")
+            flat = flat_days(fh)
+        else:
+            t_units["date"] = t_units.hid.map(h.set_index("hid").date).astype("datetime64[ns]")
+        t_units = simulate(t_units, ym, sim, flat)
     own_idx = own.set_index(["hid", "group"]).sort_index()
     # --comp: the day's typical cost of each fuel, median over the units offering it
     cbar = (t_units.assign(date=t_units.hid.map(h.set_index("hid").date))
@@ -275,6 +359,12 @@ def month(ym: str, sh: pd.DataFrame, kind: str = "thermal",
                     continue
                 q2, vs2, vb2, moved = at_cost(q, vs, vb, uu)
                 rc = clear(blk, g, q2, vs2, vb2, cand, shift)
+                if price_only:                   # where the draws' prices sit with f at cost
+                    pq = np.quantile(rc["p"], [0.1, 0.5, 0.9])
+                    out.append(pd.DataFrame({"hid": [H.hid], "group": [g], "cp_mean": [rc["p"].mean()],
+                                             "cp_sd": [rc["p"].std()], "cp_q10": [pq[0]], "cp_q50": [pq[1]],
+                                             "cp_q90": [pq[2]], "n_draws": [len(cand)]}))
+                    continue
                 ra = clear(blk, g, q, vs, vb, cand, shift)
                 cu = np.round(uu.cost.to_numpy(float), 2)
                 ku = np.minimum(np.searchsorted(q2, cu), len(q2) - 1)
@@ -299,8 +389,10 @@ def month(ym: str, sh: pd.DataFrame, kind: str = "thermal",
                     "cbar": cb, "kb_sn": nearb @ rc["n"], "kb_s": nearb @ rc["s"],
                     "moved_mw": moved, "offer_mw": uu.mw.to_numpy(float)}))
                 continue
+            if sim is not None:                  # f's steps at their simulated prices
+                uu = t_units[(t_units.hid == H.hid) & (t_units.group == g)]
+                q, vs, vb, _ = at_cost(q, vs, vb, uu.assign(cost=uu.sim))
             r = clear(blk, g, q, vs, vb, cand, shift)
-            rr = clear(blk, g, q, vs, vb, np.array([hi_]), np.zeros(1))
             K = len(q)
             x = np.where(r["s"] >= MIN_SLOPE, r["n"] / np.maximum(r["s"], 1e-9), np.nan)
             xd = np.isfinite(x)
@@ -321,6 +413,10 @@ def month(ym: str, sh: pd.DataFrame, kind: str = "thermal",
                 "g_x": acc(gk[gm & xd], x[gm & xd]), "g_xn": acc(gk[gm & xd], np.ones((gm & xd).sum())),
                 "g_s": acc(gk[gm], r["s"][gm]), "g_sn": acc(gk[gm], r["n"][gm]),
             })
+            if sim is not None:
+                out.append(row[row.price.isin(set(uu.sim.astype(float)))])
+                continue
+            rr = clear(blk, g, q, vs, vb, np.array([hi_]), np.zeros(1))
             ev = np.zeros(K, dtype=np.int8)
             if rr["kstar"][0] >= 0:
                 ev[rr["kstar"][0]] = 1
@@ -335,6 +431,9 @@ def month(ym: str, sh: pd.DataFrame, kind: str = "thermal",
                        "n_own_prices": K, "shift_abs_mean": np.abs(shift).mean()})
     if comp:
         return pd.concat(out, ignore_index=True), pd.DataFrame()
+    if sim is not None:
+        sim_units = t_units.rename(columns={"price": "price_offer"}).rename(columns={"sim": "price"})
+        return pd.concat(out, ignore_index=True), sim_units
     return pd.concat(out, ignore_index=True), pd.DataFrame(tg)
 
 
@@ -344,11 +443,32 @@ def main() -> int:
     ap.add_argument("--kind", choices=list(KINDS), default="thermal")
     ap.add_argument("--comp", action="store_true",
                     help="own steps at cost: thermal (compcost_YYYYMM) or, with --kind hydro, at λ* (hcompcost)")
+    ap.add_argument("--sim", type=int, default=None, metavar="SEED",
+                    help="own steps at simulated price-taking prices (sim<SEED>_*, hydro hsim<SEED>_*)")
+    ap.add_argument("--comp-price", action="store_true",
+                    help="only the draws' prices on the at-cost curve (compcostprice_YYYYMM, hydro hcompcostprice)")
     args = ap.parse_args()
     sh = shares()
     out = KINDS[args.kind][1]
     for ym in args.months:
         t0 = time.time()
+        if args.comp_price:
+            m, _ = month(ym, sh, args.kind, comp=True, price_only=True)
+            m.to_parquet(CACHE / f"{COMP_OUT[args.kind]}price_{ym}.parquet", index=False)
+            print(f"  {ym}: {len(m):,} targets; draws' mean price at cost median {m.cp_mean.median():.1f}, "
+                  f"sd median {m.cp_sd.median():.1f} ({time.time() - t0:.0f} s)", flush=True)
+            continue
+        if args.sim is not None:
+            m, u = month(ym, sh, args.kind, sim=args.sim)
+            pre = f"{SIM_OUT[args.kind]}{args.sim}"
+            m.to_parquet(CACHE / f"{pre}_moments_{ym}.parquet", index=False)
+            u.to_parquet(CACHE / f"{pre}_units_{ym}.parquet", index=False)
+            sets = m.groupby(["hid", "group", "price"]).m_n.first() > 0
+            print(f"  {ym}: {len(u):,} simulated steps (outside the unit's offers {u.sim_out.mean():.3f}); corr(simulated, "
+                  f"offered) {np.corrcoef(u.price, u.price_offer)[0, 1]:.2f}; sd of the gap simulated "
+                  f"{(u.price - u.cost).std():.1f} vs offered {(u.price_offer - u.cost).std():.1f}; "
+                  f"price points setting p in ≥1 draw {sets.mean():.3f} ({time.time() - t0:.0f} s)", flush=True)
+            continue
         if args.comp:
             m, _ = month(ym, sh, args.kind, comp=True)
             m.to_parquet(CACHE / f"{COMP_OUT[args.kind]}_{ym}.parquet", index=False)

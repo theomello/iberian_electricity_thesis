@@ -49,7 +49,7 @@ sys.path.insert(0, str(ROOT / "scripts" / "analysis"))
 from iv_two_endog import sw_f, tsls_k  # noqa: E402
 from midday_hydro_iv import cluster_meat  # noqa: E402
 from regional_wind_offer_test import FORECASTS, forecasts, tagged  # noqa: E402
-from step_estimator import CACHE, FIRMS, FLOORS, INSTRUMENTS, ar_grid, instruments, wdemean  # noqa: E402
+from step_estimator import CACHE, FIRMS, FLOORS, INSTRUMENTS, ar_grid, instruments, wdemean, with_slopes  # noqa: E402
 
 TABLES = ROOT / "outputs/tables"
 OUT = tagged(TABLES / "step_estimator_hydro_results.csv")
@@ -75,13 +75,21 @@ def flat_days(h: pd.DataFrame) -> pd.DataFrame:
     return s.assign(flat=(s.hours == 24) & (s.curves == 1)).reset_index()[["unit", "date", "flat"]]
 
 
-def rows() -> pd.DataFrame:
+def rows(sim: int | None = None) -> pd.DataFrame:
+    """Hydro unit-steps with their moments; with `sim`, the simulated price-takers of
+    `step_engine.py --sim` (steps at their simulated prices, flat days as offered)."""
     parts = []
-    for ym in months():
-        m = pd.read_parquet(CACHE / f"hmoments_{ym}.parquet")
+    ms = [ym for ym in months() if sim is None or (CACHE / f"hsim{sim}_moments_{ym}.parquet").exists()]
+    if len(ms) < len(months()):
+        print(f"  simulated seed {sim}: {len(ms)} of {len(months())} months on disk ({ms[0]}–{ms[-1]})", flush=True)
+    for ym in ms:
+        m = pd.read_parquet(CACHE / (f"hsim{sim}_moments_{ym}.parquet" if sim is not None else f"hmoments_{ym}.parquet"))
         h = pd.read_parquet(CACHE / f"hydro_{ym}.parquet")
         h["date"] = pd.to_datetime(h.date)
         fl = flat_days(h)
+        if sim is not None:
+            h = pd.read_parquet(CACHE / f"hsim{sim}_units_{ym}.parquet")
+            h["date"] = pd.to_datetime(h.date)
         u = h[~h.withdrawn & h.group.notna() & (h.price > 1.0)]
         tot = u.groupby(["hid", "group", "price"]).mw.sum().rename("hy_mw").reset_index()
         m = m.merge(tot, on=["hid", "group", "price"], how="inner")
@@ -136,24 +144,25 @@ def fe_codes(s: pd.DataFrame) -> list[np.ndarray]:
 
 
 def est(d: pd.DataFrame, label: str, zs: list[str] | str, x: str = "Xt", xs2: tuple | None = None,
-        y: str = "price", fe=fe_codes, ws: tuple = ()) -> dict:
+        y: str = "price", fe=fe_codes, ws: tuple = (), slopes: tuple = (), slopes_by: str | None = None) -> dict:
     """Weighted 2SLS of the step price (or `y`) on X̃ (or on X̃⁺ and X̃⁻ when xs2 is given),
-    with the fixed effects `fe(rows)` (unit × day, class × hour, class × position by default)
-    and the exogenous controls `ws`."""
+    with the fixed effects `fe(rows)` (unit × day, class × hour, class × position by default),
+    the exogenous controls `ws`, and a slope for every unit on the columns `slopes` (absorbed
+    with the first fixed effect)."""
     s = d.dropna(subset=[x, "m_n", y]).copy()
     if isinstance(zs, str) and zs == "firm forecasts":
         zs = zf(s)
-    zs, ws = list(zs), list(ws)
+    zs, ws, slopes = list(zs), list(ws), list(slopes)
     xs = list(xs2) if xs2 else [x]
-    s = s[(s.m_n > 0) & np.isfinite(s[[y, *xs, *zs, *ws]].to_numpy(float)).all(axis=1)]
+    s = s[(s.m_n > 0) & np.isfinite(s[[y, *xs, *zs, *ws, *slopes]].to_numpy(float)).all(axis=1)]
     row = {"sample": label, "x": "+".join(xs), "instruments": ", ".join(zs) if len(zs) <= 3 else f"{len(zs)} firm × forecast",
-           "controls": ", ".join(ws), "n": len(s), "units": s.unit.nunique(), "groups": s.group.nunique(),
-           "mean_x": np.average(s[xs[0]], weights=s.m_n)}
+           "controls": ", ".join(ws), "unit_slopes": ", ".join(slopes), "n": len(s), "units": s.unit.nunique(),
+           "groups": s.group.nunique(), "mean_x": np.average(s[xs[0]], weights=s.m_n)}
     if len(s) < 5000:
         print(f"  {label:58s} too few rows ({len(s):,})")
         return row | {"status": "too few rows"}
     wt = s.m_n.to_numpy(float)
-    M = wdemean(s[[y, *xs, *zs, *ws]].to_numpy(float), fe(s), wt)
+    M = wdemean(s[[y, *xs, *zs, *ws]].to_numpy(float), with_slopes(fe(s), s, slopes, wt, slopes_by), wt)
     r = np.sqrt(wt)
     k, L = len(xs), len(zs)
     Y, X, Z = M[:, 0] * r, M[:, 1:1 + k] * r[:, None], M[:, 1 + k:1 + k + L] * r[:, None]

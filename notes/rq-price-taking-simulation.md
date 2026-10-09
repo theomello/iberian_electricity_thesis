@@ -318,3 +318,52 @@ Still not excluded: a firm-specific error that changes with the hour or with the
 stake, for example a firm that saves water for the evening hours in which it also has more at
 stake. The 90-day horizon error is common to all firms and cancels in the hour effects (§8);
 reservoir bounds are untested.
+
+## 10. The departures hold within each part of the day (2026-10-08)
+
+**The test.** The same three specifications within each six-hour block of the Madrid clock
+(hour the period starts: 00–05, 06–11, 12–17, 18–23; blocks fixed before the split was read),
+actual offers against seeds 1 and 2 (and 3 on 2024 – 25), control `level`
+(`price_taking_simulation.py --kind hydro --hours`; `price_taking_simulation_hydro_by_hour{,_reading}.csv`).
+Within a block the unit × month effect is the unit's own mean over that block's hours that
+month. So if a firm keeps water for the evening and values it more there, that premium is a
+constant inside the evening block and goes into the effect. Rule, fixed before the run: if the
+departure holds within blocks, such a water value is ruled out too; if it vanishes in every
+block, it came from differences between blocks, which a water value by block and market power
+by block would both produce.
+
+Actual β and the price-taker band (seeds' min … max), unit × month:
+
+| hours | 2019 – 2021H1 | band | 2024 – 2025-09 | band | pooled | band |
+|---|---|---|---|---|---|---|
+| 00–05 | **+0.56** [0.20, 0.89] | −0.17 … +0.03 | +0.41 [0.14, 0.91] | +0.15 … +0.24 | +0.20 [0.00, 0.40] | +0.07 … +0.15 |
+| 06–11 | **+0.27** [0.01, 0.56] | −0.08 … −0.06 | **+0.20** [0.10, 0.31] | 0.00 … +0.08 | +0.11 [0.00, 0.21] | +0.06 … +0.07 |
+| 12–17 | +0.48 [−0.03, 1.01] | −0.19 … −0.03 | +0.33 [0.16, 0.53] | −0.07 … +0.18 | +0.22 [0.06, 0.38] | +0.04 … +0.19 |
+| 18–23 | **+0.40** [0.13, 0.68] | −0.19 … +0.02 | **+0.21** [0.07, 0.36] | −0.02 … +0.01 | +0.05 [−0.10, 0.17] | −0.05 … +0.01 |
+| whole day (§6) | **+0.31** [0.17, 0.46] | −0.06 … 0.00 | **+0.20** [0.10, 0.34] | −0.02 … +0.04 | +0.07 [−0.03, 0.17] | +0.02 … +0.07 |
+
+Bold: the AR set misses the band. Actual minus the band's mean: 2019 – 2021H1 +0.63, +0.34,
++0.59, +0.48 by block against +0.34 over the whole day; 2024 – 2025 +0.22, +0.17, +0.27, +0.21
+against +0.19.
+
+- **The departures do not come from differences between blocks.** Inside every block the gap
+  to price-takers is as large as over the whole day, or larger. By the rule, a firm water value
+  that differs between parts of the day and is steady over the month is ruled out as well.
+- **2019 – 2021H1 differs in three blocks.** At midday the set is wide (0 just inside), but the
+  estimate is as far above its band as the others.
+- **2024 – 2025 differs in the morning and the evening**, the blocks either side of the solar
+  hours. At night and at midday it does not: fewer rows (14k at midday, where hydro rarely sets
+  the price; first-stage F 14 at night), and at night the price-takers themselves give
+  +0.15 … +0.24.
+- **Pooled over the window no block differs**, as over the whole day.
+- These are eight tests in the two periods; the reading rests on the pattern (every estimate
+  above its band), not on any one of them. β = 1 is rejected in every block but 2019 – 2021H1
+  at midday.
+
+**What is left after §8 – §10.** The departures sit in Iberdrola and Endesa (2024 – 25) and
+mostly Iberdrola (2019 – 21H1); they are not a water value that is a fixed multiple of λ*, nor a
+fixed premium in some hours. What would still produce them is a firm-specific water value that
+moves within the month with the firm's own stake (a constraint that binds on the same days the
+firm has much at stake), or reservoir bounds. Short of that, the data fit firms that price their
+water further above λ* when they have more at stake, in these two periods, at a fraction of the
+Cournot markup.

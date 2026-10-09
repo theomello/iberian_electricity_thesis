@@ -216,7 +216,14 @@ def reading(t: pd.DataFrame, control: str = "level", by: tuple = ("base",)) -> p
     return r.rename(columns={"b_iv": "actual", "min": "null_lo", "max": "null_hi", "mean": "null_mean"})
 
 
-FIRM_PARTS = se.CACHE / "price_taking_dropfirm_s{seed}.csv"
+def hydro_level_rows(seed: int | str) -> tuple[pd.DataFrame, dict]:
+    """The rows of the hydro splits (with their selection index) and the three periods."""
+    d = lb.load(sim=seed or None)
+    d = lb.at_cost(d[d.m_n > 0])
+    d = selection(d, "hydro", "lam30s").dropna(subset=["P_rel", "cp_sd"])
+    periods = {"unit × month | Zb": d.date.notna(), "unit × month | Zb | 2019–2021H1": d.date < "2021-07-01",
+               "unit × month | Zb | 2024 – 2025-09": d.date >= "2024-01-01"}
+    return d, periods
 
 
 def hydro_firms(seed: int, only: list[str] | None = None) -> list[dict]:
@@ -225,12 +232,8 @@ def hydro_firms(seed: int, only: list[str] | None = None) -> list[dict]:
     Not firm by firm: Zb is one value per firm and hour, so within one firm the class × hour
     effects absorb it (first-stage F 0, tried 2026-10-08); β comes from comparing firms in the
     same hour."""
-    d = lb.load(sim=seed or None)
-    d = lb.at_cost(d[d.m_n > 0])
-    d = selection(d, "hydro", "lam30s").dropna(subset=["P_rel", "cp_sd"])
+    d, periods = hydro_level_rows(seed)
     sl, by = CONTROLS["level"]
-    periods = {"unit × month | Zb": d.date.notna(), "unit × month | Zb | 2019–2021H1": d.date < "2021-07-01",
-               "unit × month | Zb | 2024 – 2025-09": d.date >= "2024-01-01"}
     n = d.group.value_counts()
     print("rows by firm:", n.to_dict(), flush=True)
     res = []
@@ -244,21 +247,52 @@ def hydro_firms(seed: int, only: list[str] | None = None) -> list[dict]:
     return res
 
 
-def firms(seeds: list[int], only: list[str] | None, combine_only: bool) -> int:
+# Six-hour blocks of the Madrid clock hour a period starts in (fixed 2026-10-08, before the split was read)
+HOUR_BLOCKS = {"00–05 h": (0, 6), "06–11 h": (6, 12), "12–17 h": (12, 18), "18–23 h": (18, 24)}
+
+
+def hydro_hours(seed: int, only: list[str] | None = None) -> list[dict]:
+    """Where in the day the hydro departures sit: the same three specifications within each
+    six-hour block, control `level`; seed 0 = the actual offers. Within a block the unit ×
+    month effect is the unit's own mean over those hours, so a firm-specific water value that
+    differs between blocks (water kept for the evening) goes into it; β still compares firms in
+    the same hour."""
+    d, periods = hydro_level_rows(seed)
+    sl, by = CONTROLS["level"]
+    hour = d.utc.dt.tz_convert("Europe/Madrid").dt.hour
+    print("rows by block:", {b: int(hour.between(lo, hi - 1).sum()) for b, (lo, hi) in HOUR_BLOCKS.items()}, flush=True)
+    res = []
+    for b, (lo, hi) in HOUR_BLOCKS.items():
+        for label, keep in periods.items():
+            if only and label not in only:
+                continue
+            s = d[keep & hour.between(lo, hi - 1)]
+            res.append(sh.est(s, f"{label} | {b}", ["Zb"], y="gap30", fe=lb.UNIT_MONTH, slopes=sl, slopes_by=by)
+                       | {"base": label, "hours": b, "control": "level"})
+    return res
+
+
+# split → (estimates of one seed, the column naming the subsample, cache part name, table name)
+SPLITS = {"firms": (hydro_firms, "without", "dropfirm", "without_firm"),
+          "hours": (hydro_hours, "hours", "hourblock", "by_hour")}
+
+
+def split(name: str, seeds: list[int], only: list[str] | None, combine_only: bool) -> int:
     """Each seed's part goes to the cache (seeds can run in parallel); the parts on disk are then
-    combined into the table and read firm by firm."""
+    combined into the table and read subsample by subsample."""
+    fn, col, part, table = SPLITS[name]
     for seed in [] if combine_only else seeds:
         print(f"\n=== {'ACTUAL OFFERS' if seed == 0 else f'SEED {seed}: simulated price-takers'} ===", flush=True)
-        part = pd.DataFrame([r | {"seed": seed} for r in hydro_firms(seed, only)])
-        part.rename(columns={"b_iv_Xt": "b_iv", "se_iv_Xt": "se_iv", "F_Xt": "F", "b_ls_Xt": "b_ls"}).to_csv(
-            str(FIRM_PARTS).format(seed=seed), index=False)
-    parts = sorted(se.CACHE.glob("price_taking_dropfirm_s*.csv"))
+        p = pd.DataFrame([r | {"seed": seed} for r in fn(seed, only)])
+        p.rename(columns={"b_iv_Xt": "b_iv", "se_iv_Xt": "se_iv", "F_Xt": "F", "b_ls_Xt": "b_ls"}).to_csv(
+            se.CACHE / f"price_taking_{part}_s{seed}.csv", index=False)
+    parts = sorted(se.CACHE.glob(f"price_taking_{part}_s*.csv"))
     t = pd.concat([pd.read_csv(p) for p in parts], ignore_index=True)
-    t.to_csv(TABLES / "price_taking_simulation_hydro_without_firm.csv", index=False)
+    t.to_csv(TABLES / f"price_taking_simulation_hydro_{table}.csv", index=False)
     print(f"\ncombined {len(parts)} seed parts: {sorted(t.seed.unique())}")
     if (t.seed == 0).any() and (t.seed > 0).any():
-        r = reading(t[t.b_iv.notna()], by=("base", "without"))
-        r.to_csv(TABLES / "price_taking_simulation_hydro_without_firm_reading.csv")
+        r = reading(t[t.b_iv.notna()], by=("base", col))
+        r.to_csv(TABLES / f"price_taking_simulation_hydro_{table}_reading.csv")
         pd.set_option("display.width", 250)
         print(r.round(3).to_string())
     return 0
@@ -325,14 +359,16 @@ def main() -> int:
                     "e.g. for a seed simulated on part of the months")
     ap.add_argument("--firms", action="store_true", help="hydro only: the departures without each firm in turn "
                     "(control level)")
-    ap.add_argument("--combine", action="store_true", help="with --firms: only combine the seed parts on disk")
+    ap.add_argument("--hours", action="store_true", help="hydro only: the departures within each six-hour block "
+                    "(control level)")
+    ap.add_argument("--combine", action="store_true", help="with --firms or --hours: only combine the seed parts on disk")
     ap.add_argument("--planted", action="store_true",
                     help="hydro only: price-takers at a firm-specific water value (hsimw<SEED>), the two periods")
     args = ap.parse_args()
     if args.planted:
         return planted(args.seeds[0])
-    if args.firms:
-        return firms(args.seeds, args.only, args.combine)
+    if args.firms or args.hours:
+        return split("firms" if args.firms else "hours", args.seeds, args.only, args.combine)
     if args.corrected:
         return corrected(args.kind, args.seeds, args.controls, args.only)
     out = TABLES / f"price_taking_simulation_{args.kind}.csv"

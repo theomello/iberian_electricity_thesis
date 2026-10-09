@@ -407,3 +407,61 @@ TEMON, ADOURO, Iberdrola's DUER, TAJO, SIL and Movhera's DOUSUP.
   output and so its stake are high, which pushes β down rather than up. So the near-full excess
   need not be the bound; a firm with plenty of water and much at stake has the most room to
   price above λ*.
+
+## 12. The departures in €/MWh (2026-10-09)
+
+**The idea, with an example.** In the model a step's markup over its water value is β·X̃, where
+X̃ = n / |RD′| is the markup a Cournot firm would add (€/MWh). Say Iberdrola sells a net 500 MW
+in an hour and rivals add 100 MW per €1 of price: X̃ = €5. With β = 0.34 it prices that step
+€1.70 above where a price-taker would. If it were a net buyer of 500 MW, it would price €1.70
+below.
+
+**Method** (`price_taking_simulation.py --kind hydro --size`; `price_taking_simulation_hydro_size.csv`).
+β is the bias-adjusted estimate of each departing period: actual minus the price-takers' mean,
+with the range [AR low − null max, AR high − null min] (§7): **2019 – 2021H1 0.34 [0.17, 0.52],
+2024 – 2025-09 0.18 [0.06, 0.36]**. The rows and weights are the estimate's own: each
+price-setting step weighted by the draws in which it sets the price. Price effect: per hour,
+Σ over a firm's steps of (share of draws it sets the price) × β·X̃, averaged over every hour of
+the period, 0 where the firm's hydro never sets it. That is an upper bound: a step priced €1
+higher raises the price by €1 only if no rival step lies within €1 of it. It counts only the part
+of the markup that rises with the firm's stake; the level within each month is in the unit ×
+month effect and is not counted.
+
+Per price-setting step (weighted by the draws in which it sets the price):
+
+| | net seller | X̃ when net seller: mean (median, p90) | markup when net seller | markdown when net buyer |
+|---|---|---|---|---|
+| **2019 – 2021H1**, all firms | 50% | €3.7 (2.2, 8.2) | **€1.26** [0.61, 1.91] | −€1.16 |
+| Iberdrola | 60% | €5.1 (3.1, 11.6) | €1.74 [0.85, 2.64] | −€0.74 |
+| EDP | 54% | €3.6 (2.4, 7.5) | €1.23 [0.60, 1.87] | −€1.19 |
+| Endesa | 0.2% | — | — | −€1.80 |
+| **2024 – 2025-09**, all firms | 52% | €12.1 (6.8, 29.1) | **€2.24** [0.74, 4.38] | −€1.83 |
+| Iberdrola | 70% | €16.3 (11.2, 35.6) | €3.01 [0.99, 5.89] | −€1.75 |
+| EDP | 40% | €11.5 (6.0, 28.0) | €2.12 [0.70, 4.15] | −€1.75 |
+| Endesa | 0.5% | — | — | −€3.06 |
+
+Effect on the market price, every hour of the period counted (upper bound):
+
+| | share of hours the firm's hydro sets the price | 2019 – 2021H1 | share | 2024 – 2025-09 |
+|---|---|---|---|---|
+| all firms | 37% | **+€0.01** [0.01, 0.02] | 35% | **+€0.10** [0.03, 0.20] |
+| Iberdrola | 9% | +€0.07 | 13% | +€0.20 [0.07, 0.40] |
+| Endesa | 4% | −€0.07 | 3% | −€0.09 |
+| EDP | 19% | +€0.02 | 12% | −€0.03 |
+
+- **On the steps, the departure is €1 – 3/MWh**: about €1.3 when a firm is a net seller in
+  2019 – 2021H1 and €2.2 in 2024 – 2025, Iberdrola €1.7 and €3.0. X̃ is three times larger in
+  2024 – 2025 (larger net positions, or rivals adding fewer MW per € around the price; not
+  separated here), so a smaller β gives a larger markup.
+- **Endesa's hydro sets the price almost only when Endesa is a net buyer** (its retail demand
+  exceeds what it sells in the auction), so its part is a markdown: €1.8 and €3.1 below where a
+  price-taker would offer. A net buyer gains from a lower price.
+- **On the market price it is cents.** Upper bound +€0.01/MWh in 2019 – 2021H1 and +€0.10 in
+  2024 – 2025 (at most €0.20). Three reasons: these steps set the price in about a third of the
+  hours; when they do, the firm is a net buyer about half the time and marks down; and Endesa's
+  markdowns offset part of Iberdrola's markups.
+- **For scale**: offering all hydro at λ* with the same water lowers the price by €1.03 in 2024
+  and €2.17 in 2025 (`rq-counterfactual-hydro.md`). The part that rises with a firm's stake is
+  a tenth of that or less. Most of the gap between hydro offers and λ* is in the level (when the
+  water is offered), not in a markup that follows the stake. The two numbers come from different
+  methods (draws here, re-clearing the actual hours there), so compare their size only.

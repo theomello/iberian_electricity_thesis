@@ -333,6 +333,73 @@ def split(name: str, seeds: list[int], only: list[str] | None, combine_only: boo
     return 0
 
 
+def wquant(x: pd.Series, w: pd.Series, q: float) -> float:
+    o = np.argsort(x.to_numpy())
+    c = np.cumsum(w.to_numpy()[o])
+    return float(x.to_numpy()[o][np.searchsorted(c, q * c[-1])])
+
+
+SIZE_FIRMS = ("IBERDROLA", "ENDESA", "EDP")
+
+
+def size() -> int:
+    """The departures in €/MWh. In the model a step's markup over its water value is β·X̃
+    (X̃ = n / |RD′| over the draws in which it sets the price, €/MWh: the Cournot markup), so
+    with the bias-adjusted β of each departing period (actual minus the price-takers' mean;
+    range [AR low − null max, AR high − null min], the reading table) the implied markup of a
+    price-setting step is β·X̃. Rows and weights are the estimate's own (control `level`):
+    each step weighted by the draws in which it sets the price.
+    Price effect: per hour, Σ over a firm's steps of (draws it sets the price / draws) · β·X̃,
+    averaged over every hour of the period (0 where the firm's hydro never sets it). An upper
+    bound: a step priced Δ higher raises the price by Δ only if no rival step lies within Δ.
+    Only the part of the markup that rises with the firm's stake; its level within the month
+    is in the unit × month effect and is not counted."""
+    r = pd.read_csv(TABLES / "price_taking_simulation_hydro_reading.csv").set_index("base")
+    d, periods = hydro_level_rows(0)
+    d = d.dropna(subset=["Xt", "gap30", "Zb"])
+    d = d[d.m_n > 0]
+    hours = pd.concat([pd.read_parquet(f, columns=["hid", "utc"]) for f in sorted(se.CACHE.glob("hours_2*.parquet"))])
+    hours["date"] = hours.utc.dt.tz_convert("Europe/Madrid").dt.tz_localize(None).dt.normalize()
+    rows = []
+    for label in ("unit × month | Zb | 2019–2021H1", "unit × month | Zb | 2024 – 2025-09"):
+        b, lo, hi = r.loc[label, ["actual_minus_null", "beta_lo_adj", "beta_hi_adj"]]
+        keep = periods[label]
+        p = d[keep.reindex(d.index)]
+        hk = hours[(hours.date >= p.date.min()) & (hours.date <= p.date.max())].hid.nunique()
+        for g in ("all",) + SIZE_FIRMS + ("others",):
+            s = p if g == "all" else p[~p.group.isin(SIZE_FIRMS)] if g == "others" else p[p.group == g]
+            if s.empty:
+                continue
+            w = s.m_n.astype(float)
+            pos = s.Xt > 0
+            xp = s.Xt[pos]
+            share = (s.m_n / s.n_draws).sum() / hk         # hours in which the firm's hydro sets the price
+            eff = (s.m_n / s.n_draws * s.Xt).sum() / hk     # Σ P(sets p)·X̃ per hour of the period
+            rows.append({"period": label.split("| ")[-1], "firm": g, "rows": len(s), "units": s.unit.nunique(),
+                         "beta": b, "beta_lo": lo, "beta_hi": hi,
+                         "share_net_seller": np.average(pos, weights=w),
+                         "x_mean": np.average(s.Xt, weights=w),
+                         "x_seller_mean": np.average(xp, weights=w[pos]) if pos.any() else np.nan,
+                         "x_seller_median": wquant(xp, w[pos], 0.5) if pos.any() else np.nan,
+                         "x_seller_p90": wquant(xp, w[pos], 0.9) if pos.any() else np.nan,
+                         "x_buyer_mean": np.average(s.Xt[~pos], weights=w[~pos]) if (~pos).any() else np.nan,
+                         "gap_mean": np.average(s.gap30, weights=w),
+                         "sets_price_share_of_hours": share, "x_per_hour": eff})
+    t = pd.DataFrame(rows)
+    for c in ("x_mean", "x_seller_mean", "x_seller_median", "x_seller_p90", "x_buyer_mean", "x_per_hour"):
+        m = c.replace("x_", "markup_")
+        t[m], t[m + "_lo"], t[m + "_hi"] = t.beta * t[c], t.beta_lo * t[c], t.beta_hi * t[c]
+    t.to_csv(TABLES / "price_taking_simulation_hydro_size.csv", index=False)
+    pd.set_option("display.width", 250)
+    print("\nHYDRO DEPARTURES IN €/MWh (β bias-adjusted; X̃ weighted by draws setting the price):")
+    show = ["period", "firm", "rows", "beta", "share_net_seller", "x_seller_mean", "x_seller_median", "x_seller_p90",
+            "markup_seller_mean", "markup_seller_mean_lo", "markup_seller_mean_hi", "x_buyer_mean", "markup_buyer_mean",
+            "markup_mean", "gap_mean",
+            "sets_price_share_of_hours", "markup_per_hour", "markup_per_hour_lo", "markup_per_hour_hi"]
+    print(t[show].round(3).to_string(index=False))
+    return 0
+
+
 PLANTED_SPECS = ("unit × month | Zb | 2019–2021H1", "unit × month | Zb | 2024 – 2025-09")
 
 
@@ -402,7 +469,11 @@ def main() -> int:
                     "parts on disk")
     ap.add_argument("--planted", action="store_true",
                     help="hydro only: price-takers at a firm-specific water value (hsimw<SEED>), the two periods")
+    ap.add_argument("--size", action="store_true", help="hydro only: the departures in €/MWh (actual offers; "
+                    "reads the reading table)")
     args = ap.parse_args()
+    if args.size:
+        return size()
     if args.planted:
         return planted(args.seeds[0])
     for name in SPLITS:

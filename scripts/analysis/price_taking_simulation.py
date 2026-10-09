@@ -272,9 +272,44 @@ def hydro_hours(seed: int, only: list[str] | None = None) -> list[dict]:
     return res
 
 
+# Near a reservoir bound: the unit's fill in its own bottom or top FILL_TAIL over the estimation
+# window (fixed 2026-10-09, before the split was read)
+FILL_TAIL = 0.10
+
+
+def hydro_bounds(seed: int, only: list[str] | None = None) -> list[dict]:
+    """Reservoir bounds: λ* moves with the fill but not with its bounds (a full reservoir must
+    spill, an empty one must ration). Units with a fill series only (MITECO basin, SNIRH own
+    reservoirs); a unit-day is near a bound when its fill is in the unit's own bottom or top
+    decile over 2019-01 → 2025-09, read from the water-value table so that actual and simulated
+    rows split alike. The same three specifications on all of these rows, on the interior days
+    and near the bounds; control `level`; seed 0 = the actual offers."""
+    d, periods = hydro_level_rows(seed)
+    sl, by = CONTROLS["level"]
+    w = pd.read_parquet(lb.WV, columns=["unit", "date", "fill"])
+    w = w[(pd.to_datetime(w.date) >= "2019-01-01") & (pd.to_datetime(w.date) < "2025-10-01")]
+    q = w.groupby("unit").fill.quantile([FILL_TAIL, 1 - FILL_TAIL]).unstack()
+    lo, hi = d.unit.map(q[FILL_TAIL]), d.unit.map(q[1 - FILL_TAIL])
+    has = (d.storage != "none") & d.fill.notna() & lo.notna()
+    near = has & ((d.fill <= lo) | (d.fill >= hi))
+    subsets = {"with fill": has, "interior": has & ~near, "near a bound": near}
+    print("rows:", {k: int(v.sum()) for k, v in subsets.items()}, f"of {len(d):,};",
+          f"near full {(has & (d.fill >= hi)).sum():,}, near empty {(has & (d.fill <= lo)).sum():,}", flush=True)
+    res = []
+    for b, sub in subsets.items():
+        for label, keep in periods.items():
+            if only and label not in only:
+                continue
+            s = d[keep & sub]
+            res.append(sh.est(s, f"{label} | {b}", ["Zb"], y="gap30", fe=lb.UNIT_MONTH, slopes=sl, slopes_by=by)
+                       | {"base": label, "days": b, "control": "level"})
+    return res
+
+
 # split → (estimates of one seed, the column naming the subsample, cache part name, table name)
 SPLITS = {"firms": (hydro_firms, "without", "dropfirm", "without_firm"),
-          "hours": (hydro_hours, "hours", "hourblock", "by_hour")}
+          "hours": (hydro_hours, "hours", "hourblock", "by_hour"),
+          "bounds": (hydro_bounds, "days", "bounds", "by_fill")}
 
 
 def split(name: str, seeds: list[int], only: list[str] | None, combine_only: bool) -> int:
@@ -361,14 +396,18 @@ def main() -> int:
                     "(control level)")
     ap.add_argument("--hours", action="store_true", help="hydro only: the departures within each six-hour block "
                     "(control level)")
-    ap.add_argument("--combine", action="store_true", help="with --firms or --hours: only combine the seed parts on disk")
+    ap.add_argument("--bounds", action="store_true", help="hydro only: the departures on interior days and near "
+                    "the reservoir bounds (control level)")
+    ap.add_argument("--combine", action="store_true", help="with --firms, --hours or --bounds: only combine the seed "
+                    "parts on disk")
     ap.add_argument("--planted", action="store_true",
                     help="hydro only: price-takers at a firm-specific water value (hsimw<SEED>), the two periods")
     args = ap.parse_args()
     if args.planted:
         return planted(args.seeds[0])
-    if args.firms or args.hours:
-        return split("firms" if args.firms else "hours", args.seeds, args.only, args.combine)
+    for name in SPLITS:
+        if getattr(args, name):
+            return split(name, args.seeds, args.only, args.combine)
     if args.corrected:
         return corrected(args.kind, args.seeds, args.controls, args.only)
     out = TABLES / f"price_taking_simulation_{args.kind}.csv"

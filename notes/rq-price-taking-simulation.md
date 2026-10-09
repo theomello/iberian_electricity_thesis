@@ -367,3 +367,43 @@ moves within the month with the firm's own stake (a constraint that binds on the
 firm has much at stake), or reservoir bounds. Short of that, the data fit firms that price their
 water further above λ* when they have more at stake, in these two periods, at a fraction of the
 Cournot markup.
+
+## 11. Reservoir bounds: ruled out for 2019 – 2021H1, open for 2024 – 2025 (2026-10-09)
+
+**The test.** λ* moves with the fill but not with its bounds: a full reservoir must spill and an
+empty one must ration, so near a bound a price-taker's water value can leave λ*. Only units with
+a fill series (MITECO basin for Spain, SNIRH own reservoirs for Portugal; 20 units, 72% of the
+price-setting rows). A unit-day is near a bound when its fill is in the unit's own bottom or top
+10% over 2019-01 → 2025-09, read from the water-value table so actual and simulated rows split
+alike (`price_taking_simulation.py --kind hydro --bounds`;
+`price_taking_simulation_hydro_by_fill{,_reading}.csv`). Rule, fixed before the run: if the
+departures hold on interior days, the bounds are ruled out; if they appear only near the bounds,
+the bounds explain them. Interior days are compared with all days of the same units, so leaving
+out the units without a fill series is not read as a bound effect.
+
+| days | 2019 – 2021H1 | band | 2024 – 2025-09 | band | pooled | band |
+|---|---|---|---|---|---|---|
+| with a fill series | **+0.44** [0.23, 0.65] | −0.08 … +0.04 | +0.26 [0.05, 0.49] | −0.04 … +0.11 | +0.09 | +0.02 … +0.10 |
+| interior | **+0.45** [0.23, 0.67] | −0.08 … +0.06 | +0.09 [−0.11, 0.27] | −0.15 … +0.06 | +0.11 | −0.01 … +0.10 |
+| near a bound | **+0.35** [0.06, 0.80] | −0.32 … −0.22 | **+0.67** [0.24, 1.19] | +0.06 … +0.23 | **+0.39** [0.13, 0.73] | +0.01 … +0.09 |
+
+Near-bound days are mostly near full: 2024 – 2025, 19.6k of 20.4k rows. First-stage F near a
+bound is 13 – 44 (one seed 5 in 2019 – 2021H1), against 78 – 330 elsewhere.
+
+**Who the fill series cover.** 2019 – 2021H1: EDP 100% of its rows, Naturgy 86%, Iberdrola 61%,
+Endesa 39%, Repsol 0. 2024 – 2025: EDP 99%, Movhera 100%, Naturgy 64%, Iberdrola 38%,
+**Endesa 20%**, Repsol 0. Near-full rows in 2024 – 25 are EDP's ACAVADO, ALIMA, GUADIA, MONDEGO,
+TEMON, ADOURO, Iberdrola's DUER, TAJO, SIL and Movhera's DOUSUP.
+
+- **2019 – 2021H1: bounds ruled out.** On interior days the departure is as large as on all days
+  of the same units (+0.45 against +0.44), and the sample covers most of Iberdrola, the firm
+  carrying half of it (§8).
+- **2024 – 2025: not settled.** The fill series miss most of Iberdrola's rows and almost all of
+  Endesa's, the two firms the departure rests on (§8), so the test hardly reaches them. On the
+  units it does reach, the departure is not clear to begin with (+0.26, the set touches the
+  band); interior days give +0.09, inside the band, and near-full days +0.67, above it. Interior
+  against near-full differ by 0.58, about 2.4 standard errors.
+- Not tested, only reasoned: a spill bound makes a price-taker offer below λ* on wet days, when its
+  output and so its stake are high, which pushes β down rather than up. So the near-full excess
+  need not be the bound; a firm with plenty of water and much at stake has the most room to
+  price above λ*.

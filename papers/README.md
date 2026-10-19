@@ -64,3 +64,22 @@ paper bears on; this table is the index.
 | `wolak_eepe_final.pdf` | Wolak, *Long-Term Resource Adequacy in Wholesale Electricity Markets with Significant Intermittent Renewables* (California Aug 2020, Texas Feb 2021) | no confirmed Spain analogue event, but the low-combined-VRE-output-duration method (their Tables 3–6) is directly reusable on REE realtime 5-min data |
 | `w32616.pdf` | McRae & Wolak, *Reliability Options in Renewables-Dominated Electricity Markets* (NBER WP 32616), Colombia | the policy mechanism has no Spanish counterpart; two techniques transfer regardless — unilateral-scarcity testing and water-opportunity-cost-by-dispatch-matching |
 | `SFPFC_paper_published.pdf` | Thurber et al., game-based study of standardized forward contracting for resource adequacy | experimental study, fictional players, no real market microdata — citation-only |
+
+## Third pass (2026-10-06) — 6 papers from the ScienceDirect *Energy Economics* alerts
+
+Screened from ~130 new *Energy Economics* 2026 articles on abstract and a
+keyword check, **not read in full** — the "why it matters" column is what the
+abstract supports, to be confirmed on a real read. The two papers below marked
+†  are the closest to an active design.
+
+| file | what it is | why it matters |
+|---|---|---|
+| `The-Iberian-exception--What-was-the-cost-of-distorting-electri_2026_Energy-E.pdf` † | Lou, Pollitt, Robinson & Arcos-Vargas (2026, *Energy Economics* 157, 109288), cost of the Iberian exception | published version of the "Cambridge CWPE 2535" row in `literature-iberian-exception.md`. Rebuilds the OMIE day-ahead bid stack with and without the subsidy: day-ahead price falls, but net exports to France/Morocco rise and partly offset it; gas-for-power demand +25% in Iberia (+3.2% EU), no detectable TTF effect. Aggregate welfare accounting with no strategic-bidding analysis — a benchmark for `rq-gas-cap-conduct.md` alongside `energies-17-03102.pdf` |
+| `Strategic-bid-response-under-automated-market-power-mitigat_2026_Energy-Econ.pdf` † | 2026, *Energy Economics*, US markets 2019 | regression discontinuity: a price cap with penalty switches on only when a structural market-power index crosses a cutoff, then measures the bid response (30–40% of bidders affected). Same design pattern as `rq-clawback-size-rdd.md` and the gas-cap work, built on Wolak-style indices |
+| `Machine-learning-for-detecting-collusion-and-capacity-withhol_2026_Energy-Ec.pdf` | 2026, *Energy Economics* 162, 109557, Italy | supervised-ML cartel screens on offer-price distributions plus new day-ahead capacity-withholding screens. Citation / robustness idea for the 2024-01-15 withdrawn-supply wedge; cites Fabra & Toro (2005) (not held yet) |
+| `Trading-electrons--Predicting-DART-spread-spikes-in-ISO-el_2026_Energy-Econo.pdf` | 2026, *Energy Economics*, NYISO | spike forecasting plus a price-impact model from day-ahead bid stacks (impact = local supply slope). Framing complement to Borenstein et al. (2008) and Ito & Reguant (2016) for `rq-da-id-premium.md` |
+| `Watt-s-better--Pay-as-bid-vs--Uniform-pricing-in-electric_2026_Energy-Econom.pdf` | 2026, *Energy Economics* 109284 | supply-function-equilibrium theory of pay-as-bid vs uniform pricing; peak prices lower under pay-as-bid. Theory citation for the bid-slope / markup designs, MIBEL being uniform-price |
+| `Price-formation-in-a-highly-renewable--sector-coupled-ene_2026_Energy-Econom.pdf` | 2026, *Energy Economics*, PyPSA-DE Germany | builds full supply/demand curves from optimisation dual variables; price setting shifts from fossil units to storage and demand as VRE grows. Reference point for candidate B, a model not an empirical study |
+
+`main.pdf` (Sánchez Canales et al. 2026) was also re-downloaded in this batch;
+it is the same paper (same DOI 10.1016/j.eneco.2026.109523), so no new file.

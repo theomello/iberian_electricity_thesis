@@ -97,6 +97,7 @@ scripts/
 | `build/build_storage_hours.py` | JRC hydro + `cab` + a hand plant→unit map | no | `data/jrc_hydro/storage_hours.parquet` |
 | `fetch/fetch_snirh_reservoirs.py` | APA SNIRH *dados de base* | no, but **LMU eduVPN only** | `data/snirh/snirh_reservoir_series.parquet` |
 | `build/build_reactor_outages.py` | PDBF + `cab` + `indisp` + ownership | no | `outputs/tables/reactor_outage_{hours,dose}.parquet`, `reactor_outage_spells.csv` |
+| `build/build_outage_events.py` | `indisp` + ESIOS physical units + PDBF + `cab` + ownership | no | `outputs/tables/outage_event_{hours,dose}.parquet`, `outage_event_spells.csv` |
 | `fetch/fetch_osm_renewables.py` | OpenStreetMap (Overpass API) | no | `data/osm/osm_renewable_plants.parquet`, `osm_wind_turbines.parquet` |
 | `fetch/fetch_wri_gppd.py` | WRI Global Power Plant Database v1.3 | no | `data/wri/wri_gppd_iberia.parquet` |
 | `fetch/fetch_gisco_nuts.py` | Eurostat GISCO NUTS 2021, 1:1 million | no | `data/gisco/nuts2_iberia.parquet` |
@@ -1339,6 +1340,39 @@ firm's own wind above the national rate, by region, as a third instrument
 first stage F 22–28, β +0.9 [−2.6, 4.5]; with the outages −1.6 [−4.3, 1.5]. On the
 third location pass (78.5% of wind, the main specification since 2026-10-06): F 27–33,
 β +1.5 [−1.6, 5.0]; with the outages −1.0 [−3.1, 1.5].
+
+**How reactors cut (2026-10-19, `analysis/nuclear_cuts_describe.py`,
+`notes/rq-nuclear-cuts.md`).** The Iberdrola-run reactors (Almaraz 1 and 2 and Trillo
+through CNAT, plus Cofrentes) cut through the **bilateral** leg. PDBF role 4 to the co-owners'
+retailers falls (Trillo 849 → 298 MW on cut days), and part of the energy is offered in
+the auction at a prohibitive €250–427 and not accepted. The Endesa-run reactors (Ascó
+and Vandellós II through ANAV) offer the cut capacity at a **reservation price**: €35
+almost every day from 2024 (CNAT's is €22–23). Of positive-price MW offered by reactors,
+82% are at €20–40 and 12% above €300, so €200 separates the two cleanly. **Whole-day
+stops in 2024–2026 fall mostly on days `indisp` has no snapshot for** (2.2 of 2.7 TWh in
+2024), so they may be outages the register missed.
+
+### Outage events — every large non-nuclear fault, and what it cost the owner (2026-10-19)
+`build/build_outage_events.py` (`--verify`): 17,268 `indisp` declarations of gas, coal,
+hydro and pumped-storage generator groups, linked to OMIE units through ESIOS archive 81,
+classed by reason with the default **out** (the reactor classifier defaults unknown text
+to "unplanned", which would admit "INDISPONIBILIDAD OPERACIONAL", cold-start lead times
+and reservoir-level limits). Kept: 1,678 faults (≥ 100 MW, ≥ 6 h, declared < 24 h ahead)
+and 1,574 planned stops. Dose = owner's share of max(0, lost − (capacity − expected
+output)), the first 14 days of a spell. Three traps found building it:
+- **Twelve combined cycles register their steam turbine as a `Vapor` group.** Classed
+  group by group, one plant has two kinds and its outages split into one-hour spells.
+  Class the OMIE unit, not the group.
+- **Hydro faults never bind**: a cascade unit runs far below capacity, so a group fault
+  leaves the rest able to carry the schedule (142 spells, 0 GWh bound).
+- **Some faults last a year** (Castelnou from May 2019, 9,720 hours), which a dose from
+  the week before cannot describe.
+
+A binding gas fault reaches the owner's n at only 40% (se 21%, F 3.7), against 77–86% for
+a reactor, so **the faults are not an instrument** (the design's stop rule; joint F 15.8,
+carried by implausible coal and pumped-storage coefficients). They do not follow the
+owner's stake either: the daily fault rate does not move with the owner's X the day
+before (p 0.86, 370 starts). Detail in `notes/rq-outage-events.md`.
 
 ### Wind and solar farm locations — 54% of wind located, 16% of solar (2026-10-05)
 `data/osm/renewable_unit_locations.parquet`, built by `build/build_renewable_locations.py`:

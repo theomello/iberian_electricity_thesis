@@ -402,7 +402,8 @@ TEMON, ADOURO, Iberdrola's DUER, TAJO, SIL and Movhera's DOUSUP.
   Endesa's, the two firms the departure rests on (§8), so the test hardly reaches them. On the
   units it does reach, the departure is not clear to begin with (+0.26, the set touches the
   band); interior days give +0.09, inside the band, and near-full days +0.67, above it. Interior
-  against near-full differ by 0.58, about 2.4 standard errors.
+  against near-full differ by 0.58, about 2.4 standard errors. The rows the series miss are
+  mostly pumped storage, which no basin series can reach (§13).
 - Not tested, only reasoned: a spill bound makes a price-taker offer below λ* on wet days, when its
   output and so its stake are high, which pushes β down rather than up. So the near-full excess
   need not be the bound; a firm with plenty of water and much at stake has the most room to
@@ -465,3 +466,52 @@ Effect on the market price, every hour of the period counted (upper bound):
   a tenth of that or less. Most of the gap between hydro offers and λ* is in the level (when the
   water is offered), not in a markup that follows the stake. The two numbers come from different
   methods (draws here, re-clearing the actual hours there), so compare their size only.
+
+## 13. Pumped against conventional storage (2026-10-09)
+
+**Why not the basin link.** §11 left 2024 – 2025 open because the fill series cover little of
+Iberdrola and Endesa. The rows they miss are mostly pumped storage: Iberdrola's La Muela (`MUEL`,
+19.7k rows in 2024 – 25) and Tâmega (`TAMEGA`, 13.2k; Gouvães, pumped, is about 880 of its
+1,158 MW), Endesa's Moralets, Sallente, Tajo de la Encantada and Guillena (8.9k together), about
+60% of Iberdrola's rows and 80% of Endesa's. A basin's fill says nothing about a pumped plant,
+whose bound is its own upper reservoir, filled and emptied within the day or week; no public
+series gives that per plant (MITECO and ESIOS are by basin or national, SNIRH has only month-end
+volumes for Tâmega). So instead: does the departure come from pumped storage, where λ* is an
+arbitrage value and the weakest benchmark?
+
+**The test.** The same three specifications on pumped and on conventional storage
+(`price_taking_simulation.py --kind hydro --pumped`; `price_taking_simulation_hydro_by_kind{,_reading}.csv`).
+Main: Tâmega counted as pumped (its class moved with it, so that its steps meet the other pumped
+units' in the class × hour effects); check: the classes as coded, Tâmega conventional. Rule,
+fixed before the run: if the departure appears only in pumped storage, it is a pumped-storage
+finding; if also in conventional storage, pumped storage does not explain it. Pumped storage
+has 5 firms, conventional 9 – 11.
+
+| | 2019 – 2021H1 | band | 2024 – 2025-09 | band |
+|---|---|---|---|---|
+| pumped, Tâmega in | −0.02 [−0.29, 0.24] | −0.22 … +0.29 | **+0.19** [0.01, 0.39] | −0.22 … −0.11 |
+| conventional, Tâmega out | **+0.36** [0.19, 0.54] | −0.09 … +0.03 | +0.25 [0.07, 0.46] | −0.04 … +0.10 |
+| pumped, as coded | (same: Tâmega opened in 2022) | | +0.25 [0.07, 0.44] | −0.08 … +0.11 |
+| conventional, as coded | | | +0.18 [0.04, 0.34] | −0.05 … +0.07 |
+| all (§6) | **+0.31** [0.17, 0.46] | −0.06 … 0.00 | **+0.20** [0.10, 0.34] | −0.02 … +0.04 |
+
+Actual minus the band's mean, 2024 – 2025: pumped +0.37 and conventional +0.20 (main), +0.23 and
++0.16 (as coded).
+
+- **2019 – 2021H1 is conventional storage.** +0.36 there, clear of its band; pumped storage
+  gives nothing (−0.02, with a band so wide, −0.22 … +0.29, that it could not show anything).
+- **2024 – 2025 is in both kinds, and in neither alone clearly.** The gap to price-takers is
+  positive in all four halves (+0.16 to +0.37); only pumped storage with Tâmega clears its band,
+  the other three sets touch theirs. Splitting halves the rows and the sets widen (standard
+  errors 0.075 – 0.10 against 0.062). So pumped storage is not needed for the estimate, but the
+  conventional part alone is not significant either.
+
+**Where §6 – §13 leave the two departures.**
+- **2019 – 2021H1 is robust.** It survives leaving out any one firm (§8), a firm water value
+  (§9), every part of the day (§10), the reservoir bounds (§11, interior days) and pumped storage
+  (§13, it is in conventional storage). About half of it is Iberdrola. On the steps it is
+  about €1.3/MWh when a firm is a net seller; on the market price about a cent (§12).
+- **2024 – 2025 is fragile.** It rests on Iberdrola and Endesa together (§8), sits in the
+  morning and evening (§10), on near-full days where the fill series reach (§11), and spreads
+  over pumped and conventional storage without being clear in either (§13). Its bounds cannot
+  be tested for the pumped part. On the steps €2.2/MWh, on the price at most €0.10 – 0.20 (§12).

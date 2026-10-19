@@ -306,10 +306,39 @@ def hydro_bounds(seed: int, only: list[str] | None = None) -> list[dict]:
     return res
 
 
+# Iberdrola's Tâmega scheme is classed as storage hydro, but Gouvães (pumped, ~880 of its 1,158 MW)
+# dominates it; in the main pumped split it counts as pumped (fixed 2026-10-09, before the split was read)
+PUMPED_TOO = ("TAMEGA",)
+
+
+def hydro_pumped(seed: int, only: list[str] | None = None) -> list[dict]:
+    """Pumped against conventional storage: for pumped storage λ* is an arbitrage value and its
+    bounds are the upper reservoir's own daily or weekly cycle, which no public series gives.
+    The same three specifications on each kind, control `level`; seed 0 = the actual offers.
+    Main: Tâmega counted as pumped (its class moved too, so that its steps meet the other
+    pumped units' in the class × hour effects); check: the classes as coded."""
+    d, periods = hydro_level_rows(seed)
+    sl, by = CONTROLS["level"]
+    moved = d.assign(cls=d.cls.where(~d.unit.isin(PUMPED_TOO), "pumped"))
+    kinds = {"pumped (Tâmega in)": (moved, moved.cls == "pumped"), "conventional (Tâmega out)": (moved, moved.cls == "hydro"),
+             "pumped (as coded)": (d, d.cls == "pumped"), "conventional (as coded)": (d, d.cls == "hydro")}
+    print("rows:", {k: int(v.sum()) for k, (_, v) in kinds.items()}, flush=True)
+    res = []
+    for k, (dd, sub) in kinds.items():
+        for label, keep in periods.items():
+            if only and label not in only:
+                continue
+            s = dd[keep & sub]
+            res.append(sh.est(s, f"{label} | {k}", ["Zb"], y="gap30", fe=lb.UNIT_MONTH, slopes=sl, slopes_by=by)
+                       | {"base": label, "kind": k, "control": "level"})
+    return res
+
+
 # split → (estimates of one seed, the column naming the subsample, cache part name, table name)
 SPLITS = {"firms": (hydro_firms, "without", "dropfirm", "without_firm"),
           "hours": (hydro_hours, "hours", "hourblock", "by_hour"),
-          "bounds": (hydro_bounds, "days", "bounds", "by_fill")}
+          "bounds": (hydro_bounds, "days", "bounds", "by_fill"),
+          "pumped": (hydro_pumped, "kind", "pumped", "by_kind")}
 
 
 def split(name: str, seeds: list[int], only: list[str] | None, combine_only: bool) -> int:
@@ -465,8 +494,10 @@ def main() -> int:
                     "(control level)")
     ap.add_argument("--bounds", action="store_true", help="hydro only: the departures on interior days and near "
                     "the reservoir bounds (control level)")
-    ap.add_argument("--combine", action="store_true", help="with --firms, --hours or --bounds: only combine the seed "
-                    "parts on disk")
+    ap.add_argument("--pumped", action="store_true", help="hydro only: the departures in pumped and in conventional "
+                    "storage (control level)")
+    ap.add_argument("--combine", action="store_true", help="with --firms, --hours, --bounds or --pumped: only combine "
+                    "the seed parts on disk")
     ap.add_argument("--planted", action="store_true",
                     help="hydro only: price-takers at a firm-specific water value (hsimw<SEED>), the two periods")
     ap.add_argument("--size", action="store_true", help="hydro only: the departures in €/MWh (actual offers; "

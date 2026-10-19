@@ -98,6 +98,7 @@ scripts/
 | `fetch/fetch_snirh_reservoirs.py` | APA SNIRH *dados de base* | no, but **LMU eduVPN only** | `data/snirh/snirh_reservoir_series.parquet` |
 | `build/build_reactor_outages.py` | PDBF + `cab` + `indisp` + ownership | no | `outputs/tables/reactor_outage_{hours,dose}.parquet`, `reactor_outage_spells.csv` |
 | `build/build_outage_events.py` | `indisp` + ESIOS physical units + PDBF + `cab` + ownership | no | `outputs/tables/outage_event_{hours,dose}.parquet`, `outage_event_spells.csv` |
+| `build/build_intraday_squeeze_events.py` | `indisp` + reactor outage hours + `curva_pibc_uof` + `marginalpibc` + ownership | no | `outputs/tables/intraday_squeeze_trips.csv`, `intraday_squeeze_cells.parquet` |
 | `fetch/fetch_osm_renewables.py` | OpenStreetMap (Overpass API) | no | `data/osm/osm_renewable_plants.parquet`, `osm_wind_turbines.parquet` |
 | `fetch/fetch_wri_gppd.py` | WRI Global Power Plant Database v1.3 | no | `data/wri/wri_gppd_iberia.parquet` |
 | `fetch/fetch_gisco_nuts.py` | Eurostat GISCO NUTS 2021, 1:1 million | no | `data/gisco/nuts2_iberia.parquet` |
@@ -1350,7 +1351,13 @@ and Vandellós II through ANAV) offer the cut capacity at a **reservation price*
 almost every day from 2024 (CNAT's is €22–23). Of positive-price MW offered by reactors,
 82% are at €20–40 and 12% above €300, so €200 separates the two cleanly. **Whole-day
 stops in 2024–2026 fall mostly on days `indisp` has no snapshot for** (2.2 of 2.7 TWh in
-2024), so they may be outages the register missed.
+2024), so they may be outages the register missed. **After a trip the reactor buys its own day-ahead schedule
+back in the intraday auctions** (`build_intraday_squeeze_events.py`): a median 65% over
+the hours the day-ahead schedule still counts it, usually with bids at €180.30 or €500,
+the top of the range. Owners' other plants cover part of it, so their net take from
+rivals is a median 34% of that schedule. `indisp` gives each declaration's own `start`:
+use it for the trip time, since `reactor_outage_hours` starts a spell at 00:00 of the
+first day the next schedule shows it.
 
 ### Outage events — every large non-nuclear fault, and what it cost the owner (2026-10-19)
 `build/build_outage_events.py` (`--verify`): 17,268 `indisp` declarations of gas, coal,

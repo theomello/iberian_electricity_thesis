@@ -1,0 +1,183 @@
+comparison,outcome,mean,se,median,trips,sample,cells
+window sessions: closed,d_premium,0.4591334645716067,0.5538197020720099,0.6145337301587307,25,main sample,window sessions: closed
+window sessions: closed,slide,-0.47538046453505745,0.3632187634772021,-0.2098575292965314,25,main sample,window sessions: closed
+window sessions: closed,squeeze,0.9345139291066643,0.5506271687571223,0.9560981924324845,25,main sample,window sessions: closed
+window sessions: closed,slide_h10,-0.47103228612699427,0.4352566230139326,-0.22679763675895362,25,main sample,window sessions: closed
+window sessions: closed,squeeze_h10,0.9301657506986012,0.583094236192266,0.979172985403349,25,main sample,window sessions: closed
+window sessions: closed,take_d,-38.0148944591169,32.32942907774441,-27.147428516343474,25,main sample,window sessions: closed
+window sessions: closed,d_sell_le_-10,147.30744314769072,177.34498874369592,-60.5357118426689,25,main sample,window sessions: closed
+window sessions: closed,d_sell_le_-5,118.6140753019314,190.40658447132256,-99.65773766949064,25,main sample,window sessions: closed
+window sessions: closed,d_sell_le_+0,57.11929224084061,205.5264438900371,-169.1238087534106,25,main sample,window sessions: closed
+window sessions: closed,d_sell_le_+5,-37.480233319437104,218.57450481674158,-280.5190451399734,25,main sample,window sessions: closed
+window sessions: closed,d_sell_le_+10,-77.83562134385721,223.61789152029405,-208.23928288042194,25,main sample,window sessions: closed
+window sessions: closed,d_sell_le_+20,-36.55388603898328,233.3816967637851,66.03095614102982,25,main sample,window sessions: closed
+window sessions: closed,d_sell_total,-25.880905603110694,193.85169104098568,278.95816068754215,25,main sample,window sessions: closed
+window sessions: post,d_premium,0.7379062134882016,1.0564455165483264,0.40711924439197134,18,main sample,window sessions: post
+window sessions: post,slide,-0.45866767847137324,0.4192670397316126,-0.02393760575903317,18,main sample,window sessions: post
+window sessions: post,squeeze,1.1965698559646047,1.0430492057873826,0.7761522955263658,18,main sample,window sessions: post
+window sessions: post,slide_h10,-0.2954090193668242,0.24602535963840952,-0.07580343882353809,18,main sample,window sessions: post
+window sessions: post,squeeze_h10,1.033315232855026,1.0483265271728603,0.5716081217854214,18,main sample,window sessions: post
+window sessions: post,take_d,-11.555000963763401,16.578854838637128,2.1336449440891982,18,main sample,window sessions: post
+window sessions: post,d_sell_le_-10,110.80285402180132,156.2756590154406,-40.307216280234236,18,main sample,window sessions: post
+window sessions: post,d_sell_le_-5,114.64354715580288,170.09209315050143,-101.46172103270698,18,main sample,window sessions: post
+window sessions: post,d_sell_le_+0,73.52662235546417,188.89084810399038,-89.8183992875233,18,main sample,window sessions: post
+window sessions: post,d_sell_le_+5,-73.64578567149853,234.99246970535572,-115.6391951263936,18,main sample,window sessions: post
+window sessions: post,d_sell_le_+10,-71.17193128515595,260.64628004009677,-84.6730208717792,18,main sample,window sessions: post
+window sessions: post,d_sell_le_+20,14.762963843269821,253.08888347389063,-0.5158069785947514,18,main sample,window sessions: post
+window sessions: post,d_sell_total,-0.452056599349804,181.16353439228067,-113.17931338664674,18,main sample,window sessions: post
+window sessions: reacting,d_premium,4.230887049173094,1.4526517009959714,2.0425383707201887,31,main sample,window sessions: reacting
+window sessions: reacting,slide,1.575218680347891,0.5263607900803899,0.4326527681601504,31,main sample,window sessions: reacting
+window sessions: reacting,squeeze,2.655668368825203,1.6047982514048853,1.4176778336930842,31,main sample,window sessions: reacting
+window sessions: reacting,slide_h10,1.5139438412744612,0.4282944968790129,0.6366649481097286,31,main sample,window sessions: reacting
+window sessions: reacting,squeeze_h10,2.716943207898632,1.5645990729086077,1.271287611313644,31,main sample,window sessions: reacting
+window sessions: reacting,take_d,136.3354094397278,37.41670102787909,95.41775386115046,31,main sample,window sessions: reacting
+window sessions: reacting,d_sell_le_-10,118.27079705194652,120.1950706731619,-107.01704459851112,31,main sample,window sessions: reacting
+window sessions: reacting,d_sell_le_-5,72.33593981582506,131.71818733392956,-162.793181367283,31,main sample,window sessions: reacting
+window sessions: reacting,d_sell_le_+0,-6.182587789894841,144.85162209820788,-225.7378149247595,31,main sample,window sessions: reacting
+window sessions: reacting,d_sell_le_+5,-145.4217692312644,168.78030182488445,-330.3190508191832,31,main sample,window sessions: reacting
+window sessions: reacting,d_sell_le_+10,-194.85347794503667,183.84581945465914,-349.1174792201329,31,main sample,window sessions: reacting
+window sessions: reacting,d_sell_le_+20,-178.97146220876547,190.53024996475853,-302.39700118244144,31,main sample,window sessions: reacting
+window sessions: reacting,d_sell_total,-208.59574271638584,159.45689628204497,-77.88544170742837,31,main sample,window sessions: reacting
+window sessions: unknown,d_premium,2.9278734778602864,1.4011044048831998,2.105674149659863,8,main sample,window sessions: unknown
+window sessions: unknown,slide,-0.4023623904695163,0.45458103728817373,0.02167787160722523,8,main sample,window sessions: unknown
+window sessions: unknown,squeeze,3.330235868329803,1.3394318843845707,2.9813885091106567,8,main sample,window sessions: unknown
+window sessions: unknown,slide_h10,-0.3604835702933701,0.44809399851519377,0.05788922908795373,8,main sample,window sessions: unknown
+window sessions: unknown,squeeze_h10,3.2883570481536566,1.335414021154885,2.938853742129888,8,main sample,window sessions: unknown
+window sessions: unknown,take_d,-20.349009931722673,27.02898969305376,1.7598294265977539,8,main sample,window sessions: unknown
+window sessions: unknown,d_sell_le_-10,397.54981846321226,364.4569219659658,31.211721338855813,8,main sample,window sessions: unknown
+window sessions: unknown,d_sell_le_-5,441.70484641575695,358.1708157901982,30.836564541494432,8,main sample,window sessions: unknown
+window sessions: unknown,d_sell_le_+0,464.4928190961446,369.7749625865278,104.32005396696857,8,main sample,window sessions: unknown
+window sessions: unknown,d_sell_le_+5,316.8808889819496,466.6979664424981,134.37738504582455,8,main sample,window sessions: unknown
+window sessions: unknown,d_sell_le_+10,347.69152909190996,510.5006298792728,120.6186473420823,8,main sample,window sessions: unknown
+window sessions: unknown,d_sell_le_+20,433.10757783028345,511.2740223290055,222.9940979470403,8,main sample,window sessions: unknown
+window sessions: unknown,d_sell_total,375.508314490324,437.28111080513514,490.6482934611294,8,main sample,window sessions: unknown
+day class: post,d_premium,0.7379062134882016,1.0564455165483264,0.40711924439197134,18,main sample,day class: post
+day class: post,slide,-0.45866767847137324,0.4192670397316126,-0.02393760575903317,18,main sample,day class: post
+day class: post,squeeze,1.1965698559646047,1.0430492057873826,0.7761522955263658,18,main sample,day class: post
+day class: post,slide_h10,-0.2954090193668242,0.24602535963840952,-0.07580343882353809,18,main sample,day class: post
+day class: post,squeeze_h10,1.033315232855026,1.0483265271728603,0.5716081217854214,18,main sample,day class: post
+day class: post,take_d,-11.555000963763401,16.578854838637128,2.1336449440891982,18,main sample,day class: post
+day class: post,d_sell_le_-10,110.80285402180132,156.2756590154406,-40.307216280234236,18,main sample,day class: post
+day class: post,d_sell_le_-5,114.64354715580288,170.09209315050143,-101.46172103270698,18,main sample,day class: post
+day class: post,d_sell_le_+0,73.52662235546417,188.89084810399038,-89.8183992875233,18,main sample,day class: post
+day class: post,d_sell_le_+5,-73.64578567149853,234.99246970535572,-115.6391951263936,18,main sample,day class: post
+day class: post,d_sell_le_+10,-71.17193128515595,260.64628004009677,-84.6730208717792,18,main sample,day class: post
+day class: post,d_sell_le_+20,14.762963843269821,253.08888347389063,-0.5158069785947514,18,main sample,day class: post
+day class: post,d_sell_total,-0.452056599349804,181.16353439228067,-113.17931338664674,18,main sample,day class: post
+day class: window,d_premium,3.243085496042107,1.1073384039705447,1.411428571428569,33,main sample,day class: window
+day class: window,slide,0.7086111238651807,0.3298284275731953,0.2307699828379872,33,main sample,day class: window
+day class: window,squeeze,2.534474372176926,1.17478982473016,1.4472292244817138,33,main sample,day class: window
+day class: window,slide_h10,0.6413919805005055,0.23753971326528986,0.31665788090538133,33,main sample,day class: window
+day class: window,squeeze_h10,2.601693515541602,1.1506603148956203,1.40587342261046,33,main sample,day class: window
+day class: window,take_d,50.9229687388505,12.058702091296613,55.752379739627486,33,main sample,day class: window
+day class: window,d_sell_le_-10,120.62289431247868,112.94610125445658,-14.37163390046156,33,main sample,day class: window
+day class: window,d_sell_le_-5,90.33161383660187,123.03892705585443,-93.16375455318334,33,main sample,day class: window
+day class: window,d_sell_le_+0,34.472995125765415,137.36441065932178,-207.29893723756533,33,main sample,day class: window
+day class: window,d_sell_le_+5,-87.7578859765613,162.04261017126134,-270.20141626645534,33,main sample,day class: window
+day class: window,d_sell_le_+10,-127.53757030679607,175.97530014285732,-303.8242584780036,33,main sample,day class: window
+day class: window,d_sell_le_+20,-108.14981933241484,179.19221328286847,-308.86038695288187,33,main sample,day class: window
+day class: window,d_sell_total,-139.33482808663177,151.98484403979762,-60.00613869379197,33,main sample,day class: window
+placebo: last pre day,d_premium,-2.1402625170372143,0.9876803917777981,-0.4535981308411213,33,main sample,placebo: last pre day
+placebo: last pre day,slide,1.6166447720589758,0.959253390888418,0.03849937614676673,33,main sample,placebo: last pre day
+placebo: last pre day,squeeze,-3.756907289096189,1.7590628289259223,-0.3589330345506503,33,main sample,placebo: last pre day
+placebo: last pre day,slide_h10,0.8567170739094729,0.533628265671874,0.01745957305135477,33,main sample,placebo: last pre day
+placebo: last pre day,squeeze_h10,-2.9969795909466868,1.3789213474857542,-0.389443336982302,33,main sample,placebo: last pre day
+placebo: last pre day,take_d,13.153661638161843,14.496993976752114,6.1713424203090685,33,main sample,placebo: last pre day
+placebo: last pre day,d_sell_le_-10,126.72237730432674,83.30019268562343,-13.416777039639959,33,main sample,placebo: last pre day
+placebo: last pre day,d_sell_le_-5,203.96477764796964,112.96933720890371,-37.647819299935556,33,main sample,placebo: last pre day
+placebo: last pre day,d_sell_le_+0,242.6939172516747,153.04519320115148,213.9155759385604,33,main sample,placebo: last pre day
+placebo: last pre day,d_sell_le_+5,125.61420186252047,187.49926646284396,230.98504612180534,33,main sample,placebo: last pre day
+placebo: last pre day,d_sell_le_+10,136.8517823396594,181.41929682805596,118.56175438867832,33,main sample,placebo: last pre day
+placebo: last pre day,d_sell_le_+20,188.71640397040323,174.50172759763348,323.17810164644453,33,main sample,placebo: last pre day
+placebo: last pre day,d_sell_total,176.21745346703804,158.97753213560514,90.11335999185101,33,main sample,placebo: last pre day
+window sessions: closed,d_premium,1.0036989343607514,0.5806772534154446,0.6671130952380956,29,all trips,window sessions: closed
+window sessions: closed,slide,-0.3176233860572601,0.34386531742305537,-0.2098575292965314,29,all trips,window sessions: closed
+window sessions: closed,squeeze,1.3213223204180111,0.5775913524371118,0.9560981924324845,29,all trips,window sessions: closed
+window sessions: closed,slide_h10,-0.33570423471695726,0.39244627030157314,-0.22588727111763407,29,all trips,window sessions: closed
+window sessions: closed,squeeze_h10,1.3394031690777086,0.5982862543169147,0.979172985403349,29,all trips,window sessions: closed
+window sessions: closed,take_d,-30.499167229721614,28.6835827786306,-27.147428516343474,29,all trips,window sessions: closed
+window sessions: closed,d_sell_le_-10,130.1705570773937,156.22130199909265,-60.5357118426689,29,all trips,window sessions: closed
+window sessions: closed,d_sell_le_-5,108.32709934700732,167.53597987252243,-99.65773766949064,29,all trips,window sessions: closed
+window sessions: closed,d_sell_le_+0,52.41652052469264,180.71466281667693,-169.1238087534106,29,all trips,window sessions: closed
+window sessions: closed,d_sell_le_+5,-30.88796386847398,191.78010807629974,-280.5190451399734,29,all trips,window sessions: closed
+window sessions: closed,d_sell_le_+10,-71.95805944622525,196.02698815913485,-208.23928288042194,29,all trips,window sessions: closed
+window sessions: closed,d_sell_le_+20,-47.2061634513833,204.63162048340445,-34.17064249834753,29,all trips,window sessions: closed
+window sessions: closed,d_sell_total,-31.69561797692282,170.76980940696154,229.5099950289088,29,all trips,window sessions: closed
+window sessions: post,d_premium,0.6347625813580717,0.9031116065250386,0.40711924439197134,22,all trips,window sessions: post
+window sessions: post,slide,-0.508070456307482,0.3433486739259056,-0.19422642095463266,22,all trips,window sessions: post
+window sessions: post,squeeze,1.142829735487851,0.8935348550395446,0.7761522955263658,22,all trips,window sessions: post
+window sessions: post,slide_h10,-0.39393667813922,0.20882123608108116,-0.13823533223131412,22,all trips,window sessions: post
+window sessions: post,squeeze_h10,1.0286992594972915,0.9010879649122434,0.5716081217854214,22,all trips,window sessions: post
+window sessions: post,take_d,-19.301258475308277,14.23152554140595,-8.958928575500686,22,all trips,window sessions: post
+window sessions: post,d_sell_le_-10,62.4069778109194,129.79303848950443,-71.3759590723783,22,all trips,window sessions: post
+window sessions: post,d_sell_le_-5,61.85564787747669,141.03300322196165,-107.83782777204965,22,all trips,window sessions: post
+window sessions: post,d_sell_le_+0,21.86441838313417,155.9468307519615,-147.72995629032545,22,all trips,window sessions: post
+window sessions: post,d_sell_le_+5,-117.77113692622143,193.47617736288282,-118.00163496917648,22,all trips,window sessions: post
+window sessions: post,d_sell_le_+10,-116.47675683373522,214.34009966822558,-101.72937631917016,22,all trips,window sessions: post
+window sessions: post,d_sell_le_+20,-57.344725529482595,209.95053013274304,-65.96101418232854,22,all trips,window sessions: post
+window sessions: post,d_sell_total,-4.609035394842625,155.5930864634957,-113.17931338664674,22,all trips,window sessions: post
+window sessions: reacting,d_premium,5.25568567212474,1.3923556618992154,3.0488792423046593,35,all trips,window sessions: reacting
+window sessions: reacting,slide,3.6588762939416046,1.3829509873115575,0.6070899595836229,35,all trips,window sessions: reacting
+window sessions: reacting,squeeze,1.5968093781831354,1.6839437835130546,1.4176778336930842,35,all trips,window sessions: reacting
+window sessions: reacting,slide_h10,3.4246210415104663,1.287728529867904,0.8090582563313324,35,all trips,window sessions: reacting
+window sessions: reacting,squeeze_h10,1.8310646306142742,1.629691260842589,1.271287611313644,35,all trips,window sessions: reacting
+window sessions: reacting,take_d,179.0982366190381,40.43952913290428,102.83184886909082,35,all trips,window sessions: reacting
+window sessions: reacting,d_sell_le_-10,98.82280411825951,110.82606206986999,-107.01704459851112,35,all trips,window sessions: reacting
+window sessions: reacting,d_sell_le_-5,60.51832024579219,121.12521205490943,-162.793181367283,35,all trips,window sessions: reacting
+window sessions: reacting,d_sell_le_+0,-11.673939566239115,133.43321556142882,-225.7378149247595,35,all trips,window sessions: reacting
+window sessions: reacting,d_sell_le_+5,-144.2692237984722,155.13235866416005,-330.3190508191832,35,all trips,window sessions: reacting
+window sessions: reacting,d_sell_le_+10,-191.45486121393967,168.00200115444682,-349.1174792201329,35,all trips,window sessions: reacting
+window sessions: reacting,d_sell_le_+20,-187.47664295486055,174.07299351890023,-316.7224941020593,35,all trips,window sessions: reacting
+window sessions: reacting,d_sell_total,-208.4176664903335,149.0154567732365,-77.88544170742837,35,all trips,window sessions: reacting
+window sessions: unknown,d_premium,2.7671450407916303,1.1105087228726909,2.1242312925170057,10,all trips,window sessions: unknown
+window sessions: unknown,slide,-0.11155573972200077,0.4851209522622966,0.02167787160722523,10,all trips,window sessions: unknown
+window sessions: unknown,squeeze,2.8787007805136313,1.1259533164489945,2.6011906808794976,10,all trips,window sessions: unknown
+window sessions: unknown,slide_h10,-0.18092135271143608,0.4111185984488921,0.05788922908795373,10,all trips,window sessions: unknown
+window sessions: unknown,squeeze_h10,2.9480663935030664,1.0887936227859494,2.5341000413665404,10,all trips,window sessions: unknown
+window sessions: unknown,take_d,-20.117952711734667,21.38003451973641,-6.685536193186863,10,all trips,window sessions: unknown
+window sessions: unknown,d_sell_le_-10,345.92331073861817,290.32089050111085,35.73130843941698,10,all trips,window sessions: unknown
+window sessions: unknown,d_sell_le_-5,384.8515309412499,286.3734310140045,30.836564541494432,10,all trips,window sessions: unknown
+window sessions: unknown,d_sell_le_+0,404.5000573511625,295.88671839220194,104.32005396696857,10,all trips,window sessions: unknown
+window sessions: unknown,d_sell_le_+5,273.72019152118065,372.11063701059095,134.37738504582455,10,all trips,window sessions: unknown
+window sessions: unknown,d_sell_le_+10,301.75045783602883,406.8961099669494,120.6186473420823,10,all trips,window sessions: unknown
+window sessions: unknown,d_sell_le_+20,374.52880877930744,409.12267979621737,222.9940979470403,10,all trips,window sessions: unknown
+window sessions: unknown,d_sell_total,370.3918526239316,347.24707758220796,435.85589750717793,10,all trips,window sessions: unknown
+day class: post,d_premium,0.6347625813580717,0.9031116065250386,0.40711924439197134,22,all trips,day class: post
+day class: post,slide,-0.508070456307482,0.3433486739259056,-0.19422642095463266,22,all trips,day class: post
+day class: post,squeeze,1.142829735487851,0.8935348550395446,0.7761522955263658,22,all trips,day class: post
+day class: post,slide_h10,-0.39393667813922,0.20882123608108116,-0.13823533223131412,22,all trips,day class: post
+day class: post,squeeze_h10,1.0286992594972915,0.9010879649122434,0.5716081217854214,22,all trips,day class: post
+day class: post,take_d,-19.301258475308277,14.23152554140595,-8.958928575500686,22,all trips,day class: post
+day class: post,d_sell_le_-10,62.4069778109194,129.79303848950443,-71.3759590723783,22,all trips,day class: post
+day class: post,d_sell_le_-5,61.85564787747669,141.03300322196165,-107.83782777204965,22,all trips,day class: post
+day class: post,d_sell_le_+0,21.86441838313417,155.9468307519615,-147.72995629032545,22,all trips,day class: post
+day class: post,d_sell_le_+5,-117.77113692622143,193.47617736288282,-118.00163496917648,22,all trips,day class: post
+day class: post,d_sell_le_+10,-116.47675683373522,214.34009966822558,-101.72937631917016,22,all trips,day class: post
+day class: post,d_sell_le_+20,-57.344725529482595,209.95053013274304,-65.96101418232854,22,all trips,day class: post
+day class: post,d_sell_total,-4.609035394842625,155.5930864634957,-113.17931338664674,22,all trips,day class: post
+day class: window,d_premium,3.589431506253617,0.9635607333397361,2.0425383707201887,39,all trips,day class: window
+day class: window,slide,1.288309927396795,0.43233771732499515,0.24569035477190834,39,all trips,day class: window
+day class: window,squeeze,2.3011215788568222,1.0062795646068745,1.3655495379801512,39,all trips,day class: window
+day class: window,slide_h10,1.1490016327198294,0.36962660485837434,0.39849056343942757,39,all trips,day class: window
+day class: window,squeeze_h10,2.440429873533787,0.9836457882822295,1.40587342261046,39,all trips,day class: window
+day class: window,take_d,60.50642131183089,13.47861368891068,55.752379739627486,39,all trips,day class: window
+day class: window,d_sell_le_-10,110.25792797042398,98.83221258062046,-13.811723894666276,39,all trips,day class: window
+day class: window,d_sell_le_-5,87.07812783802044,107.63604150551737,-83.81645303618146,39,all trips,day class: window
+day class: window,d_sell_le_+0,37.28499018275992,120.09778101819894,-158.5440802113753,39,all trips,day class: window
+day class: window,d_sell_le_+5,-75.36858844567182,141.31870002743355,-207.35733882542687,39,all trips,day class: window
+day class: window,d_sell_le_+10,-112.38406274195229,152.91848076794818,-267.8187730726455,39,all trips,day class: window
+day class: window,d_sell_le_+20,-102.8316629008491,156.03367270763448,-308.3521840934337,39,all trips,day class: window
+day class: window,d_sell_total,-120.28102379641929,133.12803434947952,-60.00613869379197,39,all trips,day class: window
+placebo: last pre day,d_premium,-2.216214615555706,0.8518327920063075,-0.6497819314641741,39,all trips,placebo: last pre day
+placebo: last pre day,slide,1.5112561590851499,0.8177058603205457,0.041717460681301485,39,all trips,placebo: last pre day
+placebo: last pre day,squeeze,-3.7274707746408557,1.491360809467827,-0.8735865118630209,39,all trips,placebo: last pre day
+placebo: last pre day,slide_h10,0.8686993034439888,0.46196174211396723,0.033390425355857525,39,all trips,placebo: last pre day
+placebo: last pre day,squeeze_h10,-3.084913918999694,1.1724285183072067,-0.857268495064709,39,all trips,placebo: last pre day
+placebo: last pre day,take_d,13.969940997110312,13.034630346098345,10.293457697891283,39,all trips,placebo: last pre day
+placebo: last pre day,d_sell_le_-10,81.51017192488958,76.41262740598891,-41.57918312578204,39,all trips,placebo: last pre day
+placebo: last pre day,d_sell_le_-5,143.71212996212185,101.81450837832107,-62.81523421316456,39,all trips,placebo: last pre day
+placebo: last pre day,d_sell_le_+0,172.05860295862726,135.85646967507657,-136.49352622606867,39,all trips,placebo: last pre day
+placebo: last pre day,d_sell_le_+5,68.75405955384015,165.61379041579121,-66.15119333134204,39,all trips,placebo: last pre day
+placebo: last pre day,d_sell_le_+10,77.15095795076536,161.64450382537274,47.72429851876612,39,all trips,placebo: last pre day
+placebo: last pre day,d_sell_le_+20,118.74558934105363,157.19995373533885,188.42850594142698,39,all trips,placebo: last pre day
+placebo: last pre day,d_sell_total,134.64701902970867,147.04679830536423,90.11335999185101,39,all trips,placebo: last pre day

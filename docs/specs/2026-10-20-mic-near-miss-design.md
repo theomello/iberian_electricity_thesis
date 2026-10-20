@@ -1,6 +1,10 @@
 # Near-misses of the minimum-income condition: β in the intraday auctions
 
-**Status: design, 2026-10-20. Nothing run beyond a throwaway count (§2).** The second of four
+**Status: step 1 run 2026-10-20: STOP (`notes/rq-mic-near-miss.md`).** Acceptance jumps 0 → 0.89
+at the threshold and a withdrawn plant sells about 90 MW more intraday, but the density of r_A
+and the declared v jump there, most likely because on many accepted days the condition cannot
+bind; a restriction to days when it can is proposed, not run. Window 2019-01-01 → 2025-03-18
+(2018 moved to step 5: the re-clearing curves start in 2019). The second of four
 designs chosen on 2026-10-20 for sharper identification. The first, regional holidays,
 stopped at its first stage (`notes/rq-regional-holidays.md`): firms absorbed the shock by
 quantity in bilateral contracts. Framework:

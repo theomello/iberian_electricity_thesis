@@ -111,11 +111,14 @@ scripts/
 | `fetch/fetch_holidays.py` | BOE holiday resolutions (XML) + Portugal by law | no | `data/holidays/holidays_es_pt.parquet` |
 | `fetch/fetch_ree_regional_demand.py` | REE REData, demand by region, monthly | no | `data/ree/ree_demand_ccaa_monthly.parquet` |
 | `build/build_holiday_exposure.py` | PDBF retail schedules + holidays + REData | no | `outputs/tables/holiday_retail_days.parquet`, `holiday_exposure*.csv` |
+| `fetch/fetch_omie_pdvd.py` | OMIE `pdvd` | no | `data/omie/pdvd/parquet/pdvd_YYYYMM.parquet` |
+| `build/build_mic_running.py` | `cab` + bids + step cache | no | `outputs/tables/mic_running.parquet` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
 `lib/config.py` loads tokens from a gitignored `.env`; `lib/regions.py` gives a
 coordinate its country and region (`locate`); `lib/holidays.py` turns the holiday
-table into area × day indicators (`unshared`, `bridges`, `market_wide`).
+table into area × day indicators (`unshared`, `bridges`, `market_wide`); `lib/rd.py` holds the
+regression-discontinuity jump and McCrary's density test.
 
 ## Data inventory
 
@@ -1469,6 +1472,16 @@ whole schedule, auction plus bilateral (role 4): on the Diada 2024 Endesa's auct
 fell 674 MW but its schedule 457, and Iberdrola's auction purchases rose while its schedule
 fell. The regulated suppliers' units (Energía XXI, Curenergía, …) are registry role
 `purchase_other`, not `purchase_retail`.
+
+### OMIE `pdvd` — the schedule after REE's technical constraints (2026-10-20)
+`data/omie/pdvd/parquet/`, fetched by `fetch/fetch_omie_pdvd.py`: **2019-01 → 2025-03, 75 months,
+104 M rows**, token-free (OMIE lists monthly zips from 2018-01; `--all` fetches them). PDVD
+(*Programa Diario Viable Definitivo*) is PDBF after REE has switched plants on to secure the grid
+and cut others to rebalance; it comes before the first intraday session. **Seven fields, not
+PDBF's nine**: `year;month;day;period;unit;MW;code;` (no unit id, no group tag); `code` takes 1
+and 4 like PDBF's role code. A combined cycle withdrawn in the auction can run here: Sagunto 1 on
+2019-01-03, out of the auction, is scheduled at 51.7 MW on average. Within €2/MWh of the
+minimum-income threshold REE schedules 40% of withdrawn plants (`notes/rq-mic-near-miss.md`).
 
 ### Eurostat NUTS 2021 regions — country and autonomous community of a coordinate
 `data/gisco/nuts2_iberia.parquet`, fetched 2026-10-05 by `fetch/fetch_gisco_nuts.py`:

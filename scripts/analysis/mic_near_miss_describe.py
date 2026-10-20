@@ -2,7 +2,7 @@
 """Step 1 of the minimum-income near-miss design: is the threshold clean, and what do
 withdrawn plants do?
 
-    .venv/bin/python scripts/analysis/mic_near_miss_describe.py [--restrict]
+    .venv/bin/python scripts/analysis/mic_near_miss_describe.py [--restrict] [--single]
 
 Spec `docs/specs/2026-10-20-mic-near-miss-design.md` §3.2 and §4 step 1. Reads
 `outputs/tables/mic_running.parquet` (`build/build_mic_running.py`); rows flagged there
@@ -34,6 +34,11 @@ Writes outputs/tables/mic_near_miss_rd.csv and mic_near_miss_fate.csv.
 (`can_bind`: a fixed term, or some MW offered below v), written with suffix `_bind`. Either
 way, if the columns are there, it prints the re-clearing's price shift for withdrawn units
 near the threshold against the plant's added MW over the local slope of the effective curve.
+
+--single (after the restricted check, note §1.6): only days on which exactly one unit in the
+whole market is within €2 of its threshold, so the algorithm has no choice to make between
+near-miss plants; suffix `_single`. The selection looks at other units' margins, which the
+focal unit's status moves through the price, so it is not wholly independent of the side.
 """
 from __future__ import annotations
 
@@ -104,8 +109,9 @@ def shift_check(d: pd.DataFrame) -> None:
 def main() -> int:
     ap = ArgumentParser(description=__doc__)
     ap.add_argument("--restrict", action="store_true", help="only unit-days on which the condition can bind")
+    ap.add_argument("--single", action="store_true", help="only days with exactly one unit within the bandwidth")
     args = ap.parse_args()
-    suffix = "_bind" if args.restrict else ""
+    suffix = ("_bind" if args.restrict else "") + ("_single" if args.single else "")
     d = pd.read_parquet(T / "mic_running.parquet")
     d["date"] = pd.to_datetime(d.date)
     n0 = len(d)
@@ -117,6 +123,11 @@ def main() -> int:
         near = d.r_A.abs() < H
         print(f"--restrict: can bind on {d.can_bind.mean():.1%} of kept unit-days, {d[near].can_bind.mean():.1%} within €{H:g}")
         d = d[d.can_bind].copy()
+    if args.single:
+        per_day = d[d.r_A.abs() < H].groupby("date").size()
+        one = per_day.index[per_day == 1]
+        print(f"--single: {len(one):,} of {len(per_day):,} days with a unit within €{H:g} have exactly one")
+        d = d[d.date.isin(one)].copy()
     units = set(d.unit)
 
     # covariates

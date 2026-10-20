@@ -9,9 +9,10 @@ and logs: `.superpowers/sdd/2026-10-20-mic-near-miss-step1/`.
 **In one line.** Acceptance jumps cleanly at the threshold (0 → 0.89), and a plant just
 withdrawn sells about 90 MW more in the intraday auctions than one just accepted. But the
 stop rule fires: there are about twice as many unit-days per €/MWh just above the threshold
-as just below, and the declared variable term v jumps by €17/MWh. Neither of the two
-mechanical explanations tested accounts for it (§1.4–1.5); the one left is that the clearing
-algorithm chooses among several plants near their thresholds at once (§1.6).
+as just below, and the declared variable term v jumps by €17/MWh. Neither of two mechanical
+explanations accounts for it (§1.4–1.5). On days with a single plant near its threshold
+(§1.7), v no longer jumps but the pile-up above the threshold remains (3×, p 8·10⁻⁶), and
+there are only 264 such days. **Design 2 stops at step 1.**
 
 ### 1.1 What was built
 
@@ -119,7 +120,42 @@ among competitors, not luck, and the plants it keeps may differ systematically (
 §1.2 shows). **Not tested.** The test: days with exactly one plant within €2 across the whole
 market, where there is no competition to resolve; rerun the checks there.
 
-### 1.7 Rulings in this step
+### 1.7 Single-plant days (run 2026-10-20): still STOP
+
+Days on which exactly one unit in the whole market is within €2 of its threshold
+(`mic_near_miss_describe.py --single`; outputs `_single`): **304 of 1,444 days**, 108 unit-days
+below and 196 above.
+
+| check | jump | se | p |
+|---|---|---|---|
+| accepted | 0.735 | 0.077 | 10⁻²¹ |
+| density (McCrary, log ratio) | **1.18** | 0.26 | **8·10⁻⁶** |
+| v | +6.2 | 15.2 | 0.68 |
+| F | +5,315 | 3,016 | 0.08 |
+| D-1 demand / wind / solar forecast | −753 / −1,289 / +544 | 740 / 1,003 / 340 | 0.31 / 0.20 / 0.11 |
+| gas price at D−2 | −16.3 | 9.7 | 0.09 |
+| ran on D−1; weekend | −0.09; +0.04 | 0.13; 0.12 | 0.48; 0.73 |
+| the plant's net intraday sales | −22 MW | 16 | 0.18 |
+| its output in all | +116 MW | 24 | 10⁻⁶ |
+
+- **No covariate jumps at 1%**: with nothing for the algorithm to choose between, the
+  imbalance in v goes. That supports §1.6 as the source of the v jump.
+- **The pile-up above the threshold stays**, larger if anything (3× against 2×). It is not
+  competition, not days when the condition cannot bind, not the re-clearing's size, and not
+  withdrawn plants lost for producing nothing at the recomputed price (none are). It is
+  unexplained.
+- **The first stage weakens too**: on these days a withdrawn plant sells 57 MW intraday
+  against 15 when accepted, a jump of 22 MW (se 16), against 91 on all days.
+- **264 single-unit firm-days to 2024-06-13**, against the stop rule's 1,000.
+
+**Verdict.** The running variable fails its density test on every sample tried, and the sample
+where the covariates balance is too small and has almost no first stage. Design 2 does not
+continue to step 2. **What survives is descriptive**: a combined cycle just withdrawn in the
+auction sells about 90 MW more of its output in the intraday auctions than one just accepted,
+and REE switches 40% of them back on (§1.3), which bears on Ito & Reguant's sequential-market
+question rather than on β.
+
+### 1.8 Rulings in this step
 
 - 2018 is left to step 5: the step cache (the re-clearing curves) and REE's D-1 forecasts
   start in 2019.

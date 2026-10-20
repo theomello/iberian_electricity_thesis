@@ -3,8 +3,9 @@
 **Status: step 1 run 2026-10-20: STOP (`notes/rq-mic-near-miss.md`).** Acceptance jumps 0 → 0.89
 at the threshold and a withdrawn plant sells about 90 MW more intraday, but the density of r_A
 (log ratio 0.77) and the declared v (+€17) jump there. Not days when the condition cannot bind
-(it can on 99%), nor an overstated re-clearing; most likely the algorithm choosing among several
-plants near their thresholds at once (median 3 a day). Single-plant days proposed, not run. Window 2019-01-01 → 2025-03-18
+(it can on 99%), nor an overstated re-clearing. On single-plant days (304) v balances but the
+density still jumps (3×, p 8·10⁻⁶) and the intraday first stage is 22 MW (se 16). **Stopped at
+step 1**; the design does not go on to step 2. Window 2019-01-01 → 2025-03-18
 (2018 moved to step 5: the re-clearing curves start in 2019). The second of four
 designs chosen on 2026-10-20 for sharper identification. The first, regional holidays,
 stopped at its first stage (`notes/rq-regional-holidays.md`): firms absorbed the shock by

@@ -365,7 +365,9 @@ def within_firm(m: pd.DataFrame) -> tuple[pd.DataFrame, tuple, tuple]:
     return m, tuple(xs), tuple(tests)
 
 
-def cells(d: pd.DataFrame, tag: str = "") -> list[dict]:
+def cells(d: pd.DataFrame, tag: str = "", full: bool | None = None) -> list[dict]:
+    """Every cell of step 2. With a tag and no `full`, the main cells only (the code check)."""
+    full = not tag if full is None else full
     st = d[d.cls == "hydro"]
     main = st[st.Zb.notna() & (st.rel >= IN_PLAY)]
     pre = f"{tag}" if tag else ""
@@ -382,7 +384,7 @@ def cells(d: pd.DataFrame, tag: str = "") -> list[dict]:
     res += est(wf, pre + "within firm", "pooled", xs=xs, tests=tests)
     for per in ("departure", "crisis"):
         res += est(wf[wf.per == per], pre + "within firm", per, xs=xs, tests=tests)
-    if tag:                                     # the code check: the main cells only
+    if not full:                                # the code check: the main cells only
         return res
     for hy in HALF_YEARS:
         res += est(main[main.half == hy], "half-year", hy)
@@ -547,6 +549,127 @@ def iberdrola() -> int:
     return 0
 
 
+# ---- the after-auction contracts, and the band over every seed -------------------------------
+BILATERAL = CACHE / "fixed_step_bilateral.parquet"
+PDBF = ROOT / "data/omie/pdbf/parquet"
+
+
+def bilateral_hours() -> pd.DataFrame:
+    """unit, date, period, bil_mw: what each hydro unit of the rows delivers in the hour under
+    bilateral contracts (PDBF role 4, which may be nominated up to 13:00 on D−1, after the
+    day-ahead results: `rq-midday-hydro.md` §3.8). Quarter-hours from 2025-03-19 are summed to
+    the hour's MWh, i.e. its mean MW. Cached."""
+    if BILATERAL.exists():
+        return pd.read_parquet(BILATERAL)
+    units = sorted(set().union(*[set(pd.read_parquet(f, columns=["unit"]).unit)
+                                 for f in sorted(CACHE.glob("fixed_step_2*.parquet"))]))
+    yms = {f.stem.split("_")[1] for f in CACHE.glob("hydro_2*.parquet")}
+    parts = []
+    for f in sorted(PDBF.glob("pdbf_*.parquet")):
+        if f.stem.split("_")[1] not in yms:
+            continue
+        p = pd.read_parquet(f, columns=["date", "period", "resolution_min", "unit", "schedule_mw", "role_code"],
+                            filters=[("unit", "in", units), ("role_code", "==", "4")])
+        if p.empty:
+            continue
+        hour = np.where(p.resolution_min == 15, (p.period.astype(int) + 3) // 4, p.period.astype(int))
+        p = p.assign(period=hour, mwh=p.schedule_mw * p.resolution_min / 60)
+        parts.append(p.groupby(["unit", "date", "period"], as_index=False).mwh.sum().rename(columns={"mwh": "bil_mw"}))
+    b = pd.concat(parts, ignore_index=True)
+    b["date"] = pd.to_datetime(b.date).astype("datetime64[ns]")
+    b.to_parquet(BILATERAL, index=False)
+    return b
+
+
+def with_bilateral(m: pd.DataFrame) -> pd.DataFrame:
+    m = m.assign(period=m.period.astype(int), date=m.date.astype("datetime64[ns]"))
+    b = bilateral_hours().assign(date=lambda x: x.date.astype("datetime64[ns]"))
+    m = m.merge(b, on=["unit", "date", "period"], how="left")
+    m["bil_mw"] = m.bil_mw.fillna(0.0)
+    return m
+
+
+def routing_cells(d: pd.DataFrame, quantities: bool = True) -> list[dict]:
+    """Is Iberdrola's buyer-hour markdown hydro moved between its own retailer (bilateral, after
+    the auction) and the auction? If so, its bilateral delivery falls in the hours its auction
+    ladder gets longer and cheaper, its total hydro schedule barely moves, and controlling for
+    the bilateral share removes the markdown. Quantities are actual behaviour, the same in every
+    seed, so only the gap cells are run on the simulated rows."""
+    st = d[d.cls == "hydro"]
+    m = with_bilateral(st[st.Zb.notna() & (st.rel >= IN_PLAY)])
+    m["q_bil"] = m.bil_mw / m.cap_mw
+    m["q_cleared"] = m.cleared_mw / m.cap_mw
+    m["q_total"] = (m.cleared_mw + m.bil_mw) / m.cap_mw
+    wf, xs, tests = within_firm(m)
+    yr = wf.date.dt.year
+    res = []
+    for lab, s in (("pooled", wf), ("2019", wf[yr == 2019]), ("2023", wf[yr == 2023])):
+        if quantities:
+            for y in ("q_bil", "q_cleared", "q_total"):
+                res += est(s, "routing", f"{y} | {lab}", y=y, xs=xs, tests=tests)
+        res += est(s, "routing", f"gap | {lab}", xs=xs, tests=tests)
+        res += est(s, "routing", f"gap, bilateral share held | {lab}", xs=(*xs, "q_bil"), tests=tests)
+    return res
+
+
+def routing_describe(d: pd.DataFrame) -> None:
+    """Iberdrola's and EDP's buyer hours in fifths of the stake, within unit-month: bilateral,
+    offered, cleared and total MW, and the gap."""
+    st = d[d.cls == "hydro"]
+    m = with_bilateral(st[st.Zb.notna() & (st.rel >= IN_PLAY)])
+    m["total_mw"] = m.cleared_mw + m.bil_mw
+    pd.set_option("display.width", 250)
+    for g in FIRMS:
+        x = m[m.group == g].copy()
+        print(f"\n{g}: bilateral share of its hydro schedule by year:",
+              (x.groupby(x.date.dt.year).bil_mw.sum() / x.groupby(x.date.dt.year).total_mw.sum()).round(2).to_dict())
+        cols = ["Zb", "g_p_cf", "bil_mw", "offered_mw", "cleared_mw", "total_mw"]
+        for c in cols:
+            x[c + "_d"] = x[c] - x.groupby(["unit", "ym"])[c].transform("mean")
+        b = x[x.Zb < 0].copy()
+        b["fifth"] = pd.qcut(b.Zb_d.rank(method="first"), 5, labels=["most buying", "2nd", "3rd", "4th", "least buying"])
+        print(b.groupby("fifth", observed=True)[[c + "_d" for c in cols]].mean().round(2).to_string())
+
+
+def band_seed(seed: int) -> int:
+    """All of step 2's cells, the Iberdrola check and the routing gap cells for one seed (0 = the
+    actual offers), cached for `--band-combine`."""
+    pattern = "fixed_step_2*.parquet" if seed == 0 else f"fixed_step_sim{seed}_*.parquet"
+    d = load_rows(pattern)
+    if seed == 0:
+        routing_describe(d)
+    res = cells(d, "", full=True) + iberdrola_cells(d, "") + routing_cells(d, quantities=seed == 0)
+    pd.DataFrame([r | {"seed": seed} for r in res]).to_csv(CACHE / f"fixed_step_band_s{seed}.csv", index=False)
+    print(f"seed {seed}: {len(res)} rows", flush=True)
+    return 0
+
+
+def band_combine() -> int:
+    """Actual against every simulated seed on disk, by the simulation note's rule: differs when
+    the 95% interval misses the seeds' range; bias-adjusted range [low − seed max, high − seed
+    min]; price-taking accepted when that range lies within ±δ."""
+    parts = [pd.read_csv(f) for f in sorted(CACHE.glob("fixed_step_band_s*.csv"))]
+    t = pd.concat(parts, ignore_index=True)
+    t = t[(t.status == "ok") & ~t.x.astype(str).str.startswith("test")]
+    key = ["block", "cell", "y", "x"]
+    a = t[t.seed == 0].set_index(key)[["n", "b", "se", "lo", "hi"]]
+    s = t[t.seed > 0].groupby(key).b.agg(seeds="count", null_lo="min", null_hi="max", null_mean="mean", null_sd="std")
+    r = a.join(s, how="left").reset_index()
+    r["gap"] = r.b - r.null_mean
+    r["adj_lo"], r["adj_hi"] = r.lo - r.null_hi, r.hi - r.null_lo
+    r["differs"] = (r.lo > r.null_hi) | (r.hi < r.null_lo)
+    r["accepted"] = (r.adj_lo >= -DELTA) & (r.adj_hi <= DELTA)
+    out = TABLES / "fixed_step_band_reading.csv"
+    r.to_csv(out, index=False)
+    pd.set_option("display.width", 250)
+    pd.set_option("display.max_rows", 600)
+    print(f"seeds: {sorted(t[t.seed > 0].seed.unique())}")
+    print(r[["block", "cell", "y", "x", "n", "b", "lo", "hi", "seeds", "null_lo", "null_hi", "null_mean", "gap",
+             "adj_lo", "adj_hi", "differs", "accepted"]].round(3).to_string(index=False))
+    print(f"\nwrote {out.relative_to(ROOT)}")
+    return 0
+
+
 def main() -> int:
     ap = ArgumentParser(description=__doc__)
     ap.add_argument("--build", action="store_true", help="step 1: the unit × hour rows, one cache file a month")
@@ -554,6 +677,8 @@ def main() -> int:
     ap.add_argument("--summarise", action="store_true", help="step 1: coverage and reads by year, class and group")
     ap.add_argument("--estimate", action="store_true", help="step 2: every cell, profile and check")
     ap.add_argument("--simulated", type=int, metavar="SEED", help="step 2: the code check on simulated price-takers")
+    ap.add_argument("--band-seed", type=int, metavar="SEED", help="every cell for one seed (0 = actual), for --band-combine")
+    ap.add_argument("--band-combine", action="store_true", help="actual against every simulated seed on disk")
     ap.add_argument("--iberdrola", action="store_true", help="Iberdrola's buyer hours: the stake split into position "
                     "and slope, the reactor dose, 2023 without Iberdrola (actual and both simulated seeds)")
     args = ap.parse_args()
@@ -567,6 +692,10 @@ def main() -> int:
         return simulated(args.simulated)
     if args.iberdrola:
         return iberdrola()
+    if args.band_seed is not None:
+        return band_seed(args.band_seed)
+    if args.band_combine:
+        return band_combine()
     ap.print_help()
     return 1
 

@@ -295,7 +295,9 @@ n / |RD′| exactly. Within unit-month, n and Zb correlate 0.67 on Iberdrola's b
 reactor outages, owner's share (`reactor_outage_dose.parquet`), > 0 in 39% of its hours (mean
 522 MW); P = dose / |RD′|.
 
-**In one line.** **The high 2023 half-years are Iberdrola's**: without it, both fall inside
+**In one line.** (Two seeds. With ten, the "price-motive signature" below is withdrawn and the
+buyer slope is mostly routing between contracts and the auction: see "Ten seeds" below.)
+**The high 2023 half-years are Iberdrola's**: without it, both fall inside
 the price-takers' band. Iberdrola's buyer-hour slope is half artefact. What is left, +0.9 to
 +1.45 above the price-takers, runs through the stake Zb and not through the MW position n:
 the sign of a price motive, about the size of Nash. On its seller side the opposite holds: the
@@ -360,3 +362,95 @@ seller n: 2019 +7.8, 2023 +39.6, other years +6.2 (the last two clear of the ban
   years. It shades its hydro down as a buyer with the price motive's signature and up as a
   seller with a position effect. The step estimator's dated seller-side departure for all firms
   (2019–2021H1) is not where the fixed step puts it.
+
+## Ten seeds, and Iberdrola's after-auction contracts (2026-10-20)
+
+`fixed_step_test.py --simulated 3 … 10` (eight more seeds, same construction), then
+`--band-seed 0 … 10` (every cell for the actual offers and each seed) and `--band-combine` →
+`outputs/tables/fixed_step_band_reading.csv` (the reading rule over **ten** seeds: the band is
+their min–max). The contracts: `bilateral_hours()` (PDBF role 4 by unit and hour, cached in
+`outputs/cache/step/fixed_step_bilateral.parquet`; 27 hydro units, 10–22 TWh a year) and
+`routing_cells()`. Logs `.superpowers/sdd/2026-10-19-fixed-step/band_*.log`.
+
+**In one line.** With ten seeds, **the fixed step finds hydro offers indistinguishable from
+price-taking in every pooled, period, side and half-year cell except 2023, which is
+Iberdrola.** Iberdrola's buyer-hour markdown is mostly hydro moved between its contracts with
+its own retailer and the auction. When it buys most, it takes 131 MW out of those contracts and
+offers 130 MW more in the auction. Holding that share fixed takes the markdown inside the band.
+Two results from the two-seed band are withdrawn: the seller-side departure of 2020H2, and the
+"price-motive signature" of Iberdrola's buyer slope.
+
+### What ten seeds change
+
+| cell | actual | band, 2 seeds | band, 10 seeds | gap, bias-adjusted range (10) | differs (10) |
+|---|---|---|---|---|---|
+| pooled | +0.17 | −0.00 … +0.06 | −0.04 … +0.11 | +0.13 [−0.10, +0.36] | no |
+| seller side | +0.05 | | −0.13 … +0.14 | +0.01 [−0.26, +0.35] | no |
+| seller side 2019H2 / 2020H1 / 2020H2 | +0.95 / +0.81 / +0.51 | | +0.36…+0.82 / +0.22…+0.63 / −0.26…+0.22 | +0.37 / +0.48 / +0.59 [−0.22, +1.29] | no / no / **no (was yes)** |
+| 2023H1 / 2023H2, all firms | +1.07 / +1.75 | | +0.04…+0.42 / −0.14…+0.58 | +0.90 [+0.01, +1.67] / +1.51 [+0.54, +2.53] | yes / yes |
+| 2023H1 / 2023H2 without Iberdrola | +0.27 / +1.09 | | +0.01…+0.87 / −0.32…+0.76 | | no / no |
+| Iberdrola buyer, Zb alone | +2.00 | +0.52 … +0.59 | +0.13 … +0.79 | +1.55 [+0.40, +2.69] | yes |
+| Iberdrola buyer, Zb with n | +1.80 | +0.89 … +0.91 | +0.30 … +1.14 | +1.10 [−0.17, +2.33] | **no (was yes)** |
+| Iberdrola buyer, n alone (per GW) | +10.2 | | −0.1 … +2.7 | +8.9 [+1.6, +16.2] | yes |
+| Iberdrola seller, n with Zb (per GW) | +6.9 | | −1.3 … +1.4 | +6.8 [+3.2, +10.6] | yes |
+| hours the step cannot set the price (at-cost < 0.9 λ*) | +0.27 | | +0.00 … +0.08 | +0.23 [+0.09, +0.38] | yes |
+| hours in play (0.9–1.1 λ*) | +0.31 | | +0.05 … +0.19 | +0.20 [−0.03, +0.41] | no |
+| ladder at 1.5 cf_s, departure periods | +0.23 | | −0.14 … −0.01 | +0.29 [+0.01, +0.60] | yes |
+| placebo, bottom 5%, 2019–2022 | −0.13 | | −0.07 … +0.12 | | no (passes) |
+| reactor dose, any term | | | | | no |
+
+With ten seeds the band widens in the finer cells (seller-side half-years up to 0.5 across;
+Iberdrola's buyer slope 0.13 … 0.79). Only what is above is clear of it.
+
+### Iberdrola's contracts with its own retailer
+
+Iberdrola delivers 56–82% of its storage hydro schedule bilaterally, every year (EDP 1–8%).
+Its buyer hours by fifth of the stake (within unit-month, MW):
+
+| fifth | stake | gap at cf_s (€) | bilateral | offered in the auction | cleared in the auction | total schedule |
+|---|---|---|---|---|---|---|
+| most buying | −18.9 | −16.3 | **−131** | **+130** | −17 | −148 |
+| 2nd | −5.8 | −9.0 | −100 | +92 | +3 | −97 |
+| 3rd | −2.5 | −0.2 | −58 | +51 | −3 | −61 |
+| 4th | −1.2 | −0.9 | −11 | +7 | +3 | −7 |
+| least buying | +0.7 | +2.4 | +13 | −13 | −1 | +13 |
+
+EDP's fifths: bilateral within ±1 MW, offered −5 … +2.
+
+| regression (one pooled regression, firm × side terms) | Iberdrola buyer | price-takers (10) | differs |
+|---|---|---|---|
+| bilateral share of capacity on Zb | +0.0042 [+0.003, +0.005] (−2.5 points per sd of Zb) | (actual quantities, the same in every seed) | |
+| total schedule share on Zb | +0.0031 [+0.002, +0.004] | | |
+| gap at cf_s on Zb | +2.00 [+1.19, +2.82] | +0.13 … +0.79 | yes |
+| **gap, bilateral share held** | **+0.82 [+0.20, +1.43]** | −0.31 … +0.30 | **no** ([−0.10, +1.75]) |
+| 2023: gap / gap, bilateral share held | +2.46 / +0.68 | +0.32…+1.05 / −0.25…+0.40 | yes / no |
+
+- **The hydro is moved, MW for MW.** In the hours Iberdrola buys most, the hydro it would
+  deliver to its own retailer under contract (131 MW) is offered in the auction instead (130 MW).
+  Little of it clears, so its total hydro schedule falls by about the same amount. EDP, with
+  almost no contracts, shows nothing of the kind.
+- **That move can make both the stake and the cheap read.** When contract volume leaves the
+  bilateral route, Iberdrola's retailer presumably buys that energy in the auction (its retail
+  bids were not checked here). Its net position at cost then falls, so Zb is more negative. Its hydro ladder gets longer, so the read at a fixed share
+  lands lower. So the slope runs at least partly from the routing to the stake, not from the
+  stake to the price.
+- **Holding the bilateral share fixed removes 60% of the slope and takes it inside the band**
+  (+0.82, against price-takers' −0.31 … +0.30; bias-adjusted [−0.10, +1.75]). In 2023 the slope
+  goes from +2.46 to +0.68. The bilateral share is chosen too, up to 13:00 after the auction
+  (`rq-midday-hydro.md` §3.8), so this is a decomposition, not a causal estimate.
+
+### Reading
+
+- **At the fixed step, with ten seeds, hydro is price-taking.** Pooled, by period, by side and by
+  half-year, every cell sits inside the band except 2023, and 2023 is Iberdrola.
+- **Iberdrola's buyer-hour markdown is mostly a routing choice**: hydro moved out of contracts
+  with its own retailer and into the auction. That is a choice about where the volume goes, made
+  with its retail and generation together. It is not shown to be a price set to lower what it
+  pays. What remains with the share held (+0.8) is inside the band.
+- **Iberdrola's seller-side position effect survives** (+€6.8 per GW of net sales at cost). It
+  follows the MW position, not the stake, so it is book management, not the price motive.
+- **The slope in hours where the step cannot set the price** (+0.23 over the band) says part of
+  the ladder moves with the stake for reasons a price motive does not give.
+- **Open: the step estimator's band rests on two seeds too.** Its dated seller departure (§14–16
+  of the simulation note: 2019–2021H1, off from 2021H2) may not survive ten. That needs
+  `step_engine.py --sim` for more seeds, which re-clears the market and is the expensive run.

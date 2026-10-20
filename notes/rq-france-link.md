@@ -1,5 +1,8 @@
 # The France link: running note
 
+**Stopped at step 2 (2026-10-20)**: an open line absorbs only about a sixth of an Iberian shock
+(S ≈ 60–90 MW per €/MWh), so the instrument cannot separate price-taking from Nash (MDE 2–10).
+
 Spec: [`docs/specs/2026-10-20-france-link-design.md`](../docs/specs/2026-10-20-france-link-design.md).
 Plan: `docs/plans/2026-10-20-france-link-step1.md`. Ledger and logs:
 `.superpowers/sdd/2026-10-20-france-link-step1/`.
@@ -122,3 +125,53 @@ The French part varies as much as the Iberian part (sd 0.18 against 0.15).
 - In the split, the French predictors and capacity are held at their calendar month's mean over
   the whole sample, not the year-month's, so the instrument keeps across-month French shifts
   such as 2022's.
+
+## Step 2 (2026-10-20): the French slope, the first stage and the power — STOP
+
+Plan `docs/plans/2026-10-20-france-link-step2.md`; script `analysis/france_link_first_stage.py`
+(`--calibrate`, `--first-stage`); outputs `france_link_slope.csv`, `france_link_first_stage.csv`.
+Run after step 1's stop by 0.001, at the user's request.
+
+**In one line.** An open line absorbs only about a sixth of an Iberian shock, so the stake moves
+little between open and congested hours. The instrument moves it (F 17–93), but the smallest β
+the design could detect is 2–10, against Nash at 1.
+
+### 2.1 The slope French supply adds is small
+
+A GW of REE's D-1 forecast of Iberian demand net of wind and solar moves the Spanish price by
+**€4.26/MWh (se 0.12) when the line is predicted full and €3.58 (0.18) when predicted open**:
+a ratio of 1.19 (0.09), date and month × hour effects, 59,153 hours 2019-01 → 2025-09. With the
+median effective-curve slope of 326 MW per €/MWh, **S = 62 MW per €/MWh**. The prediction is
+slightly overconfident at the top (E[open | p] = 0.07 + 0.76 p); correcting for that gives a ratio
+of 1.27 and S = 87, inside the range checked (31–124).
+
+**It is not that the line fills up**: in open hours the room left in the tighter direction is a
+median 1,218 MW (p25 595), and 59% of open hours have a GW or more both ways. The coupled market
+is simply not much deeper than Iberia alone near the price.
+
+**For earlier results this is reassuring**: the island slope overstates the stake in open hours
+by about 16–21%, not by the large factor this design assumed. (The calibration is on GW-scale
+shocks; the French slope for a firm's marginal MW is not measured.)
+
+### 2.2 First stage and power
+
+Corrected at-cost stake Zb_c = n / (slope + S · open) on Zb × z_open; controls Zb, Zb × p_open_ib,
+Zb × Iberian residual-demand forecast, Zb × gas at D−2; effects as in the holiday step 2.
+
+| sample | rows | π | F date / week | MDE date / week |
+|---|---|---|---|---|
+| firm hydro at cost | 328,958 | −0.18 | 51 / 17 | — |
+| unit hydro, fixed step | 359,156 | −0.26 | 42 / 17 | **1.95 / 2.72** |
+| unit thermal (to 2023-12) | 781,511 | −0.23 | 93 / 35 | **8.3 / 9.9** |
+
+At 2S the hydro MDE is 1.46 / 2.04, at S/2 2.86 / 3.99. The sign is right (a predicted-open
+hour lowers the stake), and the thermal first stage passes the bar of 20.
+
+**Stop rule (fixed before the run): STOP**, the minimum detectable β above 1 on both outcomes.
+
+### 2.3 Verdict
+
+Design 3 stops at step 2. The rotation is real but small: the line changes the stake by about a
+sixth, and only part of the line's state can be predicted from French conditions. What survives:
+the France-line state panel, the French data, and the finding that the island slope is a fair
+approximation in open hours.

@@ -1,18 +1,11 @@
 # The France link: a rotation of every firm's residual demand
 
-**Status: step 1 run 2026-10-20: STOP (`notes/rq-france-link.md`).** The state is measured
-cleanly (open ⇔ equal prices, 99.7%), and French conditions with the published capacity predict
-the direction of a full line well (corr ~0.5), but the open state poorly (corr 0.20 < 0.3; F 83).
-With Iberian forecasts in the prediction and split out as a control (note §1.7), the
-correlation is 0.299: a stop by 0.001, while the French part is strongly related to the open
-state (F 621); 0.34 without 2022. The prediction is one multinomial logit, not a logit per state (§8). The third of
-four designs chosen on 2026-10-20 for sharper identification. The first two stopped: regional
-holidays at the first stage (`notes/rq-regional-holidays.md`), near-misses of the
-minimum-income condition at the validity checks (`notes/rq-mic-near-miss.md`). Framework:
-[`2026-09-29-thesis-framework-design.md`](2026-09-29-thesis-framework-design.md) (§9.3 rank 4:
-"a rotation instrument has not been found"). It reuses the fixed-step read and its simulated
-price-takers ([`2026-10-19-fixed-step-design.md`](2026-10-19-fixed-step-design.md)) and the
-at-cost stake (`hcompcost`, `compcost`).
+**Status: stopped at step 2, 2026-10-20 (`notes/rq-france-link.md`).** Step 1 stopped by 0.001
+(open-state prediction corr 0.299, French part F 621) and step 2 was run at the user's request.
+The slope French supply adds is small: a GW of Iberian residual demand moves the price €4.26
+when the line is predicted full and €3.58 when open (S ≈ 62, 87 after recalibration, against a
+market slope of 326). The instrument moves the corrected stake (F 17–93), but the minimum
+detectable β is 2.7 (hydro) and 9.9 (thermal), against the bar of 1.
 
 **In one example.** Iberdrola withholds 100 MW at 8 pm. If the line to France is full, Spain
 and Portugal clear as an island and the price rises by about €0.20/MWh (100 MW over 500 MW

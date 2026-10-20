@@ -1,6 +1,6 @@
 # Regional holidays: a within-firm test of the buyer's markdown
 
-**Status: step 1 run 2026-10-20 (`notes/rq-regional-holidays.md`): stop rule passes.** The
+**Status: step 2 run 2026-10-20: STOP (`notes/rq-regional-holidays.md`).** The holiday dose does not move a firm's exposed position (F 0.1–1.4): generation sold to its own retailer falls with its customers' load. Step 1 passed. The
 dose is built with one change to §3.2: days when four or more mainland regions are off get
 their own term (`ES`), scaled by the share of mainland demand off, instead of H = 1 in every
 region; regions that are only ever off together are merged. No β yet. The

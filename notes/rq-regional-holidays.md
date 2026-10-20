@@ -129,3 +129,77 @@ So the exposures follow the old areas where a region has its own well-separated 
 - **The dose is built from these exposures, as the spec says**, with the ES term replacing the
   spec's "H = 1 for every Spanish region at once": dose = Σ local e_fr · H + e_f,ES · (share of
   mainland demand off) + e_f,PT · H_PT, times the hourly profile, exposures leaving the year out.
+
+## Step 2: the dose, the first stage and the power (2026-10-20) — STOP
+
+`analysis/holiday_first_stage.py --dose / --first-stage / --power` (+ `qa/check_holiday_dose.py`,
+`qa/check_holiday_first_stage.py`), `analysis/holiday_schedule_legs.py`. Outputs
+`outputs/tables/holiday_dose.parquet`, `holiday_profile.csv`, `holiday_first_stage.csv`,
+`holiday_power.csv`, `holiday_schedule_legs.csv`. Logs
+`.superpowers/sdd/2026-10-20-regional-holidays-step2/`. The outcome's response to the dose was
+not estimated.
+
+**In one line.** Both stop rules trigger. A firm's holiday dose does not move its exposed position:
+when its customers buy less, it cuts the generation it supplies them through bilateral contracts
+by about as much, and sells nothing extra in the auction. So the holiday is not an instrument for
+the stake, and Endesa's β⁻ cannot be detected (smallest detectable β⁻ 27 on thermal offers, 297 on
+hydro, against Nash = 1).
+
+### The dose
+
+Step 1's exposures leaving the day's year out, times an hourly profile from the 11 Spain-only
+national days (the mainland drop runs from 0.5 GW at night to 8.4 GW at midday; profile 0.11–2.0,
+mean 1). Weekday holidays only. Endesa has a dose on 147 days, Iberdrola 140, EDP 130. All 10
+checks pass.
+
+### First stage
+
+Coefficient (F, date clusters; week clusters agree within 15%):
+
+| sample | stake on dose | pooled | Endesa |
+|---|---|---|---|
+| hydro owners, firm × hour, at cost (`hcompcost`) | n (GW) on dose (GW) | −0.12 (1.4) | +0.05 (0.4) |
+| | Zb on dose / \|RD′\| | −0.19 (3.5) | −0.23 (3.5) |
+| five firms, firm × hour, actual (`firm_x`) | n on dose | +0.04 (0.1) | +0.14 (1.2) |
+| | X on dose / \|RD′\| | +0.06 (0.1) | −0.65 (22.1) |
+| fixed-step hydro rows (step 3's sample) | Zb on dose / \|RD′\| | −0.06 (0.1) | +0.04 (0.1) |
+| thermal offer panel | X on dose (GW) | +0.51 (0.7) | +0.80 (2.2) |
+
+Expected: about +1 on n (a buyer that buys a MW less is a MW longer). Endesa's F of 22 on its
+actual X is the wrong sign, and its n does not move (+0.14, F 1.2): with the slope in both X and
+the instrument, the slope's own variation carries it. Not a first stage.
+
+### Why: the legs of the schedule
+
+MW per MW of dose, five firms, firm-days, date and firm × year effects, date clusters:
+
+| leg | auction | bilateral contracts |
+|---|---|---|
+| retail purchases (less bought) | +0.29 (0.13) | **+0.69** (0.14) |
+| generation sales | +0.02 (0.19) | **−0.54** (0.13) |
+| net position | **+0.27** (0.17) | |
+
+When a firm's customers take a holiday, about two thirds of their lower purchases fall on its
+bilateral contracts with its own retailer, and the generation it sells under those contracts falls
+by about half a MW per MW. It does not offer the freed generation in the auction. Its net position
+in the auction rises by about a quarter of the dose, imprecisely.
+
+This is the third time the same behaviour appears: reactors' owners keep their own retail covered
+when a reactor is out (`rq-nuclear-cuts.md` §6.2), Iberdrola moves hydro between its own-retail
+contracts and the auction (`rq-fixed-step.md`), and now generation follows own retail load. The
+vertical-integration mechanism the design assumed (Bushnell, Mansur & Saravia 2008: retail bought
+at the spot price offsets the gain from a higher price) does not operate here, because retail is
+covered physically by own generation, and adjusted by quantity.
+
+### What the result is good for
+
+The design fails as an instrument for the stake. It may work as a test on quantities. With the
+date effects in, the market price is common to all firms, so a price-taker's generation should
+not depend on its own customers' demand. A firm that cuts output when its own customers buy less
+is doing one of two things:
+- **exercising market power**: a firm that buys less gains more from a high price and withholds
+  (Cournot). The cut should then scale with 1/|RD′| and stay below one;
+- **balancing its book by quantity**: matching own generation to own load, whatever the slope.
+
+The holiday dose separates them with the same slope test that settled the nuclear cuts
+(`rq-nuclear-cuts.md` §6.2). Not run; a design question for the user.

@@ -1,6 +1,8 @@
 # The holiday quantity test: book balancing or market power?
 
-**Status: design, 2026-10-20. Not run.** A follow-up to the regional-holiday design, whose step 2
+**Status: step 1 run 2026-10-20: CONTINUE (`notes/rq-regional-holidays.md`, quantity test).**
+Generation responds to the dose (−0.26 per MW, t −2.6, all of it bilateral) and the test can
+detect β down to 0.54. Step 2 not run. A follow-up to the regional-holiday design, whose step 2
 stopped because a holiday does not move a firm's auction position
 (`notes/rq-regional-holidays.md`), and the next step proposed in
 `notes/sharper-designs-2026-10-20.md` §6. It reuses the holiday dose, the five firms' slopes

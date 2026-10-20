@@ -203,3 +203,45 @@ is doing one of two things:
 
 The holiday dose separates them with the same slope test that settled the nuclear cuts
 (`rq-nuclear-cuts.md` §6.2). Not run; a design question for the user.
+
+## The quantity test, step 1 (2026-10-20): CONTINUE
+
+Spec `docs/specs/2026-10-20-holiday-quantity-test-design.md`; plan
+`docs/plans/2026-10-20-holiday-quantity-test.md`; script `analysis/holiday_quantity_test.py`
+(`--panel`, `--test --step 1`); outputs `holiday_quantity_panel.parquet` (gitignored),
+`holiday_quantity_step1.csv`.
+
+**The question.** Firms cut the output they sell their own customers on those customers'
+holidays. Market power predicts the cut follows the dose's price effect P = dose / |RD′| (larger
+in steep hours); a rule matching own generation to own load predicts it follows the dose itself.
+
+**The panel.** The five firms by date and hour, weekdays 2019-01 → 2025-09: 211,320 firm-hours,
+13,608 with a dose (12,760 with a slope). Its daily means reproduce step 2's legs: generation sold
+bilaterally −0.57 per MW of dose (se 0.16; step 2 −0.54), retail bought bilaterally +0.72 (0.17;
++0.69).
+
+**Hourly, with date × hour and firm × month effects** (MW per MW of dose; 1/|RD′| as a control):
+
+| outcome | per MW of dose | se |
+|---|---|---|
+| retail purchases, both legs (first stage) | +0.53 | 0.06 |
+| … in the auction | +0.07 | 0.10 |
+| … bilateral | +0.46 | 0.10 |
+| generation, both legs | **−0.26** | 0.10 |
+| … in the auction | +0.12 | 0.14 |
+| … bilateral | −0.37 | 0.10 |
+
+**The firm's own offer slope near the price** (s, its sell offers within ±€5 per €/MWh): 72 MW
+per €/MWh, dose-weighted. It is zero in 30% of firm-hours: at prices above €5 Endesa, Iberdrola,
+Naturgy and Repsol often have nothing on offer within €5 of the price (31–42% of hours; EDP 4%).
+A price-taker with nothing near the price would not change its output for a €1 markup.
+
+**Power.** Computed without forming the test's coefficient: se(b_P) under b_P = 0 is 13.9 MW per
+€/MWh on total generation, so the smallest detectable β is **0.54** (bilateral 0.37, auction 0.70).
+P on dosed hours: median €0.21/MWh, 90th percentile €2.51.
+
+**Stop rule: CONTINUE** (generation responds, t −2.6; MDE 0.54 < 1).
+
+**A refinement for step 2, beside the spec's test.** Since s varies by hour and is zero in many,
+Nash predicts −s · P hour by hour rather than −s̄ · P on average. Regressing on s · P gives β
+directly (Nash −1, book balancing 0).

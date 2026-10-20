@@ -468,6 +468,85 @@ def simulated(seed: int) -> int:
     return 0
 
 
+# ---- Iberdrola's buyer hours (rq-fixed-step.md, "Next") ----------------------------------------
+DOSE = TABLES / "reactor_outage_dose.parquet"
+EXO_DOSE = ("planned", "unplanned")          # undeclared and economic cuts are choices, not shifts
+OWNERS = ("IBERDROLA", "ENDESA", "NATURGY", "EDP")
+
+
+def stake_parts(d: pd.DataFrame) -> pd.DataFrame:
+    """Adds the two parts of Zb = n / |RD′| (both over the NEAR draws nearest the class's cost
+    point, `hcompcost`): n_gw, the firm's net position there (GW), and slope (MW per €/MWh);
+    and the firm's reactor-outage dose (planned and unplanned, owner's share): D (GW) and
+    P = dose / slope (€/MWh), the Cournot markdown the lost output implies."""
+    c = pd.concat([pd.read_parquet(f, columns=["hid", "group", "unit", "kb_sn", "kb_s"])
+                   for f in sorted(CACHE.glob("hcompcost_2*.parquet"))], ignore_index=True)
+    c = c.drop_duplicates(["hid", "group", "unit"])
+    c["n_gw"] = c.kb_sn / NEAR / 1000
+    c["slope"] = c.kb_s / NEAR
+    d = d.merge(c[["hid", "group", "unit", "n_gw", "slope"]], on=["hid", "group", "unit"], how="left")
+    z = pd.read_parquet(DOSE)
+    z = z[z.cls.isin(EXO_DOSE)].groupby(["firm", "utc"]).lost_mw.sum().rename("dose_mw").reset_index()
+    z["utc"] = z.utc.astype("datetime64[ns, UTC]")
+    d["utc"] = d.utc.astype("datetime64[ns, UTC]")
+    d = d.merge(z.rename(columns={"firm": "group"}), on=["group", "utc"], how="left")
+    d["dose_mw"] = d.dose_mw.fillna(0.0)
+    d["D"] = d.dose_mw / 1000
+    d["P"] = d.dose_mw / d.slope.where(d.slope >= sh.FLOOR)
+    return d
+
+
+def iberdrola_cells(d: pd.DataFrame, tag: str) -> list[dict]:
+    st = d[d.cls == "hydro"]
+    m = stake_parts(st[st.Zb.notna() & (st.rel >= IN_PLAY)])
+    res = []
+    # (a) the stake split into position and slope: Zb and n by firm and side, one regression
+    xz, xn, tests = [], [], []
+    for g in (*FIRMS, "others"):
+        own = ~m.group.isin(FIRMS) if g == "others" else m.group == g
+        for side, sel in (("seller", m.Zb > 0), ("buyer", m.Zb < 0)):
+            m[f"Zb {g} {side}"] = m.Zb.where(own & sel, 0.0)
+            xz.append(f"Zb {g} {side}")
+            if g != "others":
+                m[f"n {g} {side}"] = m.n_gw.where(own & sel, 0.0)
+                xn.append(f"n {g} {side}")
+    zonly = [c for c in xz if not c.startswith("Zb IBERDROLA") and not c.startswith("Zb EDP")]
+    yr = m.date.dt.year
+    for lab, s in (("pooled", m), ("2019", m[yr == 2019]), ("2023", m[yr == 2023]),
+                   ("other years", m[~yr.isin([2019, 2023])])):
+        res += est(s, f"{tag}position and slope", f"Zb and n | {lab}", xs=tuple(xz + xn))
+        res += est(s, f"{tag}position and slope", f"n only | {lab}", xs=tuple(zonly + xn))
+    # (b) the reactor dose: a shift in n that leaves the slope of the firm's residual demand alone
+    xd = []
+    for g in OWNERS:
+        for v in ("D", "P"):
+            m[f"{v} {g}"] = m[v].where(m.group == g, 0.0).fillna(0.0)
+            xd.append(f"{v} {g}")
+    xd_d = [c for c in xd if c.startswith("D ")]
+    for lab, s in (("pooled", m), ("departure", m[m.per == "departure"]), ("crisis", m[m.per == "crisis"])):
+        res += est(s, f"{tag}reactor dose", f"D and P | {lab}", xs=tuple(xd))
+        res += est(s, f"{tag}reactor dose", f"D only | {lab}", xs=tuple(xd_d))
+    res += est(m, f"{tag}reactor dose", "first stage: n on D | pooled", y="n_gw", xs=tuple(xd_d))
+    # (c) the high 2023 half-years without Iberdrola
+    for hy in ("2023H1", "2023H2"):
+        res += est(m[m.half == hy], f"{tag}2023", f"{hy} | all firms")
+        res += est(m[(m.half == hy) & (m.group != "IBERDROLA")], f"{tag}2023", f"{hy} | without Iberdrola")
+    return res
+
+
+def iberdrola() -> int:
+    out = []
+    for seed, pattern in ((0, "fixed_step_2*.parquet"), (1, "fixed_step_sim1_*.parquet"),
+                          (2, "fixed_step_sim2_*.parquet")):
+        print(f"\n=== {'ACTUAL OFFERS' if seed == 0 else f'SEED {seed}: simulated price-takers'} ===", flush=True)
+        out += [r | {"seed": seed} for r in iberdrola_cells(load_rows(pattern), "")]
+    t = pd.DataFrame(out)
+    t.to_csv(TABLES / "fixed_step_iberdrola.csv", index=False)
+    show(t)
+    print(f"\nwrote {(TABLES / 'fixed_step_iberdrola.csv').relative_to(ROOT)}")
+    return 0
+
+
 def main() -> int:
     ap = ArgumentParser(description=__doc__)
     ap.add_argument("--build", action="store_true", help="step 1: the unit × hour rows, one cache file a month")
@@ -475,6 +554,8 @@ def main() -> int:
     ap.add_argument("--summarise", action="store_true", help="step 1: coverage and reads by year, class and group")
     ap.add_argument("--estimate", action="store_true", help="step 2: every cell, profile and check")
     ap.add_argument("--simulated", type=int, metavar="SEED", help="step 2: the code check on simulated price-takers")
+    ap.add_argument("--iberdrola", action="store_true", help="Iberdrola's buyer hours: the stake split into position "
+                    "and slope, the reactor dose, 2023 without Iberdrola (actual and both simulated seeds)")
     args = ap.parse_args()
     if args.build:
         return build(args.months)
@@ -484,6 +565,8 @@ def main() -> int:
         return estimate()
     if args.simulated is not None:
         return simulated(args.simulated)
+    if args.iberdrola:
+        return iberdrola()
     ap.print_help()
     return 1
 

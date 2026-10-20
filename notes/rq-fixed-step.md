@@ -211,7 +211,8 @@ When Iberdrola is a net buyer at cost (22% of its main-sample hours: `EBRA`, `SI
 +1.74 with unit × hour-of-day effects, +2.81 with unit × day, +2.85 without `EBRA` (the 220 MW
 unit offered flat at about €360), +1.56 in the hours in play. Price-takers give +0.5 there.
 **Twice to three times the Nash markdown is more than market power can give** (β ≤ 1), so it
-is a lead to follow, not a result: something in Iberdrola's hydro moves with its net purchases
+is a lead to follow, not a result (against the price-takers it shrinks to about Nash: see "The
+Iberdrola check" below): something in Iberdrola's hydro moves with its net purchases
 hour by hour (pumping, its retail load, its contracts), and the stake picks it up. EDP's slope,
 on both sides, sits on the price-takers.
 
@@ -229,3 +230,133 @@ on both sides, sits on the price-takers.
   move with the stake.
 - **New**: Iberdrola's buyer hours (beyond Nash, so probably not conduct) and 2023 (+0.8, +1.3,
   both sides). Neither was predicted.
+
+## Next: Iberdrola's buyer hours (proposed 2026-10-20, not run)
+
+**What they look like** (descriptive, main sample, within unit × month; a throwaway query).
+Iberdrola is a net buyer at cost in 21% of its main-sample hours: 43% in 2019 and 44% in 2023,
+2–7% in 2022, 2024 and 2025; mostly January–May. **So the high 2023 half-years (+0.8, +1.3)
+probably come from these hours too.** Its buyer hours split into fifths by how much it is
+buying (stake demeaned within unit-month):
+
+| fifth | stake | step at cf_s | step at fixed MW | bottom step | offered MW | steps | cleared MW | λ* | at-cost price |
+|---|---|---|---|---|---|---|---|---|---|
+| most buying | −18.9 | −16.3 | −22.4 | −3.0 | +130 | +0.65 | −17 | +2.6 | −0.8 |
+| 2nd | −5.8 | −9.0 | −11.8 | −6.2 | +92 | +0.44 | +3 | +0.6 | −0.8 |
+| 3rd | −2.5 | −0.2 | −1.5 | −1.8 | +51 | +0.20 | −3 | +0.1 | −0.5 |
+| 4th | −1.2 | −0.9 | −0.1 | −0.2 | +7 | 0.00 | +3 | +0.3 | +0.2 |
+| least buying | +0.7 | +2.4 | +2.2 | +2.1 | −13 | −0.07 | −1 | −0.4 | 0.0 |
+
+€/MWh and MW, deviations from the unit-month mean. EDP's most-buying fifth: −0.9 at cf_s, no
+pattern.
+
+When Iberdrola buys most, it **offers about 130 MW more hydro and prices the middle of its
+ladder €16–22 lower**. The bottom barely moves, and the hour's at-cost price is not lower. A
+price-taker would not do this: its water value does not depend on its own purchases.
+
+**Three readings, and what separates them.**
+1. **Buyer market power with a stake larger than measured.** The markdown is 2–3 × β·Zb, so
+   β ≤ 1 needs a true stake two to three times Zb. That could happen if Iberdrola's exposed
+   purchases exceed its auction position.
+2. **Covering its own customers by quantity.** When its own generation falls short (a reactor
+   out, low wind), it offers more hydro cheaply so the hydro runs, whatever that does to the
+   price.
+3. **The post-auction bilateral option.** Iberdrola can nominate hydro to its own retailer up
+   to 13:00, after the day-ahead prices (`rq-midday-hydro.md` §3.8), so its auction ladder is
+   only part of the decision.
+
+**The check.** Split the stake into its two parts, as the nuclear slope test did
+(`rq-nuclear-cuts.md`). Zb = n / |RD′|: n is the firm's net position at the cost point (MW),
+|RD′| the slope of its residual demand.
+- **Price motive (1)**: the response runs through Zb, i.e. it scales with 1/|RD′|. With both in,
+  n adds nothing.
+- **Supply motive (2)**: it runs through n, the MW short. With n in, Zb adds nothing.
+- **An exogenous shift in n**: Iberdrola's reactor-outage dose
+  (`reactor_outage_dose.parquet`, by owner share) moves its MW short without moving the slope of
+  its residual demand.
+- **Read against EDP and the simulated price-takers** (seeds 1, 2) as the band; 2019 and 2023
+  apart, the two years with most buyer hours. Also the 2023 half-years without Iberdrola, to see
+  if they drop to price-taking.
+- **Data**: n and the slope are in `hcompcost` (`kb_sn`, `kb_s`, over the 5 draws nearest the
+  cost point). Step 1's rows dropped them, so they are re-attached. Nothing to fetch.
+
+(3) cannot be tested from the auction alone. It needs the PDBF bilateral nominations
+hour by hour against the auction ladder, which `iberdrola_self_supply.py` began.
+
+## The Iberdrola check (2026-10-20)
+
+`fixed_step_test.py --iberdrola` → `outputs/tables/fixed_step_iberdrola.csv` (actual offers,
+seed 0, and simulated price-takers, seeds 1 and 2, on the same rows); log
+`.superpowers/sdd/2026-10-19-fixed-step/iberdrola.log`. Main sample as in step 2. Each
+regression is one pooled regression, with every firm's terms in it, so the hour effects come
+from all firms. n = the firm's net position at the cost point (GW), from `hcompcost`; Zb =
+n / |RD′| exactly. Within unit-month, n and Zb correlate 0.67 on Iberdrola's buyer side and
+0.61 on its seller side, so they can be told apart. Dose = Iberdrola's planned and unplanned
+reactor outages, owner's share (`reactor_outage_dose.parquet`), > 0 in 39% of its hours (mean
+522 MW); P = dose / |RD′|.
+
+**In one line.** **The high 2023 half-years are Iberdrola's**: without it, both fall inside
+the price-takers' band. Iberdrola's buyer-hour slope is half artefact. What is left, +0.9 to
++1.45 above the price-takers, runs through the stake Zb and not through the MW position n:
+the sign of a price motive, about the size of Nash. On its seller side the opposite holds: the
+step rises with the MW position (+€6.9 per GW), not with the stake. The reactor dose cannot
+separate the two, because price-takers' reads move with it too.
+
+**The stake split into position and slope** (gap at cf_s on Zb and n jointly; €/MWh per unit
+of Zb, and per GW of n):
+
+| term, pooled | actual | price-takers | gap | bias-adjusted range | differs |
+|---|---|---|---|---|---|
+| Iberdrola buyer: Zb | +1.80 [+0.97, +2.63] | +0.89 … +0.91 | +0.90 | [+0.07, +1.74] | **yes** |
+| Iberdrola buyer: n | −0.03 [−5.7, +5.7] | −4.3 … −3.4 | | [−2.3, +10.0] | no |
+| Iberdrola buyer, n alone | +10.2 [+4.3, +16.0] | +0.8 … +1.6 | +9.0 | [+2.7, +15.3] | yes |
+| Iberdrola seller: Zb | −0.27 [−0.45, −0.08] | −0.14 … −0.01 | | [−0.45, +0.05] | no |
+| Iberdrola seller: n | +6.9 [+4.6, +9.3] | +0.7 … +1.4 | +5.9 | [+3.2, +8.6] | **yes** |
+| EDP buyer: Zb / n | +0.22 / −2.1 | +0.08 … +0.19 / −0.3 … +2.7 | | | no / no |
+| EDP seller: Zb / n | −0.03 / +2.3 | +0.04 … +0.16 / +0.1 … +1.1 | | [−0.49, +0.24] / [−0.29, +3.70] | no / no |
+
+By year, Iberdrola's buyer Zb: 2019 +1.10 [−2.1, +4.3], 2023 +1.23 [−0.03, +2.49], other years
++0.71 against a band of +0.58 … +0.89. Each year alone is inside the band. The pooled excess
+comes from 2019 and 2023 together, the years Iberdrola was a buyer in 43–44% of its hours. Its
+seller n: 2019 +7.8, 2023 +39.6, other years +6.2 (the last two clear of the band).
+
+**The reactor dose.**
+
+| | actual | price-takers |
+|---|---|---|
+| first stage: Iberdrola's n per GW of dose | −0.81 [−1.06, −0.56] | (the same rows) |
+| gap on D (per GW) and P (per €/MWh) jointly, pooled: D / P | +10.8 [−1.2, +22.9] / −1.45 [−2.22, −0.69] | +9.6 … +10.6 / −1.07 … −0.95 |
+| gap on D alone, pooled / departure / crisis | −2.1 / +8.7 / −17.7 | +1.1 / +3.3 … +8.2 / −9.7 … −2.1 |
+
+- A GW of lost reactor output lowers Iberdrola's position at cost by 0.81 GW, as the reactor
+  note found (77–86%).
+- Its hydro step moves with the dose about as the price-takers' does. The simulated reads
+  respond to the dose (P −1.0) because the outage changes the hour's ladder, which the
+  simulation keeps. So the dose cannot separate a price motive from a supply motive here.
+
+**2023 without Iberdrola.**
+
+| | all firms | without Iberdrola | price-takers, without Iberdrola |
+|---|---|---|---|
+| 2023H1 | +1.07 [+0.43, +1.70], differs | +0.27 [−0.39, +0.92] | +0.16 … +0.87 |
+| 2023H2 | +1.75 [+1.12, +2.38], differs | +1.09 [+0.25, +1.94] | +0.41 … +0.76 |
+
+### Reading
+
+- **2023 is Iberdrola.** Without it, both half-years sit inside the band.
+- **As a buyer, Iberdrola prices its hydro below the water value by about the Nash markdown,
+  in 2019 and 2023.** The excess over the price-takers is +0.9 with n in the regression
+  ([+0.07, +1.74]) and +1.45 without ([+0.60, +2.30]), so "beyond Nash" (step 2) no longer
+  holds once the band is subtracted. It scales with 1/|RD′|, not with the MW it is short, which
+  is the price motive's signature. Caveats: the band comes from two seeds, no single year is
+  clear of it, and Iberdrola can still move hydro to its own retailer after the auction
+  (`rq-midday-hydro.md` §3.8).
+- **As a seller, the step follows its position, not its stake.** When Iberdrola is longer at
+  cost by 1 GW, its step at cf_s is €6 higher, whatever the slope of its residual demand. That
+  fits managing its own book by quantity (keep the water when long) and not a price motive,
+  which the seller-side Zb (−0.27, inside the band) rules against.
+- **EDP shows neither**: its terms sit on the price-takers.
+- So the hydro departures the fixed step finds come down to one firm, Iberdrola, mostly in two
+  years. It shades its hydro down as a buyer with the price motive's signature and up as a
+  seller with a position effect. The step estimator's dated seller-side departure for all firms
+  (2019–2021H1) is not where the fixed step puts it.

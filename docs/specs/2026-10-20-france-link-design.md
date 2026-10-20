@@ -1,6 +1,10 @@
 # The France link: a rotation of every firm's residual demand
 
-**Status: design, 2026-10-20. Nothing run beyond a throwaway tabulation (§2).** The third of
+**Status: step 1 run 2026-10-20: STOP (`notes/rq-france-link.md`).** The state is measured
+cleanly (open ⇔ equal prices, 99.7%), and French conditions with the published capacity predict
+the direction of a full line well (corr ~0.5), but the open state poorly (corr 0.20 < 0.3; F 83).
+A split of the prediction that lets Iberian forecasts in as controls only is proposed (note §1.5),
+not run. The prediction is one multinomial logit, not a logit per state (§8). The third of
 four designs chosen on 2026-10-20 for sharper identification. The first two stopped: regional
 holidays at the first stage (`notes/rq-regional-holidays.md`), near-misses of the
 minimum-income condition at the validity checks (`notes/rq-mic-near-miss.md`). Framework:
@@ -183,6 +187,8 @@ double as checks.
 ## 8. Left to the builder
 
 - "Full" (my call: ≤ 1 MW free; 50 MW as a check).
-- The prediction model (my call: one logit per state, the §3.2 variables, leave-one-year-out).
+- The prediction model (my call: one logit per state, the §3.2 variables, leave-one-year-out;
+  changed in step 1 to one multinomial logit over the three states, since open is the middle
+  state and a logit per state missed it).
 - Clocks: OMIE is Madrid time, RTE's `date_heure` is UTC, Ember carries both; join on UTC.
 - Clustering: by date as the main, by week as a check.

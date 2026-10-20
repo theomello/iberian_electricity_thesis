@@ -113,6 +113,9 @@ scripts/
 | `build/build_holiday_exposure.py` | PDBF retail schedules + holidays + REData | no | `outputs/tables/holiday_retail_days.parquet`, `holiday_exposure*.csv` |
 | `fetch/fetch_omie_pdvd.py` | OMIE `pdvd` | no | `data/omie/pdvd/parquet/pdvd_YYYYMM.parquet` |
 | `build/build_mic_running.py` | `cab` + bids + step cache | no | `outputs/tables/mic_running.parquet` |
+| `fetch/fetch_ember_prices.py` | Ember, European wholesale prices (hourly) | no | `data/ember/ember_prices_hourly.parquet` |
+| `fetch/fetch_rte_eco2mix.py` | RTE éCO2mix national (ODRÉ) | no | `data/rte/eco2mix_national.parquet` |
+| `build/build_france_link.py` | OMIE interconnection + Ember + RTE | no | `outputs/tables/france_link_hours.parquet` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
 `lib/config.py` loads tokens from a gitignored `.env`; `lib/regions.py` gives a
@@ -1482,6 +1485,25 @@ PDBF's nine**: `year;month;day;period;unit;MW;code;` (no unit id, no group tag);
 and 4 like PDBF's role code. A combined cycle withdrawn in the auction can run here: Sagunto 1 on
 2019-01-03, out of the auction, is scheduled at 51.7 MW on average. Within €2/MWh of the
 minimum-income threshold REE schedules 40% of withdrawn plants (`notes/rq-mic-near-miss.md`).
+
+### French prices and system data — Ember and RTE (2026-10-20)
+`data/ember/ember_prices_hourly.parquet` (`fetch/fetch_ember_prices.py`): Ember's hourly
+day-ahead prices for Spain (ESP), France (FRA) and Portugal (PRT), 2015-01-01 → 2026-10-07,
+compiled from ENTSO-E (CC BY 4.0, cite Ember); one zip of per-country CSVs with UTC and local
+times, kept in `data/ember/raw/`. **Spain's equals OMIE's `price_es` within €0.01 on 100% of
+67,919 hours**, so it is the published price, and the UTC join holds through DST. It stays
+hourly after the day-ahead's 15-minute switch. No token, unlike ENTSO-E's API.
+
+`data/rte/eco2mix_national.parquet` (`fetch/fetch_rte_eco2mix.py`): RTE's éCO2mix national
+consolidated data from ODRÉ (`eco2mix-national-cons-def`, Etalab licence, no token), hourly UTC
+means of quarter- and half-hourly rows, 2017-12-01 → 2026-08-31: demand, **RTE's D-1 forecast
+(`prevision_j1`)**, nuclear, wind, solar, and the commercial exchange with Spain (positive when
+Spain exports to France: corr +0.963 with OMIE's scheduled flow). On ODRÉ `date` is text; filter
+on `date_heure` with a `date'…'` literal. Realised output is filled only on half-hours.
+
+**The France line's state by hour** (`build/build_france_link.py`): open in 31% of hours
+2018-01 → 2025-09, import-full 41%, export-full 28%; Spanish and French prices are equal in
+99.7% of open hours and differ in 99.8% of full ones (`notes/rq-france-link.md`).
 
 ### Eurostat NUTS 2021 regions — country and autonomous community of a coordinate
 `data/gisco/nuts2_iberia.parquet`, fetched 2026-10-05 by `fetch/fetch_gisco_nuts.py`:

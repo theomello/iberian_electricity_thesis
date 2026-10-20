@@ -245,3 +245,46 @@ P on dosed hours: median €0.21/MWh, 90th percentile €2.51.
 **A refinement for step 2, beside the spec's test.** Since s varies by hour and is zero in many,
 Nash predicts −s · P hour by hour rather than −s̄ · P on average. Regressing on s · P gives β
 directly (Nash −1, book balancing 0).
+
+## The quantity test, step 2 (2026-10-20): book balancing, not market power
+
+`analysis/holiday_quantity_test.py --test --step 2` → `outputs/tables/holiday_quantity_test.csv`;
+log `.superpowers/sdd/2026-10-20-holiday-quantity-test/step2.log`.
+
+**In one line.** On their customers' holidays firms cut output by about a third of the lost load,
+steep hour or flat. The cut does not grow with the dose's price effect: β on the quantity margin is
+−0.16, 95% interval [−0.52, +0.20]. Full market power (β = 1) is rejected (p 4·10⁻¹⁰), and so it is
+for Endesa and Iberdrola alone and under every check.
+
+**The test** (spec §2, predictions fixed before the run). Generation on the dose Z and on
+P = dose / |RD′|, with 1/|RD′|, date × hour and firm × month effects, date clusters; 12,760 dosed
+firm-hours. Book balancing predicts b_P = 0; Nash predicts b_P = −s̄ = −72 MW per €/MWh.
+
+| | per MW of dose (b_Z) | b_P, MW per €/MWh | β = −b_P / s̄ | 95% interval | p(β = 1) |
+|---|---|---|---|---|---|
+| generation, both legs | **−0.33 (0.13)** | +11.2 (13.2) | **−0.16** | [−0.52, +0.20] | 4·10⁻¹⁰ |
+| … in the auction | +0.07 (0.15) | +7.9 (17.7) | −0.11 | [−0.59, +0.37] | < 10⁻⁴ |
+| … bilateral | −0.39 (0.10) | +3.3 (9.5) | −0.05 | [−0.31, +0.21] | < 10⁻⁴ |
+| Endesa alone | −0.03 (0.11) | +9.5 (10.8) | −0.20 | [−0.65, +0.25] | < 10⁻⁴ |
+| Iberdrola alone | −0.71 (0.20) | +29.6 (17.5) | −0.27 | [−0.58, +0.04] | < 10⁻⁴ |
+
+**With the own offer slope hour by hour** (s · P; step 1's refinement, Nash −1): β −0.09 [−0.21,
++0.03] on generation, −0.11 [−0.24, +0.02] in the auction, +0.02 [−0.11, +0.16] bilateral.
+
+**Checks, generation** (β, 95% interval): slope at cost −0.12 [−0.72, +0.49]; flat daily profile
+−0.12 [−0.57, +0.33]; undosed days next to a holiday dropped −0.12 [−0.49, +0.25]; Spain-wide days
+only −0.19 [−0.59, +0.21]; regional days only +0.21 [−0.54, +0.96] (Nash p 0.04); without
+March–June 2020 −0.15 [−0.53, +0.23]; week clusters −0.16 [−0.49, +0.17].
+
+**Reading.**
+- **The cut follows the lost load, not how much that load moves the price.** If anything it is a
+  little *smaller* in steep hours (b_P positive, not significant), the same as the nuclear cuts
+  (`rq-nuclear-cuts.md` §6.2).
+- **It sits in the bilateral leg**, the generation sold to the firm's own retailer, and not in the
+  auction offers where withholding to move the price would show.
+- **So the firms balance their books by quantity**: when their customers use less, they produce less
+  for them. On the quantity margin, β is small and full market power is rejected; the interval
+  allows modest conduct (up to about 0.2 pooled, 0.5 in the widest checks).
+- **The caution of the nuclear test applies**: a steep hour is also a tight one. The date × hour
+  effects take market-wide tightness, and the slope at cost (which does not move with the firm's own
+  offers) gives the same answer.

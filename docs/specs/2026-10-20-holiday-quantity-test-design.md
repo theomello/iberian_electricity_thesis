@@ -1,12 +1,8 @@
 # The holiday quantity test: book balancing or market power?
 
-**Status: step 1 run 2026-10-20: CONTINUE (`notes/rq-regional-holidays.md`, quantity test).**
-Generation responds to the dose (−0.26 per MW, t −2.6, all of it bilateral) and the test can
-detect β down to 0.54. Step 2 not run. A follow-up to the regional-holiday design, whose step 2
-stopped because a holiday does not move a firm's auction position
-(`notes/rq-regional-holidays.md`), and the next step proposed in
-`notes/sharper-designs-2026-10-20.md` §6. It reuses the holiday dose, the five firms' slopes
-(`firm_x`) and the slope test that settled the nuclear cuts (`notes/rq-nuclear-cuts.md` §6.2).
+**Status: run 2026-10-20 (`notes/rq-regional-holidays.md`, quantity test).** The cut follows the
+dose (−0.33 MW per MW), not its price effect: β on the quantity margin −0.16 [−0.52, +0.20]; Nash
+rejected (p 4·10⁻¹⁰), also for Endesa and Iberdrola alone and under every check. Book balancing.
 
 **In one example.** On the Diada, Endesa's Catalan customers use about 450 MW less, and Endesa
 cuts the output it sells them through bilateral contracts by about half that. Two stories fit.

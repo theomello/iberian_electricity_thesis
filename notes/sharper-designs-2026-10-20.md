@@ -105,7 +105,9 @@ years) and a data request to DGEG and ERSE, drafted and on hold.
 
 ## 6. Where this leaves the next step (proposals, none run)
 
-1. **The holiday quantity test** (`rq-regional-holidays.md`, step 2 section). Within the hour, a
+1. **The holiday quantity test** — **run the same day: book balancing.** The cut follows the
+   lost load, not its price effect; β on the quantity margin −0.16 [−0.52, +0.20], full market power
+   rejected (p 4·10⁻¹⁰) (`rq-regional-holidays.md`, quantity test). The original proposal: Within the hour, a
    price-taker's output does not depend on its own customers' load, yet firms cut about half a MW
    per MW of holiday dose. Under market power the cut should grow with 1/|RD′| and stay below one;
    under a rule that matches own generation to own load it should not depend on the slope. The

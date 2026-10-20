@@ -10,7 +10,9 @@ Checks `outputs/tables/holiday_quantity_panel.parquet` (`analysis/holiday_quanti
     bilaterally within 2 se of +0.69 (step 2's numbers, `holiday_schedule_legs.csv`);
   - the firm's own offer slope s is positive in ≥ 99% of hours priced at or below €5 (where every
     firm offers its renewables), and never above its offered sell MW / 10 (all of it within ±€5);
-  - P = dose / slope exactly.
+  - P = dose / slope exactly;
+  - step 2's `fit` on synthetic data recovers a planted book-balancing response (−0.5 on the dose,
+    0 on P) and a planted Nash response (−1 on s · P).
 Exits non-zero on any failure.
 """
 from __future__ import annotations
@@ -27,6 +29,7 @@ for s in ("lib", "analysis", "build"):
 from build_holiday_exposure import add_deltas  # noqa: E402
 from midday_hydro_iv import cluster_meat  # noqa: E402
 from step_estimator import wdemean  # noqa: E402
+from holiday_quantity_test import fit  # noqa: E402
 
 PANEL = ROOT / "outputs/tables/holiday_quantity_panel.parquet"
 LEGS = ROOT / "outputs/tables/holiday_schedule_legs.csv"
@@ -50,6 +53,26 @@ def main() -> int:
         print(f"  {'ok  ' if ok else 'FAIL'} {what}")
         if not ok:
             fails.append(what)
+
+    # step 2's regression on synthetic data: book balancing (y follows Z) and Nash (y = −s·P)
+    rng = np.random.default_rng(3)
+    n = 60_000
+    syn = pd.DataFrame({"date": pd.Timestamp("2020-01-06") + pd.to_timedelta(rng.integers(0, 600, n), "D"),
+                        "hour": rng.integers(0, 24, n), "group": rng.choice(["A", "B", "C", "D", "E"], n)})
+    syn["dose_mw"] = np.where(rng.uniform(size=n) < 0.2, rng.uniform(50, 800, n), 0.0)
+    syn["slope"] = rng.uniform(100, 900, n)
+    syn["inv_slope"] = 1 / syn.slope
+    syn["P"] = syn.dose_mw / syn.slope
+    syn["s"] = np.where(rng.uniform(size=n) < 0.7, rng.uniform(20, 150, n), 0.0)
+    syn["sP"] = syn.s * syn.P
+    noise = rng.normal(0, 30, n)
+    syn["y_bb"] = -0.5 * syn.dose_mw + noise
+    syn["y_nash"] = -1.0 * syn.sP + noise
+    b = fit(syn, "y_bb", ["dose_mw", "P"], ["inv_slope"])
+    check(abs(b["dose_mw"][0] + 0.5) < 3 * b["dose_mw"][1] and abs(b["P"][0]) < 3 * b["P"][1],
+          f"fit, book balancing: b_Z {b['dose_mw'][0]:+.3f} ({b['dose_mw'][1]:.3f}), b_P {b['P'][0]:+.2f} ({b['P'][1]:.2f})")
+    c = fit(syn, "y_nash", ["dose_mw", "sP"], ["inv_slope", "s"])
+    check(abs(c["sP"][0] + 1) < 3 * c["sP"][1], f"fit, Nash: γ on s·P {c['sP'][0]:+.3f} ({c['sP'][1]:.3f}), planted −1")
 
     if not PANEL.exists():
         print(f"  FAIL {PANEL.relative_to(ROOT)} missing\nFAIL: 1")

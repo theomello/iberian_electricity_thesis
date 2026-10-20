@@ -334,11 +334,183 @@ def hydro_pumped(seed: int, only: list[str] | None = None) -> list[dict]:
     return res
 
 
+# Half-years 2019H1 → 2025H1 (fixed 2026-10-19, before the split was read; 2025-07 → 09 is a
+# partial half-year and left out)
+HALF_YEARS = [f"{y}H{h}" for y in range(2019, 2026) for h in (1, 2)][:-1]
+
+
+def hydro_halfyear(seed: int, only: list[str] | None = None) -> list[dict]:
+    """When the hydro departure appears and fades: the within-month specification in each
+    half-year, control `level`; seed 0 = the actual offers. Candidate causes have different
+    dates: the crisis onset and the IVPEE suspension (2021-07-01), the windfall clawback
+    (2021-09-16), the gas cap (2022-06-15 → 2023-12-31), drought (2022)."""
+    d, _ = hydro_level_rows(seed)
+    sl, by = CONTROLS["level"]
+    dt = pd.to_datetime(d.date)
+    half = dt.dt.year.astype(str) + np.where(dt.dt.month <= 6, "H1", "H2")
+    print("rows by half-year:", half.value_counts().sort_index().to_dict(), flush=True)
+    res = []
+    base = "unit × month | Zb"
+    for hy in HALF_YEARS:
+        if only and hy not in only:
+            continue
+        s = d[half == hy]
+        res.append(sh.est(s, f"{base} | {hy}", ["Zb"], y="gap30", fe=lb.UNIT_MONTH, slopes=sl, slopes_by=by)
+                   | {"base": base, "half": hy, "control": "level"})
+    return res
+
+
+# 2021H2 by month: before the windfall clawback (RDL 17/2021, from 2021-09-16) and with it
+# (fixed 2026-10-19, before the split was read)
+MONTHS21 = {"2021-07 – 08": ("2021-07-01", "2021-09-01"), "2021-09 – 12": ("2021-09-01", "2022-01-01")}
+
+
+def hydro_months21(seed: int, only: list[str] | None = None) -> list[dict]:
+    """The months the departure switches off in: July–August 2021 (the crisis and the IVPEE
+    suspension, before the clawback) against September–December 2021 (with it); control
+    `level`; seed 0 = the actual offers."""
+    d, _ = hydro_level_rows(seed)
+    sl, by = CONTROLS["level"]
+    base = "unit × month | Zb"
+    res = []
+    for lab, (a, b) in MONTHS21.items():
+        if only and lab not in only:
+            continue
+        s = d[(d.date >= a) & (d.date < b)]
+        res.append(sh.est(s, f"{base} | {lab}", ["Zb"], y="gap30", fe=lb.UNIT_MONTH, slopes=sl, slopes_by=by)
+                   | {"base": base, "months": lab, "control": "level"})
+    return res
+
+
+# Part 2 (fixed 2026-10-19, before the split was read). The departure periods pooled against the
+# crisis, within categories of one condition at a time:
+#   side   the sign of Zb, the firm's stake at a common cost point (predetermined: it is the
+#          instrument), seller side Zb > 0 against buyer side Zb < 0
+#   fill   the unit's own fill in its own terciles over 2019-01 → 2025-09 (units with a series)
+#   level  λ*30s in bands, €/MWh: below 60, 60–100, 100 and above (the crisis has almost no days
+#          below 60)
+LEVEL_BANDS = [(-np.inf, 60.0, "λ* < 60"), (60.0, 100.0, "λ* 60–100"), (100.0, np.inf, "λ* ≥ 100")]
+
+
+def condition_cells(d: pd.DataFrame) -> dict:
+    dep = (d.date < "2021-07-01") | (d.date >= "2024-01-01")
+    periods = {"departure": dep, "crisis": ~dep}
+    cats: dict[str, dict[str, pd.Series]] = {}
+    has_z = d.Zb.notna()
+    cats["side"] = {"all": has_z & (d.Zb != 0), "seller side": d.Zb > 0, "buyer side": d.Zb < 0}
+    w = pd.read_parquet(lb.WV, columns=["unit", "date", "fill"])
+    w = w[(pd.to_datetime(w.date) >= "2019-01-01") & (pd.to_datetime(w.date) < "2025-10-01")]
+    q = w.groupby("unit").fill.quantile([1 / 3, 2 / 3]).unstack()
+    lo, hi = d.unit.map(q[1 / 3]), d.unit.map(q[2 / 3])
+    has = (d.storage != "none") & d.fill.notna() & lo.notna()
+    cats["fill"] = {"all": has, "low fill": has & (d.fill <= lo), "middle fill": has & (d.fill > lo) & (d.fill < hi),
+                    "high fill": has & (d.fill >= hi)}
+    cats["level"] = {"all": d.lam30s.notna()} | {lab: (d.lam30s >= a) & (d.lam30s < b) for a, b, lab in LEVEL_BANDS}
+    return {(cond, cat, per): m & pm for cond, cs in cats.items() for cat, m in cs.items() for per, pm in periods.items()}
+
+
+def hydro_conditions(seed: int, only: list[str] | None = None) -> list[dict]:
+    """Part 2: β in each (condition, category, period) cell, control `level`; seed 0 = the
+    actual offers. Read with --decompose."""
+    d, _ = hydro_level_rows(seed)
+    sl, by = CONTROLS["level"]
+    res = []
+    for (cond, cat, per), m in condition_cells(d).items():
+        lab = f"{cat} | {per}"
+        if only and lab not in only:
+            continue
+        s = d[m]
+        print(f"  {cond:5s} {lab:28s} rows {len(s):,}", flush=True)
+        if len(s) < 5000:
+            continue
+        res.append(sh.est(s, f"{cond} | {lab}", ["Zb"], y="gap30", fe=lb.UNIT_MONTH, slopes=sl, slopes_by=by)
+                   | {"base": cond, "cell": lab, "control": "level"})
+    return res
+
+
+def hydro_side_halfyear(seed: int, only: list[str] | None = None) -> list[dict]:
+    """The side split of part 2 in each half-year (fixed 2026-10-19, after §15 found the fade on
+    the seller side): does the seller side switch off in 2021H2 and come back after the cap, and
+    does the buyer side never stop? Control `level`; seed 0 = the actual offers."""
+    d, _ = hydro_level_rows(seed)
+    sl, by = CONTROLS["level"]
+    dt = pd.to_datetime(d.date)
+    half = dt.dt.year.astype(str) + np.where(dt.dt.month <= 6, "H1", "H2")
+    sides = {"seller side": d.Zb > 0, "buyer side": d.Zb < 0}
+    res = []
+    for hy in HALF_YEARS:
+        for side, m in sides.items():
+            lab = f"{side} | {hy}"
+            if only and lab not in only:
+                continue
+            s = d[m & (half == hy)]
+            print(f"  {lab:24s} rows {len(s):,}", flush=True)
+            if len(s) < 5000:
+                continue
+            res.append(sh.est(s, f"side | {lab}", ["Zb"], y="gap30", fe=lb.UNIT_MONTH, slopes=sl, slopes_by=by)
+                       | {"base": "side", "cell": lab, "control": "level"})
+    return res
+
+
+def decompose() -> int:
+    """The fixed rule. For each condition: the departure periods' gap to price-takers in each
+    category, weighted by the crisis's own mix of categories (draws in which a step sets the
+    price), predicts the crisis gap. The condition EXPLAINS the fade when (i) that prediction
+    lies inside the crisis's bias-adjusted range, and (ii) in no category do the departure and
+    crisis ranges fail to overlap (the fade gone within categories)."""
+    r = pd.read_csv(TABLES / "price_taking_simulation_hydro_by_condition_reading.csv")
+    r[["cat", "per"]] = r.cell.str.split(" \\| ", expand=True)
+    d, _ = hydro_level_rows(0)
+    cells = condition_cells(d)
+    rows = []
+    for cond, g in r.groupby("base"):
+        g = g.set_index(["cat", "per"])
+        cats = [c for c in g.index.get_level_values(0).unique() if c != "all"]
+        tot = sum(d.loc[cells[(cond, c, "crisis")], "m_n"].sum() for c in cats if (cond, c, "crisis") in cells)
+        pred, used = 0.0, 0.0
+        detail = []
+        for c in cats:
+            wk = d.loc[cells[(cond, c, "crisis")], "m_n"].sum() / tot if tot else 0.0
+            dep = g.loc[(c, "departure")] if (c, "departure") in g.index else None
+            cri = g.loc[(c, "crisis")] if (c, "crisis") in g.index else None
+            if dep is not None and wk > 0:
+                pred += wk * dep.actual_minus_null
+                used += wk
+            overlap = (None if dep is None or cri is None else
+                       not (dep.beta_lo_adj > cri.beta_hi_adj or cri.beta_lo_adj > dep.beta_hi_adj))
+            detail.append({"condition": cond, "category": c, "crisis_weight": wk,
+                           "gap_departure": None if dep is None else dep.actual_minus_null,
+                           "range_departure": None if dep is None else f"[{dep.beta_lo_adj:.2f}, {dep.beta_hi_adj:.2f}]",
+                           "gap_crisis": None if cri is None else cri.actual_minus_null,
+                           "range_crisis": None if cri is None else f"[{cri.beta_lo_adj:.2f}, {cri.beta_hi_adj:.2f}]",
+                           "ranges_overlap": overlap})
+        pred = pred / used if used else np.nan
+        allc = g.loc[("all", "crisis")]
+        alld = g.loc[("all", "departure")]
+        inside = allc.beta_lo_adj <= pred <= allc.beta_hi_adj
+        no_fade = all(x["ranges_overlap"] in (True, None) for x in detail)
+        rows += detail
+        rows.append({"condition": cond, "category": "RULE", "crisis_weight": used,
+                     "gap_departure": alld.actual_minus_null, "range_departure": f"[{alld.beta_lo_adj:.2f}, {alld.beta_hi_adj:.2f}]",
+                     "gap_crisis": allc.actual_minus_null, "range_crisis": f"[{allc.beta_lo_adj:.2f}, {allc.beta_hi_adj:.2f}]",
+                     "predicted_crisis_gap": pred, "prediction_inside": inside, "fade_gone_within": no_fade,
+                     "explains": bool(inside and no_fade)})
+    t = pd.DataFrame(rows)
+    t.to_csv(TABLES / "price_taking_simulation_hydro_decomposition.csv", index=False)
+    pd.set_option("display.width", 250)
+    print(t.round(3).to_string(index=False))
+    return 0
+
+
 # split → (estimates of one seed, the column naming the subsample, cache part name, table name)
 SPLITS = {"firms": (hydro_firms, "without", "dropfirm", "without_firm"),
           "hours": (hydro_hours, "hours", "hourblock", "by_hour"),
           "bounds": (hydro_bounds, "days", "bounds", "by_fill"),
-          "pumped": (hydro_pumped, "kind", "pumped", "by_kind")}
+          "pumped": (hydro_pumped, "kind", "pumped", "by_kind"),
+          "halfyear": (hydro_halfyear, "half", "halfyear", "by_halfyear"),
+          "months21": (hydro_months21, "months", "months21", "by_month2021"),
+          "conditions": (hydro_conditions, "cell", "conditions", "by_condition"),
+          "sidehalf": (hydro_side_halfyear, "cell", "sidehalf", "by_side_halfyear")}
 
 
 def split(name: str, seeds: list[int], only: list[str] | None, combine_only: bool) -> int:
@@ -496,8 +668,17 @@ def main() -> int:
                     "the reservoir bounds (control level)")
     ap.add_argument("--pumped", action="store_true", help="hydro only: the departures in pumped and in conventional "
                     "storage (control level)")
-    ap.add_argument("--combine", action="store_true", help="with --firms, --hours, --bounds or --pumped: only combine "
-                    "the seed parts on disk")
+    ap.add_argument("--halfyear", action="store_true", help="hydro only: the departure in each half-year "
+                    "2019H1 → 2025H1 (control level)")
+    ap.add_argument("--months21", action="store_true", help="hydro only: July–August 2021 against "
+                    "September–December 2021 (control level)")
+    ap.add_argument("--conditions", action="store_true", help="hydro only: part 2, β by condition (side, fill, "
+                    "level) in the departure periods and the crisis (control level)")
+    ap.add_argument("--decompose", action="store_true", help="hydro only: apply the fixed rule to --conditions")
+    ap.add_argument("--sidehalf", action="store_true", help="hydro only: seller and buyer side in each half-year "
+                    "(control level)")
+    ap.add_argument("--combine", action="store_true", help="with --firms, --hours, --bounds, --pumped or --halfyear: "
+                    "only combine the seed parts on disk")
     ap.add_argument("--planted", action="store_true",
                     help="hydro only: price-takers at a firm-specific water value (hsimw<SEED>), the two periods")
     ap.add_argument("--size", action="store_true", help="hydro only: the departures in €/MWh (actual offers; "
@@ -505,6 +686,8 @@ def main() -> int:
     args = ap.parse_args()
     if args.size:
         return size()
+    if args.decompose:
+        return decompose()
     if args.planted:
         return planted(args.seeds[0])
     for name in SPLITS:

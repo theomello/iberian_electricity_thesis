@@ -515,3 +515,194 @@ Actual minus the band's mean, 2024 – 2025: pumped +0.37 and conventional +0.20
   morning and evening (§10), on near-full days where the fill series reach (§11), and spreads
   over pumped and conventional storage without being clear in either (§13). Its bounds cannot
   be tested for the pumped part. On the steps €2.2/MWh, on the price at most €0.10 – 0.20 (§12).
+
+## 14. When the departure appears and fades: half-year by half-year (2026-10-19)
+
+`price_taking_simulation.py --kind hydro --halfyear` (actual offers and seeds 1, 2, in parallel,
+then `--combine`) → `price_taking_simulation_hydro_by_halfyear{,_reading}.csv`; logs
+`.superpowers/sdd/2026-10-19-halfyear/`. The within-month specification (unit × month, Zb,
+control `level`) in each half-year, against the price-takers' band from the same months.
+Half-years fixed before the run; 2025-07 → 09 is a partial half-year and left out.
+34k–59k rows each.
+
+| half-year | actual β | AR set | price-takers | actual − price-takers | differs | price |
+|---|---|---|---|---|---|---|
+| 2019H1 | +0.29 | [0.17, 0.41] | −0.06 … +0.01 | **+0.31** | yes | 52 |
+| 2019H2 | +0.12 | [−0.05, 0.30] | −0.05 … +0.02 | +0.14 | no | 44 |
+| 2020H1 | +0.20 | [0.04, 0.36] | −0.10 … +0.03 | **+0.24** | yes | 29 |
+| 2020H2 | +0.26 | [0.10, 0.39] | −0.13 … −0.02 | **+0.33** | yes | 39 |
+| 2021H1 | +0.46 | [0.21, 0.71] | 0.00 … +0.10 | **+0.41** | yes | 59 |
+| 2021H2 | −0.00 | [−0.15, 0.13] | −0.12 … −0.04 | +0.08 | no | 164 |
+| 2022H1 | +0.24 | [−0.04, 0.46] | +0.03 … +0.15 | +0.16 | no | 206 |
+| 2022H2 | −0.14 | [−0.34, 0.08] | +0.04 … +0.13 | −0.22 | no; price-taking accepted | 130 |
+| 2023H1 | −0.07 | [−0.40, 0.25] | −0.04 … +0.03 | −0.07 | no | 88 |
+| 2023H2 | +0.02 | [−0.18, 0.19] | +0.11 … +0.17 | −0.12 | no; price-taking accepted | 86 |
+| 2024H1 | +0.09 | [−0.06, 0.21] | +0.01 … +0.04 | +0.07 | no | 39 |
+| 2024H2 | +0.17 | [0.07, 0.27] | 0.00 … +0.07 | **+0.13** | yes | 87 |
+| 2025H1 | +0.34 | [0.10, 0.77] | −0.04 … +0.07 | **+0.33** | yes | 62 |
+
+"Price-taking accepted": the set for β, bias allowed for, lies below δ = 0.1 (§7). Price: the
+day-ahead Spanish mean, €/MWh.
+
+- **The departure is there in every half-year to mid-2021**, clearly in four of five, and grows
+  to +0.41 in 2021H1.
+- **It switches off at once in 2021H2**, the first half-year of the crisis, a year before the
+  gas cap. So the cap did not start the fade.
+- **It stays off through the cap** (2022-06-15 → 2023-12-31). Its deepest point is there: in
+  2022H2 and 2023H2 the firms are price-takers within a tenth of the Cournot markup. 2022H1, after
+  the crisis began and before the cap, has a partial, imprecise return (+0.16).
+- **It comes back after the cap, gradually**: +0.07 in 2024H1, +0.13 in 2024H2, +0.33 in 2025H1.
+
+**What the dates say about the candidates** (design in the 2026-10-19 proposal):
+
+| candidate | its dates | fits? |
+|---|---|---|
+| the crisis onset, the IVPEE suspension (2021-07-01), Iberdrola's reservoir drawdowns (August 2021, *to verify*), the windfall clawback (from 2021-09-16) | from 2021H2 | **the onset fits**; these four cannot be separated within a half-year |
+| the gas cap (2022-06-15 → 2023-12-31) | 2022H2 – 2023H2 | not the onset; **fits the deepest trough and the return after it ends** |
+| the size of X̃ (the markup a fixed number of euros) | largest in 2022H1 (sd 29) | weakened: 2022H1 has the largest X̃ and a partial return, not the smallest β |
+| drought (storage) | lowest 2022H2 (5.8 TWh); 2021H2 7.0, 2022H1 7.4, 2023H1 9.7 | mixed: 2022H2 fits, 2022H1 and 2023H1 do not |
+
+**Reading.** The departure belongs to the pre-crisis market and to the market after the cap. It
+switches off when the crisis begins and stays off while the cap is in force. Two things are
+needed next:
+- **the months of 2021H2**: July–August, before the clawback, against September–December, with
+  it;
+- **the decomposition by condition** (part 2 of the proposal: sign of the position, own-basin
+  fill, water-value level, size of X̃), on the dated pattern above.
+
+## 15. The months of 2021H2, and the fade by condition (2026-10-19)
+
+`price_taking_simulation.py --kind hydro --months21` and `--conditions` (actual offers and
+seeds 1, 2, in parallel, then `--combine`), then `--decompose` →
+`price_taking_simulation_hydro_by_month2021{,_reading}.csv`,
+`_by_condition{,_reading}.csv`, `_decomposition.csv`; logs
+`.superpowers/sdd/2026-10-19-halfyear/`. Same specification as §14.
+
+**The rule, fixed before the run.** Departure periods: 2019-01 → 2021-06 and 2024-01 →
+2025-09. Crisis: 2021-07 → 2023-12. Three conditions, each cut into categories:
+
+- **side**: the firm's position at cost, seller (Zb > 0) or buyer (Zb < 0);
+- **fill**: the unit's own-basin fill, in the unit's own terciles over 2019-01 → 2025-09 (the
+  20 units with a fill series);
+- **level**: the water value λ*30s, below €60, €60–100, €100 and above.
+
+A condition **explains the fade** if (i) the departure periods' gaps by category, weighted by
+the crisis's mix of categories (the draws in which a step sets the price), predict a crisis gap
+inside the crisis's bias-adjusted range, and (ii) in every category the departure and crisis
+ranges overlap. Cells under 5,000 rows are skipped (crisis λ* < 60: 385 rows).
+
+### 15.1 July – August against September – December 2021
+
+| months | actual β | AR set | price-takers | actual − price-takers | bias-adjusted range | differs | price | gas |
+|---|---|---|---|---|---|---|---|---|
+| 2021-07 – 08 | +0.03 | [−0.07, 0.17] | −0.13 … +0.01 | +0.10 | [−0.08, 0.30] | no | 99 | 41 |
+| 2021-09 – 12 | −0.01 | [−0.22, 0.16] | −0.07 … −0.02 | +0.03 | [−0.20, 0.23] | no | 197 | 88 |
+
+Price: day-ahead Spanish mean; gas: MIBGAS; €/MWh. 21k–32k rows each.
+
+- **Most of the drop from 2021H1 (+0.41) is already there in July – August**, before the
+  clawback (from 2021-09-16). The clawback is not needed for the onset.
+- **Two months cannot date it more finely.** July – August's range also holds the departure
+  periods' pooled gap (+0.17), and the two price-taker seeds disagree there (−0.13 and +0.01).
+  The IVPEE suspension (2021-07-01) and the rise in gas (29 in June, 36 in July, 45 in August)
+  fall in the same two months.
+
+### 15.2 The fade by condition
+
+Gap = actual − price-takers; range = bias-adjusted; "differs" in bold.
+
+| condition | category | crisis weight | departure gap [range] | crisis gap [range] |
+|---|---|---|---|---|
+| side | seller | 0.65 | +0.13 [−0.08, 0.33] | −0.13 [−0.37, 0.10], price-taking accepted |
+| | buyer | 0.35 | **+0.14 [0.00, 0.28]** | **+0.14 [0.01, 0.27]** |
+| fill | low | 0.51 | +0.40 [−0.03, 0.72] | −0.14 [−0.52, 0.17] |
+| | middle | 0.30 | +0.09 [−0.22, 0.32] | +0.22 [−0.02, 0.45] |
+| | high | 0.20 | **+0.31 [0.03, 0.67]** | +0.12 [−0.19, 0.41] |
+| level | λ* < 60 | 0.00 | +0.09 [−0.03, 0.22] | (385 rows) |
+| | λ* 60–100 | 0.06 | +0.11 [−0.10, 0.38] | −0.38 [−0.87, 0.10] |
+| | λ* ≥ 100 | 0.94 | +0.12 [−0.01, 0.23] | −0.06 [−0.23, 0.10] |
+
+| condition | departure gap | crisis gap [range] | predicted crisis gap | inside? | ranges overlap in every category | explains |
+|---|---|---|---|---|---|---|
+| side | +0.17 | −0.04 [−0.20, 0.11] | +0.13 | no | yes | **no** |
+| fill (20 units) | +0.20 | −0.06 [−0.30, 0.15] | +0.29 | no | yes | **no** |
+| level | +0.17 | −0.04 [−0.20, 0.11] | +0.12 | no | yes | **no** |
+
+Mix of rows, departure → crisis: seller side 63% → 65%; low fill 21% → 50%; λ* ≥ 100 21% → 93%.
+
+- **None of the three explains the fade.** Each predicts a crisis gap above the crisis's range.
+  Side and level miss narrowly (by 0.02 and 0.01), fill clearly.
+- **Fill goes the wrong way.** Half the crisis was low-fill days, and low fill had the largest
+  departure gap (+0.40), so the drought alone would have raised the gap. Within low fill it
+  falls to −0.14.
+- **The departure gap is flat in the water value** (+0.09, +0.11, +0.12), so the crisis's move
+  to high λ* cannot remove it by composition. Within λ* ≥ 100 it falls from +0.12 to −0.06.
+- **The fade is all on the seller side.** When the position at cost is a net sale, the gap goes
+  from +0.13 to −0.13, price-taking accepted in the crisis. When it is a net purchase, it stays
+  at +0.14 in both periods and differs from price-taking in both: the firms keep offering hydro
+  below its water value to lower the price they pay. The seller/buyer mix barely moves, so this
+  is a change within the seller side, not composition. Since the buyers' |X̃| nearly doubles in
+  the crisis (mean −5.8 → −10.4) at the same β, their markdown in euros roughly doubles too.
+
+**Reading.** (The buyer-side half of this does not survive the half-year split, §16.) The
+crisis removed the hydro markup of firms that were net sellers at cost and left the markdown of
+firms that were net buyers. No composition of the three conditions
+produces the fade. One reading fits and is not tested: in the crisis, raising prices carried
+regulatory and political risk (emergency decrees and the clawback from September 2021, the
+cap from June 2022), and lowering them did not. Next to check: the side split half-year by
+half-year, to see whether the seller side switches off in 2021H2 and returns in 2024 – 2025
+while the buyer side never stops.
+
+## 16. Seller and buyer side, half-year by half-year (2026-10-19)
+
+`price_taking_simulation.py --kind hydro --sidehalf` (seeds 0, 1, 2 in parallel, then
+`--combine`) → `price_taking_simulation_hydro_by_side_halfyear{,_reading}.csv`; logs
+`.superpowers/sdd/2026-10-19-halfyear/sidehalf_*.log`. §14's specification on each side of the
+position at cost (seller Zb > 0, buyer Zb < 0) in each half-year; 10k–38k rows a cell, F 9–227.
+
+Gap = actual − price-takers' mean; [bias-adjusted range]; bold = differs from price-taking.
+
+| half-year | seller side | buyer side | seller X̃ (mean) |
+|---|---|---|---|
+| 2019H1 | **+0.41 [0.14, 0.70]** | +0.21 [−0.12, 0.56] | 0.8 |
+| 2019H2 | +0.29 [−0.32, 0.86] | +0.03 [−0.17, 0.23] | 1.6 |
+| 2020H1 | **+0.55 [0.22, 0.88]** | −0.35 [−0.80, 0.07] | 0.6 |
+| 2020H2 | **+0.44 [0.21, 0.65]** | −0.41 [−1.25, 0.23] | 2.5 |
+| 2021H1 | +0.46 [−0.04, 0.92] | +0.13 [−0.14, 0.40] | 4.0 |
+| 2021H2 | +0.05 [−0.20, 0.28] | +0.02 [−0.53, 0.49] | 10.8 |
+| 2022H1 | +0.14 [−0.35, 0.59] | **+0.39 [0.09, 0.69]** | 13.8 |
+| 2022H2 | **−0.29 [−0.52, −0.06]** | +0.05 [−0.22, 0.30] | 8.5 |
+| 2023H1 | −0.17 [−1.01, 0.42] (F 9) | +0.05 [−0.24, 0.28] | 7.3 |
+| 2023H2 | −0.22 [−0.74, 0.20] | +0.16 [−0.24, 0.55] | 4.2 |
+| 2024H1 | −0.08 [−0.53, 0.20] | +0.30 [−0.17, 0.78] | 8.8 |
+| 2024H2 | +0.30 [−0.05, 0.63] | **+0.30 [0.12, 0.48]** | 5.3 |
+| 2025H1 | +0.08 [−0.48, 0.93] (F 10) | +0.12 [−0.21, 0.49] | 12.9 |
+
+- **The departure is the net sellers' markup before the crisis.** On the seller side the gap is
+  +0.29 to +0.55 in every half-year to 2021H1, clearly in three.
+- **It switches off at once in 2021H2** (+0.05) and stays off through the cap and 2024H1
+  (−0.29 to +0.14). In 2022H2 sellers sit *below* the price-takers, the one cell that rejects
+  price-taking from below.
+- **The return after the cap is weak on the seller side**: +0.30 in 2024H2, range just
+  including 0; 2025H1 is +0.08 because the price-takers' band jumps to 0.29–0.40 (actual +0.43,
+  F 10).
+- **The buyer side has no stable pattern.** It swings from −0.41 to +0.39 and differs from
+  price-taking in 2 of 13 half-years (2022H1, 2024H2). §15's pooled +0.14 in both periods is an
+  average over these swings, not a markdown that persists, so §15's asymmetry reading goes.
+- **A fixed markup in euros does not fit either.** The sellers' X̃ is 4–5 times larger in the
+  crisis, so the same euros would show as about +0.1. 2021H2 and 2022H1 fit that; 2022H2 rejects
+  it.
+- **The price-takers' band moves a lot on the seller side**: the two seeds differ by up to 0.25
+  (2021H1: 0.08 and 0.33), and in 2022H1, 2022H2 and 2025H1 it sits at +0.2 to +0.4. Two seeds
+  give a rough band, and the seller-side gaps inherit that noise.
+
+**Reading.** The hydro departure is net sellers pricing above the price-taking water value as
+their stake rises, from 2019 to mid-2021. It stops when the crisis begins, at once and for
+at least two and a half years, and comes back at most partly in 2024H2. Two explanations remain
+for the stop, and they predict different things: firms chose to stop (regulatory and political
+risk once prices rose in mid-2021), or the stake is overstated in the crisis because firms had sold more
+output forward financially, which the physical contract position (PDBF) does not see.
+Published hedge ratios give the second no support (`rq-hedge-ratios.md`): the year delivered was
+about 100% sold forward in 2020 and 2021 as in 2022, mostly to the firms' own customers, which n
+already counts. A design without the simulation (one step per unit
+and day, fixed before the auction) would check the seller-side pattern against the band's noise.

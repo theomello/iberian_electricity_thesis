@@ -77,3 +77,15 @@
 
 - [ ] `notes/rq-france-link.md`; spec status line; `CLAUDE.md` (two fetcher rows, the build row, a short section on Ember and RTE); memory entry.
 - [ ] Ask before committing and before step 2.
+
+### Task 6: The split prediction (added 2026-10-20 after step 1 stopped; user approved)
+
+Note §1.5. **Files:** modify `scripts/build/build_france_link.py`, `scripts/qa/check_france_link.py`, `scripts/analysis/france_link_predict.py`.
+
+**Interfaces:** `fit_loyo_mn(..., hold: pd.DataFrame | None = None)` returns `(P, P_hold)` when `hold` is given: P_hold predicts from the same leave-one-year-out fits with the columns in `hold` replaced. `france_link_hours.parquet` gains `ib_demand_fc, ib_wind_fc, ib_solar_fc` (REE's D-1 forecasts, ESIOS 1775/1777/1779, MW; from 2019), `p_open_full` (prediction with French, capacity and Iberian predictors), `p_open_ib` (the same with the French predictors and capacity held at their calendar month's mean over the sample), `z_open` = p_open_full − p_open_ib. `france_link_predict.py --split` writes `france_link_predict_split.csv`.
+
+**Stop rule for the split (fixed before the run):** stop if corr(p_open_full, open) out of sample < 0.3, or if F of open on z_open, with p_open_ib as a control, within month × hour cells, errors clustered by date, is below 20. Window 2019-01 → 2025-09 (REE's forecasts start in 2019).
+
+- [ ] Add to `check_france_link.py`: with `hold` equal to the data, P_hold = P exactly; with x1 held at its mean on synthetic data, P_hold does not move with x1 (|corr| < 0.05 given x2 fixed by design); relabelling year 2 leaves year 2's P_hold unchanged; on the file, z_open = p_open_full − p_open_ib.
+- [ ] Run → fails. Implement. Rebuild. Run → passes.
+- [ ] Run `--split`; read against the stop rule above.

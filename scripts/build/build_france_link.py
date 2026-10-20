@@ -25,9 +25,15 @@ it (out-of-sample correlation 0.08). On variables known before offers close and 
   month, hour       dummies, additive (the plan's ruling: 36 columns, not 288)
 Iberian conditions are left out on purpose (spec §3.2).
 
+SPLIT (note §1.5, `split`): the same model with REE's D-1 Iberian forecasts added gives
+p_open_full; holding the French predictors and capacity at their calendar month's mean gives
+p_open_ib, the part Iberian conditions give (a control); z_open = p_open_full − p_open_ib is
+what France and capacity add (the instrument). From 2019.
+
 Writes outputs/tables/france_link_hours.parquet: date, period, utc, year, month, hour,
 cap_imp, cap_exp, free_imp, free_exp (MW), state, price_es, price_fr, gap (ES − FR),
-fr_load_fc, fr_nuc_lag (MW), p_open, p_import_full, p_export_full.
+fr_load_fc, fr_nuc_lag (MW), p_open, p_import_full, p_export_full, ib_demand_fc, ib_wind_fc,
+ib_solar_fc (MW), p_open_full, p_open_ib, z_open.
 """
 from __future__ import annotations
 
@@ -45,12 +51,16 @@ START, END = pd.Timestamp("2018-01-01"), pd.Timestamp("2025-09-30")
 FULL = 1.0                                   # MW of free capacity at or below which a direction is full
 STATES = ["open", "import_full", "export_full"]
 PREDICTORS = ["cap_imp", "cap_exp", "fr_load_fc", "fr_nuc_lag"]
+IBERIAN = ["ib_demand_fc", "ib_wind_fc", "ib_solar_fc"]
+ESIOS = {"ib_demand_fc": 1775, "ib_wind_fc": 1777, "ib_solar_fc": 1779}
 
 
-def fit_loyo_mn(df: pd.DataFrame, y: str, xs: list[str], base: str, year_col: str = "year") -> pd.DataFrame:
+def fit_loyo_mn(df: pd.DataFrame, y: str, xs: list[str], base: str, year_col: str = "year",
+                hold: pd.DataFrame | None = None):
     """Multinomial logit of the category y on xs plus month and hour dummies, `base` the reference
     category; each year predicted from a fit on the others. One column of probabilities per
-    category, summing to 1; NaN where a predictor is missing."""
+    category, summing to 1; NaN where a predictor is missing. With `hold` (same index, some of
+    xs), also returns the predictions of the same fits with those columns replaced."""
     cats = [base] + sorted(c for c in df[y].dropna().unique() if c != base)
     code = df[y].map({c: i for i, c in enumerate(cats)})
     X = pd.concat([df[xs].astype(float),
@@ -59,11 +69,17 @@ def fit_loyo_mn(df: pd.DataFrame, y: str, xs: list[str], base: str, year_col: st
     X.insert(0, "const", 1.0)
     ok = X.notna().all(axis=1) & code.notna()
     out = pd.DataFrame(np.nan, index=df.index, columns=cats)
+    held = out.copy()
+    Xh = X.copy()
+    if hold is not None:
+        Xh[list(hold.columns)] = hold.astype(float)
     for yr in sorted(df.loc[ok, year_col].unique()):
         train, test = ok & (df[year_col] != yr), ok & (df[year_col] == yr)
         m = sm.MNLogit(code[train].astype(int), X.loc[train]).fit(disp=0, maxiter=300, method="newton")
         out.loc[test, :] = np.asarray(m.predict(X.loc[test]))
-    return out
+        if hold is not None:
+            held.loc[test, :] = np.asarray(m.predict(Xh.loc[test]))
+    return out if hold is None else (out, held)
 
 
 def nuclear_lag() -> pd.Series:
@@ -72,6 +88,31 @@ def nuclear_lag() -> pd.Series:
     daily = r.groupby(r.utc.dt.tz_convert(None).dt.normalize()).nucleaire.mean()
     daily = daily.reindex(pd.date_range(daily.index.min(), daily.index.max(), freq="D"))
     return daily.rolling(7, min_periods=5).mean().shift(2).rename("fr_nuc_lag")
+
+
+def iberian_forecasts() -> pd.DataFrame:
+    """utc and REE's D-1 forecasts of peninsular demand, wind and solar, MW (ESIOS; from 2019)."""
+    out = None
+    for name, i in ESIOS.items():
+        f = pd.read_parquet(DATA / f"esios/esios_{i}.parquet", columns=["value", "utc_timestamp"])
+        f = f.assign(utc=pd.to_datetime(f.utc_timestamp, utc=True).dt.floor("h")).groupby("utc").value.mean().rename(name)
+        out = f.to_frame() if out is None else out.join(f, how="outer")
+    return out.reset_index()
+
+
+def split(h: pd.DataFrame) -> pd.DataFrame:
+    """Note §1.5: the open prediction with French, capacity and Iberian predictors (p_open_full),
+    the same fits with the French predictors and capacity held at their calendar month's mean over
+    the sample (p_open_ib, a control), and the difference, what France and capacity add (z_open,
+    the instrument). From 2019, when REE's forecasts start."""
+    xs = PREDICTORS + IBERIAN
+    fit = pd.concat([h[["year", "month", "hour"]], h[xs] / 1000.0], axis=1)
+    fit["state"] = h.state.where(h[xs].notna().all(axis=1))
+    held = fit[PREDICTORS].copy()
+    for c in PREDICTORS:
+        held[c] = fit.groupby("month")[c].transform("mean")
+    P, H = fit_loyo_mn(fit, "state", xs, base="open", hold=held)
+    return pd.DataFrame({"p_open_full": P["open"], "p_open_ib": H["open"], "z_open": P["open"] - H["open"]})
 
 
 def main() -> int:
@@ -113,8 +154,14 @@ def main() -> int:
         print(f"  {s}: share {(h.state == s).mean():.3f}; out-of-sample corr "
               f"{h[f'p_{s}'].corr((h.state == s).astype(float)):.3f}")
 
+    h = h.merge(iberian_forecasts(), on="utc", how="left")
+    h = pd.concat([h, split(h)], axis=1)
+    print(f"  split: open out-of-sample corr {h.p_open_full.corr((h.state == 'open').astype(float)):.3f} "
+          f"(with Iberian forecasts), z_open sd {h.z_open.std():.3f}, p_open_ib sd {h.p_open_ib.std():.3f}")
+
     cols = ["date", "period", "utc", "year", "month", "hour", "cap_imp", "cap_exp", "free_imp", "free_exp", "state",
-            "price_es", "price_fr", "gap", "fr_load_fc", "fr_nuc_lag", "p_open", "p_import_full", "p_export_full"]
+            "price_es", "price_fr", "gap", "fr_load_fc", "fr_nuc_lag", "p_open", "p_import_full", "p_export_full",
+            "ib_demand_fc", "ib_wind_fc", "ib_solar_fc", "p_open_full", "p_open_ib", "z_open"]
     h[cols].to_parquet(OUT, index=False)
     print(f"wrote {OUT.relative_to(ROOT)}: {len(h):,} hours, predictors missing on "
           f"{int(h[PREDICTORS].isna().any(axis=1).sum())}")

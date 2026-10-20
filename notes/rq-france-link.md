@@ -11,7 +11,9 @@ French prices 99.7% of the time), and French conditions with the published capac
 *which way* the line will be full well (out-of-sample correlation about 0.5, AUC 0.8). But
 they predict *whether it will be open* poorly: correlation 0.20 against the bar of 0.3, though
 the predictors are strongly related to it (F 83). The open state needs the Iberian side too,
-which the spec kept out of the prediction on purpose.
+which the spec kept out of the prediction on purpose. Adding it with a split (§1.7) brings the
+correlation to 0.299: still a stop, by 0.001, while the French part is strongly related to the
+open state given the Iberian part (F 621).
 
 ### 1.1 What was built
 
@@ -77,8 +79,46 @@ wind, solar). Then split the predicted open probability into:
 The model can then see that openness needs both sides to balance, while only the French and
 capacity part identifies β. Step 1's checks would be rerun on that part.
 
-### 1.6 Rulings in this step
+### 1.7 The split (run 2026-10-20): misses the bar by 0.001
+
+Plan Task 6. REE's D-1 forecasts of peninsular demand, wind and solar added to the multinomial
+logit (2019-01 → 2025-09, each year left out of its own fit); the French predictors and capacity
+then held at their calendar month's mean over the sample to get the Iberian-only part. **Stop
+rule fixed before the run**: corr(p_open_full, open) ≥ 0.3 and F ≥ 20 for open on z_open given
+p_open_ib (month × hour cells, date clusters).
+
+| sample | corr, full prediction | corr, France only (§1.3) | F, French part given Iberian part | partial corr, French part |
+|---|---|---|---|---|
+| 2019-01 → 2025-09 | **0.299** | 0.203 | **621** | 0.256 |
+| without 2022 | 0.341 | 0.232 | 888 | 0.303 |
+| 2019 | 0.421 | 0.290 | 206 | 0.384 |
+| 2020 | 0.333 | 0.233 | 172 | 0.303 |
+| 2021 | 0.382 | 0.276 | 165 | 0.313 |
+| 2022 | 0.092 | 0.037 | 36 | 0.164 |
+| 2023 | 0.359 | 0.135 | 257 | 0.323 |
+| 2024 | 0.307 | 0.195 | 65 | 0.208 |
+| 2025 (to Sep) | 0.157 | 0.162 | 1.4 | 0.037 |
+
+The French part varies as much as the Iberian part (sd 0.18 against 0.15).
+
+**Stop rule: STOP**, by 0.001 on the correlation; the F passes by a factor of 30.
+
+- **Adding the Iberian side helps as expected**: 0.20 → 0.30 pooled, and above 0.3 in five of
+  seven years.
+- **The French part is strongly related to the open state given the Iberian part** (F 621),
+  which is what the instrument needs. The correlation bar asks how well the whole model
+  predicts openness, a weaker proxy for the same thing.
+- **2022 and 2025 are where it fails.** In 2022 the line was export-full most of the year
+  (French nuclear crisis), which fits from other years do not foresee; without 2022 the pooled
+  correlation is 0.34 and the F 888. 2025 (nine months) has almost no French part (F 1.4).
+- **The direct test of strength is step 2's**: the first stage of the corrected stake X on
+  Zb × z_open, F ≥ 20, and the minimum detectable β ≤ 1.
+
+### 1.8 Rulings in this step
 
 - One multinomial logit instead of a logit per state (§1.4).
 - Window 2018-01-01 → 2025-09-30, hourly: the estimation sample ends 2025-09.
 - Month + hour dummies in the logit (additive), month × hour cells in the F test.
+- In the split, the French predictors and capacity are held at their calendar month's mean over
+  the whole sample, not the year-month's, so the instrument keeps across-month French shifts
+  such as 2022's.

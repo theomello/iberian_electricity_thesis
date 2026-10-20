@@ -3,8 +3,9 @@
 **Status: step 1 run 2026-10-20: STOP (`notes/rq-france-link.md`).** The state is measured
 cleanly (open ⇔ equal prices, 99.7%), and French conditions with the published capacity predict
 the direction of a full line well (corr ~0.5), but the open state poorly (corr 0.20 < 0.3; F 83).
-A split of the prediction that lets Iberian forecasts in as controls only is proposed (note §1.5),
-not run. The prediction is one multinomial logit, not a logit per state (§8). The third of
+With Iberian forecasts in the prediction and split out as a control (note §1.7), the
+correlation is 0.299: a stop by 0.001, while the French part is strongly related to the open
+state (F 621); 0.34 without 2022. The prediction is one multinomial logit, not a logit per state (§8). The third of
 four designs chosen on 2026-10-20 for sharper identification. The first two stopped: regional
 holidays at the first stage (`notes/rq-regional-holidays.md`), near-misses of the
 minimum-income condition at the validity checks (`notes/rq-mic-near-miss.md`). Framework:

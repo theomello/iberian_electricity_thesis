@@ -6,10 +6,14 @@
   (a') `fit_loyo_mn`, a multinomial logit, recovers a middle category's probability (> 0.95)
       and never uses a year's own labels (relabelling year 2 leaves year 2's predictions
       unchanged);
+  (a'') with `hold`, the same leave-one-year-out fits predict with columns replaced: hold =
+      the data gives the same predictions; a predictor held at its mean no longer moves them;
+      a year's own labels never enter;
   (b) `outputs/tables/france_link_hours.parquet` (`build/build_france_link.py`): one state
       per row; the Spanish and French prices are equal (≤ €0.01) in ≥ 90% of open hours and
       differ in ≥ 90% of full hours; the nuclear proxy for 2022-07-15 is the mean of RTE's
-      daily nuclear output on 2022-07-07 … 2022-07-13; predictions lie in [0, 1].
+      daily nuclear output on 2022-07-07 … 2022-07-13; predictions lie in [0, 1];
+      z_open = p_open_full − p_open_ib (the split, from 2019).
 Exits non-zero on any failure.
 """
 from __future__ import annotations
@@ -51,6 +55,22 @@ def main() -> int:
     dd = float((Q.loc[m.year == 2] - P.loc[m.year == 2]).abs().max().max())
     check(dd < 1e-9, f"(a') relabelling year 2 moves year 2's predictions by {dd:.2g}")
 
+    # (a'') holding predictors: the same fits, some columns replaced
+    m["x2"] = rng.normal(0, 1, n)
+    same = m[["x", "x2"]].copy()
+    P2, H2 = fit_loyo_mn(m, "cat", ["x", "x2"], base="mid", hold=same)
+    check(float((P2 - H2).abs().max().max()) < 1e-12, "(a'') hold = the data: P_hold = P")
+    held = m[["x", "x2"]].copy()
+    held["x"] = m.x.mean()
+    _, H3 = fit_loyo_mn(m, "cat", ["x", "x2"], base="mid", hold=held)
+    cx = abs(np.corrcoef(H3["mid"], m.x)[0, 1])
+    check(cx < 0.05, f"(a'') x held at its mean: |corr(P_hold, x)| {cx:.3f}")
+    g2 = g.copy()
+    g2["x2"] = m.x2
+    _, H4 = fit_loyo_mn(g2, "cat", ["x", "x2"], base="mid", hold=held)
+    d4 = float((H4.loc[m.year == 2] - H3.loc[m.year == 2]).abs().max().max())
+    check(d4 < 1e-9, f"(a'') relabelling year 2 moves year 2's P_hold by {d4:.2g}")
+
     if not OUT.exists():
         print(f"  FAIL {OUT.relative_to(ROOT)} missing\nFAIL: {len(fails) + 1}")
         return 1
@@ -72,6 +92,9 @@ def main() -> int:
           f"predictions in [0, 1] ({int((~ok).sum())} hours without predictors)")
     tot = h.loc[ok, pc].sum(axis=1)
     check(((tot - 1).abs() < 1e-9).all(), "the three predictions sum to 1 (one multinomial model)")
+    sp = h.dropna(subset=["z_open"]) if "z_open" in h else h.iloc[:0]
+    check(len(sp) > 50_000 and float((sp.z_open - (sp.p_open_full - sp.p_open_ib)).abs().max()) < 1e-12,
+          f"split: z_open = p_open_full − p_open_ib on {len(sp):,} hours")
     print("PASS" if not fails else f"FAIL: {len(fails)}")
     return 1 if fails else 0
 

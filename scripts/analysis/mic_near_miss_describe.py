@@ -2,7 +2,7 @@
 """Step 1 of the minimum-income near-miss design: is the threshold clean, and what do
 withdrawn plants do?
 
-    .venv/bin/python scripts/analysis/mic_near_miss_describe.py
+    .venv/bin/python scripts/analysis/mic_near_miss_describe.py [--restrict]
 
 Spec `docs/specs/2026-10-20-mic-near-miss-design.md` §3.2 and §4 step 1. Reads
 `outputs/tables/mic_running.parquet` (`build/build_mic_running.py`); rows flagged there
@@ -29,10 +29,16 @@ rejects at 1%; two or more covariates jump at 1%; fewer than 1,000 single-unit f
 (one unit within €2 for the group that day) in 2019-01-01 → 2024-06-13.
 
 Writes outputs/tables/mic_near_miss_rd.csv and mic_near_miss_fate.csv.
+
+--restrict (plan Task 6, after step 1 stopped): only unit-days on which the condition can bind
+(`can_bind`: a fixed term, or some MW offered below v), written with suffix `_bind`. Either
+way, if the columns are there, it prints the re-clearing's price shift for withdrawn units
+near the threshold against the plant's added MW over the local slope of the effective curve.
 """
 from __future__ import annotations
 
 import sys
+from argparse import ArgumentParser
 from pathlib import Path
 
 import numpy as np
@@ -85,12 +91,32 @@ def months_of(d: pd.DataFrame, pad: int = 0) -> list[str]:
     return [p.strftime("%Y%m") for p in pd.period_range(lo, hi, freq="M")]
 
 
+def shift_check(d: pd.DataFrame) -> None:
+    w = d[~d.accepted & d.add_mw.notna() & (d.r.abs() < H)]
+    pred = -w.add_mw / w.slope_local
+    ratio = (w.dp_mean / pred).replace([np.inf, -np.inf], np.nan)
+    print(f"\nprice shift, withdrawn units with |r| < {H:g} re-cleared ({len(w):,}): median {w.dp_mean.median():.3f} €/MWh; "
+          f"added MW / local slope predicts {pred.median():.3f}; corr {w.dp_mean.corr(pred):.2f}; "
+          f"shift/prediction p10 {ratio.quantile(.1):.2f}, median {ratio.median():.2f}, p90 {ratio.quantile(.9):.2f}; "
+          f"median added {w.add_mw.median():.0f} MW, slope {w.slope_local.median():.0f} MW per €/MWh")
+
+
 def main() -> int:
+    ap = ArgumentParser(description=__doc__)
+    ap.add_argument("--restrict", action="store_true", help="only unit-days on which the condition can bind")
+    args = ap.parse_args()
+    suffix = "_bind" if args.restrict else ""
     d = pd.read_parquet(T / "mic_running.parquet")
     d["date"] = pd.to_datetime(d.date)
     n0 = len(d)
     d = d[~d.flag & d.r_A.notna()].copy()
     print(f"mic_running: {n0:,} unit-days, {len(d):,} kept (not flagged, r_A defined)")
+    if "add_mw" in d.columns:
+        shift_check(d)
+    if args.restrict:
+        near = d.r_A.abs() < H
+        print(f"--restrict: can bind on {d.can_bind.mean():.1%} of kept unit-days, {d[near].can_bind.mean():.1%} within €{H:g}")
+        d = d[d.can_bind].copy()
     units = set(d.unit)
 
     # covariates
@@ -130,7 +156,7 @@ def main() -> int:
                  "n_left": int((d.r_A.between(-H, 0, inclusive="left")).sum()),
                  "n_right": int((d.r_A.between(0, H, inclusive="left")).sum())})
     rd = pd.DataFrame(rows)
-    rd.to_csv(T / "mic_near_miss_rd.csv", index=False)
+    rd.to_csv(T / f"mic_near_miss_rd{suffix}.csv", index=False)
     with pd.option_context("display.width", 140, "display.float_format", "{:.4g}".format):
         print(rd.to_string(index=False))
 
@@ -153,7 +179,7 @@ def main() -> int:
              near.groupby(["side", "grp"]).apply(fate, include_groups=False).reset_index().assign(year="all")]
     ft = pd.concat(parts, ignore_index=True).rename(columns={"grp": "group"})
     ft = ft[["side", "year", "group", "n", "pdvd_share", "pdvd_mw", "id_share", "id_mw", "run_mw", "idle_share"]]
-    ft.to_csv(T / "mic_near_miss_fate.csv", index=False)
+    ft.to_csv(T / f"mic_near_miss_fate{suffix}.csv", index=False)
     with pd.option_context("display.width", 140, "display.float_format", "{:.3f}".format):
         print(ft.to_string(index=False))
 

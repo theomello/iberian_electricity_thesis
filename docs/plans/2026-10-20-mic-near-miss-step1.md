@@ -88,3 +88,15 @@ Rules:
 
 - [ ] `notes/rq-mic-near-miss.md`: the running variable, the checks table, the fate table, the verdict. Spec status line. `CLAUDE.md`: the PDVD fetcher row and a short PDVD paragraph. Memory entry.
 - [ ] Ask before committing and before step 2.
+
+### Task 6: The restricted check (added 2026-10-20 after step 1 stopped; user approved)
+
+Step 1 stopped on the density and on v (`notes/rq-mic-near-miss.md` §1.4). Two candidate causes, each tested here.
+
+**Files:** modify `scripts/build/build_mic_running.py`, `scripts/qa/check_mic_running.py`, `scripts/analysis/mic_near_miss_describe.py`.
+
+**Interfaces:** `mic_running.parquet` gains `mw_offered` and `mw_below_v` (offered sell MW summed over the day's hours, all and priced below v), `can_bind` = F > 0 or mw_below_v > 0, and for re-cleared rows `add_mw` (mean MW added per re-cleared hour) and `slope_local` (mean over those hours of the effective curve's MW per €/MWh between p* − 5 and p* + 5). `mic_near_miss_describe.py --restrict` reruns §1.2–1.3 on `can_bind` rows, writing `mic_near_miss_rd_bind.csv` and `mic_near_miss_fate_bind.csv`, and prints the shift against −add_mw / slope_local.
+
+- [ ] Add to `check_mic_running.py`: 0 ≤ mw_below_v ≤ mw_offered; **every row with F = 0, mw_below_v = 0 and q > 0 has r ≥ −0.01** (the mechanism: a plant offering nothing below v earns at least v on what it sells); add_mw ≥ 0 and slope_local > 0 on re-cleared rows.
+- [ ] Run → fails (no columns). Implement. Rebuild. Run → passes.
+- [ ] Run `--restrict`; read it against the step 1 stop rule.

@@ -12,10 +12,14 @@ Checks `build/build_mic_running.py`:
   - the price shift is ≤ 0 for every withdrawn row (adding supply cannot raise the price),
     and r_A ≤ r + 0.001 on all but 0.01% (a lower price can drop a unit's cheapest hours);
     r_A = r for every accepted row;
-  - no date after 2025-03-18 (the condition ends there);
+  - no date after 2025-03-18 (the condition ends there); `flag` is the same for every unit
+    on a day (a day with more than four hours that cannot be re-cleared);
   - accepted rows (≥ 4 hours cleared) have r ≥ −0.5 in at least 98% of Spanish and of
     Portuguese unit-days separately (a Portuguese unit priced at the Spanish price in
     split hours would fail).
+  - mw_below_v within [0, mw_offered]; a day with F = 0 and nothing offered below v has
+    r ≥ −0.01 (the condition cannot bind: whatever sells earns at least v); can_bind is
+    F > 0 or some MW below v; re-cleared rows carry add_mw ≥ 0 and slope_local > 0.
 Exits non-zero on any failure.
 """
 from __future__ import annotations
@@ -64,6 +68,23 @@ def main() -> int:
     acc = d[d.accepted]
     check((acc.r_A == acc.r).all(), f"accepted: r_A = r on {(acc.r_A == acc.r).mean():.4%} of {len(acc):,}")
     check(d.date.max() <= pd.Timestamp("2025-03-18"), f"last date {d.date.max().date()}")
+    # the flag is a property of the day (its hours that cannot be re-cleared), the same for
+    # accepted and withdrawn units; flagging only withdrawn units drops them asymmetrically
+    k = d.groupby("date").flag.nunique().max()
+    check(k == 1, f"flag is constant within a day (max distinct values per day {k})")
+
+    # Task 6: whether the condition can bind on the day
+    check({"mw_offered", "mw_below_v", "can_bind", "add_mw", "slope_local"} <= set(d.columns),
+          "columns mw_offered, mw_below_v, can_bind, add_mw, slope_local present")
+    if "mw_below_v" in d.columns:
+        check(((d.mw_below_v >= 0) & (d.mw_below_v <= d.mw_offered + 1e-6)).all(), "0 ≤ mw_below_v ≤ mw_offered")
+        nb = d[(d.F == 0) & (d.mw_below_v == 0) & (d.q_mwh > 0)]
+        check((nb.r >= -0.01).all(), f"F = 0 and nothing offered below v: r ≥ −0.01 on {(nb.r >= -0.01).mean():.4%} "
+                                     f"of {len(nb):,} (min {nb.r.min():.3f})")
+        check((d.can_bind == ((d.F > 0) | (d.mw_below_v > 0))).all(), "can_bind = F > 0 or MW offered below v")
+        rc = d[d.add_mw.notna()]
+        check((rc.add_mw >= 0).all() and (rc.slope_local > 0).all(),
+              f"re-cleared rows: add_mw ≥ 0, slope_local > 0 ({len(rc):,} rows)")
     for c in ("ES", "PT"):
         x = acc[acc.country == c]
         sh = (x.r >= -0.5).mean()

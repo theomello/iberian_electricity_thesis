@@ -23,14 +23,21 @@ hour is re-cleared on the step cache's effective curve (`analysis/step_curves.py
 (`shift_price`); the price had it run is p_h + (p_clear' − p_clear), the shift and not the
 re-cleared level, so the re-clearing error on the published price cancels. Hours the cache
 marks not `valid` (split, clearing identity off, re-clear more than €0.50 from the price)
-keep p_h and are counted in `n_left_out`; `flag` marks days with more than four. Other
+keep p_h and are counted in `n_left_out`. `flag` marks days with more than four hours not
+`valid`, for every unit that day: flagging only the withdrawn units whose hours could not be
+re-cleared dropped them and kept the accepted ones (605 withdrawn against 0 accepted within
+€2, fixed 2026-10-20). Other
 units with a condition keep their status: first order, not OMIE's joint search. Days
 without 24 periods (DST) are not in the cache and are left out.
 
 Writes outputs/tables/mic_running.parquet: date, unit, country, group (largest owner that
 day), F, v, cap_mw, q_mwh, rev, r, hours_cleared, accepted, r_A, far (withdrawn with
 r < −5: r_A = r, not re-cleared), n_hours, n_left_out, flag, dp_mean (mean price shift over
-the unit's hours, €/MWh).
+the unit's hours, €/MWh); mw_offered and mw_below_v (offered sell MW summed over the day, all
+and priced below v), can_bind (F > 0 or some MW below v: with neither, whatever the unit sells
+earns at least v and its margin cannot be negative); for re-cleared rows add_mw (mean MW added
+per re-cleared hour) and slope_local (the effective curve's MW per €/MWh within ±€5 of the
+price, averaged over those hours), to check the shift against −add_mw / slope_local.
 """
 from __future__ import annotations
 
@@ -56,6 +63,7 @@ MIN_HOURS = 4                              # cleared in fewer: the scheduled sto
 FAR = -5.0                                 # r below this: not re-cleared
 MAX_LEFT_OUT = 4
 EPS = 0.005                                # €/MWh, as step_curves
+SLOPE_HALF = 5.0                           # €/MWh either side of the price for slope_local
 
 
 def shift_price(prices: np.ndarray, a: np.ndarray, d_tot: float, add_p: np.ndarray, add_mw: np.ndarray) -> float:
@@ -108,8 +116,14 @@ def month(ym: str, country: dict, px: pd.DataFrame) -> pd.DataFrame:
     at = o[o.price_eur_mwh <= o.p + EPS]
     agg = (at.assign(rev=at.power_mw * at.p).groupby(["date", "unit"])
            .agg(q_mwh=("power_mw", "sum"), rev=("rev", "sum")))
-    d = dec.merge(agg.reset_index(), on=["date", "unit"], how="left").merge(cl.reset_index(), on=["date", "unit"], how="left")
-    d[["q_mwh", "rev", "hours_cleared"]] = d[["q_mwh", "rev", "hours_cleared"]].fillna(0)
+    ov = o.merge(dec[["date", "unit", "v"]], on=["date", "unit"])
+    offered = (ov.assign(below=ov.power_mw.where(ov.price_eur_mwh < ov.v - EPS, 0.0)).groupby(["date", "unit"])
+               .agg(mw_offered=("power_mw", "sum"), mw_below_v=("below", "sum")))
+    d = (dec.merge(agg.reset_index(), on=["date", "unit"], how="left").merge(cl.reset_index(), on=["date", "unit"], how="left")
+         .merge(offered.reset_index(), on=["date", "unit"], how="left"))
+    d[["q_mwh", "rev", "hours_cleared", "mw_offered", "mw_below_v"]] = \
+        d[["q_mwh", "rev", "hours_cleared", "mw_offered", "mw_below_v"]].fillna(0)
+    d["can_bind"] = (d.F > 0) | (d.mw_below_v > 0)
     d["hours_cleared"] = d.hours_cleared.astype(int)
     d["accepted"] = d.hours_cleared >= MIN_HOURS
     d["r"] = np.where(d.q_mwh > 0, (d.rev - d.F) / d.q_mwh.where(d.q_mwh > 0) - d.v, np.nan)
@@ -118,6 +132,8 @@ def month(ym: str, country: dict, px: pd.DataFrame) -> pd.DataFrame:
     d["n_hours"] = 24
     d["n_left_out"] = 0
     d["dp_mean"] = 0.0
+    d["add_mw"] = np.nan
+    d["slope_local"] = np.nan
 
     todo = d[~d.accepted & (d.r >= FAR)]
     if len(todo):
@@ -132,7 +148,7 @@ def month(ym: str, country: dict, px: pd.DataFrame) -> pd.DataFrame:
             row = d.index[(d.date == dt) & (d.unit == u)][0]
             F, v = d.at[row, "F"], d.at[row, "v"]
             q_tot = rev = 0.0
-            left, shifts = 0, []
+            left, shifts, added, slopes = 0, [], [], []
             for hid_, s in g.groupby("hid", sort=False):
                 p = float(s.p.iloc[0])
                 if ok.get(hid_, False) and hid_ in mh:
@@ -140,6 +156,9 @@ def month(ym: str, country: dict, px: pd.DataFrame) -> pd.DataFrame:
                     pr, a = mh[hid_]
                     p_new = shift_price(pr, a, dtot[hid_], add.price_eur_mwh.to_numpy(float), add.power_mw.to_numpy(float))
                     dp = min(p_new - pcl[hid_], 0.0) if np.isfinite(p_new) else 0.0
+                    added.append(float(add.power_mw.sum()))
+                    lo, hi = np.searchsorted(pr, [p - SLOPE_HALF, p + SLOPE_HALF], side="right") - 1
+                    slopes.append((a[hi] - (a[lo] if lo >= 0 else 0.0)) / (2 * SLOPE_HALF))
                 else:
                     left, dp = left + 1, 0.0
                 shifts.append(dp)
@@ -150,7 +169,12 @@ def month(ym: str, country: dict, px: pd.DataFrame) -> pd.DataFrame:
             d.at[row, "r_A"] = (rev - F) / q_tot - v if q_tot > 0 else np.nan
             d.at[row, "n_left_out"] = left
             d.at[row, "dp_mean"] = float(np.mean(shifts)) if shifts else 0.0
-    d["flag"] = d.n_left_out > MAX_LEFT_OUT
+            if added:
+                d.at[row, "add_mw"] = float(np.mean(added))
+                d.at[row, "slope_local"] = float(np.mean(slopes))
+    # a property of the day, so accepted and withdrawn units on it are dropped alike
+    bad = hours.groupby("date").valid.apply(lambda v: int((~v.astype(bool)).sum()))
+    d["flag"] = d.date.map(bad).fillna(24) > MAX_LEFT_OUT
     d["country"] = d.unit.map(country)
     return d
 
@@ -174,7 +198,8 @@ def main() -> int:
     d = pd.concat(out, ignore_index=True)
     d["group"] = majority_group(d, spells(), unit_col="unit", date_col="date")
     cols = ["date", "unit", "country", "group", "F", "v", "cap_mw", "q_mwh", "rev", "r", "hours_cleared", "accepted",
-            "r_A", "far", "n_hours", "n_left_out", "flag", "dp_mean"]
+            "r_A", "far", "n_hours", "n_left_out", "flag", "dp_mean", "mw_offered", "mw_below_v", "can_bind",
+            "add_mw", "slope_local"]
     if args.months:
         print(d[cols].head())
         return 0

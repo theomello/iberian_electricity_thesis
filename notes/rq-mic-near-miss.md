@@ -1,16 +1,17 @@
 # Near-misses of the minimum-income condition: running note
 
 Spec: [`docs/specs/2026-10-20-mic-near-miss-design.md`](../docs/specs/2026-10-20-mic-near-miss-design.md).
-Plan: `docs/plans/2026-10-20-mic-near-miss-step1.md`. Ledger and logs:
-`.superpowers/sdd/2026-10-20-mic-near-miss-step1/`.
+Plan: `docs/plans/2026-10-20-mic-near-miss-step1.md` (Task 6 is the restricted check). Ledger
+and logs: `.superpowers/sdd/2026-10-20-mic-near-miss-step1/`.
 
 ## Step 1 (2026-10-20): the running variable, the checks, the fate of withdrawn plants — STOP
 
 **In one line.** Acceptance jumps cleanly at the threshold (0 → 0.89), and a plant just
 withdrawn sells about 90 MW more in the intraday auctions than one just accepted. But the
-stop rule fires: there are 2.5 times as many unit-days per €/MWh just above the threshold as
-just below, and the declared variable term v jumps by €19/MWh. Both look mechanical, not
-manipulated (§1.4), and point to a sample restriction that has not been run.
+stop rule fires: there are about twice as many unit-days per €/MWh just above the threshold
+as just below, and the declared variable term v jumps by €17/MWh. Neither of the two
+mechanical explanations tested accounts for it (§1.4–1.5); the one left is that the clearing
+algorithm chooses among several plants near their thresholds at once (§1.6).
 
 ### 1.1 What was built
 
@@ -21,38 +22,39 @@ manipulated (§1.4), and point to a sample restriction that has not been run.
 - `build/build_mic_running.py` → `outputs/tables/mic_running.parquet`: **137,417 declaring
   unit-days on 121 units, 2019-01-01 → 2025-03-18** (DST days out). r at the published
   prices; r_A, the margin had the unit run, for withdrawn units by re-clearing each hour on
-  the step cache's effective curve with the unit's offers added. 1,363 days flagged (more
-  than four hours not re-clearable) and left out.
+  the step cache's effective curve with the unit's offers added. Days with more than four
+  hours that cannot be re-cleared (split, clearing identity off, re-clear error above €0.50)
+  are flagged for every unit and left out: 14.6% of days, 19,264 unit-days.
 - `lib/rd.py`: the local linear jump and McCrary's density test, checked on planted data
   (`qa/check_rd.py`).
 - `analysis/mic_near_miss_describe.py` → `outputs/tables/mic_near_miss_rd.csv`,
-  `mic_near_miss_fate.csv`.
+  `mic_near_miss_fate.csv` (and `_bind` versions, §1.5).
 
 **Withdrawing a plant moves the price it is measured at.** The re-clearing lowers a withdrawn
-plant's prices by a median €0.58/MWh and its margin by €0.86/MWh. Of the 410 withdrawn plants whose
-margin at the final prices was €0–0.25, 98% fall below zero once measured as if running.
-The threshold becomes almost sharp: under 5% accepted below −€0.10 (20% in the last €0.10,
-within the re-clearing's error), 89–99% above.
+plant's prices by a median €0.59/MWh and its margin by €0.86/MWh. Of the 410 withdrawn plants
+whose margin at the final prices was €0–0.25, 98% fall below zero once measured as if
+running. The threshold becomes almost sharp: under 5% accepted below −€0.10 (20% in the last
+€0.10, within the re-clearing's error), 89–99% above.
 
 ### 1.2 The checks at the threshold
 
 Local linear each side, triangular kernel, bandwidth €2/MWh, errors clustered by date;
-2,628 unit-days below, 4,111 above.
+2,624 unit-days below, 3,670 above.
 
 | check | jump | se | p |
 |---|---|---|---|
-| accepted (≥ 4 hours cleared) | **0.891** | 0.015 | 0 |
-| density (McCrary, log ratio) | **0.912** | 0.067 | 10⁻⁴² |
-| v, declared variable term (€/MWh) | **+19.2** | 3.6 | 10⁻⁷ |
-| D-1 solar forecast (MWh/h) | **+491** | 97 | 10⁻⁷ |
-| D-1 demand forecast | −411 | 197 | 0.04 |
-| F, fixed term | −670 | 1,365 | 0.62 |
-| D-1 wind forecast | +190 | 209 | 0.36 |
-| gas price at D−2 | +3.7 | 2.2 | 0.09 |
-| ran on D−1 | +0.02 | 0.03 | 0.52 |
-| weekend | −0.01 | 0.03 | 0.82 |
+| accepted (≥ 4 hours cleared) | **0.890** | 0.015 | 0 |
+| density (McCrary, log ratio) | **0.766** | 0.068 | 10⁻²⁹ |
+| v, declared variable term (€/MWh) | **+16.8** | 3.7 | 5·10⁻⁶ |
+| D-1 solar forecast (MWh/h) | **+452** | 97 | 3·10⁻⁶ |
+| D-1 demand forecast | −439 | 195 | 0.02 |
+| F, fixed term | −1,154 | 1,362 | 0.40 |
+| D-1 wind forecast | +99 | 212 | 0.64 |
+| gas price at D−2 | +2.5 | 2.2 | 0.27 |
+| ran on D−1 | +0.03 | 0.03 | 0.35 |
+| weekend | −0.02 | 0.03 | 0.46 |
 
-Single-unit firm-days within €2 to 2024-06-13 (the intraday panels' end): 2,504 of 3,913.
+Single-unit firm-days within €2 to 2024-06-13 (the intraday panels' end): 2,272 of 3,602.
 
 **Stop rule: STOP** (density test rejects; two covariates jump at 1%). The acceptance jump and
 the count pass.
@@ -63,40 +65,61 @@ Within €2 of the threshold, mean MW over the day:
 
 | | n | REE schedules it | its schedule after REE | sells intraday | its net intraday sales | runs in all | idle |
 |---|---|---|---|---|---|---|---|
-| withdrawn | 2,628 | 40% | 27 MW | 69% | **93 MW** | 120 MW | 26% |
-| accepted | 4,111 | 99% | 246 MW | 64% | 15 MW | 262 MW | 0.5% |
+| withdrawn | 2,624 | 40% | 27 MW | 69% | **93 MW** | 120 MW | 26% |
+| accepted | 3,670 | 99% | 247 MW | 64% | 16 MW | 263 MW | 0.6% |
 
-At the threshold (same regression as §1.2): intraday sales −90 MW (se 6) from withdrawn to
-accepted; output in all +104 MW (se 7). **So a withdrawal does reach the intraday auctions**:
+At the threshold (same regression as §1.2): intraday sales −91 MW (se 6) from withdrawn to
+accepted; output in all +105 MW (se 8). **So a withdrawal does reach the intraday auctions**:
 the plant sells about 90 MW there that it would not otherwise, more than intraday positions
-usually move (tens of MW a session). By firm, a withdrawn plant sells 122 MW (Naturgy), 83
+usually move (tens of MW a session). By firm, a withdrawn plant sells 122 MW (Naturgy), 85
 (Endesa), 69 (EDP), 53 (Iberdrola); by year, 117 MW in 2019 falling to 48 in 2024. This is
 the plant's own sale, not yet its owner's net position (step 2).
 
-### 1.4 Why the density jumps: two mechanical candidates, neither run yet
+### 1.4 A bug found on the way: the flag dropped only withdrawn plants
 
-**Measured at the final prices, before any re-clearing, the right side is already twice as
-dense.** Withdrawn plants spread evenly from −1 to +0.25 (about 410–440 per €0.25); accepted
-plants start at 0 (439 in the first €0.25) with almost none below. So the accepted add to the
-right without a matching group on the left.
+The first run flagged a unit-day when *its own* hours could not be re-cleared, which only
+happens to withdrawn plants. On the same bad days, 605 withdrawn plants within €2 were
+dropped and 445 accepted ones kept, which thinned the left side. The flag is now a property
+of the day (`qa/check_mic_running.py` pins it). That lowers the density jump from 0.91 to 0.77
+and the v jump from €19 to €17, and leaves the verdict unchanged. The numbers above are the
+corrected ones.
 
-1. **On many accepted days the condition cannot bind.** A plant with no fixed term that offers
-   every MW at or above its v earns at least v on whatever it sells, so its margin is never
-   negative. Those days can only sit to the right. The jump in v fits: just above the
-   threshold the median v is €66, just below €56. *Test*: keep unit-days on which the plant
-   offered some MW below its own v (known when offers close, so a valid restriction) and
-   rerun the checks.
-2. **The re-clearing may overstate the price effect.** It empties the band just below zero
-   (withdrawn plants in [−0.25, 0): 439 → 156) and sends many below −1. A median €0.58 shift
-   for a median 236 MW plant implies a slope of about 400 MW per €/MWh, close to the
-   day-ahead's 500, so it is not absurd, but the tail is not checked. *Test*: compare each
-   shift with the plant's MW over the local slope of the effective curve.
+### 1.5 The restricted check (Task 6): neither mechanical explanation holds
 
-**Manipulation is unlikely to explain it**: there is no spike just above zero (32, 31, 22, 28
-unit-days in the first four €0.01 bins against 15–22 further up), and the price noise a firm
-faces at noon on D-1 is several €/MWh.
+**1. Days when the condition cannot bind: not it.** A plant with no fixed term that offers
+nothing below its v earns at least v on whatever it sells, so its margin cannot be negative
+(pinned: r ≥ 0 on all 765 such unit-days). But such days are rare: the condition can bind on
+**99.2%** of unit-days within €2, because combined cycles offer most of their output below v
+and rely on the condition to protect them (Sagunto 1 on 2019-01-03: 5,884 of 10,015 MW·h
+offered below its €68.42). Restricted to days when it can bind: density 0.762 (se 0.068), v
++16.9 (3.7), solar +446 (98). The same.
 
-### 1.5 Rulings in this step
+**2. The re-clearing overstating the price effect: mostly not.** Each withdrawn plant's
+re-cleared price shift against its added MW over the local slope of the effective curve
+(±€5 around the price), 4,623 withdrawn unit-days within €2:
+
+| | median |
+|---|---|
+| re-cleared shift | −€0.585/MWh |
+| added MW / local slope | −€0.425/MWh |
+| ratio, p10 / median / p90 | 0.88 / 1.30 / 1.96 |
+| added MW; local slope | 227 MW; 520 MW per €/MWh |
+
+Correlation 0.92. The shift runs about 30% above the linear prediction, as a curve that steepens
+below the price would make it, and the slope matches the day-ahead's usual 500. Not an
+artefact large enough to empty the band below the threshold.
+
+### 1.6 What is left: plants compete for the same slot
+
+**Near-misses come in groups.** On days with a unit within €2, the median day has **3** such
+units and 77% have two or more. The re-clearing holds the other plants' status fixed, but the
+algorithm chooses which of them to accept jointly: accepting one lowers the price for the
+others. Which side of the threshold a plant lands on is then partly the algorithm's choice
+among competitors, not luck, and the plants it keeps may differ systematically (higher v, as
+§1.2 shows). **Not tested.** The test: days with exactly one plant within €2 across the whole
+market, where there is no competition to resolve; rerun the checks there.
+
+### 1.7 Rulings in this step
 
 - 2018 is left to step 5: the step cache (the re-clearing curves) and REE's D-1 forecasts
   start in 2019.
@@ -104,3 +127,4 @@ faces at noon on D-1 is several €/MWh.
   average, and a lower price can drop a plant's cheapest hours and raise it (Castejón 3,
   2022-02-13: −4.15 → −1.86; 2 of 100,843 rows). The check now pins that the price shift is
   never positive (100%).
+- The flag is a property of the day (§1.4).

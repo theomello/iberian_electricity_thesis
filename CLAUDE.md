@@ -108,10 +108,14 @@ scripts/
 | `build/build_water_value_forward.py` | OMIP + day-ahead prices + PDBF + `cab` + MITECO + SNIRH | no | `outputs/tables/water_value_forward.parquet`, `forward_price_quantiles.parquet` |
 | `build/build_hydro_cost.py` | `water_value_forward` + step caches + `cab` | no | `outputs/tables/hydro_cost_daily.parquet` |
 | `fetch/fetch_esios_i90.py` | ESIOS archive 34 (I90DIA), 15th of each month | **yes** | `data/esios/raw/archives/34/`, `data/esios/i90/i90_sample_hourly.parquet` |
+| `fetch/fetch_holidays.py` | BOE holiday resolutions (XML) + Portugal by law | no | `data/holidays/holidays_es_pt.parquet` |
+| `fetch/fetch_ree_regional_demand.py` | REE REData, demand by region, monthly | no | `data/ree/ree_demand_ccaa_monthly.parquet` |
+| `build/build_holiday_exposure.py` | PDBF retail schedules + holidays + REData | no | `outputs/tables/holiday_retail_days.parquet`, `holiday_exposure*.csv` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
 `lib/config.py` loads tokens from a gitignored `.env`; `lib/regions.py` gives a
-coordinate its country and region (`locate`).
+coordinate its country and region (`locate`); `lib/holidays.py` turns the holiday
+table into area × day indicators (`unshared`, `bridges`, `market_wide`).
 
 ## Data inventory
 
@@ -1435,6 +1439,36 @@ in Spain. Located wind as a share of ESIOS's August 2026 capacity: Castilla y Le
 without a unit as MW, so La Robla I and II, 5 MW solar plants, read 5,000 MW. Only 8 of
 5,215 tags are bare numbers. The matcher's capacity gate rejects a pair with such a
 capacity, so the error can cost a match but cannot create one.
+
+### Holidays by region, and regional demand (2026-10-20)
+`data/holidays/holidays_es_pt.parquet`, built by `fetch/fetch_holidays.py`: **2,134 rows,
+2018–2026, one per date and area** (ISO 3166-2:ES region codes, Ceuta, Melilla, and `PT`).
+Spain from the Dirección General de Trabajo's yearly BOE resolution (*relación de fiestas
+laborales*), read as the BOE's own XML (raw kept in `data/holidays/raw/`); `mark` says whether
+a day is national (`*`), national kept by the region (`**`) or the region's own (`***`).
+Portugal's national holidays by law (Código do Trabalho, art. 234). Municipal holidays and
+each Canary island's own day are left out, so the Canaries list 11 a year and every mainland
+region 12–13. Used by the regional-holiday design (`notes/rq-regional-holidays.md`).
+
+**The BOE table's layout changes by year**: 2018 marks regions `axis="comunidad"` and dates
+`id="headerDDMM"`, later years `axis="CA"` and `id="fDDMM"`, and a date with two named rows
+carries a letter suffix (`f2304a` San Jorge for Aragón, `f2304b` Villalar for Castilla y León;
+`header0906R`). A pattern without the suffix skipped those rows silently, losing a day in
+eight regions in some years (Aragón's and Castilla y León's 23 April among them). The parser
+now refuses a year with any unread date row.
+
+`data/ree/ree_demand_ccaa_monthly.parquet`, by `fetch/fetch_ree_regional_demand.py`: REE's
+REData `demanda/evolucion` per autonomous community, **monthly only** (daily and hourly by
+region answer HTTP 400; checked 2026-10-20), 2018-01 → 2026-08. The geo ids are not on REE's
+page; identified from 2023 totals and checked: the 15 mainland regions sum to the peninsular
+total to 0.00% in every year 2018–2025. The current year's months are provisional (2026:
+5.8% above). REData answers 400/502 to valid requests now and then; the fetcher retries.
+
+**Retail purchases are PDBF, not auction purchases.** A retailer's load is its retail units'
+whole schedule, auction plus bilateral (role 4): on the Diada 2024 Endesa's auction purchases
+fell 674 MW but its schedule 457, and Iberdrola's auction purchases rose while its schedule
+fell. The regulated suppliers' units (Energía XXI, Curenergía, …) are registry role
+`purchase_other`, not `purchase_retail`.
 
 ### Eurostat NUTS 2021 regions — country and autonomous community of a coordinate
 `data/gisco/nuts2_iberia.parquet`, fetched 2026-10-05 by `fetch/fetch_gisco_nuts.py`:

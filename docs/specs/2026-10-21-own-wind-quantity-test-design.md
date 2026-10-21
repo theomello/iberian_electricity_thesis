@@ -1,6 +1,6 @@
 # Own wind as the shock: does book balancing hold for the firm's own output?
 
-**Status: design, 2026-10-21. Nothing run.** Step 2 of the program proposed after the holiday
+**Status: step 1 STOP, 2026-10-21** (`notes/rq-own-wind-quantity.md`): Wdev moves own wind (1.15, t 30) but less in steep hours, so Wdev / |RD′| adds no separate movement in P_W; Sanderson–Windmeijer F 3.7 (W_s) and 2.5 (P_W), smallest detectable β 2.1. Step 2 not run. Step 2 of the program proposed after the holiday
 quantity test (`docs/specs/2026-10-20-holiday-quantity-test-design.md`; with own wind held fixed,
 `notes/rq-regional-holidays.md`: cut −0.27 per MWh of lost load, β −0.20 [−0.55, +0.15]). The
 holidays shocked the firms' **load**; this design shocks their **output**, in every hour instead of

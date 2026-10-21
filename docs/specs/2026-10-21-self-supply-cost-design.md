@@ -1,6 +1,12 @@
 # What does self-supply cost? Book balancing priced at each plant's cost
 
-**Status: design, 2026-10-21. Nothing run.** Follows the holiday quantity test
+**Status: step 1a run 2026-10-21, STOP on power (`notes/rq-self-supply-cost.md`).** The € test's
+smallest detectable effect is €53 per MWh of lost load against a reference of €17; step 1b not run.
+Self-supply runs on cheap plants, is below cost about as often as auction sales and timed as well
+(except Naturgy's flat hydro); the holiday cut falls on hydro and wind. Generic units resell
+bought energy (232 TWh) and are not output.
+
+Designed 2026-10-21. Follows the holiday quantity test
 (`docs/specs/2026-10-20-holiday-quantity-test-design.md`, `notes/rq-regional-holidays.md`):
 firms cut output on their customers' holidays by about a third of the lost load, steep hour or
 flat, so the cut is book balancing, not market power. This design asks what that rule costs.

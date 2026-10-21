@@ -136,3 +136,54 @@ units' intraday sales on dosed days; ESIOS measured output by province against t
 - **Book balancing looks cheap.** The rule matches own supply to own customers, mostly with
   plants whose output costs little to move (hydro below its water value), and the parts that
   could cost money (wind, Naturgy's timing) are small or unexplained.
+
+## The wind checks (2026-10-21): the wind cut was weather
+
+`self_supply_cost.py --wind` → `outputs/tables/self_supply_wind_checks.csv`; log `wind.log`.
+Asked after step 1a, to explain why the firms scheduled less wind on their customers' holidays.
+
+**In one line.** The firms' own wind happened to blow less on their customers' holidays. With
+that controlled, the wind schedule does not fall, nothing moves to the intraday auctions, and
+the only change is on paper: some wind leaves the own-retail bilateral contract for the auction.
+
+**Own wind.** Each firm's located onshore wind capacity by region (`renewable_unit_locations_v3`,
+78.5% of wind) times its regions' measured capacity factor (ESIOS output by province over
+installed capacity), MWh per day (`regional_wind_offer_test` tools). It tracks the firms' wind
+schedule closely: 0.87 MWh of schedule per MWh of it (t 72), within firm-month and day.
+
+Weekday firm-days, MWh per MWh of holiday dose, date and firm × month effects, date clusters:
+
+| outcome | on the dose | with own wind controlled |
+|---|---|---|
+| wind schedule (PDBF) | −0.18 (0.07) | **−0.04 (0.03)** |
+| own wind (physical proxy) | **−0.17 (0.07)** | |
+| own wind's regional deviation from the peninsula | −0.01 (0.01) | |
+| … bilateral wind | | −0.10 (0.05) |
+| … auction wind | | +0.07 (0.05) |
+| net intraday wind sales | | +0.00 (0.01) |
+| wind after intraday | | −0.03 (0.03) |
+| schedule, national / regional days | | −0.04 (0.03) / −0.04 (0.05) |
+| schedule, week clusters | | −0.04 (0.03) |
+
+- **The cut was the wind, not the firms.** Own wind blew 0.17 MWh less per MWh of dose, which
+  at 0.87 explains 0.15 of the 0.18. What is left (−0.04) is not significant, on national and on
+  regional days alike.
+- **Why holidays and wind line up**: not through the regions (the regional deviation does not
+  move), so through the level. A firm's own wind moves with national wind in proportion to its
+  capacity, and the doses sit mostly with Endesa and Iberdrola (2.1 of 2.8 TWh of dose; Iberdrola
+  has the most located wind, 5.9 GW). The holiday dates were calmer than the rest of their months,
+  which lowers the big-wind, big-dose firms' wind more than the others'. Chance, on 133 dates.
+- **Nothing is sold intraday instead** (+0.004).
+- **Book balancing on paper**: on its customers' holidays a firm puts about 0.10 MWh less wind per
+  MWh of dose under the bilateral contract with its retailer and sells about as much more in the
+  auction. The wind is the same; its label follows the retail load.
+
+**What it changes.**
+- **The holiday cut, net of weather**, is hydro (−0.20) and nuclear (−0.06): physical generation
+  about −0.29 per MWh of dose rather than −0.43.
+- **The € reference** with wind at its weather-controlled −0.04 becomes about **−€5 per MWh of
+  lost load** (nuclear −3.9, wind −3.0, hydro +2.0, others +0.0) instead of −€17. Book balancing
+  on holidays is close to free.
+- **Yesterday's quantity test included this weather** in its generation response (b_Z −0.33
+  hourly). Its slope test (b_P) is not about the size of the cut, so its verdict should stand, but
+  b_Z overstates the cut by about a third. A rerun with own wind as a control would settle it.

@@ -3,6 +3,7 @@
 
     .venv/bin/python scripts/analysis/self_supply_cost.py --build      # the panel
     .venv/bin/python scripts/analysis/self_supply_cost.py --describe   # step 1a
+    .venv/bin/python scripts/analysis/self_supply_cost.py --wind       # the wind checks (after 1a)
 
 Design `docs/specs/2026-10-21-self-supply-cost-design.md`; plan
 `docs/plans/2026-10-21-self-supply-cost-step1a.md`; check `qa/check_self_supply_cost.py`.
@@ -72,7 +73,8 @@ COSTS = ["c", "c_nuc_lo", "c_nuc_hi", "c_hyd90"]
 SUMS = ["mwh", "costed_mwh", "pq", "pbarq", "m", "m_nuc_lo", "m_nuc_hi", "m_hyd90", "above_mwh", "above_eur"]
 COSTED = ["nuclear", "hydro_storage", "hydro_other", "wind", "solar", "gas", "coal"]
 Z80 = 1.96 + 0.84
-OUT = {k: T / f"self_supply_{k}.csv" for k in ("composition", "above_cost", "hydro_timing", "generic", "power")}
+OUT = {k: T / f"self_supply_{k}.csv" for k in ("composition", "above_cost", "hydro_timing", "generic", "power",
+                                                "wind_checks")}
 
 
 def unit_classes(nuclear: set | None = None, hydro: pd.DataFrame | None = None,
@@ -256,6 +258,118 @@ def se_null(d: pd.DataFrame, y: str, x: str, cluster: str = "date", effects=("da
     return float(np.sqrt(cluster_meat(xx[:, None], yy, _clusters(d, cluster))[0, 0]) / (xx @ xx))
 
 
+def fit_multi(d: pd.DataFrame, y: str, xs: list[str], cluster: str = "date",
+              effects=("date", "group_month")) -> dict:
+    """y on several regressors after the effects; {x: (b, se)}, se clustered."""
+    M = wdemean(d[[y] + xs].to_numpy(float), fe_codes(d, effects), np.ones(len(d)))
+    yy, X = M[:, 0], M[:, 1:]
+    A = np.linalg.inv(X.T @ X)
+    b = A @ X.T @ yy
+    V = A @ cluster_meat(X, yy - X @ b, _clusters(d, cluster)) @ A
+    return {x: (float(b[i]), float(np.sqrt(V[i, i]))) for i, x in enumerate(xs)}
+
+
+def own_wind_daily(k: pd.DataFrame, cf: pd.DataFrame) -> pd.DataFrame:
+    """group, date, W_real, Wdev_real: each group's located wind capacity times its regions'
+    measured capacity factor (and their deviation from the peninsula's), MWh per Madrid day.
+    Days with fewer than 20 hours of data are dropped; the rest are scaled to 24 hours."""
+    w = k.merge(cf, on="nuts_id")
+    w["W_real"], w["Wdev_real"] = 1000 * w.K_gw * w.cf_real, 1000 * w.K_gw * w.dev_real
+    h = w.groupby(["group", "utc"], as_index=False)[["W_real", "Wdev_real"]].sum()
+    h["date"] = h.utc.dt.tz_convert("Europe/Madrid").dt.tz_localize(None).dt.normalize()
+    g = h.groupby(["group", "date"]).agg(W_real=("W_real", "mean"), Wdev_real=("Wdev_real", "mean"),
+                                          n=("utc", "nunique"))
+    g = g[g.n >= 20]
+    return (24 * g[["W_real", "Wdev_real"]]).reset_index()
+
+
+def intraday_net(rows: pd.DataFrame) -> pd.DataFrame:
+    """unit, date, id_net_mwh: cleared intraday sales less purchases, MWh."""
+    e = rows.power_mw * rows.resolution_min / 60 * np.where(rows.side == "V", 1.0, -1.0)
+    return rows.assign(e=e).groupby(["unit", "date"], as_index=False).e.sum().rename(columns={"e": "id_net_mwh"})
+
+
+def daily_panel(d: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Weekday firm-days: g_<class> and leg_<leg> MWh, wind by leg, g_all, g_physical, the margin M
+    and the holiday dose Z (MWh); with the class margins Mk and costed MWh Ck on the same index."""
+    w = d[d.date.dt.dayofweek < 5]
+    grid = pd.MultiIndex.from_product([FIRMS, sorted(w.date.unique())], names=["group", "date"])
+
+    def piv(sub, col, val):
+        return sub.pivot_table(index=["group", "date"], columns=col, values=val, aggfunc="sum",
+                               fill_value=0.0).reindex(grid, fill_value=0.0)
+    G, Mk, Ck, legs = piv(w, "cls", "mwh"), piv(w, "cls", "m"), piv(w, "cls", "costed_mwh"), piv(w, "leg", "mwh")
+    wl = piv(w[w.cls == "wind"], "leg", "mwh")
+    dose = pd.read_parquet(T / "holiday_dose.parquet")
+    dose["date"] = pd.to_datetime(dose.date)
+    Z = dose[dose.group.isin(FIRMS)].groupby(["group", "date"]).dose_mw.sum().reindex(grid, fill_value=0.0)
+    pan = G.add_prefix("g_").join(legs.add_prefix("leg_")).join(wl.add_prefix("wind_"))
+    pan["g_all"] = G.sum(axis=1)
+    pan["g_physical"] = G.drop(columns=["generic"], errors="ignore").sum(axis=1)
+    pan["M"], pan["Z"] = Mk.sum(axis=1), Z
+    return pan.reset_index(), Mk, Ck
+
+
+def wind_checks() -> int:
+    """Why do the firms schedule less wind on their customers' holidays? Own wind's weather,
+    intraday sales, national against regional days."""
+    from holiday_quantity_test import national_dates
+    from regional_wind_offer_test import forecasts, own_capacity, regional_cf
+    pan, _, _ = daily_panel(pd.read_parquet(PANEL))
+    W = own_wind_daily(own_capacity(FIRMS), regional_cf(forecasts()))
+    pan = pan.merge(W, on=["group", "date"], how="left")
+
+    units = sorted(unit_classes().query("cls == 'wind'").unit)
+    parts = []
+    for f in sorted((DATA / "omie/intraday/parquet").glob("intraday_*.parquet")):
+        ym = f.stem.split("_")[1]
+        if not (START.strftime("%Y%m") <= ym <= END.strftime("%Y%m")):
+            continue
+        r = pd.read_parquet(f, columns=["date", "unit", "side", "power_mw", "resolution_min", "status"],
+                            filters=[("unit", "in", units), ("status", "==", "C")])
+        r["date"] = pd.to_datetime(r.date)
+        r["unit"], r["side"] = r.unit.astype(str), r.side.astype(str)
+        parts.append(intraday_net(r))
+        print(f"  intraday {ym}", flush=True)
+    idn = pd.concat(parts, ignore_index=True).groupby(["unit", "date"], as_index=False).id_net_mwh.sum()
+    idn["group"] = majority_group(idn, spells(), exposed=True).to_numpy()
+    idn = idn[idn.group.isin(FIRMS)].groupby(["group", "date"], as_index=False).id_net_mwh.sum()
+    pan = pan.merge(idn, on=["group", "date"], how="left").fillna({"id_net_mwh": 0.0})
+    pan["wind_after_id"] = pan.g_wind + pan.id_net_mwh
+    nat = pan.date.isin(national_dates())
+    pan["Z_nat"], pan["Z_reg"] = pan.Z.where(nat, 0.0), pan.Z.where(~nat, 0.0)
+
+    hw = pan[pan.W_real.notna()].copy()
+    print(f"\nweekday firm-days {len(pan):,} (dosed {(pan.Z > 0).sum()}); with own wind {len(hw):,} (dosed {(hw.Z > 0).sum()})")
+    print("means, MWh per day:")
+    print(pan.groupby("group")[["g_wind", "wind_bilateral", "wind_auction", "id_net_mwh", "W_real"]].mean().round(0).to_string())
+    specs = [
+        ("own wind proxy tracks the schedule", "g_wind", ["W_real"], hw),
+        ("schedule, wind", "g_wind", ["Z"], pan),
+        ("schedule, wind (own-wind days)", "g_wind", ["Z"], hw),
+        ("own wind blows less? W_real", "W_real", ["Z"], hw),
+        ("own wind deviation, Wdev_real", "Wdev_real", ["Z"], hw),
+        ("schedule, wind | own wind", "g_wind", ["Z", "W_real"], hw),
+        ("bilateral wind | own wind", "wind_bilateral", ["Z", "W_real"], hw),
+        ("auction wind | own wind", "wind_auction", ["Z", "W_real"], hw),
+        ("intraday net wind | own wind", "id_net_mwh", ["Z", "W_real"], hw),
+        ("wind after intraday | own wind", "wind_after_id", ["Z", "W_real"], hw),
+        ("schedule, wind: national / regional days | own wind", "g_wind", ["Z_nat", "Z_reg", "W_real"], hw),
+        ("schedule, wind | own wind, week clusters", "g_wind", ["Z", "W_real"], hw),
+    ]
+    rows = []
+    for name, y, xs, dd in specs:
+        r = fit_multi(dd, y, xs, cluster="week" if "week" in name else "date")
+        for x in xs:
+            rows.append({"check": name, "outcome": y, "regressor": x, "b": r[x][0], "se": r[x][1],
+                         "t": r[x][0] / r[x][1], "n": len(dd), "dosed": int((dd.Z > 0).sum())})
+    out = pd.DataFrame(rows)
+    out.to_csv(OUT["wind_checks"], index=False)
+    print("\nMWh per MWh of dose (W_real: MWh per MWh of own wind); date and firm × month effects, date clusters")
+    print(out.round(3).to_string(index=False))
+    return 0
+
+
 def generic_units() -> pd.DataFrame:
     """The five firms' generic units with volume: TWh by unit, year and leg, and the hourly match
     of each sale unit (…V…) with its purchase twin (same code, V → C)."""
@@ -369,21 +483,8 @@ def describe() -> int:
     print(twins.round(4).to_string(index=False))
 
     # 5. power for step 1b
-    w = d[d.date.dt.dayofweek < 5]
-    grid = pd.MultiIndex.from_product([FIRMS, sorted(w.date.unique())], names=["group", "date"])
-    G = w.pivot_table(index=["group", "date"], columns="cls", values="mwh", aggfunc="sum", fill_value=0.0).reindex(grid, fill_value=0.0)
-    Mk = w.pivot_table(index=["group", "date"], columns="cls", values="m", aggfunc="sum", fill_value=0.0).reindex(grid, fill_value=0.0)
-    Ck = w.pivot_table(index=["group", "date"], columns="cls", values="costed_mwh", aggfunc="sum", fill_value=0.0).reindex(grid, fill_value=0.0)
-    legs = w.pivot_table(index=["group", "date"], columns="leg", values="mwh", aggfunc="sum", fill_value=0.0).reindex(grid, fill_value=0.0)
-    dose = pd.read_parquet(T / "holiday_dose.parquet")
-    dose["date"] = pd.to_datetime(dose.date)
-    Z = dose[dose.group.isin(FIRMS)].groupby(["group", "date"]).dose_mw.sum().reindex(grid, fill_value=0.0)
-    pan = G.add_prefix("g_").join(legs.add_prefix("leg_"))
-    pan["g_all"] = G.sum(axis=1)
-    pan["g_physical"] = G.drop(columns=["generic"], errors="ignore").sum(axis=1)
-    pan["M"], pan["Z"] = Mk.sum(axis=1), Z
-    pan = pan.reset_index()
-    zpos = Z.clip(lower=0)
+    pan, Mk, Ck = daily_panel(d)
+    zpos = pan.set_index(["group", "date"]).Z.clip(lower=0)
     rows = []
     for col in [c for c in pan.columns if c.startswith(("g_", "leg_"))]:
         b_, se_ = fit_daily(pan, col, "Z")
@@ -416,11 +517,14 @@ def main() -> int:
     ap = ArgumentParser(description=__doc__)
     ap.add_argument("--build", action="store_true")
     ap.add_argument("--describe", action="store_true")
+    ap.add_argument("--wind", action="store_true")
     args = ap.parse_args()
     if args.build:
         return build()
     if args.describe:
         return describe()
+    if args.wind:
+        return wind_checks()
     ap.print_help()
     return 1
 

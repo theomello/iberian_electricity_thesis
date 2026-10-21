@@ -97,6 +97,36 @@ def main() -> int:
         sn = se_null(syn, "y_0", "Z")
         check(abs(sn / se0 - 1) < 0.10, f"se under the null {sn:.3f} against the fitted se {se0:.3f} at b = 0 (within 10%)")
 
+    # the wind checks' tools: a two-regressor fit, own wind from located capacity, intraday net sales
+    try:
+        from self_supply_cost import fit_multi, intraday_net, own_wind_daily
+    except ImportError as e:
+        check(False, f"wind-check tools missing ({e})")
+    else:
+        syn2 = syn.copy()
+        syn2["W"] = rng.normal(5000, 20000, len(syn2))
+        syn2["y_2"] = -20.0 * syn2.Z + 0.8 * syn2.W + e
+        r2 = fit_multi(syn2, "y_2", ["Z", "W"])
+        check(abs(r2["Z"][0] + 20) < 3 * r2["Z"][1] and abs(r2["W"][0] - 0.8) < 3 * r2["W"][1],
+              f"fit_multi recovers −20 and +0.8: {r2['Z'][0]:+.2f} ({r2['Z'][1]:.2f}), {r2['W'][0]:+.3f} ({r2['W'][1]:.3f})")
+        utc = pd.date_range("2024-01-14 23:00", periods=24, freq="h", tz="UTC")     # 15 January, Madrid time
+        cf = pd.DataFrame({"utc": np.repeat(utc, 2), "nuts_id": ["ES11", "ES24"] * 24,
+                           "cf_real": [0.5, 0.1] * 24, "dev_real": [0.2, -0.2] * 24})
+        k = pd.DataFrame({"group": ["A", "A", "B"], "nuts_id": ["ES11", "ES24", "ES24"], "K_gw": [1.0, 2.0, 1.0]})
+        w = own_wind_daily(k, cf).set_index("group")
+        check(np.isclose(w.at["A", "W_real"], 24 * 700) and np.isclose(w.at["B", "W_real"], 24 * 100)
+              and np.isclose(w.at["A", "Wdev_real"], 24 * (200 - 400)) and (w.date == pd.Timestamp("2024-01-15")).all(),
+              f"own wind: A {w.at['A', 'W_real']:.0f} MWh (16,800), B {w.at['B', 'W_real']:.0f} (2,400), "
+              f"A's deviation {w.at['A', 'Wdev_real']:.0f} (−4,800), on the Madrid date")
+        cf_gap = cf[~cf.utc.isin(utc[:6])]                                          # 18 hours left: too few
+        check(own_wind_daily(k, cf_gap).empty, "own wind: a day with fewer than 20 hours is dropped")
+        rows = pd.DataFrame({"unit": ["U1", "U1", "U1", "U2"], "date": pd.Timestamp("2025-06-02"),
+                             "side": ["V", "C", "V", "V"], "power_mw": [100.0, 40.0, 80.0, 10.0],
+                             "resolution_min": [60, 60, 15, 60]})
+        net = intraday_net(rows).set_index("unit").id_net_mwh
+        check(np.isclose(net["U1"], 100 - 40 + 20) and np.isclose(net["U2"], 10),
+              f"intraday net: U1 {net['U1']:.0f} MWh (80), U2 {net['U2']:.0f} (10)")
+
     # the legs equal the holiday quantity panel's
     if PANEL.exists():
         p = pd.read_parquet(PANEL, columns=["group", "date", "hour", "leg", "mwh"])

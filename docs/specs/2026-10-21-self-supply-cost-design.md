@@ -5,6 +5,8 @@ smallest detectable effect is €53 per MWh of lost load against a reference of 
 Self-supply runs on cheap plants, is below cost about as often as auction sales and timed as well
 (except Naturgy's flat hydro); the holiday cut falls on hydro and wind. Generic units resell
 bought energy (232 TWh) and are not output.
+**Wind checks, 2026-10-21:** the holiday wind cut was weather (own wind blew 0.17 MWh less per
+MWh of dose; controlled, the schedule moves −0.04, se 0.03); the € reference falls to about −€5.
 
 Designed 2026-10-21. Follows the holiday quantity test
 (`docs/specs/2026-10-20-holiday-quantity-test-design.md`, `notes/rq-regional-holidays.md`):

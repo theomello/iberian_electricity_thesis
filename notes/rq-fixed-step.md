@@ -454,3 +454,40 @@ EDP's fifths: bilateral within ±1 MW, offered −5 … +2.
 - **Open: the step estimator's band rests on two seeds too.** Its dated seller departure (§14–16
   of the simulation note: 2019–2021H1, off from 2021H2) may not survive ten. That needs
   `step_engine.py --sim` for more seeds, which re-clears the market and is the expensive run.
+
+## Rerun on corrected ownership (2026-10-21)
+
+Two fixes in `lib/unit_ownership.py` (`docs/specs/2026-10-21-edp-retail-sale-design.md`):
+- Movhera's six Douro dams, sold on 2020-12-17, stayed inside EDP's `ADOURO` until 2021-09-08.
+  Movhera now holds 60% of `ADOURO` over those dates.
+- EDP Energía (`HCENE01`) is TotalEnergies' from 2021-01-01.
+
+Rebuilt for 202012 → 202109: the step curves, the at-cost stake and prices (`hcompcost`,
+`hcompcostprice`), the fixed-step rows, and the ten seeds' rows. Then `--estimate`, `--simulated
+1..10`, `--band-seed 0..10` and `--band-combine`. **`ADOURO` is left out over the window**
+(`AMBIGUOUS` in `fixed_step_test.py`), because it is not known whose stake its offers answer to.
+The old files are in `outputs/cache/backup/2026-10-21-ownership/`.
+
+**One of 318 readings changes.** The profile read at 1.5 cf_s in the departure periods differed
+from the price-takers before (b 0.234). It no longer does: b is 0.210 and its low end, −0.023,
+falls just under the seeds' maximum of −0.017. 24 cells differ, against 25 before; 6 are
+accepted, as before.
+
+| cell (read at cf_s, ten-seed band) | b before | b after | differs |
+|---|---|---|---|
+| pooled | 0.165 | 0.163 | no, no |
+| 2020H2 / 2021H1 / 2021H2 | 0.260 / −0.104 / −0.209 | 0.245 / −0.342 / −0.301 | no, no |
+| seller side 2021H1 (n 13,726 → 7,907) | −0.277 | −0.646 [−1.48, 0.19] | no, no |
+| buyer side 2021H1 (n 10,312 → 14,994) | −0.231 | −0.471 | no, no |
+| within EDP, seller / buyer, pooled | 0.119 / 0.030 | 0.117 / 0.006 | no, no |
+
+The 2021H1 cells move most: EDP's hours move from the seller to the buyer side, and `ADOURO`
+leaves. No reading there changes. **The reading above stands.**
+
+**Not rebuilt for the window, so stale:**
+- the step estimator's caches (`hmoments`, `hsim*`) and the thermal ones (`moments`, `compcost`,
+  `sim*`);
+- `fixed_step_reading.csv` and `fixed_step_results_sim_halfyear.csv` (the two-seed readings of
+  step 2), and `fixed_step_rows_summary.csv`.
+
+A rerun of the simulation note would rebuild the first set before reading them.

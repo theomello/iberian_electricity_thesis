@@ -67,10 +67,12 @@ They begin in the crisis and may not show in n, depending on how they settle (*t
 physical or financial, and how much was actually sold). If large sales went through, they
 lower the true stake from 2022.
 
-**The clawback's exemption pulls the same way.** From 2021-09-16, energy sold forward at a
-fixed price (from March 2022, at or below €67/MWh, with intra-group sales counted at the
-price passed on to customers) was exempt from the clawback. That rewards fixing prices, but
-the current year was already fixed in 2020 and 2021.
+**The clawback's exemption pulls the same way.** From 2021-10-27 (RDL 23/2021; the clawback
+itself began on 2021-09-16), energy sold forward at a fixed price was exempt from the clawback
+(from 2022-03-31, at or below €67/MWh, with intra-group sales counted at the price passed on to
+customers). That rewards fixing prices, but the current year was already fixed in 2020 and
+2021. Checked 2026-10-21 (`docs/specs/2026-10-21-clawback-exemption-design.md`): no physical
+third-party contracts appeared at any of the dates.
 
 ## Reading
 

@@ -259,6 +259,9 @@ READS = {"cf_s": "p_cf", "bottom 5%": "p_bot", "0.1 cf_s": "p_k010", "0.25 cf_s"
          "0.5 cf_s": "p_k050", "1.5 cf_s": "p_k150", "2 cf_s": "p_k200", "net of contracts": "p_net",
          "fixed MW": "p_mw"}
 FIRMS = ("EDP", "IBERDROLA")
+# Movhera's Douro dams, offered inside ADOURO after their sale (lib/unit_ownership.UNIT_SHARES): whose
+# stake those offers answer to is not known, so ADOURO is left out over the window (2026-10-21).
+AMBIGUOUS = [("ADOURO", "2020-12-17", "2021-09-09")]
 
 
 def zero_shares() -> pd.DataFrame:
@@ -282,6 +285,8 @@ def load_rows(pattern: str = "fixed_step_2*.parquet") -> pd.DataFrame:
     d = pd.concat([pd.read_parquet(f) for f in sorted(CACHE.glob(pattern))], ignore_index=True)
     d = d.merge(zero_shares(), on=["unit", "ym"], how="left")
     d = d[(d.zero_share.fillna(0) <= ZERO_SHARE_MAX) & (d.zero2.fillna(0) <= ZERO_SHARE_MAX)].copy()
+    for u, a, b in AMBIGUOUS:
+        d = d[~((d.unit == u) & (d.date >= a) & (d.date < b))]
     for c in READS.values():
         d[f"g_{c}"] = d[c] - d.lam30s
     d["q_offered"] = d.offered_mw / d.cap_mw

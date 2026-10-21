@@ -20,6 +20,10 @@ to one group before the date and another from it. Spells are split there.
 UNIT SALES. A unit sold between two listings is dated in UNIT_CHANGES: the change
 the next listing shows takes effect on the sale date, not on the listing's date.
 
+SHARES OVER A WINDOW. An owner no listing shows for a unit, holding part of it for a
+while, is in UNIT_SHARES: inside the window it takes its share and the listed owners
+keep the rest, pro rata.
+
 FALLBACK. A unit no listing names keeps the inference chain's owner
 (`unit_agents.agent_owner`), share 1, for the whole window.
 
@@ -58,6 +62,11 @@ ENTITY_CHANGES = [
     (r"^VIESGO ", "2018-11-02", "VIESGO", "REPSOL",
      "Repsol completed its purchase of Viesgo's non-regulated generation and retail on "
      "2018-11-02 (notes/rq-leg-d-sign-of-n.md; before it Viesgo was not Repsol's)"),
+    (r"^EDP ENERGIA S A$", "2021-01-01", "EDP", "TOTALENERGIES",
+     "EDP Energia, which holds the residential book TotalEnergies bought with EDP's Spanish "
+     "retail, is TotalEnergies Mercado Espana in the 2023-05-16 listing. Its one active unit, "
+     "HCENE01, is supplied by EDP's resale unit HCGC01 to 2020-12 and by TotalEnergies' TGYEC01 "
+     "from 2021-01 (docs/specs/2026-10-21-edp-retail-sale-design.md)"),
 ]
 
 
@@ -68,6 +77,18 @@ UNIT_CHANGES = {
     # 2020-03-09 and EDP Comercializadora (TotalEnergies' from 2020-12-01) on 2022-02-08.
     "CTJON1": "2020-12-01",
     "CTJON3": "2020-12-01",
+}
+
+# unit -> (start, end exclusive, owner, share): `owner` holds `share` of the unit over the
+# window; the listed owners keep the rest, pro rata.
+UNIT_SHARES = {
+    # Movhera (ENGIE-led) bought six of EDP's Douro plants (1,689 MW) on 2020-12-17 (EDP
+    # market notification), but they stayed inside ADOURO until 2021-09-08: its cab max
+    # power is 2,849 MW to that day and 1,147 MW from 2021-09-09, when Movhera's DOUSUP
+    # (1,709 MW) first offers. In between ADOURO is split by capacity, 1,709 / 2,849 = 0.60
+    # Movhera's. Whose account EDP offered them for is not public
+    # (docs/specs/2026-10-21-edp-retail-sale-design.md).
+    "ADOURO": ("2020-12-17", "2021-09-09", "MOVHERA - HIDROELÉTRICAS DO NORTE SA", 0.60),
 }
 
 
@@ -120,6 +141,21 @@ def spells() -> pd.DataFrame:
         bounds = [lo] + sorted(c for c in cuts if lo < c < hi) + [hi]
         for a, b in zip(bounds[:-1], bounds[1:]):
             parts.append(s.assign(start=a, end=b))
+    sp = pd.concat(parts, ignore_index=True)
+    # A share over a window: the unit's spells cut at the window, its owners inside it scaled
+    # down and the extra owner added.
+    parts = [sp[~sp.unit.isin(set(UNIT_SHARES))]]
+    for u, (a, b, owner, share) in UNIT_SHARES.items():
+        a, b = pd.Timestamp(a), pd.Timestamp(b)
+        for _, s in sp[sp.unit == u].groupby("start"):
+            lo, hi = s.start.iloc[0], s.end.iloc[0]
+            if lo < a:
+                parts.append(s.assign(end=min(hi, a)))
+            if hi > b:
+                parts.append(s.assign(start=max(lo, b)))
+            if lo < b and hi > a:
+                inside = s.assign(start=max(lo, a), end=min(hi, b), share=s.share * (1 - share))
+                parts.append(pd.concat([inside, inside.iloc[:1].assign(owner=owner, share=share)]))
     sp = pd.concat(parts, ignore_index=True)
     # Units no listing names: the inference chain's owner, for the whole window.
     ua = pd.read_parquet(AGENTS, columns=["unit", "agent_owner"]).dropna()

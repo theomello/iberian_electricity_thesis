@@ -1533,8 +1533,11 @@ declared term, not the offer price, carries the cost.
 for `ALIMA` ("LIMA"), and offered volume moves between them from February to
 April 2024. The unit codes and names did not change, so **a per-unit series for
 either spans two plant sets**. Which plants moved is not published. The same
-thing happened to `ADOURO` in January 2022, when the dams sold to Movhera
-left it (2,849 → 1,147 MW) and became `DOUSUP`. A cascade unit's contents are
+thing happened to `ADOURO` on 2021-09-09, when the six dams EDP sold to Movhera
+on 2020-12-17 left it (2,849 → 1,147 MW) and became `DOUSUP` (1,709 MW). Until
+then they were offered inside `ADOURO`; `lib/unit_ownership.py` gives Movhera 60%
+of `ADOURO` over that window (`UNIT_SHARES`). An earlier note here said January
+2022; the `cab` break is 2021-09-09. A cascade unit's contents are
 not fixed; check `cab` max power for breaks before reading a unit's series
 across years.
 

@@ -9,7 +9,9 @@ Checks `lib/unit_ownership.py` on the registry itself:
   - co-owned reactors split by the listing's shares (Almaraz 1, Trillo,
     Vandellos II, Asco 2), shares summing to 1;
   - dated sales: EDP Comercializadora is EDP's until 2020-11-30 and
-    TotalEnergies' from 2020-12-01; Viesgo is Repsol's from 2018-11-02;
+    TotalEnergies' from 2020-12-01; EDP Energia (HCENE01) TotalEnergies' from
+    2021-01-01; Viesgo is Repsol's from 2018-11-02;
+  - a share over a window: ADOURO is 60% Movhera's from 2020-12-17 to 2021-09-08;
   - a unit no listing names keeps the inference chain's owner, share 1;
   - attach_owners splits a row across owners and preserves its total;
 and the wiring: `firm_x.month` and `firm_incentive_rebuild.month_extras` for
@@ -86,6 +88,14 @@ def main() -> int:
         c1 = owners_on(u, pd.Timestamp("2020-12-01"), sp).group.tolist()
         check(c0 == ["EDP"] and c1 == ["TOTALENERGIES"], f"{u} (Castejon, sold with EDP's retail): EDP on "
               f"2020-11-30, TotalEnergies on 2020-12-01 (got {c0} / {c1})")
+    h0 = owners_on("HCENE01", pd.Timestamp("2020-12-31"), sp).group.tolist()
+    h1 = owners_on("HCENE01", pd.Timestamp("2021-01-01"), sp).group.tolist()
+    check(h0 == ["EDP"] and h1 == ["TOTALENERGIES"], f"HCENE01 (EDP Energia, the residential book): EDP on "
+          f"2020-12-31, TotalEnergies on 2021-01-01 (got {h0} / {h1})")
+    dou = [owners_on("ADOURO", pd.Timestamp(d), sp).groupby("group").share.sum().round(5).to_dict()
+           for d in ("2020-12-16", "2020-12-17", "2021-09-08", "2021-09-09")]
+    check(dou[0] == dou[3] == {"EDP": 1.0} and dou[1] == dou[2] == {"EDP": 0.4, "MOVHERA": 0.6},
+          f"ADOURO: EDP's to 2020-12-16 and from 2021-09-09, 60% Movhera's in between (got {dou})")
     nat = [owners_on(f"NATVD1{i}", pd.Timestamp("2019-06-01"), sp).group.tolist() for i in range(1, 6)]
     check(all(g == ["EDP"] for g in nat), f"NATVD11-15 (EDP's parks via EDP Comercializadora) are EDP's in 2019 "
           f"(got {nat}); this retired build_rival_solar.OWNER_FIX")
@@ -221,9 +231,12 @@ def main() -> int:
                          columns=["date", "period", "unit", "group", "X"])
     latest = hp.unit.map(hwd.storage_hydro().set_index("unit").group)
     off = hp[hp.group.ne(latest)]
-    check(set(off.unit) == {"VIES"} and off.date.max() < pd.Timestamp("2018-11-02") and (off.group == "VIESGO").all(),
-          f"edp_hydro_panel: groups off the latest owner are VIES -> VIESGO before 2018-11-02 only "
-          f"({len(off):,} rows, units {sorted(set(off.unit))})")
+    vies, dou = off[off.unit == "VIES"], off[off.unit == "ADOURO"]
+    check(set(off.unit) <= {"VIES", "ADOURO"} and vies.date.max() < pd.Timestamp("2018-11-02")
+          and (vies.group == "VIESGO").all() and (dou.group == "MOVHERA").all()
+          and (dou.empty or (dou.date.min() >= pd.Timestamp("2020-12-17") and dou.date.max() < pd.Timestamp("2021-09-09"))),
+          f"edp_hydro_panel: groups off the latest owner are VIES -> VIESGO before 2018-11-02 and ADOURO -> "
+          f"MOVHERA from 2020-12-17 to 2021-09-08 only ({len(vies):,} + {len(dou):,} rows, units {sorted(set(off.unit))})")
     m1 = hp[hp.date.dt.strftime("%Y%m") == "202401"]
     check(bool((m1.group.to_numpy() == hwd.dated_group(m1).to_numpy()).all()),
           "edp_hydro_panel January 2024: group = dated_group on every row")

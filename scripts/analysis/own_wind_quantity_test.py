@@ -5,6 +5,7 @@ proportion to the wind (book balancing) or to the wind's effect on the price (ma
     .venv/bin/python scripts/analysis/own_wind_quantity_test.py --panel
     .venv/bin/python scripts/analysis/own_wind_quantity_test.py --test --step 1
     .venv/bin/python scripts/analysis/own_wind_quantity_test.py --test --step 1 --slope-groups
+    .venv/bin/python scripts/analysis/own_wind_quantity_test.py --alone
 
 Spec `docs/specs/2026-10-21-own-wind-quantity-test-design.md`; plan
 `docs/plans/2026-10-21-own-wind-quantity-test-step1.md`.
@@ -39,6 +40,14 @@ SLOPE GROUPS (`--slope-groups` → outputs/tables/own_wind_quantity_step1_groups
 added after step 1 stopped). Step 1 with instruments Wdev × D_k, D_k the k-th third of the firm's
 own hours by 1/slope (1 flat, 3 steep), and D_2, D_3 as controls: the wind's response to Wdev may
 differ by group. Also reports each group's mean 1/slope.
+
+OWN WIND ALONE (`--alone` → outputs/tables/own_wind_quantity_alone.csv; design §9, added after the
+slope groups stopped on power). Other generation on own wind W_s, instrumented by Wdev alone; no
+β. Gate: first-stage F < 10 stops before b_W is formed. Outcomes: other generation in total and by
+leg, by class, and W_s_bilateral (the bilateral share of the extra wind). By firm: W_s × firm
+instrumented by Wdev × firm, one regression. References per MW of own wind: book balancing
+−(bilateral share), Nash at β = 1 −r, r = s/slope weighted by |Wdev|. Checks on the total: firm ×
+date effects, Spanish price above €5, 2022 on, Wdev_fc as instrument, week clusters.
 """
 from __future__ import annotations
 
@@ -61,6 +70,7 @@ FIRMS = ["ENDESA", "IBERDROLA", "NATURGY", "EDP", "REPSOL"]
 KEY = ["group", "date", "hour"]
 STEP1 = T / "own_wind_quantity_step1.csv"
 STEP1_GROUPS = T / "own_wind_quantity_step1_groups.csv"
+ALONE = T / "own_wind_quantity_alone.csv"
 FORECASTS = ["F_wind", "F_solar", "F_demand"]
 Z80 = 1.96 + 0.84
 CLASSES = {"hydro_storage": "g_hydro_storage", "nuclear": "g_nuclear", "gas": "g_thermal", "coal": "g_thermal",
@@ -126,10 +136,22 @@ def build_panel() -> int:
     return 0
 
 
-def prep(d: pd.DataFrame, cols: list[str]) -> np.ndarray:
-    """The columns net of date × hour and firm × month effects."""
-    from holiday_quantity_test import resid
-    return resid(d, cols)
+def prep(d: pd.DataFrame, cols: list[str], firm_fe: str = "month") -> np.ndarray:
+    """The columns net of date × hour and firm × month (or firm × date) effects."""
+    from step_estimator import wdemean
+    fmt = "%Y%m%d" if firm_fe == "date" else "%Y%m"
+    codes = [pd.factorize(d.date.dt.strftime("%Y%m%d") + "|" + d.hour.astype(str))[0],
+             pd.factorize(d.group + d.date.dt.strftime(fmt))[0]]
+    return wdemean(d[cols].to_numpy(float), codes, np.ones(len(d)))
+
+
+def by_firm(d: pd.DataFrame, col: str) -> list[str]:
+    """Adds col × 1{firm} for each firm (alphabetical) and returns the column names."""
+    out = []
+    for g in sorted(d.group.unique()):
+        d[f"{col}_{g}"] = d[col].where(d.group == g, 0.0)
+        out.append(f"{col}_{g}")
+    return out
 
 
 def controls_for(d: pd.DataFrame) -> list[str]:
@@ -164,12 +186,12 @@ def _clusters(d: pd.DataFrame, cluster: str = "date") -> np.ndarray:
 
 
 def fit_iv(d: pd.DataFrame, y: str, endog: list[str], inst: list[str], controls: list[str],
-           cluster: str = "date") -> dict:
+           cluster: str = "date", firm_fe: str = "month") -> dict:
     """Two-stage least squares of y on endog, instruments inst, after the effects and with the
     controls; {endog: (b, se)}, se clustered."""
     from iv_two_endog import tsls_k
     k, L = len(endog), len(inst)
-    M = prep(d, [y] + endog + inst + controls)
+    M = prep(d, [y] + endog + inst + controls, firm_fe)
     b, V = tsls_k(M[:, 0], M[:, 1:1 + k], M[:, 1 + k:1 + k + L], M[:, 1 + k + L:], _clusters(d, cluster))
     return {e: (float(b[i]), float(np.sqrt(V[i, i]))) for i, e in enumerate(endog)}
 
@@ -242,15 +264,78 @@ def step1(groups: bool = False) -> int:
     return 0
 
 
+def alone() -> int:
+    from holiday_quantity_test import ols
+    from iv_two_endog import sw_f
+    from self_supply_cost import prices
+    d = pd.read_parquet(PANEL)
+    ctrl = controls_for(d)
+    cl = _clusters(d)
+    M = prep(d, ["W_s", "Wdev"] + ctrl)
+    b, se = ols(M[:, 0], M[:, 1:], cl)
+    F = float((b[0] / se[0]) ** 2)
+    print(f"first stage: own wind on Wdev {b[0]:.3f} ({se[0]:.3f}), F {F:.0f}")
+    if F < 10:
+        print("gate: STOP (F < 10); b_W not formed")
+        return 0
+    rows = [{"part": "first stage", "spec": "pooled", "y": "W_s", "b": b[0], "se": se[0], "F": F}]
+
+    def r_of(x: pd.DataFrame) -> float:
+        return float(np.average(x.s.to_numpy(float) * x.inv_slope.to_numpy(), weights=x.Wdev.abs().to_numpy()))
+
+    r = r_of(d)
+    share = fit_iv(d, "W_s_bilateral", ["W_s"], ["Wdev"], ctrl)["W_s"][0]
+    ys = ["G_other", "G_other_auction", "G_other_bilateral", "g_hydro_storage", "g_nuclear", "g_thermal", "g_rest",
+          "W_s_bilateral", "W_s_auction", "generic"]
+    for y in ys:
+        bw, sw = fit_iv(d, y, ["W_s"], ["Wdev"], ctrl)["W_s"]
+        rows.append({"part": "pooled", "spec": "main", "y": y, "b": bw, "se": sw, "ref_bb": -share, "ref_nash": -r})
+    # by firm: one regression per outcome, W_s × firm instrumented by Wdev × firm
+    ws, wd = by_firm(d, "W_s"), by_firm(d, "Wdev")
+    Mf = prep(d, ws + wd + ctrl)
+    k = len(ws)
+    Ff = {g: sw_f(Mf[:, :k], Mf[:, k:2 * k], Mf[:, 2 * k:], cl, j) for j, g in enumerate(sorted(d.group.unique()))}
+    sh = fit_iv(d, "W_s_bilateral", ws, wd, ctrl)
+    for y in ["G_other", "G_other_auction", "G_other_bilateral"]:
+        rf = fit_iv(d, y, ws, wd, ctrl)
+        for g in sorted(d.group.unique()):
+            rows.append({"part": "by firm", "spec": g, "y": y, "b": rf[f"W_s_{g}"][0], "se": rf[f"W_s_{g}"][1],
+                         "F": Ff[g], "ref_bb": -sh[f"W_s_{g}"][0], "ref_nash": -r_of(d[d.group == g])})
+    # checks on the total
+    p = prices()[["date", "hour", "price_es"]]
+    dp = d.merge(p, on=["date", "hour"], how="left")
+    checks = [("firm × date effects", d, "Wdev", {"firm_fe": "date"}),
+              ("Spanish price above €5", dp[dp.price_es > 5].reset_index(drop=True), "Wdev", {}),
+              ("2022 on", d[d.date >= "2022-01-01"].reset_index(drop=True), "Wdev", {}),
+              ("Wdev_fc as instrument", d, "Wdev_fc", {}),
+              ("week clusters", d, "Wdev", {"cluster": "week"})]
+    for lab, x, z, kw in checks:
+        for y in ["G_other", "G_other_auction", "G_other_bilateral"]:
+            bw, sw = fit_iv(x, y, ["W_s"], [z], ctrl, **kw)["W_s"]
+            rows.append({"part": "check", "spec": lab, "y": y, "b": bw, "se": sw, "n": len(x)})
+    out = pd.DataFrame(rows)
+    out["t"] = out.b / out.se
+    out["n"] = out.n.fillna(len(d))
+    out.to_csv(ALONE, index=False)
+    with pd.option_context("display.width", 160, "display.float_format", "{:.3f}".format):
+        print(out[["part", "spec", "y", "b", "se", "t", "F", "ref_bb", "ref_nash"]].to_string(index=False))
+    print(f"\n{len(d):,} firm-hours; per MW of own wind: bilateral share of the extra wind {share:.3f}, "
+          f"Nash reference at β = 1, r = {r:.3f}")
+    return 0
+
+
 def main() -> int:
     ap = ArgumentParser(description=__doc__)
     ap.add_argument("--panel", action="store_true")
     ap.add_argument("--test", action="store_true")
     ap.add_argument("--step", type=int, default=1)
     ap.add_argument("--slope-groups", action="store_true")
+    ap.add_argument("--alone", action="store_true")
     args = ap.parse_args()
     if args.panel:
         return build_panel()
+    if args.alone:
+        return alone()
     if args.test and args.step == 1:
         return step1(groups=args.slope_groups)
     raise SystemExit("--panel, or --test --step 1")

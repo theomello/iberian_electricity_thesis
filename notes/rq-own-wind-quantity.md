@@ -105,3 +105,83 @@ Step 2 is not run.
 **Left (each needs a yes):** variant 1 above (own wind alone: the cut per MW of own wind and its
 leg; no β). It tests book balancing on the output side with a strong instrument. Pooling this
 shock with the holidays into one β (the program's step 3) would be dominated by the holidays.
+
+## Own wind alone (2026-10-21, design §9): a cut of 0.2 per MW, on the bilateral leg
+
+`--alone` → `own_wind_quantity_alone.csv`; log `alone.log`. One regressor (own wind W_s), one
+instrument (Wdev); date × hour and firm × month effects, the same controls, date clusters.
+
+**In one line.** When a firm's own wind blows, it schedules **0.20 MW less from its other plants
+per MW** (t 3.3). The cut is all on the bilateral leg; the auction does not move. That is half of
+what full physical book balancing predicts, and about what market power at β = 1 predicts. With
+firm × date effects it halves again and is no longer significant.
+
+**First stage.** Own scheduled wind rises 1.00 MW per MW of Wdev (0.025, F 1,610). Of the extra
+wind, **41% goes under the bilateral contract** and 59% to the auction.
+
+Per MW of own wind:
+
+| outcome | b_W (se) |
+|---|---|
+| **other generation, total** | **−0.20 (0.06)** |
+| … auction | +0.01 (0.06) |
+| … bilateral | **−0.21 (0.06)** |
+| storage hydro | −0.10 (0.04) |
+| thermal (gas, coal) | −0.08 (0.03) |
+| nuclear | −0.04 (0.03) |
+| the rest | +0.02 (0.01) |
+| generic units (resold purchases) | −0.07 (0.01) |
+
+| reference (design §9) | per MW of own wind | observed |
+|---|---|---|
+| price-taking | 0 | total −0.20: rejected (t 3.3) |
+| book balancing, physical | −0.41 (the bilateral share), bilateral | about half, bilateral |
+| market power, β = 1 | −0.22 (r = s/\|RD′\|), auction | auction +0.01 (0.06): rejected, 3.9 se |
+
+**Checks on the total** (auction / bilateral in brackets):
+
+| | total | auction | bilateral |
+|---|---|---|---|
+| main | −0.20 (0.06) | +0.01 | −0.21 |
+| **firm × date effects** | **−0.09 (0.06)** | −0.06 (0.05) | −0.03 (0.04) |
+| Spanish price above €5 | −0.28 (0.07) | −0.01 | −0.27 |
+| 2022 on | −0.32 (0.08) | −0.06 | −0.27 |
+| forecast version of Wdev | −0.17 (0.06) | −0.00 | −0.17 |
+| week clusters | −0.20 (0.08) | +0.01 | −0.21 |
+
+**By firm** (one regression, own wind × firm instrumented by Wdev × firm):
+
+| firm (F) | total | auction | bilateral | book balancing ref. | Nash ref., β = 1 |
+|---|---|---|---|---|---|
+| Iberdrola (985) | **−0.27 (0.10)** | −0.02 (0.09) | **−0.24 (0.09)** | −0.52 | −0.40 |
+| Repsol (1,386) | **−0.52 (0.13)** | **−0.40 (0.15)** | −0.12 (0.08) | −0.29 | −0.03 |
+| Endesa (1,013) | −0.07 (0.32) | +0.53 (0.40) | −0.59 (0.32) | 0.00 | −0.08 |
+| Naturgy (2,216) | +0.29 (0.18) | +0.13 (0.18) | +0.16 (0.09) | −0.32 | −0.05 |
+| EDP (207) | +2.07 (0.86) | +1.66 (0.87) | +0.41 (0.43) | +0.04 | −0.36 |
+
+**Reading it.**
+- **A firm does cut its other plants when its own wind blows**: hydro and gas, about 0.2 MW per
+  MW. Price-taking is rejected in the main specification and in every check but one.
+- **The size does not separate the two stories.** It is half of full physical book balancing
+  (−0.41) and close to market power at β = 1 (−0.22). The slope test was the one that could
+  separate them, and it lacked power (above).
+- **The leg points to book balancing, with a caveat.** The cut is where the extra wind is labelled
+  bilateral, and the auction cut that market power predicts is rejected (3.9 se; 3.2 se with firm
+  × date effects). But the leg is partly a label. A firm that cut bilateral output and let its
+  retailer buy the gap in the auction would lower its net position just as an auction cut does.
+  The retailer's legs were not examined.
+- **Within a firm's day the cut is small** (−0.09, t 1.6). The cut comes from windy against calm
+  days, not windy against calm hours of the same day. That fits hydro planned over the day (the
+  day's water budget follows the day's own wind, and its hourly profile follows prices). It also
+  fits a confounder that varies by day. The rain story predicted the opposite direction (rain
+  raises hydro), so it does not explain the halving.
+- **Iberdrola carries the pooled result** (−0.27, on its bilateral leg: about half its book
+  balancing reference). Repsol's cut is in the auction (−0.52), against a Nash reference of
+  −0.03; its located wind is 28% of its capacity, in one region. Unexplained. EDP's other output
+  *rises* with its own wind (+2.1, se 0.86; the weakest first stage). Its farms and its hydro
+  share the wet north-west, so this is where rain would show. Endesa and Naturgy are noise.
+
+**What it settles.** Own wind adds the output side to the holiday result. Firms cut other output,
+mostly hydro, by about 0.2 MW per MW of their own wind, through the bilateral leg, and not the
+auction cut that market power at β = 1 predicts. It is weaker evidence than the holidays: it
+does not separate the stories by size, and within the day it fades. No β.

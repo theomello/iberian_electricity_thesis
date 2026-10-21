@@ -14,7 +14,10 @@ Design `docs/specs/2026-10-21-own-wind-quantity-test-design.md`; script
     of the two-stage se when b_P is in fact 0;
   - slope groups (design §8): thirds of each firm's own hours by 1/slope, ordered and balanced;
     the three instruments Wdev × D_k sum to Wdev; and when the wind's response to Wdev falls in
-    steep hours (1.2, 1.0, 0.4 by group, as in the data), they recover book balancing and Nash.
+    steep hours (1.2, 1.0, 0.4 by group, as in the data), they recover book balancing and Nash;
+  - own wind alone (design §9): firm × date effects remove a firm-day constant that firm × month
+    effects leave; the per-firm columns sum to the pooled one; and one regression with W_s × firm
+    instrumented by Wdev × firm recovers a different cut per firm (A −0.7, B −0.1, the rest 0).
 Exits non-zero on any failure.
 """
 from __future__ import annotations
@@ -117,6 +120,34 @@ def main() -> int:
             ok = all(abs(r[k][0] - w) < 3 * r[k][1] for k, w in (("W_s", want_w), ("P_W", want_p)))
             check(ok, f"slope-group instruments, response 1.2/1.0/0.4, {y}: b_W {r['W_s'][0]:+.3f} ({r['W_s'][1]:.3f}), "
                       f"b_P {r['P_W'][0]:+.2f} ({r['P_W'][1]:.2f}); want {want_w:+.1f}, {want_p:+.0f}")
+
+    # own wind alone: firm × date effects, and a cut per firm
+    try:
+        from own_wind_quantity_test import by_firm, controls_for, prep
+    except ImportError as e:
+        check(False, f"own-wind-alone tools missing ({e})")
+    else:
+        d = synthetic(seed=9)
+        rng = np.random.default_rng(1)
+        fd = d.group + d.date.dt.strftime("%Y%m%d")
+        d["storm"] = pd.Series(rng.normal(0, 500, fd.nunique()), index=fd.unique())[fd].to_numpy()
+        try:
+            a = prep(d, ["storm"], firm_fe="date")[:, 0]
+            b = prep(d, ["storm"])[:, 0]
+            check(np.abs(a).max() < 1e-6 * 500 and b.std() > 100,
+                  f"firm × date effects remove a firm-day constant (max {np.abs(a).max():.2e}); "
+                  f"firm × month leave it (sd {b.std():.0f})")
+        except TypeError as e:
+            check(False, f"prep has no firm_fe ({e})")
+        ws, wd = by_firm(d, "W_s"), by_firm(d, "Wdev")
+        check(ws == [f"W_s_{g}" for g in "ABCDE"] and np.allclose(d[ws].sum(axis=1), d.W_s)
+              and np.allclose(d[wd].sum(axis=1), d.Wdev), "per-firm columns sum to the pooled one")
+        cut = d.group.map({"A": -0.7, "B": -0.1}).fillna(0.0).to_numpy()
+        d["y_f"] = cut * d.W_s + d.e
+        r = fit_iv(d, "y_f", ws, wd, controls_for(d))
+        ok = all(abs(r[f"W_s_{g}"][0] - w) < 3 * r[f"W_s_{g}"][1] for g, w in zip("ABCDE", (-0.7, -0.1, 0, 0, 0)))
+        check(ok, "a cut per firm: " + ", ".join(f"{g} {r[f'W_s_{g}'][0]:+.3f} ({r[f'W_s_{g}'][1]:.3f})" for g in "ABCDE")
+              + " (want −0.7, −0.1, 0, 0, 0)")
 
     # the panel adds up
     if PANEL.exists():

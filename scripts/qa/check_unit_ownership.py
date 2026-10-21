@@ -10,7 +10,9 @@ Checks `lib/unit_ownership.py` on the registry itself:
     Vandellos II, Asco 2), shares summing to 1;
   - dated sales: EDP Comercializadora is EDP's until 2020-11-30 and
     TotalEnergies' from 2020-12-01; EDP Energia (HCENE01) TotalEnergies' from
-    2021-01-01; Viesgo is Repsol's from 2018-11-02;
+    2021-01-01; Viesgo is Repsol's from 2018-11-02; Castejon 1 and 3 and their
+    represented registrations (CTJON1R/3R, whose stale 2022 listing names EDP)
+    are TotalEnergies' from 2020-12-01;
   - a share over a window: ADOURO is 60% Movhera's from 2020-12-17 to 2021-09-08;
   - a unit no listing names keeps the inference chain's owner, share 1;
   - attach_owners splits a row across owners and preserves its total;
@@ -83,11 +85,10 @@ def main() -> int:
     check(v0 == ["VIESGO"] and v1 == ["REPSOL"], f"VIES (Viesgo hydro): VIESGO on 2018-11-01, REPSOL on 2018-11-02 "
           f"(got {v0} / {v1})")
 
-    for u in ("CTJON1", "CTJON3"):
-        c0 = owners_on(u, pd.Timestamp("2020-11-30"), sp).group.tolist()
-        c1 = owners_on(u, pd.Timestamp("2020-12-01"), sp).group.tolist()
-        check(c0 == ["EDP"] and c1 == ["TOTALENERGIES"], f"{u} (Castejon, sold with EDP's retail): EDP on "
-              f"2020-11-30, TotalEnergies on 2020-12-01 (got {c0} / {c1})")
+    for u in ("CTJON1", "CTJON3", "CTJON1R", "CTJON3R"):
+        c0, c1, c2 = (owners_on(u, pd.Timestamp(t), sp).group.tolist() for t in ("2020-11-30", "2020-12-01", "2024-06-01"))
+        check(c0 == ["EDP"] and c1 == c2 == ["TOTALENERGIES"], f"{u} (Castejon, sold with EDP's retail): EDP on "
+              f"2020-11-30, TotalEnergies on 2020-12-01 and 2024-06-01 (got {c0} / {c1} / {c2})")
     h0 = owners_on("HCENE01", pd.Timestamp("2020-12-31"), sp).group.tolist()
     h1 = owners_on("HCENE01", pd.Timestamp("2021-01-01"), sp).group.tolist()
     check(h0 == ["EDP"] and h1 == ["TOTALENERGIES"], f"HCENE01 (EDP Energia, the residential book): EDP on "

@@ -105,7 +105,7 @@ def main() -> int:
     check(off == 0, f"every unit-day counts for its largest owner that day, or FRINGE ({off:,} do not)")
     check(not ((five.firm == "REPSOL") & (five.date < pd.Timestamp("2018-11-02"))).any(),
           "no REPSOL rows before Repsol bought Viesgo (2018-11-02)")
-    ct = h[h.unit.isin(["CTJON1", "CTJON3"])]
+    ct = h[h.unit.isin(["CTJON1", "CTJON3", "CTJON1R", "CTJON3R"])]
     check(ct.empty or ((ct.firm == "EDP") == (ct.date < pd.Timestamp("2020-12-01"))).all(),
           "Castejon is EDP's before its sale on 2020-12-01 and FRINGE after")
     al = h[h.unit == "ALL1"]

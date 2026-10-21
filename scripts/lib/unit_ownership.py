@@ -18,7 +18,8 @@ the sales that matter are dated by hand in ENTITY_CHANGES: an owner entity belon
 to one group before the date and another from it. Spells are split there.
 
 UNIT SALES. A unit sold between two listings is dated in UNIT_CHANGES: the change
-the next listing shows takes effect on the sale date, not on the listing's date.
+the first later listing shows takes effect on the sale date, not on the listing's
+date. Later listings that still show the seller's group are stale and superseded.
 
 SHARES OVER A WINDOW. An owner no listing shows for a unit, holding part of it for a
 while, is in UNIT_SHARES: inside the window it takes its share and the listed owners
@@ -70,13 +71,20 @@ ENTITY_CHANGES = [
 ]
 
 
-# unit -> date: the change the next listing shows took effect on this date.
+# unit -> date: the change the first later listing with another group shows took effect
+# on this date.
 UNIT_CHANGES = {
     # Castejon 1 and 3, EDP's combined cycles, went to TotalEnergies with EDP's Spanish
     # retail on 2020-12-01 (leg_c_panel.CASTEJON_SALE). The listings show EDP Espana on
     # 2020-03-09 and EDP Comercializadora (TotalEnergies' from 2020-12-01) on 2022-02-08.
     "CTJON1": "2020-12-01",
     "CTJON3": "2020-12-01",
+    # Their represented registrations (CC. CASTEJON1 REPR, CC CASTEJON 3 REPR), BAJA and
+    # still listed under EDP Espana to 2022-02-08, TotalEnergies Gas and Power's on
+    # 2025-01-31. They offer from 2024-02-05, after CTJON1/3's last offer on 2024-01-31;
+    # the stale 2022 listing put that year of Castejon back in EDP's net position.
+    "CTJON1R": "2020-12-01",
+    "CTJON3R": "2020-12-01",
 }
 
 # unit -> (start, end exclusive, owner, share): `owner` holds `share` of the unit over the
@@ -120,15 +128,23 @@ def spells() -> pd.DataFrame:
     snaps["end"] = snaps.groupby("unit").snapshot.shift(-1).fillna(LATE)
     first = snaps.groupby("unit").snapshot.transform("min")
     snaps["start"] = snaps.snapshot.where(snaps.snapshot != first, EARLY)
-    # A dated unit sale: the first listing after the date takes effect on the date.
+    # A dated unit sale: the first listing from the date whose groups differ from the
+    # seller's takes effect on the date; listings in between still show the seller and
+    # are dropped.
     for u, d in UNIT_CHANGES.items():
         d = pd.Timestamp(d)
-        su = snaps[(snaps.unit == u) & (snaps.snapshot > d)]
-        if su.empty:
+        lu = l[l.unit == u]
+        pre = lu[lu.snapshot < d]
+        if pre.empty:
             continue
-        nxt = su.snapshot.min()
+        seller = {_group(o, d - pd.Timedelta(days=1)) for o in pre.owner[pre.snapshot == pre.snapshot.max()]}
+        later = sorted(lu.snapshot[lu.snapshot >= d].unique())
+        nxt = next((s for s in later if {_group(o, s) for o in lu.owner[lu.snapshot == s]} != seller), None)
+        if nxt is None:
+            continue
+        snaps = snaps[~((snaps.unit == u) & (snaps.snapshot >= d) & (snaps.snapshot < nxt))]
         snaps.loc[(snaps.unit == u) & (snaps.snapshot == nxt), "start"] = d
-        snaps.loc[(snaps.unit == u) & (snaps.end == nxt), "end"] = d
+        snaps.loc[(snaps.unit == u) & (snaps.snapshot < d) & (snaps.end > d), "end"] = d
     sp = l.merge(snaps, on=["unit", "snapshot"])
     # Split spells at the dated sales of an owner entity they contain.
     cuts = [pd.Timestamp(d) for pat, d, *_ in ENTITY_CHANGES]

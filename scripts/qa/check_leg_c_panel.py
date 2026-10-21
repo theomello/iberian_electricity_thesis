@@ -63,6 +63,9 @@ def main() -> int:
         pre, post = u[u.date < "2020-12-01"], u[u.date >= "2020-12-01"]
         check(len(u) > 0 and (pre.firm == "EDP").all() and (post.firm == "TOTALENERGIES").all(),
               f"{unit}: EDP's before its sale on 2020-12-01, TotalEnergies' after ({len(pre)} / {len(post)} rows)")
+    for unit in ("CTJON1R", "CTJON3R"):   # represented registrations, offering from 2024-02-05
+        u = d[d.unit == unit]
+        check((u.firm == "TOTALENERGIES").all(), f"{unit}: TotalEnergies' on every row ({len(u)} rows)")
     check("min_load" in d and 0.05 < d.min_load.mean() < 0.30,
           f"min_load flags rows whose cleared volume is all priced at or below 5 EUR/MWh "
           f"({d.min_load.mean() if 'min_load' in d else float('nan'):.3f})")

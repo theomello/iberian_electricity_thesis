@@ -153,3 +153,46 @@ endogenous, controls, effects, clusters, predictions.
 **Step 1 again, with the same stop rule.** Stop if either F < 10, or if the smallest detectable β
 exceeds 1. Also report: the first stage of W_s on Wdev within each group, mean 1/|RD′| by group,
 and the placebo (own retail on the three instruments).
+
+## 9. Amendment (2026-10-21, after §8 stopped on power): own wind alone
+
+**Why.** With slope groups the instruments work (F 53 and 39), but the smallest detectable β is
+1.16, and the holiday test measures β more precisely (se about 0.18 against 0.41). What own wind
+can still answer is whether a firm cuts its other plants when its own wind blows, on which leg,
+and which firms do it. That is book balancing on the output side, to set against the holidays on
+the load side. It gives no β.
+
+**Regression.** G_other = b_W · W_s + controls + effects + e. W_s is instrumented by Wdev alone (one
+regressor, one instrument). Controls, effects and clusters are as in §2.
+- **Outcomes:** other generation in total and by leg; by class (hydro storage, nuclear, thermal,
+  the rest) as description; and W_s_bilateral, which gives the bilateral share of the extra wind.
+- **By firm:** W_s × each of the five firms, instrumented by Wdev × each firm, in one regression.
+
+**Read the legs with care.** A firm's bilateral sales go mostly to its own retailers, whose
+purchases are a control. So if the extra wind is labelled bilateral, the other plants' bilateral
+output falls by about as much, whatever the firm does physically. The legs show the label; **the
+total shows whether output is cut**.
+
+**Predictions, fixed before the run** (per MW of own wind):
+
+| | other generation, total | where |
+|---|---|---|
+| price-taking | 0 | any bilateral fall is offset in the auction (relabelling) |
+| book balancing, physical | about −(bilateral share of the extra wind) | bilateral, not offset |
+| market power, β | about −β · r | the auction |
+
+- **r** = s / |RD′| weighted by |Wdev|: the cut Nash predicts per MW of own wind at β = 1.
+- **The bilateral share** is the 2SLS of W_s_bilateral on W_s.
+- **By firm:** book balancing predicts each firm's cut in proportion to its own bilateral share
+  (Iberdrola 71% of its wind, EDP 0%). Market power predicts it in proportion to the firm's r,
+  whatever the label.
+
+**Gate.** If the first-stage F < 10, stop before b_W is formed (step 1 found t 30). There is no
+power rule, since there is no β: the se of b_W is reported next to the size of each reference.
+
+**Checks on the total (§4):**
+- firm × date effects in place of firm × month (storms bring rain);
+- hours with the Spanish price above €5;
+- 2022 on;
+- Wdev_fc as the instrument;
+- week clusters.

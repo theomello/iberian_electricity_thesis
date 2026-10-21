@@ -131,3 +131,25 @@ All on disk: `holiday_quantity_panel.parquet` (slope, s, slope_cost, retail legs
 - Hours where own wind is missing (fewer than 30 provinces reporting): dropped.
 - My call: weekdays only, to reuse the holiday panel's slopes and own offer slopes unchanged;
   adding weekends would mean rebuilding them.
+
+## 8. Amendment (2026-10-21, after step 1): instruments by slope group
+
+**Why.** Step 1 stopped: Wdev moves own wind (1.15, t 30), but less in steep hours (about 0.4 at
+the steepest 1%), so Wdev / |RD′|, which assumes the same response in every hour, carries no
+separate movement in P_W (Sanderson–Windmeijer F 3.7 and 2.5; `notes/rq-own-wind-quantity.md`).
+
+**The change.** The instruments become Wdev × D_k, k = 1, 2, 3, where D_k marks the k-th third of
+the firm's own hours by 1/|RD′| (flat, middle, steep). The wind's response to Wdev may then differ
+by group. b_P is identified from how the cut per MW of own wind changes from flat to steep groups,
+since 1/|RD′| differs between them. Everything else in §2 is unchanged: outcome, W_s and P_W
+endogenous, controls, effects, clusters, predictions.
+
+**Calls made here.**
+- **Thirds within each firm**, not pooled, so every firm contributes flat and steep hours.
+- **D_2 and D_3 enter as controls** (D_1 the reference), alongside 1/|RD′|.
+- Three instruments for two endogenous regressors: the Sanderson–Windmeijer F has 2 numerator
+  degrees of freedom.
+
+**Step 1 again, with the same stop rule.** Stop if either F < 10, or if the smallest detectable β
+exceeds 1. Also report: the first stage of W_s on Wdev within each group, mean 1/|RD′| by group,
+and the placebo (own retail on the three instruments).

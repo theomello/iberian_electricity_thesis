@@ -4,6 +4,7 @@ proportion to the wind (book balancing) or to the wind's effect on the price (ma
 
     .venv/bin/python scripts/analysis/own_wind_quantity_test.py --panel
     .venv/bin/python scripts/analysis/own_wind_quantity_test.py --test --step 1
+    .venv/bin/python scripts/analysis/own_wind_quantity_test.py --test --step 1 --slope-groups
 
 Spec `docs/specs/2026-10-21-own-wind-quantity-test-design.md`; plan
 `docs/plans/2026-10-21-own-wind-quantity-test-step1.md`.
@@ -33,6 +34,11 @@ errors clustered by date. Endogenous W_s and P_W, instruments Wdev and Wdev_inv.
                never formed; s̄ = own offer slope weighted by |Wdev|; smallest detectable β =
                2.8 se / s̄, for other generation in total and by leg
 Stop if either F < 10, or the smallest detectable β (other generation, total) exceeds 1.
+
+SLOPE GROUPS (`--slope-groups` → outputs/tables/own_wind_quantity_step1_groups.csv; design §8,
+added after step 1 stopped). Step 1 with instruments Wdev × D_k, D_k the k-th third of the firm's
+own hours by 1/slope (1 flat, 3 steep), and D_2, D_3 as controls: the wind's response to Wdev may
+differ by group. Also reports each group's mean 1/slope.
 """
 from __future__ import annotations
 
@@ -54,6 +60,7 @@ PANEL = T / "own_wind_quantity_panel.parquet"
 FIRMS = ["ENDESA", "IBERDROLA", "NATURGY", "EDP", "REPSOL"]
 KEY = ["group", "date", "hour"]
 STEP1 = T / "own_wind_quantity_step1.csv"
+STEP1_GROUPS = T / "own_wind_quantity_step1_groups.csv"
 FORECASTS = ["F_wind", "F_solar", "F_demand"]
 Z80 = 1.96 + 0.84
 CLASSES = {"hydro_storage": "g_hydro_storage", "nuclear": "g_nuclear", "gas": "g_thermal", "coal": "g_thermal",
@@ -137,6 +144,21 @@ def controls_for(d: pd.DataFrame) -> list[str]:
     return out
 
 
+def group_instruments(d: pd.DataFrame, col: str = "Wdev") -> tuple[list[str], list[str]]:
+    """Adds slope_group (1 flat … 3 steep: thirds of each firm's own hours by 1/slope), col × D_k
+    for k = 1, 2, 3, and dummies D_2, D_3; returns (instruments, dummies)."""
+    r = d.groupby("group").inv_slope.rank(method="first")
+    n = d.groupby("group").inv_slope.transform("size")
+    d["slope_group"] = (np.ceil(3 * r / n)).astype(int).clip(1, 3)
+    inst = []
+    for k in (1, 2, 3):
+        d[f"{col}_g{k}"] = d[col].where(d.slope_group == k, 0.0)
+        inst.append(f"{col}_g{k}")
+    for k in (2, 3):
+        d[f"D_{k}"] = (d.slope_group == k).astype(float)
+    return inst, ["D_2", "D_3"]
+
+
 def _clusters(d: pd.DataFrame, cluster: str = "date") -> np.ndarray:
     return (d.date.dt.strftime("%G%V") if cluster == "week" else d.date.dt.strftime("%Y%m%d")).to_numpy()
 
@@ -167,16 +189,23 @@ def se_null_iv(y: np.ndarray, X: np.ndarray, Z: np.ndarray, W: np.ndarray, cl: n
     return float(np.sqrt(V[j, j]))
 
 
-def step1() -> int:
+def step1(groups: bool = False) -> int:
     from holiday_quantity_test import ols
     from iv_two_endog import sw_f
     d = pd.read_parquet(PANEL)
     ctrl = controls_for(d)
     ys, X_, Z_ = ["G_other", "G_other_auction", "G_other_bilateral"], ["W_s", "P_W"], ["Wdev", "Wdev_inv"]
-    M = prep(d, ys + X_ + Z_ + ctrl)
-    Y, X, Z, W = M[:, :3], M[:, 3:5], M[:, 5:7], M[:, 7:]
-    cl = _clusters(d)
     rows = []
+    if groups:
+        Z_, dums = group_instruments(d)
+        ctrl = ctrl + dums
+        for k, x in d.groupby("slope_group"):
+            rows.append({"part": "slope group", "y": "mean 1/slope", "x": f"group {k}", "b": x.inv_slope.mean(),
+                         "median_slope": x.slope.median(), "hours": len(x)})
+    L = len(Z_)
+    M = prep(d, ys + X_ + Z_ + ctrl)
+    Y, X, Z, W = M[:, :3], M[:, 3:5], M[:, 5:5 + L], M[:, 5 + L:]
+    cl = _clusters(d)
     for j, x in enumerate(X_):
         b, se = ols(X[:, j], np.column_stack([Z, W]), cl)
         F = sw_f(X, Z, W, cl, j)
@@ -194,7 +223,7 @@ def step1() -> int:
         rows.append({"part": "power", "y": y, "x": "P_W", "se": sn, "s_bar": s_bar, "mde_beta": Z80 * sn / s_bar})
     out = pd.DataFrame(rows)
     out["n"] = len(d)
-    out.to_csv(STEP1, index=False)
+    out.to_csv(STEP1_GROUPS if groups else STEP1, index=False)
     with pd.option_context("display.width", 160, "display.float_format", "{:.4g}".format):
         print(out.drop(columns="n").to_string(index=False))
     print(f"\n{len(d):,} firm-hours, {d.date.nunique():,} days; s̄ (own offer slope, |Wdev|-weighted) {s_bar:.1f} MW "
@@ -207,6 +236,8 @@ def step1() -> int:
     for k, v in stops.items():
         print(f"  {'STOP' if v else 'ok  '} {k}")
     print("  placebo (no stop rule): " + ", ".join(f"retail on {r.x} t {r.t:+.2f}" for r in pl.itertuples()))
+    if groups:
+        print("  slope groups: 'b' is the group's mean 1/slope")
     print(f"stop rule (step 1): {'STOP' if any(stops.values()) else 'CONTINUE'}")
     return 0
 
@@ -216,11 +247,12 @@ def main() -> int:
     ap.add_argument("--panel", action="store_true")
     ap.add_argument("--test", action="store_true")
     ap.add_argument("--step", type=int, default=1)
+    ap.add_argument("--slope-groups", action="store_true")
     args = ap.parse_args()
     if args.panel:
         return build_panel()
     if args.test and args.step == 1:
-        return step1()
+        return step1(groups=args.slope_groups)
     raise SystemExit("--panel, or --test --step 1")
 
 

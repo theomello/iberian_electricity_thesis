@@ -11,7 +11,10 @@ Design `docs/specs/2026-10-21-own-wind-quantity-test-design.md`; script
     synthetic panel where own wind is endogenous, through the same effects and controls as the
     real run, while OLS on the same data is off;
   - the standard error of b_P under b_P = 0 (from the restricted model's residual) is within 10%
-    of the two-stage se when b_P is in fact 0.
+    of the two-stage se when b_P is in fact 0;
+  - slope groups (design §8): thirds of each firm's own hours by 1/slope, ordered and balanced;
+    the three instruments Wdev × D_k sum to Wdev; and when the wind's response to Wdev falls in
+    steep hours (1.2, 1.0, 0.4 by group, as in the data), they recover book balancing and Nash.
 Exits non-zero on any failure.
 """
 from __future__ import annotations
@@ -88,6 +91,32 @@ def main() -> int:
         sn = se_null_iv(M[:, 0], M[:, 1:3], M[:, 3:5], M[:, 5:], cl, 1)
         check(abs(sn / r0["P_W"][1] - 1) < 0.10,
               f"se(b_P) under the null {sn:.3f} against the fitted se {r0['P_W'][1]:.3f} at b_P = 0 (within 10%)")
+
+    # slope groups: thirds of each firm's hours by 1/slope, instruments that let the response vary
+    try:
+        from own_wind_quantity_test import group_instruments, controls_for
+    except ImportError as e:
+        check(False, f"slope-group tools missing ({e})")
+    else:
+        d = synthetic(seed=5)
+        inst, dums = group_instruments(d)
+        ordered = all((x.groupby("slope_group").inv_slope.max().to_numpy()[:-1]
+                       <= x.groupby("slope_group").inv_slope.min().to_numpy()[1:]).all() for _, x in d.groupby("group"))
+        sizes = d.groupby(["group", "slope_group"]).size()
+        check(inst == ["Wdev_g1", "Wdev_g2", "Wdev_g3"] and dums == ["D_2", "D_3"] and ordered
+              and sizes.max() - sizes.min() <= 1 and np.allclose(d[inst].sum(axis=1), d.Wdev),
+              f"slope groups: thirds within each firm, ordered by 1/slope, sizes {sizes.min()}–{sizes.max()}, "
+              "instruments sum to Wdev")
+        resp = np.array([0.0, 1.2, 1.0, 0.4])[d.slope_group.to_numpy()]
+        d["W_s"] = d.W_s + (resp - 0.9) * d.Wdev
+        d["P_W"] = d.W_s * d.inv_slope
+        d["y_bb"], d["y_nash"] = -0.5 * d.W_s + d.e, -40.0 * d.P_W + d.e
+        ctrl = controls_for(d) + dums
+        for y, want_w, want_p in (("y_bb", -0.5, 0.0), ("y_nash", 0.0, -40.0)):
+            r = fit_iv(d, y, ["W_s", "P_W"], inst, ctrl)
+            ok = all(abs(r[k][0] - w) < 3 * r[k][1] for k, w in (("W_s", want_w), ("P_W", want_p)))
+            check(ok, f"slope-group instruments, response 1.2/1.0/0.4, {y}: b_W {r['W_s'][0]:+.3f} ({r['W_s'][1]:.3f}), "
+                      f"b_P {r['P_W'][0]:+.2f} ({r['P_W'][1]:.2f}); want {want_w:+.1f}, {want_p:+.0f}")
 
     # the panel adds up
     if PANEL.exists():

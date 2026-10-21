@@ -73,3 +73,35 @@ per firm on each D-1 forecast (wind, solar, demand); date clusters.
    differ by slope group and identifies b_P from how the cut per MW changes from flat to steep
    hours, without forcing the response to be linear in 1/|RD′|. Its F and power are unknown
    until step 1 is rerun with it.
+
+## Step 1 with slope groups (2026-10-21, design §8): STOP on power, narrowly
+
+`--test --step 1 --slope-groups` → `own_wind_quantity_step1_groups.csv`; log `step1_groups.log`.
+
+**In one line.** Letting the wind's response differ by thirds of each firm's hours (flat, middle,
+steep) fixes the instruments (F 53 and 39). But the test still could not tell β = 0 from β = 1:
+the smallest detectable β is **1.16** (auction 1.07, bilateral 1.10) against a limit of 1. The
+outcome regression was not formed.
+
+| slope group | mean 1/\|RD′\| | median slope, MW per €/MWh | own wind per MW of Wdev |
+|---|---|---|---|
+| 1 flat | 0.0014 | 724 | **1.33 (0.07)** |
+| 2 middle | 0.0037 | 283 | **0.87 (0.02)** |
+| 3 steep | 0.0120 | 107 | **0.84 (0.03)** |
+
+- **The instruments now work**: Sanderson–Windmeijer F 53.0 (own wind), 38.9 (its price effect).
+  In steep hours the price effect per MW of wind is 9 times the flat hours'. The wind's response
+  is lower there (0.84 against 1.33), but it does not collapse.
+- **Power**: se(b_P) under b_P = 0 is 25.7, against Nash −62.0 (s̄): smallest detectable β 1.16.
+  That is a standard error on β of about 0.41, wider than the holiday quantity test's (about
+  0.18: β −0.20 [−0.55, +0.15]).
+- **Placebo**: own retail purchases on Wdev by group +0.03 (t 1.6), +0.09 (t 4.4), +0.07 (t 3.7).
+  These are small, and retail is a control, but regional wind moves own load too.
+
+**What it settles.** Own wind is a strong shock to a firm's output (t 20–36 in every slope group).
+As a test of β it is less precise than the holidays, and below the design's power threshold.
+Step 2 is not run.
+
+**Left (each needs a yes):** variant 1 above (own wind alone: the cut per MW of own wind and its
+leg; no β). It tests book balancing on the output side with a strong instrument. Pooling this
+shock with the holidays into one β (the program's step 3) would be dominated by the holidays.

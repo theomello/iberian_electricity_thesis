@@ -288,3 +288,32 @@ March–June 2020 −0.15 [−0.53, +0.23]; week clusters −0.16 [−0.49, +0.1
 - **The caution of the nuclear test applies**: a steep hour is also a tight one. The date × hour
   effects take market-wide tightness, and the slope at cost (which does not move with the firm's own
   offers) gives the same answer.
+
+## The quantity test with own wind held fixed (2026-10-21)
+
+`holiday_quantity_test.py --test --step 2 --wind-control` → `outputs/tables/holiday_quantity_test_wind.csv`;
+log `.superpowers/sdd/2026-10-20-holiday-quantity-test/step2_wind.log`. Asked after the wind checks
+of `rq-self-supply-cost.md`: the firms' own wind happened to blow less on their customers' holidays,
+and generation includes it. Every step-2 regression now also holds fixed the firm's own wind in the
+hour (located capacity × its regions' measured capacity factor) and own wind × 1/|RD′|, since own
+wind moves the stake as the dose does; the s·P refinement adds s × own wind × 1/|RD′|. 199,675 of
+199,840 firm-hours have own wind. The plain step 2, rerun on the new code, reproduces its table exactly.
+
+| | b_Z, before → with own wind | β, before | β with own wind | p(β = 1) |
+|---|---|---|---|---|
+| generation, both legs | −0.33 → **−0.27** (0.13) | −0.16 [−0.52, +0.20] | **−0.20 [−0.55, +0.15]** | 3·10⁻¹¹ |
+| … auction | +0.07 → +0.09 | −0.11 | −0.13 [−0.61, +0.35] | < 10⁻⁴ |
+| … bilateral | −0.39 → −0.36 | −0.05 | −0.07 [−0.33, +0.19] | < 10⁻⁴ |
+| s·P refinement | −0.28 → −0.21 | −0.09 [−0.21, +0.03] | −0.12 [−0.25, +0.02] | < 10⁻⁴ |
+| Endesa alone | −0.03 → +0.00 | −0.20 | −0.23 [−0.66, +0.20] | < 10⁻⁴ |
+| Iberdrola alone | −0.71 → −0.58 | −0.27 | −0.28 [−0.59, +0.04] | < 10⁻⁴ |
+
+Checks with own wind (β): slope at cost −0.17 [−0.70, +0.36]; flat profile −0.15; adjacent days
+out −0.17; Spain-wide days −0.24; regional days +0.22 [−0.52, +0.96] (Nash p 0.04); without
+March–June 2020 −0.19; week clusters −0.20 [−0.53, +0.13].
+
+- **The verdict stands**: the cut does not grow in steep hours, and full market power is rejected
+  in every specification.
+- **The cut is about a fifth smaller**: −0.27 MWh per MWh of dose hourly (−0.33 before), still all in
+  the bilateral leg (−0.36), and for Iberdrola −0.58 (−0.71). Part of what looked like a cut was the
+  wind.

@@ -118,6 +118,16 @@ def main() -> int:
               and np.isclose(w.at["A", "Wdev_real"], 24 * (200 - 400)) and (w.date == pd.Timestamp("2024-01-15")).all(),
               f"own wind: A {w.at['A', 'W_real']:.0f} MWh (16,800), B {w.at['B', 'W_real']:.0f} (2,400), "
               f"A's deviation {w.at['A', 'Wdev_real']:.0f} (−4,800), on the Madrid date")
+        try:
+            from self_supply_cost import own_wind_hourly
+        except ImportError as e:
+            check(False, f"hourly own wind missing ({e})")
+        else:
+            wh = own_wind_hourly(k, cf)
+            a0 = wh[(wh.group == "A") & (wh.hour == 0)]
+            check(len(wh) == 48 and sorted(wh.hour.unique()) == list(range(24)) and len(a0) == 1
+                  and a0.date.iloc[0] == pd.Timestamp("2024-01-15") and np.isclose(a0.W_real.iloc[0], 700),
+                  "hourly own wind: Madrid date and hour (UTC 23:00 is hour 0 of the next day), A 700 MW")
         cf_gap = cf[~cf.utc.isin(utc[:6])]                                          # 18 hours left: too few
         check(own_wind_daily(k, cf_gap).empty, "own wind: a day with fewer than 20 hours is dropped")
         rows = pd.DataFrame({"unit": ["U1", "U1", "U1", "U2"], "date": pd.Timestamp("2025-06-02"),

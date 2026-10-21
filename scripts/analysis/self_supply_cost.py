@@ -269,14 +269,22 @@ def fit_multi(d: pd.DataFrame, y: str, xs: list[str], cluster: str = "date",
     return {x: (float(b[i]), float(np.sqrt(V[i, i]))) for i, x in enumerate(xs)}
 
 
-def own_wind_daily(k: pd.DataFrame, cf: pd.DataFrame) -> pd.DataFrame:
-    """group, date, W_real, Wdev_real: each group's located wind capacity times its regions'
-    measured capacity factor (and their deviation from the peninsula's), MWh per Madrid day.
-    Days with fewer than 20 hours of data are dropped; the rest are scaled to 24 hours."""
+def own_wind_hourly(k: pd.DataFrame, cf: pd.DataFrame) -> pd.DataFrame:
+    """group, utc, date, hour, W_real, Wdev_real: each group's located wind capacity times its
+    regions' measured capacity factor (and their deviation from the peninsula's), MW, on the
+    Madrid date and hour."""
     w = k.merge(cf, on="nuts_id")
     w["W_real"], w["Wdev_real"] = 1000 * w.K_gw * w.cf_real, 1000 * w.K_gw * w.dev_real
     h = w.groupby(["group", "utc"], as_index=False)[["W_real", "Wdev_real"]].sum()
-    h["date"] = h.utc.dt.tz_convert("Europe/Madrid").dt.tz_localize(None).dt.normalize()
+    loc = h.utc.dt.tz_convert("Europe/Madrid")
+    h["date"], h["hour"] = loc.dt.tz_localize(None).dt.normalize(), loc.dt.hour
+    return h
+
+
+def own_wind_daily(k: pd.DataFrame, cf: pd.DataFrame) -> pd.DataFrame:
+    """group, date, W_real, Wdev_real: `own_wind_hourly` summed to MWh per Madrid day.
+    Days with fewer than 20 hours of data are dropped; the rest are scaled to 24 hours."""
+    h = own_wind_hourly(k, cf)
     g = h.groupby(["group", "date"]).agg(W_real=("W_real", "mean"), Wdev_real=("Wdev_real", "mean"),
                                           n=("utc", "nunique"))
     g = g[g.n >= 20]

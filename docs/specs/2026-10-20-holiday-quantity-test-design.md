@@ -3,6 +3,8 @@
 **Status: run 2026-10-20 (`notes/rq-regional-holidays.md`, quantity test).** The cut follows the
 dose (−0.33 MW per MW), not its price effect: β on the quantity margin −0.16 [−0.52, +0.20]; Nash
 rejected (p 4·10⁻¹⁰), also for Endesa and Iberdrola alone and under every check. Book balancing.
+**With own wind held fixed (2026-10-21)**: the firms' own wind blew less on holidays; controlled,
+b_Z −0.27 (was −0.33), β −0.20 [−0.55, +0.15], Nash still rejected everywhere.
 
 **In one example.** On the Diada, Endesa's Catalan customers use about 450 MW less, and Endesa
 cuts the output it sells them through bilateral contracts by about half that. Two stories fit.

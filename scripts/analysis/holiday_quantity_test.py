@@ -5,6 +5,7 @@ the dose's price effect (market power) or to the dose itself (book balancing)?
     .venv/bin/python scripts/analysis/holiday_quantity_test.py --panel
     .venv/bin/python scripts/analysis/holiday_quantity_test.py --test --step 1
     .venv/bin/python scripts/analysis/holiday_quantity_test.py --test --step 2
+    .venv/bin/python scripts/analysis/holiday_quantity_test.py --test --step 2 --wind-control
 
 Spec `docs/specs/2026-10-20-holiday-quantity-test-design.md`; plan
 `docs/plans/2026-10-20-holiday-quantity-test.md`.
@@ -39,6 +40,14 @@ STEP 2 (`--test --step 2` → outputs/tables/holiday_quantity_test.csv). The slo
 for generation (sum, auction, bilateral), with the spec's checks on the sum: the slope at cost,
 a flat daily profile for the dose, undosed days next to a dosed one dropped, Spain-wide days
 (four or more mainland regions off) and regional days apart, March–June 2020 out, week clusters.
+
+WIND CONTROL (`--wind-control` → outputs/tables/holiday_quantity_test_wind.csv; added 2026-10-21).
+The firms' own wind happened to blow less on their customers' holidays
+(`notes/rq-self-supply-cost.md`, wind checks), and generation includes it. Every step-2 regression
+then also holds fixed the firm's own wind in the hour (W_real: located capacity × its regions'
+measured capacity factor, `self_supply_cost.own_wind_hourly`) and W_real × 1/slope (own wind moves
+the firm's stake as the dose does); the s·P refinement adds s × W_real × 1/slope. Hours without
+own wind data are dropped.
 """
 from __future__ import annotations
 
@@ -176,9 +185,30 @@ def national_dates() -> pd.DatetimeIndex:
     return n.index[n >= 4]
 
 
-def step2() -> int:
+def add_wind(d: pd.DataFrame, wh: pd.DataFrame) -> pd.DataFrame:
+    """The panel with the firm's own wind in the hour (W_real, MW), W_inv = W_real × 1/slope and
+    sW = s × W_inv; hours without own wind dropped."""
+    x = d.merge(wh[["group", "date", "hour", "W_real"]], on=["group", "date", "hour"], how="inner")
+    x["W_inv"] = x.W_real * x.inv_slope
+    x["sW"] = x.s * x.W_inv
+    return x
+
+
+def own_wind() -> pd.DataFrame:
+    from regional_wind_offer_test import forecasts, own_capacity, regional_cf
+    from self_supply_cost import own_wind_hourly
+    return own_wind_hourly(own_capacity(FIRMS), regional_cf(forecasts()))
+
+
+def step2(wind: bool = False) -> int:
     d = pd.read_parquet(PANEL)
     d = d[d.slope.notna() & d.s.notna()].copy()
+    extra = []
+    if wind:
+        n0 = len(d)
+        d = add_wind(d, own_wind())
+        extra = ["W_real", "W_inv"]
+        print(f"own wind held fixed: {len(d):,} of {n0:,} firm-hours have it")
     d["sP"] = d.s * d.P
     w = (d.dose_mw > 0)
     s_bar = float(np.average(d.s[w], weights=d.dose_mw[w]))
@@ -187,8 +217,10 @@ def step2() -> int:
     def main_rows(x: pd.DataFrame, spec: str, outcomes: list[str], P: str = "P", inv: str = "inv_slope",
                   dose: str = "dose_mw", cluster: str = "date") -> None:
         sb = float(np.average(x.s[x[dose] > 0], weights=x[dose][x[dose] > 0]))
+        if wind:
+            x = x.assign(W_inv=x.W_real * x[inv])
         for y in outcomes:
-            r = fit(x, y, [dose, P], [inv], cluster)
+            r = fit(x, y, [dose, P], [inv] + extra, cluster)
             bP, se = r[P]
             rows.append({"spec": spec, "outcome": y, "term": "P", "b_Z": r[dose][0], "se_Z": r[dose][1],
                          "b": bP, "se": se, "s_bar": sb, "beta": -bP / sb, "beta_lo": (-bP - 1.96 * se) / sb,
@@ -198,7 +230,7 @@ def step2() -> int:
     gens = ["gen", "gen_auction", "gen_bilateral"]
     main_rows(d, "main", gens)
     for y in gens:                                   # the s·P refinement
-        r = fit(d, y, ["dose_mw", "sP"], ["inv_slope", "s"])
+        r = fit(d, y, ["dose_mw", "sP"], ["inv_slope", "s"] + extra + (["sW"] if wind else []))
         g, se = r["sP"]
         rows.append({"spec": "s·P", "outcome": y, "term": "s·P", "b_Z": r["dose_mw"][0], "se_Z": r["dose_mw"][1],
                      "b": g, "se": se, "s_bar": s_bar, "beta": -g, "beta_lo": -g - 1.96 * se, "beta_hi": -g + 1.96 * se,
@@ -209,7 +241,7 @@ def step2() -> int:
         own = x.group == f
         x["dose_f"], x["P_f"] = x.dose_mw.where(own, 0.0), x.P.where(own, 0.0)
         x["dose_o"], x["P_o"] = x.dose_mw.where(~own, 0.0), x.P.where(~own, 0.0)
-        r = fit(x, "gen", ["dose_f", "P_f", "dose_o", "P_o"], ["inv_slope"])
+        r = fit(x, "gen", ["dose_f", "P_f", "dose_o", "P_o"], ["inv_slope"] + extra)
         sb = float(np.average(x.s[own & (x.dose_mw > 0)], weights=x.dose_mw[own & (x.dose_mw > 0)]))
         bP, se = r["P_f"]
         rows.append({"spec": f"firm {f}", "outcome": "gen", "term": "P", "b_Z": r["dose_f"][0], "se_Z": r["dose_f"][1],
@@ -236,7 +268,7 @@ def step2() -> int:
     main_rows(d, "check: week clusters", ["gen"], cluster="week")
 
     out = pd.DataFrame(rows)
-    out.to_csv(T / "holiday_quantity_test.csv", index=False)
+    out.to_csv(T / ("holiday_quantity_test_wind.csv" if wind else "holiday_quantity_test.csv"), index=False)
     with pd.option_context("display.width", 200, "display.float_format", "{:.3f}".format):
         print(out[["spec", "outcome", "term", "b_Z", "se_Z", "b", "se", "s_bar", "beta", "beta_lo", "beta_hi",
                    "p_beta0", "p_nash", "dosed"]].to_string(index=False))
@@ -291,13 +323,14 @@ def main() -> int:
     ap.add_argument("--panel", action="store_true")
     ap.add_argument("--test", action="store_true")
     ap.add_argument("--step", type=int, default=1)
+    ap.add_argument("--wind-control", action="store_true")
     args = ap.parse_args()
     if args.panel:
         return build_panel()
     if args.test and args.step == 1:
         return step1()
     if args.test and args.step == 2:
-        return step2()
+        return step2(wind=args.wind_control)
     raise SystemExit("--panel, or --test --step 1|2")
 
 

@@ -186,4 +186,5 @@ Weekday firm-days, MWh per MWh of holiday dose, date and firm × month effects, 
   on holidays is close to free.
 - **Yesterday's quantity test included this weather** in its generation response (b_Z −0.33
   hourly). Its slope test (b_P) is not about the size of the cut, so its verdict should stand, but
-  b_Z overstates the cut by about a third. A rerun with own wind as a control would settle it.
+  b_Z overstates the cut. **Rerun with own wind held fixed (2026-10-21, `rq-regional-holidays.md`):**
+  b_Z −0.27 hourly (was −0.33), β −0.20 [−0.55, +0.15], Nash rejected in every specification.

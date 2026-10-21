@@ -54,6 +54,21 @@ def main() -> int:
         if not ok:
             fails.append(what)
 
+    # the own-wind control: merged by group, date and hour; slope-scaled terms; unmatched hours out
+    try:
+        from holiday_quantity_test import add_wind
+    except ImportError as e:
+        check(False, f"add_wind missing ({e})")
+    else:
+        pnl = pd.DataFrame({"group": ["A", "A", "B"], "date": pd.Timestamp("2024-01-15"), "hour": [0, 1, 0],
+                            "inv_slope": [0.01, 0.02, 0.005], "s": [50.0, 0.0, 20.0]})
+        wh = pd.DataFrame({"group": ["A", "B"], "date": pd.Timestamp("2024-01-15"), "hour": [0, 0],
+                           "W_real": [700.0, 100.0]})
+        x = add_wind(pnl, wh).set_index("group")
+        check(len(x) == 2 and np.isclose(x.at["A", "W_inv"], 7.0) and np.isclose(x.at["A", "sW"], 350.0)
+              and np.isclose(x.at["B", "W_inv"], 0.5),
+              "add_wind: W_inv = W × 1/|RD′| (A 7.0, B 0.5), sW = s × W_inv (A 350), the hour without wind dropped")
+
     # step 2's regression on synthetic data: book balancing (y follows Z) and Nash (y = −s·P)
     rng = np.random.default_rng(3)
     n = 60_000

@@ -491,3 +491,28 @@ leaves. No reading there changes. **The reading above stands.**
   step 2), and `fixed_step_rows_summary.csv`.
 
 A rerun of the simulation note would rebuild the first set before reading them.
+
+## Rerun for Castejón's represented units (2026-10-22)
+
+`CTJON1R` and `CTJON3R`, Castejón's represented registrations, are TotalEnergies' from
+2020-12-01 (`UNIT_CHANGES`; `docs/specs/2026-10-21-edp-retail-sale-design.md`, stage 3). A stale
+2022 listing had made them EDP's while they offered, 2024-02 → 2025-01, and EDP's net position
+falls by 120 MW over that year's clean periods. Rebuilt for 202402 → 202501 as above, then the
+same estimates, seeds and band. `ADOURO` stays out over its own window. Logs in
+`.superpowers/logs/rerun-2026-10-22/`.
+
+**No reading changes**: 0 of 318. 24 cells differ and 6 are accepted, as before.
+
+| cell (read at cf_s, ten-seed band) | b before | b after | differs |
+|---|---|---|---|
+| pooled | 0.163 | 0.155 | no, no |
+| 2024H2 | 0.289 | 0.216 [−0.23, 0.66] | no, no |
+| seller / buyer side 2024H2 | 0.191 / −0.575 | 0.224 / −0.874 | no, no |
+| within EDP, seller / buyer, pooled | 0.117 / 0.006 | 0.081 / −0.040 | no, no |
+| within EDP, seller / buyer, departure | 0.177 / 0.194 | 0.066 / 0.094 | no, no |
+| fixed MW, pooled (check) | 0.239 [0.09, 0.39] | 0.236 [0.08, 0.39] | |
+
+Three plain intervals on the actual offers, which this note does not read (it reads cells
+against the band), stop excluding zero: 2024H2 [+0.03, +0.55] → [−0.06, +0.50], fixed MW in the
+departure periods [+0.012, +0.445] → [−0.005, +0.441], and MW at or below λ* per unit of capacity,
+pooled, whose slope is −0.000 either way. The stale list above still applies.

@@ -168,6 +168,35 @@ expects `ADOURO` → Movhera inside the window.
 
 **Stage 2 rerun: the fixed step.** The ten window months were rebuilt, with `ADOURO` left out over the window. One of 318 ten-seed readings changes: a profile cell at 1.5 cf_s in the departure periods no longer differs. The EDP and 2021H1 cells move but keep their readings (`notes/rq-fixed-step.md`, "Rerun on corrected ownership").
 
+**Stage 3 (2026-10-22): Castejón's represented units.** `CTJON1R` and `CTJON3R` ("CC. CASTEJON1
+REPR", "CC CASTEJON 3 REPR") were BAJA and still listed under EDP España to 2022-02-08, and
+TotalEnergies Gas and Power's on 2025-01-31. They offer from 2024-02-01 and clear from 2024-02-05,
+after CTJON1/3's last offer on 2024-01-31, so the nearest preceding listing (2022) gave a year of
+Castejón back to EDP. `UNIT_CHANGES` now dates them with CTJON1/3 at 2020-12-01, and a dated unit
+sale takes effect at the first later listing whose group differs from the seller's; only these
+two units' spells change. Rerun with `.superpowers/sdd/2026-10-22-castejon-rerun/chain.sh` (logs in
+`.superpowers/logs/rerun-2026-10-22/`); every check passes.
+- **Firm panels.** Only EDP's rows change in `firm_x`: 2,050 periods, 2024-02-01 → 2025-01-30. Over
+  the clean periods n goes from −814 to −934 MW (December 2024: −468 → −890), the net-buyer share
+  from 0.784 to 0.824, and the sign flips in 4.0% of periods (18% in December). X's median goes
+  from −2.33 to −3.05; the slope barely moves (708 → 710). In `firm_incentive_net`,
+  TotalEnergies' cleared sales on the changed firm-periods go from 10 to 545 MW.
+- **Leg A.** Within-day β at 50% of offered volume, pooled: +0.089 → +0.091 [−0.13, 0.33]; at 75%:
+  +1.357 → +1.378 [0.78, 2.10]. Quantity at the median, pooled: −0.075 → −0.076 pp per €/MWh of X
+  (implied β +0.03 both). Markup bound p90: 1.75 → 1.74. Leg B, across days: still no first stage
+  (F ≤ 3).
+- **Leg C.** Unchanged, byte for byte: its panel has no EDP rows in the window, and the R units
+  have no plant-specific efficiency.
+- **Leg D.** 15,434 unit-hours move from EDP to the fringe. Pooled g₊ 4.32 → 4.53, g₋ −1.63 →
+  −1.63; EDP g₊ 6.66 → 7.95, g₋ −2.77 → −2.98. No row's status, sign reading or common AR set
+  changes. The forecast-instrument table and the two first stages (`forecast_first_stage`,
+  `hydro_rain_first_stage`) had last been run on 2026-10-05, so their diffs also carry the
+  stage 2 changes; no reading changes there either, and no first stage crosses F = 10.
+- **Fixed step.** None of the 318 ten-seed readings changes (`notes/rq-fixed-step.md`, "Rerun for
+  Castejón's represented units").
+
+No recorded conclusion moves.
+
 **Left to whoever picks this up:** whether EDP Clientes' growth to 1,200 MW by mid-2021 took in
 business customers from the sold company; whether anything public (EDP's 2020–21 reports,
 Movhera's licence transfer) says who bore the dams' price risk before 2021-09-09.

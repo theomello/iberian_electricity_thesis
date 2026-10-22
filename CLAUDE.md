@@ -426,7 +426,12 @@ The module gives the owners in force on any date: each listing's owners from its
 date to the next listing naming the unit, shares normalised to 1, spells split at
 the dated sales in `ENTITY_CHANGES`, and the inference chain's owner (share 1) for
 units no listing names. `attach_owners` splits a row across owners with its volume
-times each share. `firm_x.py`, `firm_incentive_rebuild.py` and
+times each share. **A dormant registration keeps a stale owner in the listings**, so
+a dated unit sale (`UNIT_CHANGES`) takes effect at the first later listing whose group
+differs from the seller's, not at the next listing. Castejón's represented units
+`CTJON1R`/`CTJON3R` are the case: BAJA and listed under EDP España to 2022-02-08,
+TotalEnergies' on 2025-01-31, offering from 2024-02-01. The next-listing rule gave
+that year of Castejón to EDP, 120 MW of its mean net position (fixed 2026-10-22). `firm_x.py`, `firm_incentive_rebuild.py` and
 `residual_demand_firm.py --tier owner` use it; `qa/check_unit_ownership.py` pins the
 reactors' shares, the sale dates, and that January 2024 rebuilt through each of the
 three differs from the static attribution by exactly the share changes.

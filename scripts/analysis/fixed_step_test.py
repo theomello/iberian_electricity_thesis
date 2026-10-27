@@ -259,9 +259,7 @@ READS = {"cf_s": "p_cf", "bottom 5%": "p_bot", "0.1 cf_s": "p_k010", "0.25 cf_s"
          "0.5 cf_s": "p_k050", "1.5 cf_s": "p_k150", "2 cf_s": "p_k200", "net of contracts": "p_net",
          "fixed MW": "p_mw"}
 FIRMS = ("EDP", "IBERDROLA")
-# Movhera's Douro dams, offered inside ADOURO after their sale (lib/unit_ownership.UNIT_SHARES): whose
-# stake those offers answer to is not known, so ADOURO is left out over the window (2026-10-21).
-AMBIGUOUS = [("ADOURO", "2020-12-17", "2021-09-09")]
+AMBIGUOUS = sh.AMBIGUOUS       # ADOURO over the Douro dams' window: whose stake is not known
 
 
 def zero_shares() -> pd.DataFrame:

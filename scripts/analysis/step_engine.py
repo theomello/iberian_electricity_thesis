@@ -332,9 +332,10 @@ def month(ym: str, sh: pd.DataFrame, kind: str = "thermal", comp: bool = False, 
             t_units["date"] = t_units.hid.map(h.set_index("hid").date).astype("datetime64[ns]")
         t_units = simulate(t_units, ym, sim, flat, WATER_SCALE if sim_scale else None)
     own_idx = own.set_index(["hid", "group"]).sort_index()
-    # --comp: the day's typical cost of each fuel, median over the units offering it
+    # --comp: the day's typical cost of each fuel, median over the units offering it (plain
+    # hydro units carry no cost)
     cbar = (t_units.assign(date=t_units.hid.map(h.set_index("hid").date))
-            .groupby(["date", "fuel"]).cost.median())
+            .groupby(["date", "fuel"]).cost.median()) if comp else None
     shw = sh.set_index("group")
     out, tg = [], []
     in_month = pd.to_datetime(h.date).dt.strftime("%Y%m") == ym

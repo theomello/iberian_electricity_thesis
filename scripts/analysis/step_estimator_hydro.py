@@ -59,6 +59,9 @@ HYDRO_SHARE = 0.9
 FLOOR = 20
 MIN_ROWS = 20_000
 WEAK_F = 10.0
+# Movhera's Douro dams, offered inside ADOURO after their sale (lib/unit_ownership.UNIT_SHARES): whose
+# stake those offers answer to is not known, so ADOURO is left out over the window (2026-10-21)
+AMBIGUOUS = [("ADOURO", "2020-12-17", "2021-09-09")]
 
 
 def months() -> list[str]:
@@ -100,6 +103,8 @@ def rows(sim: int | None = None) -> pd.DataFrame:
         print(f"  {ym}: {len(parts[-1]):,} hydro unit-steps with draws", flush=True)
     d = pd.concat(parts, ignore_index=True)
     d["date"] = pd.to_datetime(d.date)
+    for u, a, b in AMBIGUOUS:
+        d = d[~((d.unit == u) & (d.date >= a) & (d.date < b))]
     return d
 
 

@@ -1,0 +1,235 @@
+% The step estimator, the at-cost instrument Zb, the selection control and the null band.
+% Build: latexmk -pdf at-cost-instrument.tex   (from docs/derivations/)
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs,array}
+\usepackage{textcomp}
+\usepackage[hidelinks]{hyperref}
+\usepackage{microtype}
+
+\newtheorem*{assumption}{Assumption}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Xt}{\tilde X}
+\newcommand{\eur}{\text{\texteuro}}
+\newcommand{\code}[1]{\texttt{\small #1}}
+
+\title{The step estimator and the at-cost instrument}
+\author{Spanish electricity market project}
+\date{27 October 2026}
+
+\begin{document}
+\maketitle
+
+\noindent This note writes out what \code{step\_engine.py}, \code{leg\_b\_levels.py} and
+\code{price\_taking\_simulation.py} compute, and maps each symbol to the data. The scripts
+are the authority: where this note and the code disagree, the code is right.
+
+\section{A worked example}
+
+A firm offers a hydro step at \eur62 per MWh, and its water value is \eur55, so the markup
+is \eur7. In 4 of the 40 simulated hours this step sets the price:
+
+\begin{center}
+\begin{tabular}{ccc}
+\toprule
+draw & firm's net position $n$ (MW) & rivals' slope $s$ (MW per \eur) \\
+\midrule
+1 & 300 & 100 \\
+2 & 200 & 50 \\
+3 & 100 & 50 \\
+4 & 200 & 200 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent The pooled incentive is $\Xt = (300+200+100+200)/(100+50+50+200) = 800/400 =
+\eur2$. A price-taker would offer at \eur55 (markup 0); a firm exercising full market power
+would offer at \eur57 (markup $\Xt$). The parameter $\beta$ is the share of $\Xt$ that
+appears in markups, across many steps.
+
+\section{The model}
+
+\paragraph{Setting.} Firm $f$ submits a step curve for hour $H$ before it knows its residual
+demand. That uncertainty is represented by $R=40$ equally likely draws $r=1,\dots,R$ of the
+rivals' curve (Section~\ref{sec:data}). Let $RD_r(p)$ be $f$'s residual demand in draw $r$:
+market demand minus rivals' supply at price $p$. At the clearing price $p_r^*$, $f$'s net
+position (sales minus purchases, exposed volume only) is
+\[
+  n_r = RD_r(p_r^*),
+\]
+and the slope of its residual demand is
+\[
+  s_r = \lvert RD_r'(p_r^*)\rvert \approx
+  \frac{\text{rivals' MW offered within } \pm h \text{ of } p_r^*}{2h}, \qquad h = \eur5.
+\]
+
+\paragraph{The draws.} Take $H$ = 20:00 on Tuesday 14 March 2023. The firm bids at noon on
+13 March without knowing how rivals will bid. The candidates are the 20:00 hour of each day
+from 14 February to 11 April, excluding 14 March itself: 56 evenings. Of these, the 40 whose
+forecast of net load (REE's D$-1$ demand forecast minus its wind and solar forecasts) is
+nearest 14 March's are kept. In each kept evening the market's real curves are taken, $f$'s
+own offers removed, and the rest shifted sideways by the difference in forecasts:
+\[
+  \Delta = (1-d_f)\,\Delta F_{\text{demand}} - (1-w_f)\,\Delta F_{\text{wind}} - (1-s_f)\,\Delta F_{\text{solar}},
+\]
+with $d_f$, $w_f$, $s_f$ the firm's shares of buy offers, wind and solar. $f$'s actual curve for
+14 March is then cleared against each of the 40 rival curves. The idea is that how rivals
+bid on similar evenings stands in for $f$'s uncertainty about how they will bid on this one.
+Its weakness: the spread across evenings mixes true uncertainty with real changes between
+days (a move in the gas price from 9 to 14 March), so it may overstate that uncertainty.
+
+\paragraph{One step.} Step $k$ of unit $u$ is offered at price $q_k$; the unit's marginal
+(opportunity) cost is $c_k$. Let
+\[
+  M_k = \{\, r : p_r^* = q_k \,\}
+\]
+be the draws in which step $k$ sets the price. In the other draws a small change in $q_k$
+does not move the price, so it does not move profit.
+
+\paragraph{First-order condition.} In a draw $r \in M_k$, profit as a function of the price
+is $\pi_r(p) = (p - c_k)\,RD_r(p)$ near $p=q_k$, plus terms that do not depend on $p$. So
+\[
+  \pi_r'(q_k) = RD_r(q_k) + (q_k - c_k)\,RD_r'(q_k) = n_r - (q_k - c_k)\,s_r .
+\]
+Raising the price by one euro earns one euro on each of the $n_r$ net MW and loses the
+margin $q_k - c_k$ on the $s_r$ MW that rivals take. The step's price is optimal in
+expectation when
+\[
+  \sum_{r \in M_k} \bigl[\, n_r - (q_k - c_k)\, s_r \,\bigr] = 0
+  \quad\Longleftrightarrow\quad
+  q_k - c_k = \frac{\sum_{r \in M_k} n_r}{\sum_{r \in M_k} s_r} \equiv \Xt_k .
+\]
+This is the condition of Wolak (2007), Kastl (2011) and Reguant (2014). $\Xt_k$ is a ratio of
+sums, not a mean of the ratios $n_r/s_r$.
+
+\paragraph{Conduct.} Nesting price-taking ($\beta=0$) and full market power ($\beta=1$):
+\begin{equation}\label{eq:est}
+  y_k \equiv q_k - c_k = \beta\,\Xt_k + \alpha_{u,m} + \varepsilon_k ,
+\end{equation}
+where $\alpha_{u,m}$ is a unit $\times$ month fixed effect (unit $\times$ day in some rows) and
+$\varepsilon_k$ is everything unobserved, including any error in $c_k$. Observations are steps
+that set the price in at least one draw ($\lvert M_k\rvert > 0$), weighted by $\lvert M_k
+\rvert$, with a mean slope $\sum_{M_k} s_r / \lvert M_k\rvert$ of at least 20 MW per \eur.
+For hydro, $c_k = \lambda^*_{30s}$, the water value, and $y_k$ is \code{gap30}; with unit
+$\times$ day effects the daily cost is absorbed and $y_k$ is the offer price.
+
+\section{Why \texorpdfstring{$\Xt$}{X} needs an instrument}
+
+$\Xt_k$ is built on the firm's own curve. Both $M_k$ (in which draws step $k$ sets the price)
+and $n_r$ (the firm's position there) depend on the firm's own offer prices, and those
+contain $\varepsilon$. A step priced high because its true cost is high sets the price in
+different, higher-priced draws than a step priced low. So $\operatorname{Cov}(\Xt_k,
+\varepsilon_k) \neq 0$, and least squares on \eqref{eq:est} is biased.
+
+\section{The at-cost instrument \texorpdfstring{$Z^b$}{Zb}}
+
+\paragraph{Counterfactual curve.} Move every one of $f$'s storage and pumped-storage hydro
+steps priced above \eur1 to its unit's water value, $q_j \to c_j$, and leave every other
+offer as submitted, including $f$'s own non-hydro offers. Re-clear each draw against the
+same rivals' curves, giving $\tilde p_r$, $\tilde n_r$ and $\tilde s_r$.
+
+\paragraph{Cost point and near draws.} Let $\bar c_d$ be the median water value across hydro
+units on day $d$, and $N_k$ the 5 draws whose $\tilde p_r$ is nearest $\bar c_d$. Then
+\[
+  Z^b_k = \frac{\sum_{r \in N_k} \tilde n_r}{\sum_{r \in N_k} \tilde s_r},
+\]
+defined when $\sum_{N_k} \tilde s_r / 5$ is at least 20 MW per \eur. It is $\Xt$ evaluated
+where the firm is a price-taker in its hydro, that is, at $\varepsilon = 0$: the
+approximation to optimal instruments of Berry, Levinsohn and Pakes (1999). Using the class
+median $\bar c_d$ rather than the unit's own $c_k$ keeps an error in one unit's cost out of
+the instrument; $Z^c$ uses $c_k$ itself.
+
+\begin{assumption}[Exclusion]
+$\E[\varepsilon_k \mid Z^b_k, \alpha_{u,m}] = 0$.
+\end{assumption}
+
+\noindent $Z^b$ contains neither $q_k$ nor $c_k$. It moves with rivals' curves, the forecasts
+that select and shift the draws, $f$'s non-hydro offers and $\bar c_d$. Relevance:
+$\operatorname{corr}(\Xt, Z^b) = 0.44$, first-stage $F$ about 90 to 410 across specifications.
+
+\paragraph{What would violate it.}
+\begin{enumerate}
+  \item The unobserved cost moves with the shape of rivals' curves: a firm values its water
+    more on days when rivals' supply near the price is thin. The planted test
+    (\code{--sim-scale}: price-takers at $m_f\lambda^*$, with $m_f$ each firm's ratio of
+    offer to $\lambda^*$) is one check; it moves $\beta$ by $-0.01$ to $-0.05$.
+  \item $f$'s own non-hydro offers are kept as submitted, so $Z^b$ is not wholly free of
+    $f$'s choices.
+\end{enumerate}
+
+\paragraph{A wrong cost level does not bias $\beta$.} If $c_k = c_k^{\text{true}} +
+\delta_{u,m}$, the error is constant within a unit-month and is absorbed by $\alpha_{u,m}$. For
+the same reason the test cannot confirm the cost level. That rests on separate checks:
+EDP's revealed water value is within 6\% of $\lambda^*$.
+
+\section{The selection control}
+
+A step enters the sample only if some draw's price reaches it, so the kept steps' markups
+rise with how far the hour's prices sit above the unit's cost, and the instruments move with
+that too. Let $\bar{\tilde p}_k$ and $\sigma_k$ be the mean and standard deviation of the
+draws' prices on the at-cost curve, and
+\[
+  P^{\text{rel}}_k = \bar{\tilde p}_k - c_k .
+\]
+The corrected specification gives each unit $i$ its own slope:
+\[
+  y_k = \beta\,\Xt_k + \gamma_i\,P^{\text{rel}}_k + \alpha_{u,m} + \varepsilon_k ,
+\]
+with $\Xt_k$ instrumented by $Z^b_k$. The variants add $\bigl(P^{\text{rel}}_k\bigr)^2/100$ or
+$\sigma_k$, each also with a slope per unit; \code{none} drops the control. The draws' prices
+are taken on the at-cost curve, so the firm's own offers do not enter the control either.
+
+\section{The null band}
+
+\paragraph{Simulated price-takers.} For seed $s$, replace $f$'s hydro steps by $c_j +
+\eta_j^{(s)}$, where $\eta^{(s)}$ is the unit's own markups reshuffled, which ignores $f$'s
+stake in the price. Then $\beta = 0$ by construction. Rebuild $\Xt$, $Z^b$ and the sample on
+the same draws and estimate $\hat\beta^{(s)}$.
+
+\paragraph{Reading rule} (fixed 2026-10-08, before the actual offers were read). With the
+\code{level} control,
+\[
+  B = \Bigl[\, \min_{s \ge 1} \hat\beta^{(s)},\ \max_{s \ge 1} \hat\beta^{(s)} \,\Bigr].
+\]
+The actual offers ($s=0$) differ from price-takers only if their Anderson--Rubin 95\% set
+does not meet $B$. Full market power is rejected if 1 lies outside that set. More seeds can
+only widen $B$, so a ``differs'' on two seeds is provisional; seeds 3 to 10 are the next run.
+
+\section{Where each symbol comes from}\label{sec:data}
+
+\begin{center}
+\small
+\begin{tabular}{>{\raggedright}p{2.6cm} >{\raggedright}p{6.4cm} >{\raggedright\arraybackslash}p{5.2cm}}
+\toprule
+symbol & data & file or code \\
+\midrule
+$q_k$, $f$'s curve & OMIE day-ahead bid curves (\code{curva\_pbc\_uof}); the effective curve: accepted rows below $p^*$, offered rows at and above it & \code{step\_curves.py} $\to$ \code{own\_}, \code{market\_YYYYMM} \\
+$f$: whose units & OMIE unit listings with ownership shares, dated & \code{lib/unit\_ownership.py}, \code{owner\_groups.parquet} \\
+draws $r$ & 40 hours at the same clock hour within $\pm 28$ days, nearest in REE's D$-1$ forecast of net load (ESIOS 1775, 1777, 1779), shifted to $H$'s forecasts & \code{step\_engine.py} \\
+$n_r$ & $f$'s exposed sales minus purchases at $p_r^*$; regulated pass-through suppliers excluded & \code{lib/omie\_owner.py} \\
+$s_r$ & rivals' MW within $\pm$\eur5 of $p_r^*$, over \eur10; undefined below 5 MW per \eur & \code{step\_engine.py} \\
+$c_k$, hydro & $\lambda^*_{30s}$: OMIP forwards $\times$ last year's hourly shape, the unit's running share, MITECO or SNIRH reservoir fill; known at D$-2$ & \code{hydro\_cost\_daily.parquet} \\
+$c_k$, thermal & MIBGAS gas and EUA carbon (coal: API2 over the ECB rate) divided by JRC efficiency; prices final at noon on D$-1$ & \code{implied\_marginal\_\allowbreak cost\_daily.parquet}, \code{\_bid} columns \\
+$\sum_{M_k} n_r$, $\sum_{M_k} s_r$, $\lvert M_k\rvert$ & & \code{hmoments\_YYYYMM}: \code{m\_sn}, \code{m\_s}, \code{m\_n} \\
+$\sum_{N_k} \tilde n_r$, $\sum_{N_k} \tilde s_r$ & & \code{hcompcost\_YYYYMM}: \code{kb\_sn}, \code{kb\_s} \\
+$\bar{\tilde p}_k$, $\sigma_k$ & & \code{hcompcostprice\_YYYYMM}: \code{cp\_mean}, \code{cp\_sd} \\
+$\hat\beta^{(s)}$ inputs & simulated price-takers, seeds 1--3 & \code{hsim}$s$\code{\_moments}, \code{hsim}$s$\code{\_units} \\
+planted test & price-takers at $m_f \lambda^*$ & \code{hsimw1\_*} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Thermal uses the same caches without the \code{h} prefix, with $f$'s gas and coal
+steps in place of its hydro steps.
+
+\paragraph{What the October rebuild changes.} Only the membership of $f$. ADOURO's Douro dams
+are Movhera's, not EDP's, from 2020-12-17 to 2021-09-08, and Castejón's represented units are
+TotalEnergies', not EDP's, from February 2024 to January 2025. In those months the own curves
+of EDP, Movhera and TotalEnergies change, and with them $n_r$, $M_k$, the rivals' curves,
+$\Xt$, $Z^b$ and $P^{\text{rel}}$. Every other firm's rows were checked to be identical. The
+costs and the formulas above are unchanged.
+
+\end{document}

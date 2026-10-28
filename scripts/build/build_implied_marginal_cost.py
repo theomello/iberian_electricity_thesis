@@ -109,6 +109,33 @@ cycles; Sines and Pego coal, closed in 2021). They are valued at the MIBGAS-ES
 index like Spain's, and the cap applies to them too: RDL 10/2022 and Portugal's
 Decreto-Lei 33/2022 set one mechanism for MIBEL.
 
+THE SUBSIDY, AND WHY THE "CAPPED" COLUMNS ARE SUPERSEDED (2026-10-28)
+
+The mechanism did not cap the gas price a plant may bid on. It paid every eligible
+plant -- gas, coal and unregulated CHP alike -- the same subsidy per MWh of electricity
+produced from energy offered to the market:
+
+    Y_d = max(0, PGN_d - PRGN_d) / 0.55
+
+with 0.55 a fixed efficiency written into the decree, not the plant's own. Source in
+text: the Commission's approval, SA.102454/SA.102569, C(2022) 3942, 8 June 2022, recital
+(36) for the formula, (39) for "the same amount of compensation, regardless of their
+input fuel or production costs", (24) and (29) for coal (`papers/`; the BOE prints the
+formula as an image). So a plant's cost under the mechanism is its own cost minus Y_d:
+`subsidy_eur_mwh` and `marginal_cost_subsidised_eur_mwh`, with `_bid` twins on the
+MIBGAS index known at 12:00 on D-1. They apply to coal too, which the capped columns
+left uncapped.
+
+The `marginal_cost_capped_*` columns (gas at min(PGN, PRGN) over the plant's own
+efficiency) are kept unchanged so that earlier results reproduce, but they are not the
+decree's rule: they differ from the subsidised cost by (PGN - PRGN)(1/eff - 1/0.55),
+about 13 EUR/MWh for an efficiency of 0.52 in August 2022, and they miss coal entirely.
+Use the subsidised columns for anything new.
+
+PGN here is MIBGAS's index for the delivery day (`mibgas_es_eur_mwh`), which averages
+every session for that gas day; the decree's PGN is the D+1 product's weighted price on
+the day-ahead session. The two differ by intraday trading on the gas day.
+
 STILL NOT IN THE FORMULA AT ALL
 
 O&M, water and startup-amortisation costs; part-load efficiency (every
@@ -166,6 +193,7 @@ COAL_EMISSION_FACTOR_TCO2_PER_MWH_TH = 0.3406  # EU ETS MRR Annex VI, other bitu
 GAS_CAP_START = pd.Timestamp("2022-06-15")
 GAS_CAP_END = pd.Timestamp("2023-12-31")
 GAS_CAP_INITIAL = 40.0
+SUBSIDY_EFFICIENCY = 0.55              # the decree's fixed conversion, EC recital (36)
 GAS_CAP_MONTHLY = {                      # from January 2023, article 3
     "2023-01": 45.0, "2023-02": 50.0, "2023-03": 55.0, "2023-04": 56.1,
     "2023-05": 57.2, "2023-06": 58.3, "2023-07": 59.4, "2023-08": 60.6,
@@ -328,6 +356,23 @@ def build() -> pd.DataFrame:
                                    COAL_EMISSION_FACTOR_TCO2_PER_MWH_TH, "coal")
 
     panel = pd.concat([gas_panel, coal_panel], ignore_index=True)
+
+    # The decree's subsidy: the same EUR per MWh for every eligible plant on a day, gas
+    # and coal alike, zero outside the mechanism's window or when PGN <= PRGN.
+    y = known_at_bidding(d["gas"].dropna(subset=["mibgas_es_eur_mwh"]), d["gas"],
+                         ["mibgas_es_eur_mwh"])
+    prgn = gas_reference_price(y.date)
+    y["subsidy_eur_mwh"] = ((y.mibgas_es_eur_mwh - prgn).clip(lower=0) / SUBSIDY_EFFICIENCY).fillna(0.0)
+    y["subsidy_bid_eur_mwh"] = ((y.mibgas_es_eur_mwh_bid - prgn).clip(lower=0)
+                                / SUBSIDY_EFFICIENCY).where(y.mibgas_es_eur_mwh_bid.notna() | prgn.isna())
+    y.loc[prgn.isna(), "subsidy_bid_eur_mwh"] = 0.0
+    panel = panel.merge(y[["date", "subsidy_eur_mwh", "subsidy_bid_eur_mwh"]], on="date", how="left")
+    # A coal day with no MIBGAS row (the series' last day) is outside the window: no subsidy.
+    outside = ~panel.date.between(GAS_CAP_START, GAS_CAP_END)
+    panel.loc[outside, ["subsidy_eur_mwh", "subsidy_bid_eur_mwh"]] = 0.0
+    panel["marginal_cost_subsidised_eur_mwh"] = panel.marginal_cost_eur_mwh - panel.subsidy_eur_mwh
+    panel["marginal_cost_subsidised_bid_eur_mwh"] = (panel.marginal_cost_bid_eur_mwh
+                                                     - panel.subsidy_bid_eur_mwh)
     panel = panel.sort_values(["fuel", "unit", "date"]).reset_index(drop=True)
     return panel
 
@@ -390,6 +435,14 @@ def main() -> int:
         # ceiling -- the generic-efficiency subset's extremes are expected,
         # see the printed caveat above.
         assert specific.marginal_cost_eur_mwh.max() < 500, "plant-specific cost ceiling looks implausibly high"
+        live = panel[panel.date.between(GAS_CAP_START, GAS_CAP_END)]
+        assert (panel.loc[~panel.date.between(GAS_CAP_START, GAS_CAP_END), "subsidy_eur_mwh"] == 0).all(), \
+            "subsidy outside the mechanism's window"
+        per_day = live.groupby("date").subsidy_eur_mwh.nunique()
+        assert (per_day == 1).all(), "the subsidy must be one value per day for gas and coal alike"
+        print(f"  subsidy: mean {live.drop_duplicates('date').subsidy_eur_mwh.mean():.2f} EUR/MWh over "
+              f"the window, last positive day "
+              f"{live[live.subsidy_eur_mwh > 0].date.max().date()}")
         print("\n  --verify passed")
     return 0
 

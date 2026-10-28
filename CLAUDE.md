@@ -117,6 +117,7 @@ scripts/
 | `fetch/fetch_rte_eco2mix.py` | RTE éCO2mix national (ODRÉ) | no | `data/rte/eco2mix_national.parquet` |
 | `fetch/fetch_gme_offers.py` | GME, Italian day-ahead public offers (`OffertePubbliche`) | no, but GME's terms | `data/gme/offers/parquet/offers_YYYYMMDD.parquet` |
 | `fetch/fetch_gme_gas_prices.py` | GME, Italian day-ahead gas market (MGP-GAS, PSV) | no, but GME's terms | `data/gme/gas/gme_mgp_gas_daily.parquet` |
+| `build/build_italy_marginal_cost.py` | JRC Italy + PSV + EUA | no | `data/jrc_ppdb/italy_implied_marginal_cost_daily.parquet` |
 | `build/build_france_link.py` | OMIE interconnection + Ember + RTE | no | `outputs/tables/france_link_hours.parquet` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
@@ -1175,7 +1176,15 @@ capped**. Valuing a capped plant at the market price makes compliance look like
 strategic markdown — it put 53.2% of 2022 offers below cost with a negative
 median markup (see `analysis/markdown_contract_test.py`).
 
-**Coal keeps its uncapped cost and `cap_applies` is False.** Coal plants were
+**Superseded 2026-10-28 by the decree's own rule: use `marginal_cost_subsidised_*`.** The
+mechanism paid every eligible plant, gas and coal alike, the same subsidy per MWh, `subsidy_eur_mwh` =
+max(0, PGN − PRGN) / 0.55, with 0.55 fixed in the decree (Commission approval C(2022) 3942, recitals
+(36), (39); `docs/gas-cap-sources.md`). The subsidised cost is own cost minus it, with a `_bid` twin. It
+is positive on 243 days, 2022-06-15 → 2023-02-25, at most €336/MWh. August 2022 medians: gas €306 →
+€113 (the capped column gave €108), coal €232 → €36. The capped columns below are kept so that earlier
+results reproduce.
+
+**Coal keeps its uncapped cost and `cap_applies` is False** in the capped columns — wrong, as above. Coal plants were
 inside the mechanism, but the decree defines the adjustment on the gas price and
 converting it to a coal plant's fuel cost needs a consumption factor the decree
 does not give. Not invented here.
@@ -1556,6 +1565,14 @@ product (`MGP-YYYY-MM-DD`): volume-weighted mean, GME's reference price, auction
 offer for day D use sessions up to D-2**, as the Spanish `_bid` costs do. Against MIBGAS:
 correlation 0.97, yearly means within €1–3 except in the crisis (2022: PSV 124, MIBGAS 99;
 August 2022: 232 against 164), so compare offers net of each plant's own cost, not levels.
+**`data/jrc_ppdb/italy_implied_marginal_cost_daily.parquet`** (`build/build_italy_marginal_cost.py`):
+Spain's cost rule on Italian gas units, PSV in place of MIBGAS, same EUA and emission factor, `_bid`
+twins on prices final at 12:00 on D-1. 102 units with an efficiency (82 plant-specific), 2018-01-02 →
+2026-08-23; median plant-specific cost €239.7/MWh in 2022, €111.8 in 2023. On every GME day **46–57
+plant-specific units of 100 MW or more both offer and have a bid-time cost** (median 57), 67 on at least
+half the days. Two Termini Imerese units have an efficiency of 0.33 and a cost of €1,008 on 2022-08-26:
+real arithmetic.
+
 In the download API the gas prices are `Settore=SintesiScambio` (`Prezzi` answers HTTP 417
 `InvalidFilter`), with the gas page's own `ModuleId`/`TabId` headers.
 

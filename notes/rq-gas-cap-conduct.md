@@ -1,5 +1,13 @@
 # RQ structured for the supervisor meeting — the gas cap and firm conduct
 
+> **2026-10-28.** Two corrections, both from the Commission's approval of the mechanism
+> (`docs/gas-cap-sources.md`). (1) The mechanism did not cap the gas price used in bids: it paid every
+> eligible plant, gas and coal alike, the same subsidy per MWh, Y = (PGN − PRGN) / 0.55. Costs under it
+> are now `marginal_cost_subsidised_*`. (2) "No control group needed" did not survive its own test
+> (9481fc2: not identified, since Y is common to all units on a day). The design that replaces this
+> note's identification uses Italian gas plants as the control:
+> `docs/specs/2026-10-28-gas-cap-conduct-design.md`.
+
 Written 2026-08-14, for the meeting on the 15th. This is the candidate I would
 take. The alternative is set out at the bottom, with the reasons it is weaker.
 

@@ -12,8 +12,9 @@ Castejón's represented units (2024-02 → 2025-01) away from EDP. §1 – §16 
 +0.31; 2024 – 2025 +0.19 [0.08, 0.33], was +0.20), thermal does not depart, and full market
 power is rejected. What changes: the 2019 – 2021H1 departure now rests on Iberdrola, 2024H2 no
 longer departs, and neither the near-bound cells (§11) nor the buyer side (§15.2) departs.
-Hydro seeds 3 – 10 are being added (`chain3.sh`); readings resting on two or three seeds may
-still change.
+**Ten seeds, 2026-10-28 (§18):** 2019 – 2021H1 stands, with its set clearing the ten-seed band
+by 0.13. 2024 – 2025 no longer differs, because one seed of ten reaches its set, and after the
+cap no half-year departs.
 
 ## 1. The idea, with an example
 
@@ -806,3 +807,83 @@ Full market power is rejected for hydro with every instrument.
 **Not rebuilt here:** the engine diagnostics and correlations of §1 and §3 (from logs), the
 water-value multipliers m of §9 (`rq-water-value-forward.md` §5.5, which counts `ADOURO` as
 EDP's over its window), and the counterfactual of §12 (`rq-counterfactual-hydro.md`).
+
+## 18. Ten seeds (2026-10-28)
+
+`chain3.sh` in `.superpowers/sdd/2026-10-22-sim-rebuild/` simulated hydro seeds 3 – 10 over all
+81 months (`step_engine.py --kind hydro --sim 3 … 10`). It then re-estimated every hydro table of
+this note on seeds 1 – 10, recombined them, and reran the decomposition and the size. The
+comparison of two seeds against ten is in `compare_seeds.md` beside it, and the two-seed tables
+are in git at 1c8755d. Thermal stays on two seeds (three in its two doubtful periods, §6).
+
+**The rule is unchanged**: a cell differs when its actual AR set misses the band, the min–max
+over seeds. Ten draws spread wider than two, so a verdict can only move toward "does not differ",
+and an equivalence (§7) can only be lost. Every change below goes that way. The actual estimates
+and their sets do not move, so β = 1 stays rejected wherever it was.
+
+| specification, control `level` | actual | band, 2 seeds | band, 10 seeds | seeds' mean (sd) | differs |
+|---|---|---|---|---|---|
+| unit × month \| Zb | +0.06 [−0.05, 0.15] | +0.01 … +0.07 | −0.00 … +0.09 | +0.04 (0.03) | no |
+| unit × day \| Zb | −0.23 [−0.45, −0.06] | −0.07 … −0.06 | −0.15 … −0.04 | −0.09 (0.04) | no |
+| reactor outages | +0.11 [−0.41, 0.48] | −0.20 … +0.26 | −0.30 … +0.40 | +0.01 (0.25) | no |
+| 2019 – 2021H1 | +0.25 [0.15, 0.34] | −0.03 … −0.02 | −0.12 … +0.02 | −0.04 (0.04) | **yes** |
+| 2021H2 – 2023 | +0.00 [−0.13, 0.13] | +0.03 … +0.09 | +0.00 … +0.10 | +0.05 (0.03) | no |
+| 2024 – 2025-09 | +0.19 [0.08, 0.33] | −0.04 … +0.04 (3 seeds) | −0.06 … +0.09 | +0.02 (0.05) | **no** (was yes) |
+
+- **2019 – 2021H1 stands, more firmly than two seeds showed.** §17 noted that the two seeds
+  nearly coincided (−0.032, −0.022), so the band was narrow by chance. Ten seeds spread from
+  −0.12 to +0.02, and the set's lower end still clears the top seed by 0.13, about three seed
+  standard deviations. Gap +0.29, bias-adjusted range [0.13, 0.46].
+- **2024 – 2025 no longer differs.** One seed of ten (seed 10, +0.091) reaches past the set's
+  lower end (+0.08). The next is +0.06, and the other eight sit at or below +0.04. Under the rule
+  this is "does not differ", narrowly. Gap +0.17 [−0.01, 0.39].
+- **2021H2 – 2023 is no longer accepted within δ = 0.1** (range −0.23 … +0.13). It neither
+  departs nor is shown to be price-taking, as before the rebuild. Unit × day is still within δ
+  (upper end +0.09).
+
+**Readings that change, by section.** A gap is the actual minus the seeds' mean, given with its
+bias-adjusted range, as in §14 – §16.
+
+- **§8, which firms:** 2019 – 2021H1 still differs without each firm except Iberdrola. In
+  2024 – 2025, only the sample without EDP differs (+0.25 [0.11, 0.41], against −0.01 … +0.10).
+  Without Movhera, Naturgy or Repsol it no longer differs, like the full sample.
+- **§10, part of the day:** in 2019 – 2021H1 all four blocks still differ. In 2024 – 2025 only
+  06 – 11 h does (+0.19 [0.09, 0.30], against −0.03 … +0.09); 18 – 23 h no longer differs.
+- **§11, reservoir bounds:** the pooled near-bound cell no longer differs (+0.38 [0.12, 0.72],
+  against +0.00 … +0.29). In 2019 – 2021H1 the with-fill and interior cells still differ.
+- **§12, size:**
+  - 2019 – 2021H1: the markup on price-setting steps is €0.98 [0.44, 1.53], was €0.93 (Iberdrola
+    €1.49, EDP €0.86). The effect on the price is −€0.01, nil.
+  - 2024 – 2025: €2.08 [−0.13, 4.66] on the steps and +€0.08 [−0.005, 0.17] on the price. Both
+    ranges now reach zero.
+- **§13, pumped against conventional:** in 2024 – 2025, pumped storage (Tâmega in) no longer
+  differs, so no kind differs there. Conventional storage still differs in 2019 – 2021H1.
+- **§14, half-years:** only **2020H2 (+0.30 [0.07, 0.52]) and 2021H1 (+0.35 [0.07, 0.65])**
+  differ. These no longer differ:
+  - 2019H1, +0.24 [−0.01, 0.47];
+  - 2020H1, +0.25 [−0.01, 0.49];
+  - 2025H1, +0.24 [−0.17, 0.82].
+
+  **After the cap no half-year departs.** 2022H2 and 2023H2 are no longer within δ.
+- **§15.2, the fade by condition:** no cell differs in either period. The pooled departure cells
+  (side, level) touch their bands (+0.20 [0.10, 0.31], against −0.02 … +0.11). Four crisis cells
+  are no longer within δ: level overall, level at λ* ≥ 100, side overall and seller side. By the
+  rule, level and side now "explain" the fade and fill does not. The rule passes only because
+  the ranges widened, so this says little.
+- **§16, side by half-year:** three cells differ: seller 2020H1 (+0.53 [0.09, 0.95]), seller
+  2020H2 (+0.38 [0.03, 0.69]) and buyer 2024H2 (+0.26 [0.01, 0.56]). Seller 2019H1, buyer
+  2022H1 and seller 2022H2 no longer differ. Seller 2022H2 was the one cell that rejected
+  price-taking from below (§16), so that finding is gone.
+- **§9 and §15.1:** no change.
+
+**Reading.** The hydro departure from price-taking is one episode, from 2019 to mid-2021. It sits
+on the net sellers' side in 2020 and rests on Iberdrola. After the gas cap nothing is
+established:
+- 2024 – 2025 misses on one seed of ten;
+- no half-year or kind of storage departs on its own;
+- the only cells that still depart are the morning block (06 – 11 h), the sample without EDP,
+  and buyers in 2024H2 (§16).
+
+The fixed step (`rq-fixed-step.md`, ten seeds) reads the earlier periods the other way round. It
+finds no departure in 2019 – 2021H1 (its seller 2020H2 departure went at ten seeds), and a
+departure in 2023 that is Iberdrola's. Neither design finds one in 2024 – 2025.

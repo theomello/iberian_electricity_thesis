@@ -1902,6 +1902,7 @@ which names the old limits as €0 and €180); the first negative sell offer is
 offer above €180.30 on 2021-07-10. **Any count of offers far above cost or below zero is zero by rule
 before that date**: read a rise in high-priced blocks across mid-2021 as the limits moving, not conduct.
 The clearing price itself never came near either limit (Spanish maximum €700, minimum −€15).
+**The comparison countries' limits did not move the same way** (checked 2026-10-28, offered sell side): GME's Italian offers already reach €3,000 in June 2021 (11% of rows above €180.30), the ceiling rises to €4,000 from May 2022 and the floor goes €0 → −€500 in September 2021; Iberia's ceiling stays €3,000 through 2022 (floor −€300 in practice). British balancing offers run to £9,999 throughout, no change. So only Iberia gained room to post high prices inside the gas-cap comparison's pre-period.
 
 ### The 15-minute switch on 2025-10-01
 OMIE moved from hourly to **15-minute market time units** on 2025-10-01 (the

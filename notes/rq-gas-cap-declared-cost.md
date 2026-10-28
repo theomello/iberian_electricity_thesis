@@ -23,6 +23,17 @@ unit-hours priced far above cost in mid-2021" was a rule, not restraint.
 - **The blocks rarely bind**: before the cap the Spanish price reached €450 in 48 of 6,168 hours from
   2021-10-01 (one hour at €700). The high-priced blocks mostly price capacity that would not run anyway.
 
+**Italy and Britain, same check (2026-10-28).** Offered sell prices, a day a week:
+- **Italy (GME)**: ceiling already €3,000 in June 2021, with 11% of offer rows above €180.30 then; €4,000 from
+  May 2022; floor €0 → −€500 in September 2021. The share of rows above €180.30 rises from 11% (mid-2021) to
+  31–39% (October 2021 – June 2022) and falls back to 9% by June 2023, so Italy has its own swing, inside
+  limits that never bound.
+- **Britain (balancing offers)**: up to £9,999 throughout; the 90th percentile swings (£729 in June 2021,
+  £3,950 in September 2021, £1,000 in December 2021, £4,000 in June 2022), with no rule change.
+- So the €180.30 ceiling is an Iberia-only break, and only at the very start of the pre-period (to
+  2021-07-06). It explains why Iberia's high blocks start at zero, not their rise from October 2021, which
+  Italy shares in part.
+
 What it changes: the swing that sank the Italian and British comparisons, and that the drift model of
 §10 would explain, is partly the new room to post high prices, not a change in conduct. Recorded as a
 trap in CLAUDE.md and as a correction in the design's §6 and §10.

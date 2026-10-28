@@ -238,6 +238,96 @@ between a cheap minimum-load block, a near-cost band and withholding blocks in w
 shared with Italy captures. Next (to be approved): the sharp break at 2022-06-15 and the monthly Design B,
 within Iberia. Weekly gaps in `outputs/tables/gas_cap_ife_att_weekly.csv`.
 
+**Step 2b — within Iberia: the sharp break at 2022-06-15 (specification fixed 2026-10-28, before
+running).** The subsidy starts at one moment for every Iberian plant: the bid-time Y is €71/MWh on the first
+delivery day and €95–140 within the week (mean €106 over the first 7 days, €124 on delivery prices): the
+offers of 14 June (delivery 15 June) were the first made under it. Nothing else in the offer problem
+jumps that day, so the change in offers across the break, net of the change in own gross cost, measures
+how much of the subsidy went into them.
+- **Statistic**: for unit i, J_i = [mean of (offer − gross cost) over the k delivery days from 15 June] −
+  [the same over the k days to 14 June]. Bidding at cost gives J = −Ȳ (the offer falls by the subsidy);
+  ignoring it gives J = 0. So ρ_break = −J̄ / Ȳ, with Ȳ the bid-time subsidy over the k days after.
+- **Outcomes**: p_band (steps within ±€10 of the clearing price, the main one), p_mid, and run20 (MW
+  offered at or below net cost + €20, over K; for it the at-cost prediction is a rise).
+- **Bandwidth**: k = 7 days (main), 3 and 14 as checks. Same weekdays on both sides.
+- **Reference distribution (the stop rule)**: the same statistic at every day of the pre-period
+  (2021-06-15 → 2022-05-13, before the decree was published), giving the jump in (offer − gross cost)
+  that ordinary days produce. ρ_break is read only if the 2.5–97.5% range of those placebo jumps is
+  narrower than ±Ȳ/5 (about ±€21 at k = 7); otherwise the break is no sharper than an ordinary week and the
+  design stops. Inference on J̄: firm block bootstrap (resampling Iberian firms), and the placebo range.
+- **Threats**: the cap also lowered the Iberian price and raised exports to France the same day, so
+  residual demand moved with it. Offers that respond to that are conduct, not noise, but they mean
+  ρ_break is pass-through *at the new residual demand*. Anticipation: the decree was published
+  2022-05-14; the days 2022-05-14 → 06-14 are shown, not used as the pre-window.
+
+**Step 2c — within Iberia: monthly Design B (fixed 2026-10-28, before running).** Before the cap,
+monthly offers follow monthly gross cost one for one (slope 1.00, se 0.14; step 1d). Under the cap a
+bidder at cost follows the *net* cost (gross − Y), one who ignores the subsidy follows the gross.
+- **Regression**: o_im = α_i + β_g·c_im + β_n·(c_im − Y_m) + γ′X_m + ε, unit-month means 2021-06 →
+  2023-06; o = p_band (main) and p_mid; c the bid-time gross cost; X the monthly means of step 1c's
+  controls. Bidding at cost: (β_g, β_n) = (0, 1); ignoring the subsidy: (1, 0). ρ = β_n / (β_g + β_n).
+- **What separates the two**: the gap c − (c − Y) = Y, which is 0 in 15 months and runs to €336 in the
+  9 binding ones; and coal (Y is the same per MWh, but it is most of coal's cost), entered as a second
+  group with its own α_i.
+- **Stop rule**: the pre-period slope must stay at one in the estimating sample (β_g on months with
+  Y = 0, |β − 1| < 0.3), else the design's premise fails. Inference: firm block bootstrap.
+- **Threat, named**: Y is large exactly when gas was dearest, and step 1 showed that Iberian
+  withholding rises with the gas price. A slope on gross cost that is not linear at high gas loads onto
+  β_g. Check: the same regression with c entered in bins.
+
+**Steps 2b and 2c — result (2026-10-28, `analysis/gas_cap_within_iberia.py`,
+`outputs/tables/gas_cap_within_iberia.csv`; firm block bootstrap, 499).**
+
+*Correction to the specification above, made before reading the result*: for run20, measured
+against the net cost, bidding at cost predicts **no change** across the break and ignoring the
+subsidy a fall (not a rise, as written).
+
+*Found after running, and it changes the reading*: **p_band is the clearing price to within €10 by
+construction** (median |p_band − price| €4.4; monthly correlation with the price 0.99). So the
+p_band results measure how the Iberian **price** followed the subsidised cost — price pass-through,
+already measured by Haro Ruiz et al. — not how plants' own offers did. **p_mid is the conduct
+outcome**; the p_band rows are reported, not read as conduct.
+
+2b, the sharp break: **STOP on every variant.** Ordinary pre-period weeks move (offer − gross cost)
+by ±€35–130 (placebo 95% ranges), against a threshold of ±Ȳ/5 ≈ €16–25. Recorded anyway: at k = 7,
+J(p_mid) = −190 [−422, −67] against Ȳ = 106 (ρ 1.8); J(p_band) = −89 [−104, −41] (ρ 0.83, 12 units);
+run20 +0.02 [−0.04, +0.07]. The p_mid and p_band jumps lie outside the placebo range, so the break
+is unusual, but it is not clean enough to size ρ by the rule fixed in advance.
+
+2c, monthly Design B: **the premise passes** (slope on cost in the months with Y = 0: 1.05 for p_mid,
+0.89 for p_band).
+
+| outcome | spec | b_g (gross) | b_n (net) | ρ = b_n/(b_g+b_n) |
+|---|---|---|---|---|
+| p_mid | linear | −0.56 [−1.98, +0.39] | +1.51 [+0.25, +3.82] | 1.60 [0.48, 2.95] |
+| p_mid | controls | −0.04 [−0.38, +0.37] | +0.76 [+0.20, +1.46] | **1.06 [0.58, 1.90]** |
+| p_mid | cost bins | | +1.15 [+0.12, +3.03] | |
+| p_band (price) | controls | −0.03 [−0.12, +0.11] | +0.94 [+0.79, +1.14] | 1.04 [0.90, 1.16] |
+| p_band (price) | cost bins | | +0.63 [+0.47, +0.85] | |
+
+Gas and coal together give the same numbers (2 coal units). Reading: Iberian offers above minimum
+load followed the **net** cost, not the gross: ignoring the subsidy (ρ = 0) is rejected in every
+p_mid specification, and bidding at cost (ρ = 1) is not. The interval is wide (lower bound
+0.48–0.58), so keeping up to about half the subsidy is not ruled out. Identification here is
+before/after within Iberia, conditional on a cost slope estimated on the uncapped months, so it
+rests on that slope staying put at the crisis's high gas prices; the bins check is noisy (b_n
+0.12–3.03) and does not settle it.
+
+**Step 2d — Great Britain as a second comparison (data fetched 2026-10-28).** Great Britain was
+uncapped and is not coupled to Iberia (it left the European coupling on 2021-01-01). Its unit-level
+offers are balancing-mechanism offers (Elexon BOD, `fetch/fetch_elexon_bod.py`): prices to raise or
+lower output relative to the plant's own final physical notification (FPN), not day-ahead offers.
+Two analogues of the Iberian outcomes, fixed before looking:
+- **Running price**: the offer on the first band above FPN (pair 1) minus gross cost: what the plant
+  asks to run more.
+- **Willingness to run**: FPN over capacity, the share the plant chose to generate.
+Cost: (SAP gas + carbon)/efficiency (`fetch/fetch_ons_gas_sap.py`; JRC efficiencies join on
+National Grid's unit name). Carbon: UK ETS from 2021-05-19 plus the £18/t Carbon Price Support —
+**no free series yet**. Then step 1 (pre-trend, same placebos and thresholds) against Iberia.
+Known issue: in 2021–22 British balancing offers carried large premia for constraint reasons, which
+Ofgem pursued under the transmission constraint licence condition; the pre-trend test shows whether
+that drifts.
+
 **Step 2 — pass-through (earlier sketch).** m_i,h = α_i + δ_country×hour-of-day + δ_date + ρ̃·(Iberia_i × Y_d) + ε,
 where ρ̃ = 0 is full pass-through on the markup scale (ρ = 1 − ρ̃ on the offer scale). Date
 fixed effects take out the common European gas and carbon shocks. Also the binary version

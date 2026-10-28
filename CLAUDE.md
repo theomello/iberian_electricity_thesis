@@ -120,6 +120,8 @@ scripts/
 | `build/build_italy_marginal_cost.py` | JRC Italy + PSV + EUA | no | `data/jrc_ppdb/italy_implied_marginal_cost_daily.parquet` |
 | `fetch/fetch_italy_temperature.py` | Open-Meteo ERA5, 12 Italian cities | no | `data/weather/temperature_population_italy.parquet` |
 | `build/build_france_link.py` | OMIE interconnection + Ember + RTE | no | `outputs/tables/france_link_hours.parquet` |
+| `fetch/fetch_elexon_bod.py` | Elexon BMRS, balancing offers (BOD) and physical notifications (PN) per unit | no | `data/elexon/{bod,pn}/parquet/<unit>.parquet` |
+| `fetch/fetch_ons_gas_sap.py` | ONS, Great Britain gas System Average Price (daily) | no | `data/ons/gas_sap_daily.parquet` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
 `lib/config.py` loads tokens from a gitignored `.env`; `lib/regions.py` gives a
@@ -1576,6 +1578,24 @@ real arithmetic.
 
 In the download API the gas prices are `Settore=SintesiScambio` (`Prezzi` answers HTTP 417
 `InvalidFilter`), with the gas page's own `ModuleId`/`TabId` headers.
+
+### Great Britain — balancing offers per unit, gas price (2026-10-28)
+A second comparison for the gas-cap design, besides Italy: uncapped, and outside the European coupling
+since 2021-01-01. **Great Britain has no day-ahead pool**, so its unit-level offers are
+balancing-mechanism offers: `fetch/fetch_elexon_bod.py` (Elexon Insights API, free, no key, at most 7
+days per unit per request) keeps BOD, up to ten MW bands per half-hour relative to the plant's final
+physical notification with an offer (to raise output) and a bid (to lower it), and PN, the notified MW
+level itself. Window 2021-06-01 → 2023-06-30; units are the register's CCGT and COAL (`fuelType`,
+`/reference/bmunits/all`, a snapshot saved with its date: 71 units with an Elexon id). **JRC-PPDB-OPEN's
+`name_g` for British units is National Grid's unit name** (`PEMB-11`, `DAMC-1`), so efficiencies join
+exactly, as for Italy. A period can carry several PN segments (a ramp within the half-hour): the key is
+the segment start, not the period.
+
+Gas: `fetch/fetch_ons_gas_sap.py`, the ONS's daily System Average Price (National Gas Transmission's
+On-the-Day Commodity Market average), 2018-01-01 →, p/kWh ×10 = £/MWh; 2022 mean £71.2 against a
+published NBP average of about 200 p/therm (£68). NBP day-ahead quotes are not free. **Carbon is not on
+disk**: UK ETS allowances from 2021-05-19 (ICE auctions, no free series found) plus the £18/t Carbon
+Price Support.
 
 ### Eurostat NUTS 2021 regions — country and autonomous community of a coordinate
 `data/gisco/nuts2_iberia.parquet`, fetched 2026-10-05 by `fetch/fetch_gisco_nuts.py`:

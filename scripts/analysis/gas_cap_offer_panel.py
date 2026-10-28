@@ -61,11 +61,11 @@ BAND = 10.0          # EUR/MWh around the clearing price, for p_band
 QS = (0.25, 0.50, 0.75, 1.00)
 
 
-def iberia_steps() -> tuple[pd.DataFrame, pd.DataFrame]:
+def iberia_steps(fuel: str = "gas") -> tuple[pd.DataFrame, pd.DataFrame]:
     c = pd.read_parquet(DATA / "jrc_ppdb" / "implied_marginal_cost_daily.parquet",
                         columns=["unit", "date", "fuel", "eff_is_generic", "subsidy_bid_eur_mwh",
                                  "marginal_cost_bid_eur_mwh", "marginal_cost_subsidised_bid_eur_mwh"])
-    c = c[(c.fuel == "gas") & ~c.eff_is_generic & c.date.between(START, END)]
+    c = c[(c.fuel == fuel) & ~c.eff_is_generic & c.date.between(START, END)]
     units = sorted(c.unit.unique())
     parts = []
     for ym in pd.period_range(START, END, freq="M"):

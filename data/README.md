@@ -186,6 +186,17 @@ price (MGP-GAS, PSV), 2018-01 → 2026-10, raw monthly zips in `gas/raw/`. Re-fe
 GME's terms of use must be accepted first. Control group for the gas-cap design; the
 Italian units' efficiencies are in `jrc_ppdb/jrc_italy_units.parquet`. See CLAUDE.md.
 
+## `elexon/` — Great Britain: balancing offers and physical notifications
+
+`fetch_elexon_bod.py`. `raw/{bod,pn}/<unit>/<YYYYMMDD>.json.gz`: each 7-day answer as served;
+`{bod,pn}/parquet/<unit>.parquet`: de-duplicated rows per unit; `bmunits_<date>.parquet`: the unit
+register snapshot. Re-fetchable.
+
+## `ons/` — Great Britain gas price
+
+`fetch_ons_gas_sap.py`. `gas_sap_daily.parquet`: daily System Average Price, p/kWh and £/MWh;
+`raw/` keeps the ONS workbook.
+
 ## `entsoe/` — empty
 
 **Token-gated** and nothing fetched. The only series still missing anywhere in

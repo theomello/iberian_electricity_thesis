@@ -48,14 +48,16 @@ PLACEBOS = [pd.Timestamp("2022-01-01"), pd.Timestamp("2022-03-01")]
 MARGIN, RUN, MIN_DAYS, MIN_UNITS = 50.0, 20.0, 5, 25
 
 
-def panel() -> pd.DataFrame:
+def panel(margin: float | None = MARGIN) -> pd.DataFrame:
+    """Main sample; `margin=None` keeps every hour (no in-money condition)."""
     h = pd.read_parquet(PANEL, columns=["unit", "date", "period", "iberia", "zone", "firm", "cost", "cost_gross",
                                         "subsidy", "price", "run20", "run20_gross", "essential"])
     p = h.groupby(["zone", "date", "period"], as_index=False).price.first()
     p["date"] = p.date + pd.Timedelta(days=1)
     h = h.merge(p.rename(columns={"price": "price_lag"}), on=["zone", "date", "period"], how="left")
     h["firm"] = h.firm.fillna(h.unit)
-    h = h[~h.essential & h.cost.notna() & ((h.price_lag - h.cost) > MARGIN) & h.date.between(WIN0, END)]
+    inm = (h.price_lag - h.cost) > margin if margin is not None else True
+    h = h[~h.essential & h.cost.notna() & inm & h.date.between(WIN0, END)]
     h["w"] = h.date.dt.to_period("W").dt.start_time
     return h
 

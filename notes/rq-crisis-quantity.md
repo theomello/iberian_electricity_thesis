@@ -61,3 +61,34 @@ unchanged (their post windows, 23 and 15 weeks, bracket the 19 weeks).
 | run20_gross | 0.099 | 0.050 | 0.129 | fails |
 
 So B2 runs on **run20 only**, over the same five months; run20_gross is dropped from Q2.
+
+## B2. Pass-through against Italy (2026-10-28): STOP, the counterfactual fails after the subsidy
+
+`scripts/analysis/gas_cap_quantity_b2.py` → `outputs/tables/gas_cap_quantity_b2{,_weekly}.csv`. 49 Iberian and 44
+Italian units × 92 weeks; 19 high-subsidy weeks; 18 weeks after 2023-02-25. Xu's cross-validation picks r = 0
+(MSPE nearly flat across r = 0…5).
+
+| | estimate | 95% (firm block bootstrap, 10 Iberian / 12 Italian firms) |
+|---|---|---|
+| ATT, high-subsidy weeks | +0.025 | [−0.053, +0.118] |
+| ρ = 1 + ATT / 0.410 | 1.06 | [0.87, 1.29] |
+| **ATT after 2023-02-25 (should be ~0)** | **+0.134** | [+0.019, +0.197] |
+
+**Rule (fixed): the gap after the subsidy is outside ±0.05 → STOP.** It is +0.13 to +0.18 at every r = 0…5, so
+after the cap Iberian plants offer more capacity near cost than the Italian-built counterfactual predicts,
+with no subsidy to explain it. The same drift may sit inside the high-subsidy ATT, so ρ cannot be read off.
+For scale only, not a result: subtracting the after-gap would give ρ ≈ 0.73.
+
+Sensitivity (B, ATT high / after / ρ): r 1 +0.020 / +0.148 / 1.05; r 3 −0.015 / +0.153 / 0.96; r 5 −0.027 /
++0.168 / 0.93. Bai's θ on Iberia × high weeks −0.18 to +0.09, sign changing with r.
+
+Checks at r = 0 (point estimates): all hours ATT high +0.114, after −0.017; margin > €20 +0.066 / +0.058;
+pre-cap hour-of-day mix +0.056 / +0.132. **Only the all-hours sample passes the after-check**, which suggests the
+post-cap drift is partly which hours count as in the money in 2023 (prices fell, so the in-money sample shrinks
+and changes). Not tested.
+
+Ruling (builder's): check (c) reweights to the pre-cap **hour-of-day** mix only; the design said hour × month,
+but months before and after the cap do not overlap.
+
+Reading: the third Italian comparison to fail its own check after the cap ended (p_mid +€168; now run20
++0.13). The within-Iberia description stands (actual run20 at the full pass-through end, B1 section).

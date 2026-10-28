@@ -343,6 +343,18 @@ Known issue: in 2021–22 British balancing offers carried large premia for cons
 Ofgem pursued under the transmission constraint licence condition; the pre-trend test shows whether
 that drifts.
 
+**Step 2d — result (2026-10-28, `analysis/gas_cap_gb.py`, all units fetched).** 71 CCGT and coal BM
+units fetched (`fetch_elexon_bod.py --verify`: no repeated PN segments); 43 gas units, 17 lead
+parties, enter (68 have a plant-specific efficiency and an Elexon id; the rest are open-cycle
+turbines, not fetched, or did not run before the cap, K ≤ 10 MW).
+- **price** (pair-1 offer − cost against Iberia's p_mid − cost): **FAILS.** Trend +330/yr, placebos
+  +247, +178, +166 (threshold 20.5). Britain is steady except September 2021 (+217, the British
+  supply squeeze of that month); the gap is Iberia's own swing, as against Italy.
+- **run** (FPN over K against run20): trend −0.05/yr (t 1.0, passes), placebos −0.003, −0.011 pass,
+  2022-03-01 −0.066 **exceeds 0.05: FAILS on one placebo**. Monthly gaps are noisy (±0.2).
+- Rule agreed beforehand: pool Italy and Britain only if Britain moved with Iberia before the cap.
+  It did not, so the pooled estimate is **not run**.
+
 **Step 2 — pass-through (earlier sketch).** m_i,h = α_i + δ_country×hour-of-day + δ_date + ρ̃·(Iberia_i × Y_d) + ε,
 where ρ̃ = 0 is full pass-through on the markup scale (ρ = 1 − ρ̃ on the offer scale). Date
 fixed effects take out the common European gas and carbon shocks. Also the binary version

@@ -5,6 +5,16 @@ resampled clearing), `analysis/price_taking_simulation.py` (the estimates).
 Tables: `outputs/tables/price_taking_simulation_{hydro,thermal}.csv`. Ledger and logs:
 `.superpowers/sdd/2026-10-08-sim/`.
 
+**Rebuilt on corrected ownership, 2026-10-27 (§17).** Every table was re-estimated after the
+ownership fixes of 2026-10-21/22, which moved Movhera's Douro dams (2020-12 → 2021-09) and
+Castejón's represented units (2024-02 → 2025-01) away from EDP. §1 – §16 are as first written;
+§17 gives what changed. Both hydro departures stand (2019 – 2021H1 +0.25 [0.15, 0.34], was
++0.31; 2024 – 2025 +0.19 [0.08, 0.33], was +0.20), thermal does not depart, and full market
+power is rejected. What changes: the 2019 – 2021H1 departure now rests on Iberdrola, 2024H2 no
+longer departs, and neither the near-bound cells (§11) nor the buyer side (§15.2) departs.
+Hydro seeds 3 – 10 are being added (`chain3.sh`); readings resting on two or three seeds may
+still change.
+
 ## 1. The idea, with an example
 
 Before weighing something unknown, put a known weight on the scale. Here the known weight
@@ -706,3 +716,93 @@ Published hedge ratios give the second no support (`rq-hedge-ratios.md`): the ye
 about 100% sold forward in 2020 and 2021 as in 2022, mostly to the firms' own customers, which n
 already counts. A design without the simulation (one step per unit
 and day, fixed before the auction) would check the seller-side pattern against the band's noise.
+
+## 17. Rebuilt on corrected ownership (2026-10-27)
+
+The ownership fixes of 2026-10-21/22 moved two sets of units away from EDP: the Douro dams sold
+to Movhera, which sat inside EDP's `ADOURO` from 2020-12-17 to 2021-09-08, and Castejón's
+represented units, TotalEnergies' while they offered (2024-02 → 2025-01). The step rows and
+seeds of those 22 months were rebuilt (`hmoments`, `hsim1`–`3`, `hsimw1`; thermal `moments`,
+`sim1`–`3`, `compcost`, `compcostprice`), with `ADOURO` left out of the hydro rows over its
+window (`step_estimator_hydro.AMBIGUOUS`: its offers answer to Movhera's 60% or EDP's 40%, and
+which is not known). Then every table of this note, of leg B and of the step estimators. The
+rebuilt rows of every group other than EDP, Movhera and TotalEnergies are identical to the old
+ones. Old against new: `.superpowers/sdd/2026-10-22-sim-rebuild/compare_rebuild.md`, and a
+cell-by-cell check of this note in `audit_notes.txt` beside it. The old tables are in git at
+8c550b1. **The figures in §1 – §16 are as first written; this section gives what changed.**
+
+**Thermal: no reading changes**, and no estimate moves by more than 0.01 except 2019 – 2021H1
+under the `level` control, where the two simulated seeds move from −0.175 / −0.206 to
+−0.144 / −0.196. The actual set [−0.16, 0.05] now touches the two-seed band as well as the
+three-seed one (§6), so thermal 2019 – 2021H1 does not depart on any number of seeds.
+
+**Hydro, the main reading (§6):**
+
+| specification, control `level` | actual before | actual after | null band after | differs |
+|---|---|---|---|---|
+| unit × month \| Zb | +0.07 [−0.03, 0.17] | +0.06 [−0.05, 0.15] | +0.01 … +0.07 | no, no |
+| unit × day \| Zb | −0.23 [−0.45, −0.06] | −0.23 [−0.45, −0.06] | −0.07 … −0.06 | no, no |
+| reactor outages | +0.13 [−0.39, 0.49] | +0.11 [−0.41, 0.48] | −0.20 … +0.26 | no, no |
+| 2019 – 2021H1 | +0.31 [0.17, 0.46] | **+0.25 [0.15, 0.34]** | −0.03 … −0.02 | yes, yes |
+| 2021H2 – 2023 | +0.01 [−0.12, 0.13] | +0.00 [−0.13, 0.13] | +0.03 … +0.09 | no, no |
+| 2024 – 2025-09 | +0.20 [0.10, 0.34] | +0.19 [0.08, 0.33] | −0.04 … +0.04 (three seeds) | yes, yes |
+
+**Both hydro departures stand; 2019 – 2021H1 is a fifth smaller.** That is where the Douro
+dams were: EDP's rows over that window are no longer in the sample.
+
+**Readings that change, by section:**
+
+- **§2 (no selection control), hydro 2019 – 2021H1:** actual +0.14 [0.02, 0.26] → **+0.03
+  [−0.06, 0.12]**, so zero is inside the set; simulated −0.08 → −0.12. Actual minus simulated
+  falls from +0.22 to +0.15. Unit effects only: actual −0.01 → −0.05, simulated +0.03 → −0.01.
+- **§6, the margin over the band, 2024 – 2025:** the set's lower end clears the three-seed band
+  by 0.04, about 1.1 seed standard deviations (before 0.06, about 2). "Further seeds are unlikely
+  to change either verdict" no longer holds for 2024 – 2025. Seeds 3 – 10 are running
+  (`chain3.sh`) and settle it. In 2019 – 2021H1 the two seeds nearly coincide (−0.032, −0.022),
+  so the band is narrow by chance and the set clears it by 0.17.
+- **§7, equivalence:** 2021H2 – 2023 is now accepted as price-taking within δ = 0.1 (β range
+  −0.22 … +0.10, just).
+- **§8, which firms:** without Iberdrola, 2019 – 2021H1 reads −0.01 [−0.12, 0.10] and touches
+  its band (−0.15 … −0.11). **The 2019 – 2021H1 departure now rests on Iberdrola**: without any
+  other firm it stands (+0.20 to +0.32). 2024 – 2025 rests on Iberdrola and Endesa together, as
+  before (without them +0.10 [−0.04, 0.24] and +0.13 [0.00, 0.28]). Without Movhera,
+  2019 – 2021H1 equals the full sample for a reason other than the one §8 gives: Movhera's
+  units are out of that sample (`ADOURO` over its window) or start after it (`DOUSUP`,
+  2021-09-09). Its purchase was 2020-12-17, not 2022.
+- **§10, part of the day:** 12 – 17 h in 2019 – 2021H1 now differs (+0.33 [0.04, 0.63]), so all
+  four blocks differ there, and every block rejects β = 1 (largest p 0.031).
+- **§11, reservoir bounds:** near a bound no longer differs in either period (2019 – 2021H1
+  +0.20 [−0.23, 0.51]; 2024 – 2025 +0.65 [0.20, 1.19] against a band of +0.05 … +0.23). In
+  2024 – 2025 none of the three fill cells (with fill, interior, near a bound) differs, so the
+  2024 – 2025 departure is not located in the 20 units with a fill series. "Open for 2024 – 2025"
+  in the title of §11 rested on the near-bound cell.
+- **§12, size:** in 2019 – 2021H1 β 0.34 → 0.28 and the markup on price-setting steps €1.26 →
+  **€0.93** (Iberdrola €1.74 → €1.41, EDP €1.23 → €0.81); the effect on the price, +€0.01 →
+  −€0.01, stays nil. 2024 – 2025 barely moves: €2.24 → €2.18 on the steps, +€0.10 → +€0.08
+  [0.02, 0.16] on the price. "€1 – 3 on the steps" becomes €0.8 – 3.
+- **§14, half-years:** **2024H2 no longer differs** (+0.14 [0.05, 0.23] against −0.02 … +0.06),
+  so after the cap only 2025H1 departs. 2021H1 falls from +0.46 to +0.36 (gap +0.41 → +0.29), and
+  the largest gap is now 2020H2's (+0.34). The departure still stops when the crisis begins.
+- **§15.2, the fade by condition:** the buyer side no longer differs in either period (+0.12
+  [−0.02, 0.25], +0.14 [−0.01, 0.27]), the seller side's departure gap falls to +0.08, and the
+  fill split's pooled departure no longer differs. By the rule, side now "explains" the fade
+  (predicted crisis gap +0.09 inside the range −0.23 … +0.10), but narrowly and not through
+  composition (seller share 59% → 64%): the gaps to be faded are smaller. The reading of §15.2,
+  sellers' markup removed and buyers' markdown kept, has no cell left that differs on either
+  side. Both pooled crisis cells (side, level) are now within δ.
+- **§16, side by half-year:** seller 2020H2 still differs (+0.39 [0.10, 0.66]) and buyer 2024H2
+  still differs (+0.26 [0.04, 0.46]); seller 2021H1 falls from +0.46 to +0.32 and seller 2024H2
+  from +0.30 to +0.21 [−0.27, 0.62], so the sellers' partial return in 2024H2 (§16 reading) is
+  weaker still.
+- **§9, planted:** unchanged in substance (planted minus plain −0.02 and −0.05).
+
+**Errors found in passing, not caused by the rebuild.** About fifteen figures were rounded twice
+(−0.1545 printed −0.16) or are a digit off; none changes a reading, and they are listed in
+`audit_notes.txt`. Two statements in §6 were wrong already: "AR p(1) < 1e-25" holds only for
+thermal (hydro 2024 – 2025: 1e-9), and "the reactor-outage
+specifications cannot reject" β = 1 holds only for thermal (hydro: [−0.41, 0.48], p(1) 2e-6).
+Full market power is rejected for hydro with every instrument.
+
+**Not rebuilt here:** the engine diagnostics and correlations of §1 and §3 (from logs), the
+water-value multipliers m of §9 (`rq-water-value-forward.md` §5.5, which counts `ADOURO` as
+EDP's over its window), and the counterfactual of §12 (`rq-counterfactual-hydro.md`).

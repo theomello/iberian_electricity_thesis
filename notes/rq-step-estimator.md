@@ -19,6 +19,9 @@ specification: β −0.08, set [−0.19, 0.02], with unit × day effects. Its si
 the fixed effects (−0.27 to +0.10 on all years), so it settles the upper bound, not the
 sign.
 
+**Rebuilt on corrected ownership, 2026-10-27 (§8).** No reading changes; 2019 – mid-2021 now
+−0.19 (set −0.64 to 0.17). §1 – §7 are as first written.
+
 ## 1. The idea, with an example
 
 A gas plant offers its first 200 MW at €60 and the next 100 MW at €90. It does not
@@ -359,3 +362,31 @@ running MIC units, 9.0 off MIC, 15.3 running without MIC, 20.9 off without MIC.
   a quarter of the draws, with weaker first stages; not read further.
 - **Unchanged:** full Nash is rejected in every row, and the preferred column stays near
   0. The bound holds; the sign is open.
+
+## 8. Rebuilt on corrected ownership (2026-10-27)
+
+The step rows were rebuilt for the 22 months the ownership fixes of 2026-10-21/22 touch, with
+`ADOURO` left out of the hydro rows over 2020-12-17 → 2021-09-08 (`rq-price-taking-simulation.md`
+§17), and both result tables re-estimated. The figures in §1 – §7 are as first written; old
+tables in git at 8c550b1, the cell-by-cell check in
+`.superpowers/sdd/2026-10-22-sim-rebuild/audit_notes.txt`. **No reading changes**: full Nash is
+rejected where it was, and zero is inside every set it was inside.
+
+| specification | before | after |
+|---|---|---|
+| thermal, outage doses, all | +0.07 [−0.68, 1.01], F 9.9 | +0.07 [−0.67, 1.02], F 9.7 |
+| thermal, outage doses, 2019 – 2021H1 | −0.16 [−0.60, 0.19], F 22.6 | −0.19 [−0.64, 0.17], F 22.0 |
+| thermal at cost, unit × month | −0.27 [−0.37, −0.18] | −0.27 [−0.37, −0.18] |
+| thermal at cost, 2019 – 2021H1 | −0.03 [−0.10, 0.04] | −0.04 [−0.12, 0.03] |
+| thermal at cost, coal | +0.04 [−0.39, 0.28] | −0.08 [−0.57, 0.19] |
+| hydro (§6), reactor outages | +0.06 [−0.73, 0.37], F 5.3 | +0.04 [−0.90, 0.36], F 5.0 |
+| hydro (§6), regional wind | −0.12 [−0.61, 0.31], F 14.4 | −0.10 [−0.60, 0.36], F 13.4 |
+| hydro (§6), two slopes, 2024 – 2025-09 | −0.85 / +0.79 | −0.80 / +0.73 |
+
+Coal moves because EDP's coal units carry EDP's corrected position. The hydro rows of §6 fall
+from 661,669 price-setting unit-steps to 646,232, and the main sample from 457,263 to 442,208.
+
+**Not rebuilt**, on the old rows: `step_startup_check.csv` (§7.1), the first-location-pass
+hydro table `step_estimator_hydro_results_v1loc.csv` (§6), and the first-stage coefficients of
+§2 (printed, not stored). Two slips found in passing: the firm × forecast set of §6 has 12
+instruments, not 16, and Movhera's rows start on 2021-09-09 (`DOUSUP`), not in 2022.

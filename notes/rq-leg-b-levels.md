@@ -16,6 +16,10 @@ instrument (§5, F 90–410) the bound tightens to β ≤ 0.12 outside 2019 – 
 caused by the firm's own zero-priced output or its water (§6.1), and the paper's wrong
 storage sign comes from comparing years, not from incomplete storage data (§6.2).
 
+**Rebuilt on corrected ownership, 2026-10-27 (§8).** Reactor outages −0.27 [−0.74, 0.04];
+at cost the bound is β ≤ 0.12 in every period, and 2019 – 2021H1 is no longer slightly positive
+(+0.03 [−0.06, 0.12], was +0.14 [0.02, 0.26]). §1 – §7 are as first written.
+
 ## 1. The idea, with an example
 
 Iberdrola's Duero unit offers a step at €110 on a day when the price-taking water value
@@ -310,3 +314,39 @@ regressor, so the comparison with Murray (negative on volume) needs year effects
 - X̃ is defined on resampled draws; the slope floor (20 MW per €/MWh) drops thin bands.
 - The across-day margin is read within months; withholding spread over months is in the
   unit-effect rows only, which are less precise.
+
+## 8. Rebuilt on corrected ownership (2026-10-27)
+
+The step rows were rebuilt for the 22 months the ownership fixes of 2026-10-21/22 touch, with
+`ADOURO` left out over 2020-12-17 → 2021-09-08 (`rq-price-taking-simulation.md` §17), and every
+table of this note re-estimated. The figures in §1 – §7 are as first written; old tables in
+git at 8c550b1, the cell-by-cell check in `.superpowers/sdd/2026-10-22-sim-rebuild/audit_notes.txt`.
+
+| specification | before | after |
+|---|---|---|
+| unit × month, reactor outages | −0.26 [−0.72, 0.04], F 21.5 | −0.27 [−0.74, 0.04], F 21.0 |
+| unit × month, at cost (Zb) | −0.22 [−0.30, −0.15], F 407 | −0.23 [−0.32, −0.16], F 394 |
+| unit × day, at cost (Zb) | −0.37 [−0.52, −0.25] | −0.37 [−0.52, −0.25] |
+| unit, at cost (Zb) | −0.01 [−0.12, 0.09] | −0.05 [−0.15, 0.06] |
+| **2019 – 2021H1, at cost (Zb)** | **+0.14 [0.02, 0.26]** | **+0.03 [−0.06, 0.12]** |
+| 2024 – 2025-09, at cost (Zb) | −0.16 [−0.25, −0.06] | −0.17 [−0.26, −0.07] |
+| net sellers β⁺ / buyers β⁻ | −0.35 / −0.02 | −0.36 / −0.03 |
+
+- **2019 – 2021H1 is no longer slightly positive.** The "about a seventh of Nash" of §5 was the
+  Douro dams counted as EDP's: zero is now inside the set. Before mid-2021, as after, β at cost is
+  indistinguishable from zero.
+- **The bound tightens**: the highest upper end is 0.12 (2019 – 2021H1) and 0.08 in every other
+  row (before 0.26 and 0.12). Full market power is rejected everywhere, as before.
+- **The paper's method (§4)** loses EDP's Douro-window hours: 19,059 → 18,440 unit-hours, EDP
+  10,644 → 10,025. EDP's X at the price falls from −0.93 to −1.13, and its λ̂ at β = 1 and β = 0
+  now differ by €2.9, not €1.5, so "a euro or two" is one to three euros. The storage
+  coefficient stays positive (+0.9 → +1.0 per 10 points; EDP +0.1 → +0.2); selection puts λ̂
+  3 – 19% below λ* (EDP 13%, was 9%). `compare.py` reports this table as unchanged because its
+  changed columns are not among those it reads; the check above read them.
+- Units with a storage series, reactor outages: F 10.3 → 9.7, now weak. Regional wind within
+  the month: F 8.8 → 10.0, still weak.
+
+**Not rebuilt**, and resting on the old step rows (`ADOURO`'s window counted as EDP's):
+`leg_b_water_checks.csv` (§6.1 – §6.2: V0, rain, storage slopes and the year table), EDP's
+revealed water value in §4 (`water_value_revealed`, 12,817 unit-hours) and the correlation 0.44
+between Zb and X̃ (§5, printed, not stored).

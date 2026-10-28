@@ -14,6 +14,12 @@ Writes outputs/tables/gas_cap_offer_panel.parquet, one row per unit and hour:
   (its zone's in Italy, its country's in Iberia), and `mw_band`. Kept as a comparison only:
   a band around the clearing price conditions on an outcome the cap itself moved (ab99b50).
 * `offered_mw`, `offered_share` = offered_mw / K.
+* `p_mid` (2026-10-28): the price at the midpoint between the unit's minimum stable load and K,
+  i.e. at K * (1 + ml) / 2, with ml JRC's `min_load` (a share of capacity; the plant's mean over
+  its generators in Iberia, the unit's own in Italy, 0.33 where JRC has none). Iberian plants
+  offer their minimum-load block low and protect it with the minimum-income condition, so
+  shares of K below ml read that block, not the price of running more; Italian plants price
+  their first MW near cost. `ml` is carried.
 * `run10`, `run20`, `run50` (2026-10-28): MW offered at or below cost + 10/20/50 EUR/MWh,
   divided by K -- the willingness to run, comparable across the two countries because
   withholding by a high price (Iberia's habit) and by not offering (Italy's) count the same.
@@ -111,6 +117,20 @@ def italy_steps() -> tuple[pd.DataFrame, pd.DataFrame]:
     return t, cost
 
 
+ML_DEFAULT = 0.33
+
+
+def min_loads() -> pd.Series:
+    m = pd.read_parquet(DATA / "jrc_ppdb" / "jrc_cab_match.parquet", columns=["unit", "jrc_eic_p"])
+    es = pd.concat([pd.read_parquet(DATA / "jrc_ppdb" / f"jrc_{c}_units.parquet", columns=["eic_p", "min_load"])
+                    for c in ("spain", "portugal")])
+    ib = m.merge(es.groupby("eic_p").min_load.mean().rename("ml"), left_on="jrc_eic_p", right_index=True,
+                 how="left").drop_duplicates("unit").set_index("unit").ml
+    it = pd.read_parquet(DATA / "jrc_ppdb" / "jrc_italy_units.parquet", columns=["name_g", "min_load"])
+    it = it.dropna(subset=["name_g"]).groupby("name_g").min_load.mean()
+    return pd.concat([ib, it])
+
+
 def unit_hour(s: pd.DataFrame, cost: pd.DataFrame) -> pd.DataFrame:
     keys = ["unit", "date", "period"]
     s = s.merge(cost[["unit", "date", "cost"]], on=["unit", "date"], how="left")
@@ -126,6 +146,11 @@ def unit_hour(s: pd.DataFrame, cost: pd.DataFrame) -> pd.DataFrame:
     for q in QS:
         hit = s[s.cum >= q * s.K - 1e-6].groupby(keys, sort=False).p.first().rename(f"p{int(q * 100)}")
         h = h.merge(hit, on=keys, how="left")
+    ml = min_loads()
+    s["ml"] = s.unit.map(ml).fillna(ML_DEFAULT).clip(0.0, 0.9)
+    hit = s[s.cum >= (1 + s.ml) / 2 * s.K - 1e-6].groupby(keys, sort=False).p.first().rename("p_mid")
+    h = h.merge(hit, on=keys, how="left")
+    h["ml"] = h.unit.map(ml).fillna(ML_DEFAULT).clip(0.0, 0.9)
     band = s[(s.p - s.price).abs() <= BAND].assign(pm=lambda x: x.p * x.mw)
     b = band.groupby(keys).agg(pm=("pm", "sum"), mw_band=("mw", "sum"))
     b["p_band"] = b.pm / b.mw_band

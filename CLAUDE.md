@@ -118,6 +118,7 @@ scripts/
 | `fetch/fetch_gme_offers.py` | GME, Italian day-ahead public offers (`OffertePubbliche`) | no, but GME's terms | `data/gme/offers/parquet/offers_YYYYMMDD.parquet` |
 | `fetch/fetch_gme_gas_prices.py` | GME, Italian day-ahead gas market (MGP-GAS, PSV) | no, but GME's terms | `data/gme/gas/gme_mgp_gas_daily.parquet` |
 | `build/build_italy_marginal_cost.py` | JRC Italy + PSV + EUA | no | `data/jrc_ppdb/italy_implied_marginal_cost_daily.parquet` |
+| `fetch/fetch_italy_temperature.py` | Open-Meteo ERA5, 12 Italian cities | no | `data/weather/temperature_population_italy.parquet` |
 | `build/build_france_link.py` | OMIE interconnection + Ember + RTE | no | `outputs/tables/france_link_hours.parquet` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;

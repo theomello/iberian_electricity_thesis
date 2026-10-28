@@ -164,6 +164,49 @@ and the events that hit one side only (French nuclear outages and Iberian export
 drought; PSV against MIBGAS through the war-driven spikes). Descriptive; it decides whether a control can
 be rebuilt (e.g. by conditioning on one of these) or whether the within-Iberia designs take over.
 
+**Step 1, second run — result (2026-10-28): FAILED.** m25: trend +188/yr, placebos +86 to +124; run20:
+trend +0.12/yr, placebos +0.066 to +0.069 (threshold 0.05). €10/€50 variants alike.
+
+**Step 1b — two alternative gas costs** (`analysis/gas_cap_cost_test.py`): a 30-day lagged hub price in
+both countries, and the higher of MIBGAS and PSV in Iberia. Neither removes the drift in m25 (placebos
++72 to +123); run20 with the lagged cost passes its placebos (+0.023 to +0.049) but not its trend. The
+Iberian cost stands.
+
+**Step 1c — conditional on pre-auction demand conditions** (`analysis/gas_cap_conditional_pretrend.py`,
+eight controls: REE D-1 demand, wind, solar; RTE D-1 French demand; lagged French nuclear; predicted
+open French line; lagged hydro storage; PSV − MIBGAS at D-2). m25: trend +33/yr (t 0.4), placebos +68
+(se 41), +10, −11: fails on 2021-10-01 only. run20 worse.
+
+**Why m25 drifts**: the Iberian price at a quarter of capacity barely follows cost (median €10 → €100
+while cost went €76 → €231, June 2021 → March 2022), by every firm but Iberdrola: plants offer their
+minimum-load block low under the protection of the minimum-income condition. Hence `p_mid`, the price
+midway between JRC's minimum load and K. Its step 1 (`--outcomes mmid`) fails on the full window (trend
++391/yr, placebos +179 to +238) and from 2021-10-01 (conditional: +15, +53, −1): in means, p_mid often
+lands inside the high-priced withholding blocks.
+
+**Step 1d — four ways of building the comparison** (`analysis/gas_cap_identification_tests.py`, outcome
+mmid, 19 controls adding the Iberian thermal gap, temperature in both countries, holidays in both, Italian
+demand):
+
+| method | placebos 2021-10 / 2022-01 / 2022-03 (threshold €20.5) |
+|---|---|
+| conditional DiD | +175 / +62 / +25 (trend +217/yr): fails |
+| interactive fixed effects, r = 1 | +23 / +67 / +97: fails |
+| r = 2 | −2 / +17 / +59: fails on one |
+| **r = 3** | **+0.6 (se 12) / +0.3 (24) / +27 (22)**: fails narrowly, within one se of zero |
+| unit-level synthetic control | +172 to +238 (means, driven by a few units; medians +75 to +139): fails |
+
+Daily offers do not follow daily cost before the cap (slope Iberia 0.33, Italy 0.04), weekly barely
+(0.39, 0.82), **monthly one-for-one (Iberia 1.00, se 0.14; Italy 0.91, se 0.21)**. So Design B (offers
+against cost changes, within Iberia) works at a monthly horizon only.
+
+**Decision (2026-10-28).** Main estimate: interactive fixed effects against Italy on the full window, the
+number of factors chosen by Bai & Ng's (2002) criterion, not by the placebos; Moon & Weidner (2015) for
+over-specification. To run once the user has the literature (Bai 2009; Bai & Ng 2002; Gobillon & Magnac
+2016; Xu 2017; Athey et al. 2021; Arkhangelsky et al. 2021; Roth 2022; Rambachan & Roth 2023). Report the
+pre-period placebos with Rambachan–Roth sensitivity rather than as a pass/fail, given Roth (2022) on
+pretesting after this many attempts. Supporting: the sharp break at 2022-06-15 and a monthly Design B.
+
 **Step 2 — pass-through.** m_i,h = α_i + δ_country×hour-of-day + δ_date + ρ̃·(Iberia_i × Y_d) + ε,
 where ρ̃ = 0 is full pass-through on the markup scale (ρ = 1 − ρ̃ on the offer scale). Date
 fixed effects take out the common European gas and carbon shocks. Also the binary version

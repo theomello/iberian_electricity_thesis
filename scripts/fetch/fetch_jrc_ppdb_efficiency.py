@@ -10,7 +10,9 @@ Writes data/jrc_ppdb/jrc_spain_units.parquet, one row per Spanish generating
 unit, and since 2026-10-05 data/jrc_ppdb/jrc_portugal_units.parquet, the same for
 Portugal (75 units; its 10 gas and 6 coal generators all carry an efficiency).
 Portugal is inside MIBEL, so its thermal plants bid in the same auction; EDP's
-Lares and Ribatejo and Endesa's Pego combined cycles had no cost until then. Not resumable in the per-day sense the OMIE fetchers are -- the JRC
+Lares and Ribatejo and Endesa's Pego combined cycles had no cost until then.
+Since 2026-10-28 also data/jrc_ppdb/jrc_italy_units.parquet, for the Italian gas plants
+that serve as the control group in the gas-cap design (GME offers, `fetch_gme_offers.py`). Not resumable in the per-day sense the OMIE fetchers are -- the JRC
 publishes one static historical database, not a live archive -- so this just
 re-downloads and re-parses unless the output already exists.
 
@@ -104,6 +106,8 @@ OUT_UNITS = OUT_DIR / "jrc_spain_units.parquet"
 OUT_TEMPORAL = OUT_DIR / "jrc_spain_temporal.parquet"
 OUT_PT_UNITS = OUT_DIR / "jrc_portugal_units.parquet"
 OUT_PT_TEMPORAL = OUT_DIR / "jrc_portugal_temporal.parquet"
+OUT_IT_UNITS = OUT_DIR / "jrc_italy_units.parquet"
+OUT_IT_TEMPORAL = OUT_DIR / "jrc_italy_temporal.parquet"
 ZIP_URL = "https://zenodo.org/records/3574566/files/JRC-PPDB-OPEN.ver1.0.zip?download=1"
 COUNTRY = "Spain"
 
@@ -175,6 +179,12 @@ def main() -> int:
         pt_temporal.to_parquet(OUT_PT_TEMPORAL, index=False)
         print(f"  wrote {OUT_PT_UNITS} ({len(pt)} units, {int(pt.eff.notna().sum())} with an efficiency)")
 
+    if not OUT_IT_UNITS.exists() or args.refresh:
+        it, it_temporal = parse(download(session()), "Italy")
+        it.to_parquet(OUT_IT_UNITS, index=False)
+        it_temporal.to_parquet(OUT_IT_TEMPORAL, index=False)
+        print(f"  wrote {OUT_IT_UNITS} ({len(it)} units, {int(it.eff.notna().sum())} with an efficiency)")
+
     n_eff = df.eff.notna().sum()
     print(f"\n{len(df):,} Spanish generating units, {n_eff} with a non-null efficiency")
     print("\n  by technology (total / with eff):")
@@ -192,6 +202,8 @@ def main() -> int:
         fossil = pt[pt.type_g.str.startswith("Fossil", na=False)]
         assert len(fossil) == 16 and fossil.eff.notna().all(), "Portugal: expected 16 fossil units, all with eff"
         assert pt.duplicated(["eic_p", "eic_g"]).sum() == 0, "Portugal: duplicate (eic_p, eic_g) rows"
+        it = pd.read_parquet(OUT_IT_UNITS)
+        assert it.duplicated(["eic_p", "eic_g"]).sum() == 0, "Italy: duplicate (eic_p, eic_g) rows"
         print("\n  --verify passed")
     return 0
 

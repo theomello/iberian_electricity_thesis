@@ -86,7 +86,7 @@ scripts/
 | `fetch/fetch_omie_interconnection.py` | OMIE `capacidad_inter_pbc` | no | `data/omie/interconnection/omie_interconnection_capacity.parquet` |
 | `fetch/fetch_omip_forwards.py` | OMIP | no | `data/omip/parquet/omip_forwards_{zone}_{YYYY}.parquet` |
 | `fetch/fetch_hydro_reservoirs.py` | MITECO Boletín Hidrológico | no | `data/miteco/embalses_historico.parquet` |
-| `fetch/fetch_jrc_ppdb_efficiency.py` | JRC-PPDB-OPEN (Zenodo) | no | `data/jrc_ppdb/jrc_{spain,portugal}_units.parquet` |
+| `fetch/fetch_jrc_ppdb_efficiency.py` | JRC-PPDB-OPEN (Zenodo) | no | `data/jrc_ppdb/jrc_{spain,portugal,italy}_units.parquet` |
 | `fetch/fetch_mibgas_prices.py` | MIBGAS | no | `data/mibgas/mibgas_price_index_daily.parquet` |
 | `fetch/fetch_eua_carbon_price.py` | investing.com (browser-captured) | no, but not resumable | `data/investing/eua_carbon_price_daily.parquet` |
 | `fetch/fetch_coal_price.py` | investing.com (browser-captured) | no, but not resumable | `data/investing/coal_price_daily.parquet` |
@@ -115,6 +115,8 @@ scripts/
 | `build/build_mic_running.py` | `cab` + bids + step cache | no | `outputs/tables/mic_running.parquet` |
 | `fetch/fetch_ember_prices.py` | Ember, European wholesale prices (hourly) | no | `data/ember/ember_prices_hourly.parquet` |
 | `fetch/fetch_rte_eco2mix.py` | RTE éCO2mix national (ODRÉ) | no | `data/rte/eco2mix_national.parquet` |
+| `fetch/fetch_gme_offers.py` | GME, Italian day-ahead public offers (`OffertePubbliche`) | no, but GME's terms | `data/gme/offers/parquet/offers_YYYYMMDD.parquet` |
+| `fetch/fetch_gme_gas_prices.py` | GME, Italian day-ahead gas market (MGP-GAS, PSV) | no, but GME's terms | `data/gme/gas/gme_mgp_gas_daily.parquet` |
 | `build/build_france_link.py` | OMIE interconnection + Ember + RTE | no | `outputs/tables/france_link_hours.parquet` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
@@ -1509,6 +1511,53 @@ on `date_heure` with a `date'…'` literal. Realised output is filled only on ha
 **The France line's state by hour** (`build/build_france_link.py`): open in 31% of hours
 2018-01 → 2025-09, import-full 41%, export-full 28%; Spanish and French prices are equal in
 99.7% of open hours and differ in 99.8% of full ones (`notes/rq-france-link.md`).
+
+### Italy — GME unit-level offers, PSV gas price, JRC units (2026-10-28)
+The control group for the gas-cap design: Italian gas plants, which had no cap, against
+Iberian ones around 2022-06-15. Italy is not coupled to Iberia, so unlike France it did not
+receive the capped Iberian power.
+
+**`data/gme/offers/parquet/`** (`fetch/fetch_gme_offers.py`): every offer and bid in GME's
+day-ahead market (MGP), **760 days, 2021-06-01 → 2023-06-30, 32.3 M offered sell rows, 1,822
+selling units, 154 operators**, one parquet per day. Raw zips kept as served in
+`data/gme/raw/YYYYMM/` (1.8 GB; one XML of ~100 MB a day inside). GME keeps offers
+confidential for 7 days (DM 29 April 2009), then publishes them with the **unit code and the
+operator** (`OPERATORE`; bilateral positions read "Bilateralista", so take a unit's operator
+from its other rows). Hourly to 2023-06, CET local day. History goes back to 2004.
+Access needs GME's **terms of use**, accepted by the user in a browser on 2026-10-28; the
+download API then checks only the cookie that acceptance sets (`GmePolicy_en=true`), no login.
+The fetcher pauses 3 s between days.
+
+- **Curves:** keep status ACC/REJ/PREJ for the offered curve (like OMIE's `O`) and ACC for
+  cleared volume. **REP (replaced) and REV (revoked) repeat quantities**; summing them
+  double-counts.
+- **Accepted buy exceeds accepted sell, by design**: imports over the coupled borders
+  (France, Austria, Slovenia, Greece) clear implicitly and appear in no offer, like OMIE's
+  `MIEU`. On 2022-09-15 the gap is 4.4 GW at night and 0.5 GW at midday. Switzerland and
+  Montenegro are explicit zones (`SVIZ`, `MONT`) inside the offers. `--verify` checks the hour
+  count and that the gap stays within ±12 GW: all 760 days pass.
+- **Zonal**: `zone` is GME's bidding zone (NORD, CNOR, CSUD, SUD, CALA, SICI, SARD); the
+  national purchase price (PUN) is not in this file.
+
+**`data/jrc_ppdb/jrc_italy_units.parquet`**: JRC-PPDB-OPEN's Italian units, from the zip already
+kept for Spain. **JRC's `name_g` is GME's own unit code** (`UP_TAVAZZANO_5`), so the two join
+exactly, unlike Spain's name matching. 104 gas units of 100 MW or more; **88 offer in the window
+(36.0 GW), 73 with a plant-specific efficiency** (`best_source` not `Class_derived`), 84 both
+before and after 2022-06-15. **15 operators**: Enel 18 units (5.5 GW), A2A 9 (4.8), Eni 14
+(4.6), Edison 9 (4.2), EP Produzione 7 (3.3), Sorgenia 4 (3.2), Tirreno Power 4 (2.3), Axpo 6
+(2.3), Iren 5 (2.3), Engie 4 (1.5) and five small ones. Against Iberia: 56 gas units (25 GW)
+and 12 owning firms.
+
+**`data/gme/gas/gme_mgp_gas_daily.parquet`** (`fetch/fetch_gme_gas_prices.py`): GME's
+day-ahead gas market at the PSV (*Punto di Scambio Virtuale*, the Italian hub), the counterpart
+of MIBGAS. **9,594 rows, every gas day 2018-01-02 → 2026-10-03**, one row per session and
+product (`MGP-YYYY-MM-DD`): volume-weighted mean, GME's reference price, auction price from
+2019-12-31. A product trades on several sessions, so (session, product) is the key; **for an
+offer for day D use sessions up to D-2**, as the Spanish `_bid` costs do. Against MIBGAS:
+correlation 0.97, yearly means within €1–3 except in the crisis (2022: PSV 124, MIBGAS 99;
+August 2022: 232 against 164), so compare offers net of each plant's own cost, not levels.
+In the download API the gas prices are `Settore=SintesiScambio` (`Prezzi` answers HTTP 417
+`InvalidFilter`), with the gas page's own `ModuleId`/`TabId` headers.
 
 ### Eurostat NUTS 2021 regions — country and autonomous community of a coordinate
 `data/gisco/nuts2_iberia.parquet`, fetched 2026-10-05 by `fetch/fetch_gisco_nuts.py`:

@@ -177,6 +177,15 @@ installed capacity by province, which this project still lacks.
 **The exception to "fully re-fetchable".** SNIRH answers only APA's whitelisted
 address, LMU eduVPN's exit 194.95.236.6, so `raw/` must be kept. See CLAUDE.md.
 
+## `gme/` — Italy: GME day-ahead offers and PSV gas prices
+
+`offers/parquet/offers_YYYYMMDD.parquet`: every offer and bid in the Italian day-ahead
+market (MGP) with unit code and operator, 2021-06-01 → 2023-06-30 (760 days). `raw/YYYYMM/`
+holds the daily zips as served. `gas/gme_mgp_gas_daily.parquet`: the Italian day-ahead gas
+price (MGP-GAS, PSV), 2018-01 → 2026-10, raw monthly zips in `gas/raw/`. Re-fetchable, but
+GME's terms of use must be accepted first. Control group for the gas-cap design; the
+Italian units' efficiencies are in `jrc_ppdb/jrc_italy_units.parquet`. See CLAUDE.md.
+
 ## `entsoe/` — empty
 
 **Token-gated** and nothing fetched. The only series still missing anywhere in

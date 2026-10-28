@@ -207,7 +207,38 @@ over-specification. To run once the user has the literature (Bai 2009; Bai & Ng 
 pre-period placebos with Rambachan–Roth sensitivity rather than as a pass/fail, given Roth (2022) on
 pretesting after this many attempts. Supporting: the sharp break at 2022-06-15 and a monthly Design B.
 
-**Step 2 — pass-through.** m_i,h = α_i + δ_country×hour-of-day + δ_date + ρ̃·(Iberia_i × Y_d) + ε,
+**Step 2, the main estimate — specification fixed 2026-10-28, before running.**
+- **Panel**: weekly unit means of mmid (p_mid minus the bid-time cost after the subsidy), 2021-06-15 →
+  2023-06-30; units with at most 30% of weeks missing over the window.
+- **Dose**: Y_w, the week's mean bid-time subsidy (0 before 2022-06-15 and after 2023-02-25). On the
+  markup scale, bidding at cost gives θ = 0 (the offer falls with the cost) and keeping the whole subsidy
+  gives θ = 1 per € of Y. Pass-through ρ = 1 − θ.
+- **Estimator A, Bai (2009) / Gobillon & Magnac (2016)**: y_iw = α_i + ξ_w + λ_i′F_w + θ·(Iberia_i × Y_w)
+  + ε, all units, least squares alternating with principal components, missing cells imputed (EM).
+  Also the binary version, θ_D on Iberia × binding.
+- **Estimator B, Xu (2017)**: factors from Italian units only (two-way effects + r factors), each Iberian
+  unit's loadings from the weeks before 2022-06-15, its no-cap path imputed; the weekly mean gap ATT_w,
+  then θ from ATT_w on Y_w through the origin over the binding weeks, and the mean ATT over the weeks after
+  2023-02-25 (should be ~0: no subsidy).
+- **Number of factors**: Bai & Ng's IC_p2 on the Italian two-way-demeaned matrix, k_max = 8: the main
+  choice. Xu's leave-one-out cross-validation on Iberian pre-cap weeks reported beside it. Both estimators
+  at the IC_p2 choice; the other r = 0…5 shown as sensitivity, not chosen among.
+- **Inference**: firm block bootstrap, resampling firms within each country, 199 draws.
+- **Reading**: θ against 0 (bidding at cost, the regulator's premise) and 1 (offers ignored the subsidy).
+
+**Step 2, the main estimate — result (2026-10-28, `analysis/gas_cap_ife.py`): NOT IDENTIFIED.**
+50 Iberian and 40 Italian units × 107 weeks. IC_p2 falls monotonically to k_max = 8 (uninformative);
+Xu's cross-validation picks 4. θ (markup change per € of subsidy) by r = 0…5: estimator A (Bai) −0.65,
++0.73, +0.17, −0.30, −0.30, −0.22; estimator B (Xu) −0.15 to −1.88. At r = 8: A −0.12 [−0.52, +0.65],
+B −1.69 [−4.47, +0.68] (firm block bootstrap, 199). **B fails its own check**: the mean gap after
+2023-02-25, when there was no subsidy, is +€168 [+25, +479] (+185 to +281 at every r), so factors
+estimated on Italy do not predict Iberian markups once the cap ends. A changes sign with r. Reading: the
+Italian comparison, tried with a fixed specification, does not identify pass-through; Iberian plants move
+between a cheap minimum-load block, a near-cost band and withholding blocks in ways no common factor
+shared with Italy captures. Next (to be approved): the sharp break at 2022-06-15 and the monthly Design B,
+within Iberia. Weekly gaps in `outputs/tables/gas_cap_ife_att_weekly.csv`.
+
+**Step 2 — pass-through (earlier sketch).** m_i,h = α_i + δ_country×hour-of-day + δ_date + ρ̃·(Iberia_i × Y_d) + ε,
 where ρ̃ = 0 is full pass-through on the markup scale (ρ = 1 − ρ̃ on the offer scale). Date
 fixed effects take out the common European gas and carbon shocks. Also the binary version
 (Iberia × binding period), and the switch-off in March 2023 on its own.

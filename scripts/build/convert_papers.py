@@ -102,7 +102,7 @@ def convert(pdf_path: Path) -> Path:
     for i, lines in enumerate(page_lines):
         for ln in lines[:3] + lines[-3:]:
             s = ln.strip()
-            if s.isdigit() and 1 <= int(s) <= 9999:
+            if s.isdecimal() and 1 <= int(s) <= 9999:
                 offsets[int(s) - (i + 1)] += 1
     offset = offsets.most_common(1)[0][0] if offsets else 0
 

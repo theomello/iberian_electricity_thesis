@@ -138,6 +138,32 @@ Italy, 2021-06 → 2022-06, and the difference. Placebo cap dates in the pre-per
 *Stop if* the pre-period difference trends, or placebo dates give effects as large as a fifth of
 the mean Y in the binding period. Then there is no control group, and that is the finding.
 
+**Step 1, first run (2026-10-28): FAILED.** Outcome p50 − cost (and its minimum-income-aware
+variant): weekly gap trend +€6.5/week (se 0.9; MIC-aware +7.3), placebos +163 to +224 (MIC-aware +179 to
++260) against a threshold of €20.5. Italy is stable (unit-demeaned −19 … +22 every month); Iberia swings
+(−173 … +152). Diagnosis: the two countries withhold in different formats. From October 2021 a growing
+share of Iberian unit-hours price capacity far above cost (over €200 above cost: 0% in mid-2021, 37% in
+April 2022), while Italian plants withhold by not offering, which leaves p50 missing. p50 mixes how much a
+plant withholds with the price it runs at, and records withholding differently in the two countries.
+
+**Step 1, second run — the two-part outcome, fixed here before running.**
+- **Part 1, willingness to run**: `run20` = MW offered at or below cost + €20, divided by K (the unit's
+  pre-cap 99th-percentile offered MW). €10 and €50 as checks. Withholding by a high price and by not
+  offering count the same.
+- **Part 2, running price**: `m25` = p25 − cost, the markup at the first quarter of K, defined in 95–100% of
+  unit-hours in both countries.
+- Cost is the bid-time cost after the subsidy (Iberia) or without one (Italy), as before.
+- **Stop rule**, per part: stop if the weekly pre-period gap trend is significant at 5% (Newey–West, 4
+  lags) and over a year exceeds the threshold, or if any placebo cap (2021-10-01, 2022-01-01, 2022-03-01)
+  reaches the threshold. Thresholds: €20.5 for m25 (a fifth of the mean subsidy, as before); 0.05 (5% of
+  capacity) for run20.
+- The first run's failure is reported next to this one whatever the result.
+
+**Step 1b — what drives any remaining drift.** If either part fails: the gap by firm and by unit, its dating,
+and the events that hit one side only (French nuclear outages and Iberian exports in 2022; the Iberian
+drought; PSV against MIBGAS through the war-driven spikes). Descriptive; it decides whether a control can
+be rebuilt (e.g. by conditioning on one of these) or whether the within-Iberia designs take over.
+
 **Step 2 — pass-through.** m_i,h = α_i + δ_country×hour-of-day + δ_date + ρ̃·(Iberia_i × Y_d) + ε,
 where ρ̃ = 0 is full pass-through on the markup scale (ρ = 1 − ρ̃ on the offer scale). Date
 fixed effects take out the common European gas and carbon shocks. Also the binary version

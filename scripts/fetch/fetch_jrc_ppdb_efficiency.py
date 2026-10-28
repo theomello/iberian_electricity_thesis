@@ -108,6 +108,8 @@ OUT_PT_UNITS = OUT_DIR / "jrc_portugal_units.parquet"
 OUT_PT_TEMPORAL = OUT_DIR / "jrc_portugal_temporal.parquet"
 OUT_IT_UNITS = OUT_DIR / "jrc_italy_units.parquet"
 OUT_IT_TEMPORAL = OUT_DIR / "jrc_italy_temporal.parquet"
+OUT_UK_UNITS = OUT_DIR / "jrc_uk_units.parquet"
+OUT_UK_TEMPORAL = OUT_DIR / "jrc_uk_temporal.parquet"
 ZIP_URL = "https://zenodo.org/records/3574566/files/JRC-PPDB-OPEN.ver1.0.zip?download=1"
 COUNTRY = "Spain"
 
@@ -184,6 +186,14 @@ def main() -> int:
         it.to_parquet(OUT_IT_UNITS, index=False)
         it_temporal.to_parquet(OUT_IT_TEMPORAL, index=False)
         print(f"  wrote {OUT_IT_UNITS} ({len(it)} units, {int(it.eff.notna().sum())} with an efficiency)")
+
+    # Great Britain, for the gas-cap design's second comparison: JRC's `name_g` for British units is
+    # National Grid's BM unit name (`PEMB-11`), so they join Elexon's offers exactly.
+    if not OUT_UK_UNITS.exists() or args.refresh:
+        uk, uk_temporal = parse(download(session()), "United Kingdom")
+        uk.to_parquet(OUT_UK_UNITS, index=False)
+        uk_temporal.to_parquet(OUT_UK_TEMPORAL, index=False)
+        print(f"  wrote {OUT_UK_UNITS} ({len(uk)} units, {int(uk.eff.notna().sum())} with an efficiency)")
 
     n_eff = df.eff.notna().sum()
     print(f"\n{len(df):,} Spanish generating units, {n_eff} with a non-null efficiency")

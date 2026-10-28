@@ -122,6 +122,8 @@ scripts/
 | `build/build_france_link.py` | OMIE interconnection + Ember + RTE | no | `outputs/tables/france_link_hours.parquet` |
 | `fetch/fetch_elexon_bod.py` | Elexon BMRS, balancing offers (BOD) and physical notifications (PN) per unit | no | `data/elexon/{bod,pn}/parquet/<unit>.parquet` |
 | `fetch/fetch_ons_gas_sap.py` | ONS, Great Britain gas System Average Price (daily) | no | `data/ons/gas_sap_daily.parquet` |
+| `fetch/fetch_uka_carbon_price.py` | investing.com UKA futures (browser-captured) | no, but not resumable | `data/investing/uka_carbon_price_daily.parquet` |
+| `build/build_gb_marginal_cost.py` | JRC UK + ONS SAP + UKA + CPS + ECB GBP | no | `data/jrc_ppdb/gb_implied_marginal_cost_daily.parquet` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
 `lib/config.py` loads tokens from a gitignored `.env`; `lib/regions.py` gives a
@@ -1593,9 +1595,12 @@ the segment start, not the period.
 
 Gas: `fetch/fetch_ons_gas_sap.py`, the ONS's daily System Average Price (National Gas Transmission's
 On-the-Day Commodity Market average), 2018-01-01 →, p/kWh ×10 = £/MWh; 2022 mean £71.2 against a
-published NBP average of about 200 p/therm (£68). NBP day-ahead quotes are not free. **Carbon is not on
-disk**: UK ETS allowances from 2021-05-19 (ICE auctions, no free series found) plus the £18/t Carbon
-Price Support.
+published NBP average of about 200 p/therm (£68). NBP day-ahead quotes are not free. Carbon: the UK ETS allowance future
+from investing.com ("UK Emissions Allowances Energy c1", captured by hand 2026-10-28 into
+`data/investing/raw/uka_carbon_historical.csv`, 2021-05-20 →; 2022 mean £78/t), plus the £18/t Carbon
+Price Support. `build/build_gb_marginal_cost.py` costs 91 British gas units (75 plant-specific, 68 with
+an Elexon id) in pounds and in euros (ECB GBP rate, `data/ecb/ecb_gbp_eur_daily.parquet`); 2022 median
+£181/MWh. Its ceiling is £1,000: small peaking turbines at efficiencies of 0.25–0.29 reach £868.
 
 ### Eurostat NUTS 2021 regions — country and autonomous community of a coordinate
 `data/gisco/nuts2_iberia.parquet`, fetched 2026-10-05 by `fetch/fetch_gisco_nuts.py`:

@@ -56,6 +56,9 @@ OUT_DIR = DATA / "ecb"
 OUT = OUT_DIR / "ecb_usd_eur_daily.parquet"
 URL = ("https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A"
        "?format=csvdata&startPeriod=2018-01-01&endPeriod=2026-12-31")
+# GBP per 1 EUR, same convention (divide a GBP amount by it), for British plants' costs.
+OUT_GBP = OUT_DIR / "ecb_gbp_eur_daily.parquet"
+URL_GBP = URL.replace("D.USD.EUR", "D.GBP.EUR")
 
 
 def fetch(sess) -> pd.DataFrame:
@@ -86,6 +89,15 @@ def main() -> int:
         df = fetch(session())
         df.to_parquet(OUT, index=False)
         print(f"  wrote {OUT}")
+
+    if not OUT_GBP.exists() or args.refresh:
+        r = session().get(URL_GBP, timeout=60)
+        r.raise_for_status()
+        g = pd.read_csv(io.StringIO(r.text)).rename(columns={"TIME_PERIOD": "date", "OBS_VALUE": "gbp_per_eur"})
+        g = g[["date", "gbp_per_eur"]].assign(date=lambda x: pd.to_datetime(x.date)).dropna().sort_values("date")
+        assert g.gbp_per_eur.between(0.7, 1.0).all(), "gbp_per_eur outside a plausible range"
+        g.reset_index(drop=True).to_parquet(OUT_GBP, index=False)
+        print(f"  wrote {OUT_GBP}: {len(g)} days, mean {g.gbp_per_eur.mean():.4f}")
 
     print(f"\n{len(df):,} days, {df.date.min().date()} -> {df.date.max().date()}")
     print(f"  usd_per_eur: mean {df.usd_per_eur.mean():.4f}, "

@@ -23,6 +23,10 @@ Writes outputs/tables/gas_cap_offer_panel.parquet, one row per unit and hour:
 * `run10`, `run20`, `run50` (2026-10-28): MW offered at or below cost + 10/20/50 EUR/MWh,
   divided by K -- the willingness to run, comparable across the two countries because
   withholding by a high price (Iberia's habit) and by not offering (Italy's) count the same.
+  `run10_gross`, `run20_gross`, `run50_gross` (2026-10-28): the same against `cost_gross`, so
+  identical wherever there is no subsidy (`qa/check_gas_cap_offer_panel.py`). Keeping the subsidy
+  collapses `run20`; passing it on raises `run20_gross` (crisis quantity design §4).
+* `essential` (2026-10-28): Italian units on Terna's essential-plant list (`ESSENTIAL`).
 * `cost` (EUR/MWh, prices final at 12:00 on D-1): Iberia `marginal_cost_subsidised_bid_eur_mwh`,
   i.e. own cost minus the decree's subsidy; Italy `marginal_cost_bid_eur_mwh` (no subsidy).
   `subsidy` (Iberia, bid-time; 0 in Italy) and `cost_gross` (before the subsidy).
@@ -59,6 +63,10 @@ START, END = pd.Timestamp("2021-06-15"), pd.Timestamp("2023-06-30")
 PRE_END = pd.Timestamp("2022-06-14")
 BAND = 10.0          # EUR/MWh around the clearing price, for p_band
 QS = (0.25, 0.50, 0.75, 1.00)
+# Italian units on Terna's list of plants essential for system security (regulated offers, ARERA
+# 111/06): Porcari in 2022 (ARERA 563/2021) and 2023 (626/2022), Sarlux in 2023. The 2021 list was
+# not found, so both are flagged over the whole window.
+ESSENTIAL = {"UP_PORCARI_1", "UP_SARLUX_1"}
 
 
 def iberia_steps(fuel: str = "gas") -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -133,7 +141,7 @@ def min_loads() -> pd.Series:
 
 def unit_hour(s: pd.DataFrame, cost: pd.DataFrame) -> pd.DataFrame:
     keys = ["unit", "date", "period"]
-    s = s.merge(cost[["unit", "date", "cost"]], on=["unit", "date"], how="left")
+    s = s.merge(cost[["unit", "date", "cost", "cost_gross"]], on=["unit", "date"], how="left")
     s = s.sort_values(keys + ["p"], kind="stable")
     g = s.groupby(keys, sort=False)
     s["cum"] = g.mw.cumsum()
@@ -156,11 +164,12 @@ def unit_hour(s: pd.DataFrame, cost: pd.DataFrame) -> pd.DataFrame:
     b["p_band"] = b.pm / b.mw_band
     h = h.merge(b[["p_band", "mw_band"]], on=keys, how="left")
     h["mw_band"] = h.mw_band.fillna(0.0)
-    for x in (10, 20, 50):
-        r = s[s.p <= s.cost + x].groupby(keys).mw.sum().rename(f"run{x}")
-        h = h.merge(r, on=keys, how="left")
-        h[f"run{x}"] = h[f"run{x}"].fillna(0.0).where(h.merge(cost[["unit", "date", "cost"]],
-                                                               on=["unit", "date"], how="left").cost.notna().to_numpy()) / h.K
+    has_cost = h.merge(cost[["unit", "date", "cost"]], on=["unit", "date"], how="left").cost.notna().to_numpy()
+    for base, sfx in (("cost", ""), ("cost_gross", "_gross")):
+        for x in (10, 20, 50):
+            r = s[s.p <= s[base] + x].groupby(keys).mw.sum().rename(f"run{x}{sfx}")
+            h = h.merge(r, on=keys, how="left")
+            h[f"run{x}{sfx}"] = h[f"run{x}{sfx}"].fillna(0.0).where(has_cost) / h.K
     h["offered_share"] = h.offered_mw / h.K
     return h
 
@@ -178,6 +187,7 @@ def main() -> int:
     h.loc[~ibm, "firm"] = h.loc[~ibm, "unit"].map(op)
     h["iberia"] = ibm
     h["cap"] = ibm & (h.subsidy > 0)
+    h["essential"] = h.unit.isin(ESSENTIAL)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     h.to_parquet(OUT, index=False)
     print(f"wrote {OUT}: {len(h):,} unit-hours")

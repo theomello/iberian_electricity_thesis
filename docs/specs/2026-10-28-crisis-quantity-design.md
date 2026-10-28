@@ -41,8 +41,10 @@ interactive fixed effects learn how each plant responds (§5).
 - **Goal**: for each question, an estimate precise enough to separate the claims it is meant to
   separate (pass-through near 1 against near 0; β near 0 against the Italian β).
 - **Non-goals**: a price outcome; a model of Great Britain (descriptive only: no public firm stakes,
-  and its balancing mechanism is pay-as-bid, so the uniform-price stake logic does not apply); a
-  welfare figure in euros for consumers (a later step if Q2 lands).
+  and its balancing mechanism is pay-as-bid, so the uniform-price stake logic does not apply).
+- **End goal (the user's, 2026-10-28)**: a consumer figure in euros. Once ρ is estimated, prices
+  turn it into money: ρ × subsidy × in-money volume, checked against the observed price drop. Not
+  part of the steps below; it is the stage they lead to.
 - **Anti-goal (the user's)**: a result that supports none of the possible claims. A clean run with
   bands from 0 to 1 is a failure. A precise null is a finding.
 
@@ -69,7 +71,9 @@ plant-specific efficiency, 2021-06-15 → 2023-06-30, built by `gas_cap_offer_pa
 - **Iberia has almost no predicted in-money hours before September 2021** (31 unit-days in September,
   1,097 in October). The effective pre-period is 2021-10-01 → 2022-06-14.
 - **Italian essential units** (must-run under regulated offer rules; ARERA 563/21 lists the 2022 set,
-  rules in ARERA 111/06) are flagged by hand and dropped from the main Italian sample.
+  626/22 the 2023 set, rules in ARERA 111/06) are flagged (`essential`) and dropped from the main
+  Italian sample. Of the panel's units only Porcari (2022, 2023) and Sarlux (2023) are on them; the
+  2021 list was not found, so both are flagged over the whole window.
 
 ## 5. Branch B: Q2, the subsidy against a counterfactual from Italy
 

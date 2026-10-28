@@ -421,3 +421,29 @@ day's counterfactual through the date effects. Three readings of intensity:
 - Plant-specific efficiencies only (56 Iberian, 73 Italian); generic ones as a robustness check.
 - Window ends 2023-06-30, as fetched.
 - Firm-level clustering with a wild bootstrap.
+
+## 10. Next: modelling the drift within Iberia (under discussion, 2026-10-28)
+
+Every foreign comparison failed for the same reason: Iberia's markups swung before the cap
+(withholding blocks far above cost: 0% of unit-hours in mid-2021, a third by spring 2022) while
+Italy and Britain stayed steady. Iberia combined an energy island (about 3 GW to France), the 2022
+drought, OMIE's minimum-income condition and a concentrated combined-cycle fleet. So instead of a
+control group: fit Iberian markups on pre-auction Iberian conditions before 2022-06-15, predict the
+no-cap markup after it, and compare with offers over the subsidised cost. Main threat: the cap moved
+some conditions itself (exports to France), so only conditions it did not move enter.
+
+**Leaning (the user, not yet settled):** a model with economic meaning: market power under scarcity,
+with the cause of the withholding at its centre. Candidate causes and what tells them apart:
+- market power: withholding rises with a steeper residual demand (French nuclear outages, the
+  drought), holding gas risk fixed;
+- gas-price risk: withholding rises with gas volatility whatever the competition;
+- the offer rules: withholding moves with the minimum-income condition and its declaration.
+
+Guesses to confirm: Iberia only, gas plants, June 2021 to mid-2023, the firm as the decision unit.
+Open question: is the headline a number (€ of markup per GW of French nuclear lost) or a verdict
+among the causes?
+
+**Set aside, recorded so they are not lost:** France as a quantity comparison (per-plant output is
+public, offers are not; border proximity gives no variation, France being one price zone);
+households on the regulated tariff (PVPC) against fixed-price contracts, a clean split for a
+separate incidence question.

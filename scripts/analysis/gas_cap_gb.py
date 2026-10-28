@@ -84,12 +84,12 @@ def iberia(outcome: str) -> tuple[pd.DataFrame, float]:
     return d, ybar
 
 
-def step1(d: pd.DataFrame, thr: float, dec: int) -> None:
-    pre = d[(d.date >= START) & (d.date <= PRE_END)].copy()
+def step1(d: pd.DataFrame, thr: float, dec: int, label: str = "Britain", start=START) -> None:
+    pre = d[(d.date >= start) & (d.date <= PRE_END)].copy()
     pre["m_u"] = pre.m - pre.groupby("unit").m.transform("mean")
     mon = pre.assign(ym=pre.date.dt.to_period("M")).groupby(["ym", "iberia"]).m_u.mean().unstack()
-    mon.columns = ["Britain", "Iberia"]
-    mon["gap"] = mon.Iberia - mon.Britain
+    mon.columns = [label, "Iberia"]
+    mon["gap"] = mon.Iberia - mon[label]
     print("pre-period, unit-demeaned outcome\n" + mon.round(dec).to_string())
     wk = pre.assign(w=pre.date.dt.to_period("W")).groupby(["w", "iberia"]).m_u.mean().unstack()
     gap = (wk[True] - wk[False]).dropna()
@@ -106,7 +106,7 @@ def step1(d: pd.DataFrame, thr: float, dec: int) -> None:
     print(f"\nweekly gap trend {b[1]:.4g}/week (se {se:.3g}), {b[1] * 52:.3g} a year, {n} weeks"
           f"{'  <-- FAILS' if fail else ''}")
     print(f"placebo caps (unit + date FE, firm clusters, {pre.firm.nunique()} firms), threshold {thr:.3g}:")
-    for p in PLACEBOS:
+    for p in [x for x in PLACEBOS if pd.Timestamp(x) > start]:
         bt, s = did(pre, (pre.iberia & (pre.date >= p)).to_numpy())
         print(f"  {p}: {bt:+.3g} (se {s:.3g}){'  <-- exceeds threshold' if abs(bt) >= thr else ''}")
 

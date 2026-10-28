@@ -313,6 +313,21 @@ before/after within Iberia, conditional on a cost slope estimated on the uncappe
 rests on that slope staying put at the crisis's high gas prices; the bins check is noisy (b_n
 0.12–3.03) and does not settle it.
 
+**Two last tries with Italy (2026-10-28; rules fixed before running, as for step 2b).**
+- *Difference in discontinuities* (`analysis/gas_cap_diff_disc.py`): Iberia's jump at 2022-06-15
+  minus Italy's over the same days, with the same placebo rule. **FAILS at every k.** Iberian and
+  Italian ordinary-day jumps correlate only 0.44–0.54 (mmid, run20), so differencing does not
+  narrow the placebo range (mmid at k = 7: [−83, +96] against Iberia alone [−94, +99]; threshold
+  ±21). At the break D(mmid) = −197 [−430, −68], ρ 1.85. Only p_band, the clearing price, comes
+  near the rule (k = 14: [−29, +22] against ±25).
+- *Italian-looking Iberian plants* (`analysis/gas_cap_italy_like.py`): units whose median |p_mid −
+  cost| in 2021-06-15 → 09-30 is at most Italy's median (€25.4): 19 of 53 (Naturgy 8, EDP 5,
+  Endesa 3, Iberdrola 2, Cepsa 1), tested from 2021-10-01. **FAILS**: mmid trend +130/yr, placebos
+  +57, +63 (threshold 20.5); run20 trend +0.12/yr, placebo 2022-03 +0.051 (0.05).
+
+Reading: the drift is in Iberian plants' offers relative to cost; no Italian subset or local window
+removes it. The Italy comparison is closed.
+
 **Step 2d — Great Britain as a second comparison (data fetched 2026-10-28).** Great Britain was
 uncapped and is not coupled to Iberia (it left the European coupling on 2021-01-01). Its unit-level
 offers are balancing-mechanism offers (Elexon BOD, `fetch/fetch_elexon_bod.py`): prices to raise or

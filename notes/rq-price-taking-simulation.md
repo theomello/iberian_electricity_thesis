@@ -887,3 +887,35 @@ established:
 The fixed step (`rq-fixed-step.md`, ten seeds) reads the earlier periods the other way round. It
 finds no departure in 2019 – 2021H1 (its seller 2020H2 departure went at ten seeds), and a
 departure in 2023 that is Iberdrola's. Neither design finds one in 2024 – 2025.
+
+## 19. The month the departure stops: June 2021, when the clawback was announced (2026-10-28)
+
+`price_taking_simulation.py --kind hydro --months21fine` (actual offers and seeds 1–10, ownership-corrected
+caches), `--combine` → `price_taking_simulation_hydro_by_month2021_single{,_reading}.csv`; log
+`.superpowers/sdd/2026-10-28-hydro-stop/`. Same specification as §15.1 (unit × month effects, control
+`level`), one month at a time. Asked because the 2019 – 21H1 departure (+0.25 on ten seeds, §18) stops in
+2021H2 and four things happen in those weeks.
+
+| month | actual β | AR set | F | price-takers (10 seeds) | actual − price-takers | bias-adjusted range | departs |
+|---|---|---|---|---|---|---|---|
+| 2021-04 | +0.44 | [0.24, 0.73] | 96 | −0.52 … +0.14 | +0.71 | [0.10, 1.25] | **yes** |
+| 2021-05 | +0.24 | [0.13, 0.36] | 306 | −0.10 … +0.09 | +0.24 | [0.04, 0.46] | **yes** |
+| 2021-06 | −0.08 | [−0.27, 0.15] | 81 | −0.08 … +0.14 | −0.13 | [−0.41, 0.23] | no |
+| 2021-07 | −0.04 | [−0.22, 0.10] | 168 | −0.30 … +0.05 | +0.07 | [−0.27, 0.40] | no |
+| 2021-08 | −0.01 | [−0.11, 0.07] | 148 | −0.13 … +0.10 | +0.01 | [−0.21, 0.20] | no |
+
+- **The departure stops between May and June 2021**, before every candidate dated earlier: the IVPEE
+  suspension (2021-07-01), OMIE's new offer limits (2021-07-07, `notes/rq-gas-cap-declared-cost.md` §1) and
+  the clawback in force (2021-09-16). The ten-seed July – August reading (+0.04) agrees.
+- **On 1 June 2021 the Council of Ministers approved the draft law to claw back the "CO2 windfall" of
+  non-emitting plants built before 2005** (Anteproyecto de Ley por el que se actúa sobre la retribución del
+  CO2 no emitido: about 85 TWh a year, 67% nuclear and 29% hydro; government press release of 2021-06-01;
+  the bill went to Parliament on 2021-08-03 and RDL 17/2021 brought the clawback in from 2021-09-16). The
+  month boundary is the announcement date.
+- **Reading**: the stop fits the regulatory-risk explanation of §16 (firms stop pricing hydro above the
+  price-takers once their inframarginal hydro is under political scrutiny), and none of the July dates.
+  It is a coincidence of dates on one month's data, not a test: June also has rising gas (MIBGAS 29 → 36
+  → 45, June–August) and falling storage (10.6 TWh in June, 7.7 in August), and single months carry wide
+  ranges (April's price-taker range alone spans 0.66).
+- What would sharpen it (needs a yes): weekly cells from mid-May to mid-June, and the seller/buyer split of
+  §16 for May and June, since the clawback hit net sellers' inframarginal output.

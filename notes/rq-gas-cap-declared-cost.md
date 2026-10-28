@@ -103,3 +103,50 @@ positive on delivery day 2023-02-25. The declared cost simply follows the gross 
 - Decide the reference for ρ (before the cap, after it, or both as bounds) and write it into the design as
   the gas-cap outcome, with the placebo rule fixed before any regression.
 - Restate the design's §10 drift question on an outcome the limits change does not move.
+
+## 5. Capacity offered near cost, in hours a plant can expect to run (2026-10-28)
+
+`scripts/analysis/gas_cap_inmoney_pretrend.py` → `outputs/tables/gas_cap_inmoney_{pretrend,monthly}.csv`.
+
+**The idea, by example.** A 400 MW combined cycle offers 260 MW near its cost and 140 MW at €800. If the price
+is €250 it runs 260 MW, whatever the €800 says. So measure the share of capacity offered at or below cost
++ €20 (`run20`), and only in hours the plant could expect to be in the money: the same hour's price the day
+before (known when offers close) above the plant's cost by more than €50. The sample is then not chosen by the
+price the offers set.
+
+**Monthly mean run20 in predicted in-money hours:**
+
+| | 2021-09 → 2022-02 | 2022-03 → 2022-06 | after the cap, 2022-07 → 2023-06 |
+|---|---|---|---|
+| Iberia | 0.64–0.72 | 0.60–0.67 | 0.63–0.73 |
+| Italy | 0.41–0.47 | 0.29–0.34 | 0.21–0.33 |
+
+- **Iberia is flat throughout**, cap or no cap. **Italy falls in March 2022** (the invasion of Ukraine)
+  and stays lower. Pooled over all hours, run20 trended (+0.12 a year); in predicted in-money hours the
+  Iberian side does not move.
+- **Iberia has no predicted in-money hours before September 2021** (31 unit-days in September, 1,097 in
+  October): gas plants were out of the money in summer 2021.
+
+**The design's step-1 rule, unchanged (threshold 0.05 of capacity):**
+
+| sample | trend per year | placebo 2021-10-01 | 2022-01-01 | 2022-03-01 | rule |
+|---|---|---|---|---|---|
+| predicted in money, margin > €50 (main) | +0.038 (0.033) | **+0.100** (0.059) | +0.024 (0.044) | +0.022 (0.034) | **fails** |
+| predicted in money, margin > €20 | **+0.059 (0.018)** | +0.047 (0.030) | +0.038 (0.038) | +0.034 (0.030) | **fails** |
+| realised in money, margin > €50 (comparison) | +0.041 (0.025) | **−0.052** (0.041) | +0.022 (0.039) | +0.035 (0.030) | fails |
+| all hours (the earlier second run) | **+0.116 (0.017)** | **+0.066** | **+0.069** | **+0.067** | fails |
+
+- **Much closer than before, but it fails.** In the main sample the trend and two of three placebos pass.
+  The failing placebo, 2021-10-01, has almost no Iberian data before it (31 unit-days), so it compares
+  October with nothing. With margin > €20 the trend fails narrowly (+0.059 a year against 0.05).
+- **The comparison country is the one that moves.** Italy's drop in March 2022 sits inside the pre-period, so
+  even on this outcome Italy is not a stable control for the months just before the cap.
+- **Not done, and it would need a decision:** shortening the pre-period to October 2021 → February 2022
+  (before Italy's break, after Iberia enters the money) would change the rule after seeing the data.
+
+**Run50** (at or below cost + €50) behaves the same way: trend passes, placebo 2021-10-01 +0.26.
+
+**The water value in autumn 2021** (the question why almost all hydro was offered above €180 by October
+2021): mostly the price level, with low storage adding to it. Median λ* (the price-taking water value) went
+from €98 in June 2021 to €269 in October as forward prices rose with gas; peninsular hydro storage fell from
+10.6 TWh to 6.1 TWh over the same months (ESIOS 623).

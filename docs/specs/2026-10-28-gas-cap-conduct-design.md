@@ -161,6 +161,8 @@ plant withholds with the price it runs at, and records withholding differently i
   capacity) for run20.
 - The first run's failure is reported next to this one whatever the result.
 
+**Step 1, run20 in predicted in-money hours (2026-10-28, `analysis/gas_cap_inmoney_pretrend.py`, `notes/rq-gas-cap-declared-cost.md` §5): FAILS, narrowly.** Hours where the day-before price exceeds cost by €50: trend +0.038/yr (se 0.033), placebos +0.100 (2021-10-01, on 31 Iberian unit-days before it), +0.024, +0.022. Iberia's run20 is flat (0.60–0.73) from September 2021 to June 2023; Italy's falls in March 2022 (0.41–0.47 → 0.29–0.34).
+
 **Step 1b — what drives any remaining drift.** If either part fails: the gap by firm and by unit, its dating,
 and the events that hit one side only (French nuclear outages and Iberian exports in 2022; the Iberian
 drought; PSV against MIBGAS through the war-driven spikes). Descriptive; it decides whether a control can

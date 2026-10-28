@@ -1,0 +1,21 @@
+sample,outcome,test,b,se,fails,unit_days_pre
+"predicted in money, margin > 50",run20,trend per year,0.037601017076714975,0.03283145057813931,False,20387
+"predicted in money, margin > 50",run20,placebo 2021-10-01,0.09985436508771778,0.05941224141531889,True,20387
+"predicted in money, margin > 50",run20,placebo 2022-01-01,0.02355709254548374,0.04354691505409862,False,20387
+"predicted in money, margin > 50",run20,placebo 2022-03-01,0.02185191113715285,0.03422126583018486,False,20387
+"predicted in money, margin > 20",run20,trend per year,0.058849432609649865,0.017583204407203377,True,30814
+"predicted in money, margin > 20",run20,placebo 2021-10-01,0.04738391652108204,0.030019945948144416,False,30814
+"predicted in money, margin > 20",run20,placebo 2022-01-01,0.037930689389040595,0.03775821331114062,False,30814
+"predicted in money, margin > 20",run20,placebo 2022-03-01,0.03366516381313044,0.030375342843573967,False,30814
+"realised in money, margin > 50 (comparison only)",run20,trend per year,0.04127824884493688,0.02461784630248174,False,20015
+"realised in money, margin > 50 (comparison only)",run20,placebo 2021-10-01,-0.05244311822608969,0.04090858490905834,True,20015
+"realised in money, margin > 50 (comparison only)",run20,placebo 2022-01-01,0.022333504129890762,0.039200450782387215,False,20015
+"realised in money, margin > 50 (comparison only)",run20,placebo 2022-03-01,0.034702330900681984,0.029616212119170062,False,20015
+all hours (step 1 second run),run20,trend per year,0.11547327577149502,0.016714207801301905,True,36587
+all hours (step 1 second run),run20,placebo 2021-10-01,0.06581630647621854,0.032210288067136404,True,36587
+all hours (step 1 second run),run20,placebo 2022-01-01,0.06865435282329688,0.03704219043246812,True,36587
+all hours (step 1 second run),run20,placebo 2022-03-01,0.06670908806041065,0.030457236221237607,True,36587
+"predicted in money, margin > 50",run50,trend per year,0.05759134700915938,0.04142093493184756,False,20387
+"predicted in money, margin > 50",run50,placebo 2021-10-01,0.26385508072083336,0.08585200227011855,True,20387
+"predicted in money, margin > 50",run50,placebo 2022-01-01,0.02786564468840517,0.04935038937796686,False,20387
+"predicted in money, margin > 50",run50,placebo 2022-03-01,0.030104880042513327,0.03683588369838409,False,20387

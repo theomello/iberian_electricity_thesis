@@ -363,6 +363,9 @@ def hydro_halfyear(seed: int, only: list[str] | None = None) -> list[dict]:
 # 2021H2 by month: before the windfall clawback (RDL 17/2021, from 2021-09-16) and with it
 # (fixed 2026-10-19, before the split was read)
 MONTHS21 = {"2021-07 – 08": ("2021-07-01", "2021-09-01"), "2021-09 – 12": ("2021-09-01", "2022-01-01")}
+# 2026-10-28: single months around the stop, to date it against the IVPEE suspension (2021-07-01),
+# OMIE's new offer limits (2021-07-07) and the clawback (2021-09-16)
+MONTHS21_FINE = {f"2021-{m:02d}": (f"2021-{m:02d}-01", f"2021-{m + 1:02d}-01") for m in range(4, 9)}
 
 
 def hydro_months21(seed: int, only: list[str] | None = None) -> list[dict]:
@@ -374,6 +377,21 @@ def hydro_months21(seed: int, only: list[str] | None = None) -> list[dict]:
     base = "unit × month | Zb"
     res = []
     for lab, (a, b) in MONTHS21.items():
+        if only and lab not in only:
+            continue
+        s = d[(d.date >= a) & (d.date < b)]
+        res.append(sh.est(s, f"{base} | {lab}", ["Zb"], y="gap30", fe=lb.UNIT_MONTH, slopes=sl, slopes_by=by)
+                   | {"base": base, "months": lab, "control": "level"})
+    return res
+
+
+def hydro_months21_fine(seed: int, only: list[str] | None = None) -> list[dict]:
+    """As `hydro_months21`, one month at a time, April → August 2021."""
+    d, _ = hydro_level_rows(seed)
+    sl, by = CONTROLS["level"]
+    base = "unit × month | Zb"
+    res = []
+    for lab, (a, b) in MONTHS21_FINE.items():
         if only and lab not in only:
             continue
         s = d[(d.date >= a) & (d.date < b)]
@@ -509,6 +527,7 @@ SPLITS = {"firms": (hydro_firms, "without", "dropfirm", "without_firm"),
           "pumped": (hydro_pumped, "kind", "pumped", "by_kind"),
           "halfyear": (hydro_halfyear, "half", "halfyear", "by_halfyear"),
           "months21": (hydro_months21, "months", "months21", "by_month2021"),
+          "months21fine": (hydro_months21_fine, "months", "months21fine", "by_month2021_single"),
           "conditions": (hydro_conditions, "cell", "conditions", "by_condition"),
           "sidehalf": (hydro_side_halfyear, "cell", "sidehalf", "by_side_halfyear")}
 
@@ -670,6 +689,8 @@ def main() -> int:
                     "storage (control level)")
     ap.add_argument("--halfyear", action="store_true", help="hydro only: the departure in each half-year "
                     "2019H1 → 2025H1 (control level)")
+    ap.add_argument("--months21fine", action="store_true", help="hydro only: each month April → August 2021 "
+                    "(dates the stop of the 2019–21H1 departure)")
     ap.add_argument("--months21", action="store_true", help="hydro only: July–August 2021 against "
                     "September–December 2021 (control level)")
     ap.add_argument("--conditions", action="store_true", help="hydro only: part 2, β by condition (side, fill, "

@@ -1894,6 +1894,15 @@ change — but still a lead, not a demonstration. Nobody has shown the mechanism
 by which the new typology breaks the market-clearing identity, and it does not
 explain why the cluster *ends* on 2025-06-09.
 
+### Offer prices were capped at €0–180.30 until 2021-07-06
+Verified 2026-10-28 on `curva_pbc_uof` (status `O`). Until delivery day 2021-07-06 every day-ahead
+offer and bid lies between €0 and €180.30. From **2021-07-07** the limits are **−€500 and €3,000**,
+the European coupling's harmonised limits, set by the CNMC resolution of 6 May 2021 (BOE-A-2021-8362,
+which names the old limits as €0 and €180); the first negative sell offer is that day, the first sell
+offer above €180.30 on 2021-07-10. **Any count of offers far above cost or below zero is zero by rule
+before that date**: read a rise in high-priced blocks across mid-2021 as the limits moving, not conduct.
+The clearing price itself never came near either limit (Spanish maximum €700, minimum −€15).
+
 ### The 15-minute switch on 2025-10-01
 OMIE moved from hourly to **15-minute market time units** on 2025-10-01 (the
 EU-wide MTU change). Days have 96 periods from that date, 24 before. Any

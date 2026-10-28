@@ -146,6 +146,8 @@ share of Iberian unit-hours price capacity far above cost (over €200 above cos
 April 2022), while Italian plants withhold by not offering, which leaves p50 missing. p50 mixes how much a
 plant withholds with the price it runs at, and records withholding differently in the two countries.
 
+**Correction (2026-10-28, `notes/rq-gas-cap-declared-cost.md`): the "0% in mid-2021" is a rule, not restraint.** Until delivery day 2021-07-06 OMIE accepted no offer above €180.30 (or below €0); from 2021-07-07 the limits are −€500 and €3,000 (CNMC resolution of 6 May 2021, BOE-A-2021-8362). The first sell offers above €180.30 are on 2021-07-10. So no block could sit €200 above cost before July 2021, and the rise in such blocks from then partly records the new room. The blocks also rarely bind: before the cap the Spanish price reached €450 in 48 of 6,168 hours from 2021-10-01 (sweep peek).
+
 **Step 1, second run — the two-part outcome, fixed here before running.**
 - **Part 1, willingness to run**: `run20` = MW offered at or below cost + €20, divided by K (the unit's
   pre-cap 99th-percentile offered MW). €10 and €50 as checks. Withholding by a high price and by not
@@ -425,7 +427,7 @@ day's counterfactual through the date effects. Three readings of intensity:
 ## 10. Next: modelling the drift within Iberia (under discussion, 2026-10-28)
 
 Every foreign comparison failed for the same reason: Iberia's markups swung before the cap
-(withholding blocks far above cost: 0% of unit-hours in mid-2021, a third by spring 2022) while
+(withholding blocks far above cost: 0% of unit-hours in mid-2021, a third by spring 2022; the 0% is OMIE's €180.30 offer ceiling, lifted 2021-07-07, see the correction in §6) while
 Italy and Britain stayed steady. Iberia combined an energy island (about 3 GW to France), the 2022
 drought, OMIE's minimum-income condition and a concentrated combined-cycle fleet. So instead of a
 control group: fit Iberian markups on pre-auction Iberian conditions before 2022-06-15, predict the

@@ -146,6 +146,8 @@ detect; the mapping from the actual outcome to ρ is linear interpolation betwee
 the minimum detectable effect of estimator B on placebo cap dates (2022-01-01, 2022-03-01) with the
 bootstrap. **Stop if the MDE exceeds half the (i)–(ii) gap.**
 
+**B1 result and amendment (2026-10-28, `notes/rq-crisis-quantity.md`).** As fixed, B1 stopped both outcomes (run20: MDE 0.133 against half the gap 0.129). The user then restricted the average to the high-subsidy months, June–September and December 2022, **a choice made after seeing the result**: run20 passes there (gap 0.410, MDE 0.133), run20_gross still fails (gap 0.099) and is dropped from Q2. B2 below uses run20 over those five months.
+
 **B2. Estimate** (only if B1 passes). **Stop rule**: the mean gap after 2023-02-25 outside
 [−0.05, +0.05] of capacity at the chosen r means the counterfactual does not hold; report and stop.
 Otherwise report ρ with its band, and the r = 0…5 sensitivity.

@@ -2,7 +2,7 @@
 """Step B1 of the crisis quantity design: how large is the effect Branch B must detect, and can it?
 (docs/specs/2026-10-28-crisis-quantity-design.md §7, fixed before running)
 
-    .venv/bin/python scripts/analysis/gas_cap_quantity_b1.py [--reps 199]
+    .venv/bin/python scripts/analysis/gas_cap_quantity_b1.py [--reps 199] [--all-hours]
 
 1. The two ends. For each Iberian gas unit, its offer steps over the last eight weeks before the cap
    (2022-04-20 -> 2022-06-14), in predicted in-money hours, as markups m = p - gross cost, pooled by
@@ -24,6 +24,8 @@ subsidy > EUR 50), Italian essential units out. Units with at most 30% of weeks 
 2021-10-01 -> 2023-06-30 (50% if fewer than 25 Iberian units pass; stop below 25).
 
 Writes outputs/tables/gas_cap_quantity_b1_ends.csv (weekly ends) and gas_cap_quantity_b1_mde.csv.
+`--all-hours` drops the in-money condition (every hour, added 2026-11-02 after B2, the user's decision)
+and writes the same files suffixed `_allhours`.
 """
 from __future__ import annotations
 
@@ -145,9 +147,11 @@ def placebo_mde(W: pd.DataFrame, ib: np.ndarray, firm: np.ndarray, reps: int, rn
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--reps", type=int, default=199)
+    ap.add_argument("--all-hours", action="store_true", help="every hour, not predicted in-money hours")
     a = ap.parse_args()
+    sfx = "_allhours" if a.all_hours else ""
     rng = np.random.default_rng(20261028)
-    h = panel()
+    h = panel(None if a.all_hours else MARGIN)
     e = ends(h)
     zero = e[e.subsidy == 0]
     assert np.allclose(zero.full_run20, zero.none_run20) and np.allclose(zero.full_run20_gross, zero.none_run20_gross), \
@@ -156,7 +160,7 @@ def main() -> int:
     bind = e[e.subsidy > 0]
     gap = {"run20": float((bind.full_run20 - bind.none_run20).mean()),
            "run20_gross": float((bind.full_run20_gross - bind.none_run20_gross).mean())}
-    e.to_csv(T / "gas_cap_quantity_b1_ends.csv")
+    e.to_csv(T / f"gas_cap_quantity_b1_ends{sfx}.csv")
     print(f"ends over {len(bind)} weeks with a subsidy (mean S {bind.subsidy.mean():.1f}):")
     print(bind[["full_run20", "none_run20", "full_run20_gross", "none_run20_gross"]].mean().round(3).to_string())
     print("full - none gap:", {k: round(v, 3) for k, v in gap.items()})
@@ -178,7 +182,7 @@ def main() -> int:
             print(f"  placebo {row['placebo']}: r {row['r']}, gap {row['gap']:+.3f} (se {row['se']:.3f}), "
                   f"MDE {row['mde']:.3f} vs half the gap {row['threshold']:.3f}{'  <-- FAILS' if row['fails'] else ''}")
     out = pd.DataFrame(rows)
-    out.to_csv(T / "gas_cap_quantity_b1_mde.csv", index=False)
+    out.to_csv(T / f"gas_cap_quantity_b1_mde{sfx}.csv", index=False)
     for y in ("run20", "run20_gross"):
         f = out[out.outcome == y]
         verdict = "no units" if f.empty else ("STOP" if f.fails.any() else "PASS")

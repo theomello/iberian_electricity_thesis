@@ -92,3 +92,38 @@ but months before and after the cap do not overlap.
 
 Reading: the third Italian comparison to fail its own check after the cap ended (p_mid +€168; now run20
 +0.13). The within-Iberia description stands (actual run20 at the full pass-through end, B1 section).
+
+## B2 on all hours (2026-11-02, the user's decision after the main B2 stopped)
+
+**A sample change made after seeing the result; any write-up must say so.** Main sample = every hour of each
+unit (no in-money condition), Italian essential units still out; same units rule, same high-subsidy months,
+same stop rules. `gas_cap_quantity_b1.py --all-hours` and `gas_cap_quantity_b2.py --all-hours` → the same
+tables suffixed `_allhours`. 51 Iberian and 53 Italian units × 92 weeks; 20 high-subsidy weeks.
+
+**B1 on all hours: STOP on power.** Full − none gap over the high-subsidy months 0.339 (full 0.529, none
+0.190), so half is 0.170. Placebo MDEs 0.117 (2022-01-01, r 0) and **0.207** (2022-03-01, r 3): the worse one
+fails. The pre-period fit is also weaker than in-money hours: placebo gaps +0.053 and +0.063 (in-money +0.004,
+−0.019), each about one se.
+
+**B2 on all hours: the after-check holds at the chosen r.** Xu's cross-validation picks r = 2.
+
+| | estimate | 95% (firm block bootstrap, 12 Iberian / 13 Italian firms) |
+|---|---|---|
+| ATT, high-subsidy weeks | +0.058 | [−0.011, +0.171] |
+| ρ = 1 + ATT / 0.339 | 1.17 | [0.97, 1.50] |
+| ATT after 2023-02-25 (should be ~0) | −0.030 | [−0.150, +0.108] |
+
+Sensitivity (r, ATT high / after / ρ): 0 +0.110 / −0.017 / 1.32; 1 +0.103 / **−0.064** / 1.30; 3 +0.036 /
+−0.036 / 1.11; 4 +0.016 / **−0.055** / 1.05; 5 +0.012 / **−0.054** / 1.04. The after-gap is outside ±0.05 at
+r = 1, 4, 5, so the check holds at the chosen r but not robustly. Bai's θ on Iberia × high weeks −0.05 to
++0.10, sign changing with r. Checks: the in-money sample inside this run gives ATT high +0.007, after +0.143
+(the main B2's failure, reproduced); the hour-of-day reweighting does nothing here (every hour is present on
+both sides of the cap).
+
+**Reading.** On all hours the Italian counterfactual no longer drifts after the cap, which supports the lead
+that the main B2's post-cap gap came from which hours count as in-money in 2023. But the design is
+underpowered on this sample (B1 fails) and the after-check is fragile across r. ρ = 0 (no pass-through) is
+far outside the interval at every r; ρ = 1 (full pass-through) is inside it. So: **the pass-through estimate
+is consistent with full pass-through and rejects none, with a wide interval, on a sample chosen after seeing
+the result.** It agrees with the within-Iberia description (ρ ≈ 1.1) and the declared-cost result (~0.9–1.0).
+Not a stand-alone estimate; usable as corroboration.

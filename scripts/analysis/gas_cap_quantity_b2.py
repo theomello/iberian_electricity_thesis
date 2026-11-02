@@ -2,7 +2,7 @@
 """Step B2 of the crisis quantity design: the cap's pass-through, Iberia against a counterfactual
 built from Italy (docs/specs/2026-10-28-crisis-quantity-design.md §5, §7; B1 amended).
 
-    .venv/bin/python scripts/analysis/gas_cap_quantity_b2.py [--reps 199]
+    .venv/bin/python scripts/analysis/gas_cap_quantity_b2.py [--reps 199] [--all-hours]
 
 Outcome: weekly unit means of run20 (MW offered at or below net cost + EUR 20, over K) in predicted
 in-money hours (`gas_cap_quantity_b1.panel`), units as in B1. Estimator B (Xu 2017, main): factors
@@ -22,6 +22,8 @@ Checks (point estimates at the chosen r): (a) all hours, (b) margin EUR 20, (c) 
 Iberian post-cap hours reweighted to the pre-cap hour-of-day mix.
 
 Writes outputs/tables/gas_cap_quantity_b2.csv (estimates) and gas_cap_quantity_b2_weekly.csv (ATT_w).
+`--all-hours` (2026-11-02, the user's decision after the main run stopped) uses every hour as the main
+sample, with the ends from `gas_cap_quantity_b1.py --all-hours`; outputs suffixed `_allhours`.
 """
 from __future__ import annotations
 
@@ -35,7 +37,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts" / "analysis"))
 from gas_cap_ife import bai, gsc, xu_cv  # noqa: E402
-from gas_cap_quantity_b1 import CAP0, matrix, panel  # noqa: E402
+from gas_cap_quantity_b1 import CAP0, MARGIN, matrix, panel  # noqa: E402
 
 T = ROOT / "outputs" / "tables"
 CAP1 = pd.Timestamp("2023-02-25")
@@ -43,8 +45,8 @@ HIGH = ["2022-06", "2022-07", "2022-08", "2022-09", "2022-12"]
 TOL = 0.05
 
 
-def weeks_info(cols: pd.DatetimeIndex) -> tuple[np.ndarray, np.ndarray, float]:
-    e = pd.read_csv(T / "gas_cap_quantity_b1_ends.csv", parse_dates=["w"]).set_index("w")
+def weeks_info(cols: pd.DatetimeIndex, sfx: str = "") -> tuple[np.ndarray, np.ndarray, float]:
+    e = pd.read_csv(T / f"gas_cap_quantity_b1_ends{sfx}.csv", parse_dates=["w"]).set_index("w")
     s = e.subsidy.reindex(cols).fillna(0.0)
     high = (s > 0).to_numpy() & cols.strftime("%Y-%m").isin(HIGH)
     gap = float((e.full_run20 - e.none_run20).reindex(cols)[high].mean())
@@ -75,9 +77,11 @@ def reweighted(h: pd.DataFrame) -> pd.DataFrame:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--reps", type=int, default=199)
+    ap.add_argument("--all-hours", action="store_true", help="every hour as the main sample")
     a = ap.parse_args()
+    sfx = "_allhours" if a.all_hours else ""
     rng = np.random.default_rng(20261028)
-    h = panel()
+    h = panel(None if a.all_hours else MARGIN)
     W, thr = matrix(h, "run20")
     meta = h.drop_duplicates("unit").set_index("unit")
     ib = meta.iberia.reindex(W.index).to_numpy()
@@ -85,7 +89,7 @@ def main() -> int:
     cols = W.columns
     M = W.to_numpy()
     pre = cols < CAP0
-    high, after, gap = weeks_info(cols)
+    high, after, gap = weeks_info(cols, sfx)
     print(f"{ib.sum()} Iberian, {(~ib).sum()} Italian units x {len(cols)} weeks (missing limit {thr:.0%}); "
           f"{high.sum()} high-subsidy weeks, {after.sum()} weeks after the subsidy; gap full - none {gap:.3f}")
     cv = xu_cv(M, ib, pre)
@@ -117,7 +121,8 @@ def main() -> int:
     print(f"  ATT after 2023-02-25      {aa:+.3f}  95% [{ci_a[0]:+.3f}, {ci_a[1]:+.3f}]  "
           f"{'<-- outside +-0.05: STOP' if stop else '(within +-0.05: check holds)'}")
     checks = []
-    for lab, hh in (("all hours", panel(None)), ("margin > 20", panel(20.0))):
+    alt = (("in-money hours", panel()),) if a.all_hours else (("all hours", panel(None)), ("margin > 20", panel(20.0)))
+    for lab, hh in alt:
         Wc, _ = matrix(hh, "run20")
         m2 = hh.drop_duplicates("unit").set_index("unit")
         ibc = m2.iberia.reindex(Wc.index).to_numpy()
@@ -136,9 +141,9 @@ def main() -> int:
                                     "att_after_hi": ci_a[1], "gap": gap, "stop": stop}]),
                      pd.DataFrame(sens).assign(estimate="sensitivity"),
                      pd.DataFrame(checks).assign(estimate="check")], ignore_index=True)
-    out.to_csv(T / "gas_cap_quantity_b2.csv", index=False)
+    out.to_csv(T / f"gas_cap_quantity_b2{sfx}.csv", index=False)
     pd.DataFrame({"week": cols, "high": high, "after": after, "att": att}).to_csv(
-        T / "gas_cap_quantity_b2_weekly.csv", index=False)
+        T / f"gas_cap_quantity_b2_weekly{sfx}.csv", index=False)
     print(f"\nB2 rule: {'STOP (counterfactual fails after the subsidy)' if stop else 'counterfactual holds'}")
     return 0
 

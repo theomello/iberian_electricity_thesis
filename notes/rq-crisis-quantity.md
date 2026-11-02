@@ -127,3 +127,52 @@ far outside the interval at every r; ρ = 1 (full pass-through) is inside it. So
 is consistent with full pass-through and rejects none, with a wide interval, on a sample chosen after seeing
 the result.** It agrees with the within-Iberia description (ρ ≈ 1.1) and the declared-cost result (~0.9–1.0).
 Not a stand-alone estimate; usable as corroboration.
+
+## B3. Dose-response against Italy — design fixed before running (2026-11-02)
+
+The user's request after the all-hours B2 (a fourth Italian specification; say so in any write-up). Instead of
+the mean gap over high-subsidy weeks, test the shape the two ends predict week by week. With g_w = full − none
+(B1 ends) and ATT_w the weekly Iberia − counterfactual gap from estimator B (Xu 2017, as B2):
+
+    ATT_w = a + b · g_w,  over every week from 2022-06-13 to 2023-06-30 (weeks with g_w = 0 included)
+
+Full pass-through gives b = 0, none gives b = −1, so **ρ = 1 + b**. The intercept a absorbs any constant post-cap
+drift (what broke the in-money B2: +0.13 with no subsidy). g_w rises to 0.6 in August 2022, falls to ~0 in late
+October–November, returns to 0.4 in December, and is 0 from late February 2023: the dip and the December
+return separate the slope from slow drift.
+
+- **Main:** in-money sample (the design's fixed sample), r by Xu's cross-validation as in B2, OLS weighted
+  equally by week, 95% interval from the same firm block bootstrap within country (199 draws; ATT_w
+  re-estimated each draw, g_w held fixed).
+- **Check (stop rule, fixed):** add a linear time trend over the same weeks. If the trend version's ρ falls
+  outside the main 95% interval, the slope is picking up time, not subsidy → STOP.
+- **Reported beside, not decisive:** r = 0…5; the all-hours sample with its own ends (chosen after seeing B2).
+
+### B3 results (2026-11-02): the check holds on both samples; in-money ρ ≈ 0.75
+
+`scripts/analysis/gas_cap_quantity_b3.py [--all-hours]` → `outputs/tables/gas_cap_quantity_b3{,_allhours}.csv`.
+
+| sample | r | intercept a | ρ = 1 + b, 95% | ρ with linear trend, 95% | rule |
+|---|---|---|---|---|---|
+| **in-money (main, fixed)** | 0 | +0.142 | **0.73 [0.51, 1.03]** | 0.79 [0.66, 0.91] | holds |
+| all hours (chosen after B2) | 2 | +0.000 | 1.18 [0.78, 1.50] | 0.96 [0.76, 1.19] | holds |
+
+Firm block bootstrap, 199 draws: 10 Iberian / 12 Italian firms in-money, 12 / 13 all hours. Sensitivity, ρ
+(trend) at r = 0…5: in-money 0.73, 0.70, 0.69, 0.63, 0.54, 0.57 (0.79, 0.79, 0.79, 0.77, 0.74, 0.75); all
+hours 1.27, 1.38, 1.18, 1.18, 1.16, 1.16 (0.99, 1.06, 0.96, 1.07, 0.97, 1.01).
+
+**Reading.**
+- On the main sample the dose-response works where the mean did not: the intercept takes the post-cap drift
+  (+0.142, the +0.134 that stopped B2), and the slope, identified off the October–November dip and the December
+  return, gives ρ 0.73. No pass-through (ρ = 0) is rejected at every r; full pass-through is just inside the
+  interval (upper end 1.03) without the trend and rejected with it (0.66–0.91). ρ falls as r rises (0.54–0.73),
+  so the point estimate is not tight. Read: **about three-quarters of the subsidy reached offers near cost**,
+  full pass-through borderline.
+- On all hours ρ is 1.18, and 0.96–1.07 with the trend; full pass-through not rejected, none rejected.
+- **The two samples disagree on the point (0.73 against 1.18); the intervals overlap on [0.78, 1.03].** The
+  in-money sample is the design's and was fixed first. All hours was chosen after B2 and its power check
+  (B1) fails.
+- Against the other gas-cap results: declared minimum-income cost 0.9–1.0, within Iberia ρ ≈ 1.1. B3 in-money
+  sits below both. A difference between what plants declare and what they offer near cost would be a finding
+  in itself, but these intervals do not establish it.
+- A fourth Italian specification, requested after three failed; any write-up must say so.

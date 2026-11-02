@@ -421,3 +421,38 @@ in the regions the old ones did, the index is only rescaled, which changes nothi
   volume (offered share flat), location (§6), or the timing of trips (§8). With
   sets this wide, thermal offers do not pin β between price-taking and Nash.
 
+
+## 11. Price-taker band and closure (2026-11-02)
+
+**Question.** Is the §6 negative sign the estimator? A price-taker offers at its own cost,
+so the §6 IV with cost as the outcome (same effects, instruments and week clusters) is the
+β a price-taker would show. Scratch script, not committed; it reads the stored
+`outage_offer_panel.parquet` (2026-10-05, before the 2026-10-22 ownership fixes) and
+`hydro_cost_daily.parquet` (λ*30s) for hydro.
+
+| sample | outcome | β | 95% AR set | F |
+|---|---|---|---|---|
+| thermal, both doses | cost (c_bid) | +0.006 | [−0.006, 0.018] | 11.2 |
+| thermal, unplanned | cost | +0.008 | [−0.005, 0.030] | 11.6 |
+| hydro, both doses | cost (λ*) | +0.08 | [−0.12, 0.24] | 8.0 |
+| hydro, unplanned | cost | −0.09 | [−0.59, 0.14] | 6.5 |
+| thermal, both doses | offer o50 | −1.58 | [−6.97, 2.78] | 11.2 |
+| hydro, both doses | offer o50 | +0.41 | [−1.68, 2.17] | 8.0 |
+
+Reduced form: the offered share rises slightly with the dose (thermal +0.007 per GW, se
+0.003, both doses; hydro +0.005–0.008, ns), so the owner offers a little more volume when
+its reactor is out (book balancing). Cost does not move.
+
+**Reading.** The price-taker band is about 0 (thermal within ±0.03, hydro within ±0.6), so
+§6 is not contaminated the way the step estimator was (`rq-price-taking-simulation.md`).
+The negative point estimates are noise or commitment, not cost. §6 stands as a bound:
+β = 1 rejected pooled (p 0.03), 0 not rejected; on thermal or hydro alone both are inside.
+Re-run §6 on the rebuilt panel before quoting the pooled figure.
+
+**Closed.** A review of six revival routes on 2026-11-02 found none that adds events:
+intraday trip timing (the owner's shortfall is a median 165 MW, a β = 1 move of about
+€1.9 per trip against a detectable €4), planned refuelling split across co-owners (51
+spells, reintroduces slow confounds), quantities on D and D/|RD′| (price-takers reproduce
+the split, `rq-fixed-step.md`), REE redispatch PDVD − PDBF (chosen through constraint
+offers), ENTSO-E Art. 15.1 (a handful of post-2023 trips). About 100 reactor spells carried
+by two firms cannot separate 0 from 1; the outage designs end here.

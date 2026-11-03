@@ -258,3 +258,63 @@ cleared demand, and needs the price-setting step and a check against the observe
 hour-level setter table on disk). (2) V uses offered MW, not cleared, so it overstates the subsidy actually
 paid on these units' output; the euros are an upper bound on the offer side. (3) Only the 54 modelled gas
 units; other gas and coal plants are out. (4) ρ is B3's, a fourth Italian specification (see above).
+
+## D. The consumer's saving — re-clearing the day-ahead curve without the pass-through (design fixed before running, 2026-11-03)
+
+User asked for the price-setting step after C. **A first-order count (hours a subsidised plant sets the price × ρS
+× demand) is wrong in both directions** (raising a unit's offers can also move the price when it was *not* the
+setter: it drops out below another unit, and a dearer one is needed). So the saving is a **counterfactual
+re-clear**, using the effective curve of `step_curves.py` (accepted rows on the accepted side of the price, offered
+rows at and beyond it).
+
+For each ρ in {0.51, 0.54, 0.55, 0.73, 0.75, 1.00, 1.03}:
+1. Hours: 2022-06-15 → 2023-02-25, days with S_d > 0 (panel `subsidy`, Iberian), 24-period days, **valid** hours
+   only (unsplit Spain/Portugal, clearing identity holds, re-clear of the actual curve within €0.5 of the
+   published price). Split hours are left out and reported (share of the hours and of V).
+2. Counterfactual "no pass-through of the part ρ": every sell row of the 54 modelled gas units (the set of C and
+   B1) is moved up by ρ·S_d; the hour is re-cleared; p0 is the new price. Actual price p_a = re-clear of the
+   unmoved curve. Hourly gross saving (p0 − p_a) × cleared buy MW × 1 h.
+3. G(ρ) = Σ hourly gross saving (€ m). B = Σ S_d × cleared sell MW of the 54 units (€ m): the subsidy bill on
+   the modelled units, which the mechanism charged to buyers. **Net saving = G − B** (indicative: the quantities
+   are the actual world's in both terms, and B is a floor, only 54 units and auction-cleared energy).
+
+Also reported: share of valid hours in which any move changes the price, mean and 95th percentile of the price
+change, and how many of the units sat at the margin (an accepted sell row within €0.011 of the price).
+**Limits stated now:** units' ladders are the effective rows (accepted below the price), as in `step_curves.py`;
+the price effect of moving only the 54 units, not other gas or coal plants; demand is all cleared buy volume,
+exports included; the counterfactual keeps every other offer fixed. Not checked against an observed price drop:
+there is none to check against (no cap-free Iberia).
+
+### D results (2026-11-03)
+
+`scripts/analysis/gas_cap_consumer_saving.py` → `outputs/tables/gas_cap_consumer_saving.csv` (by ρ) and
+`gas_cap_consumer_saving_hourly.parquet` (ρ 0.73). 55 Iberian gas units with a cost (54 with subsidy days);
+5,808 hours in the cap months, **5,397 valid (92.9%)**; the split Spain/Portugal and identity-failing hours are
+left out, so every euro figure covers 93% of the hours. Re-clear of the unmoved curve reproduces the published
+price within €0.5 in all valid hours by construction (the validity rule).
+
+| ρ | gross wholesale saving G (€ m) | net of the bill B = €4,937 m | price falls in … of hours | mean fall (€/MWh) |
+|---|---|---|---|---|
+| 0.51 | 2,033 | −2,905 | 74% | 14.5 |
+| 0.54 | 2,192 | −2,745 | 74% | 15.6 |
+| 0.55 | 2,246 | −2,692 | 75% | 16.0 |
+| 0.73 | 3,211 | −1,727 | 78% | 22.8 |
+| 0.75 | 3,319 | −1,618 | 78% | 23.6 |
+| 1.00 | 4,670 | −267 | 80% | 33.2 |
+| 1.03 | 4,825 | −112 | 81% | 34.3 |
+
+B = Σ S_d × cleared sell MWh of the 54 units (€4,937 m in valid hours; €5,268 m in all hours).
+
+**Reading.**
+- The modelled units sit exactly at the price in only **0.5% of valid hours**, yet the price moves in 74–81%:
+  moving their offers up takes them out of the merit order below dearer units, which is why a count of
+  "hours a subsidised plant sets the price" would have been wrong.
+- **On B3's range (ρ 0.55–0.75) the gross saving is €2.2–3.3 bn, less than the subsidy bill on the same
+  units (€4.9 bn): net −€1.6 to −2.7 bn.** Break-even needs ρ ≈ 1.05, just above full pass-through. The gross
+  saving is the same order as C's ρ × V (€2.3–3.1 bn) — a consistency, not a check (different bases).
+- **The net figure is the part to distrust most.** It assumes (i) the bill fell on buyers; the decree's
+  allocation between domestic buyers, exporters and bilateral contracts is not checked here; (ii) only the 54
+  units are moved and billed (other gas and coal plants out); (iii) B is not compared with REE's published
+  adjustment cost; (iv) buy-side demand is fixed and every other offer unchanged; (v) the counterfactual is
+  "undo the passed-through part ρ", with the subsidy itself unchanged. It contradicts the public account of a
+  net consumer saving, so it needs those checks before it is quoted.

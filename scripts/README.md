@@ -157,6 +157,9 @@ renders `€` and `±` as `...`.
 Rscript scripts/analysis/descriptives.R
 ```
 
+`scripts/rerun_ownership_chain.sh` rebuilds the ownership-dependent panels and reruns legs C and D in dependency order
+(19 steps, stops at the first failure, logs in `.superpowers/logs/rerun/`; `FROM=1` skips the first three).
+
 Only `build/` and `analysis/` depend on order; the fetchers are independent of
 each other. Budget several hours and ~8 GB for a full rebuild.
 

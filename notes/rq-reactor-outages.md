@@ -456,3 +456,12 @@ spells, reintroduces slow confounds), quantities on D and D/|RD′| (price-taker
 the split, `rq-fixed-step.md`), REE redispatch PDVD − PDBF (chosen through constraint
 offers), ENTSO-E Art. 15.1 (a handful of post-2023 trips). About 100 reactor spells carried
 by two firms cannot separate 0 from 1; the outage designs end here.
+
+## 12. Rerun of §6 on the corrected ownership — rule fixed before running (2026-11-03)
+
+§11 said to rerun §6 before quoting the pooled figure: the stored `outage_offer_panel.parquet` and the dose are from 2026-10-05, before the
+ownership fixes of 2026-10-21 (Movhera's Douro dams, EDP Energia's sale, Castejón's represented units); `firm_x` and `firm_incentive_net` were
+rebuilt on 2026-10-22. Same code, same specification, rebuilt inputs, in order: `build_reactor_outages.py`, `outage_offer_panel.py`,
+`outage_offer_test.py` (about 48 minutes). Nothing in the design changes. The old table is §6 above (and `outage_offer_results.csv` in git history).
+Reading, fixed now: quote the new numbers; if the pooled 25% row's 95% set stops containing 0, or β = 1 stops being rejected at 5% (p ≤ 0.05),
+say so and flag §6's reading as changed; otherwise §6 stands with the new numbers beside the old.

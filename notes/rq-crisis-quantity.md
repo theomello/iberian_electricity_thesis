@@ -641,3 +641,33 @@ Ranked by what each buys:
    on B3; the steps are small.
 Not worth it: more pre-cap weeks (the offer limits changed on 2021-07-07), more small plants (efficiency unknown),
 a second control country (Great Britain failed).
+
+## G1. Specification curve and paired test — rules fixed before running (2026-11-03)
+
+User asked to resume the sizing ideas (1 and 2 of section G). Nothing below has been run.
+
+**G1a. Specification curve** (`gas_cap_quantity_b3_curve.py`). Point estimates of B3's ρ = 1 + b over a grid, no bootstrap
+(a bootstrap per cell would multiply cost 199-fold and the grid is the uncertainty being reported here):
+- margin for the predicted in-money condition: €20, €50 (main), €100, every hour; the B1 ends are recomputed for each
+  (`gas_cap_quantity_b1.ends`, run20 only);
+- r = 0 … 5 (Xu 2017 factors; the CV choice is one of them);
+- gas controls: none / MIBGAS / MIBGAS + PSV − MIBGAS spread;
+- time trend: without / with;
+- window end: 2023-06-30 (main) / 2023-02-25 (last week with a subsidy).
+Not in the grid, because the stored panel carries only `run20` and the 54 modelled units: run10 / run50 thresholds and the
+97-unit set. Say so when quoting. For each cell also the timing permutation p (cyclic shifts, as in the B3 checks).
+Reading, fixed now: no pass/fail. Quote (i) the range of the middle half of cells (25th–75th percentile) as the size
+uncertainty across specifications, (ii) the full min–max, (iii) the share of cells whose ρ lies inside B3's bootstrap
+interval [0.51, 1.03], (iv) the share with permutation p ≤ 0.05, and (v) by axis, the range of cell medians, to show which
+choice moves ρ most. If the middle half lies wholly inside [0.51, 1.03] the bootstrap interval is the binding uncertainty;
+if it spills outside, specification uncertainty is at least as large and must be quoted with it.
+
+**G1b. Paired test against the declared costs** (`gas_cap_quantity_b3_paired.py`). One firm-block bootstrap, 199 draws,
+resampling firms within country as in B3. In each draw: ρ_offer = 1 + b of B3 (r by CV on the full sample, no controls,
+the ATT re-estimated on the draw, g_w fixed); ρ_decl = the median over the drawn Iberian firms' unit-days with S ≥ €20,
+2022-06-15 → 2023-02-25, of `rho_bid` from `gas_cap_declared_cost.panel()` (a firm drawn twice counts twice). d = ρ_decl − ρ_offer.
+Report mean d, the 95% percentile interval and the share of draws with d > 0. Rule: offers pass through less than declared
+costs only if the interval of d lies wholly above 0; wholly below 0 the reverse; otherwise no difference is detectable.
+Caveats stated in advance: the declared sample is 50 units in 11 firms, B3's 54 units in 12; the two ρ's are not the same
+object (declared term of the minimum-income condition vs the share of capacity offered near cost), so a difference can
+also be a difference in what is measured.

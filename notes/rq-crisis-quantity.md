@@ -913,3 +913,17 @@ Reading: the controlled interval [0.10, 0.87] contains the uncontrolled point an
 point; they overlap on 0.51–0.87. Full pass-through (ρ = 1) is inside the uncontrolled interval and outside the controlled one; no pass-through
 (ρ = 0) is outside both, just. The break-even ρ of the net (Spain 1.4–1.5; Iberia with both bills about 1.05–1.1) lies above both intervals, so the
 negative net does not depend on which is quoted. Quoting range for the paper: 0.5–0.75 as the central band, with 0.10–1.03 as the union of the two 95% intervals.
+
+### H7. Hour-of-day counterfactual — rules fixed before running (user chose it, 2026-11-03; `gas_cap_quantity_hod_fit.py`, stage 2 later)
+Why: H1 found Italy's weekly path adds noise to an Iberian plant before the cap (R² −0.35 at r = 0); offers at night and at midday behave differently,
+so a week effect averaged over all hours may be the wrong control. Idea: match Iberian and Italian plants within the same hour-of-day block.
+**Blocks:** four six-hour blocks of the local delivery hour (periods 1–6, 7–12, 13–18, 19–24; quarter-hours in 2025 are not in the window). One matrix per block:
+rows units, columns weeks, the weekly mean of run20 over the unit's predicted in-money hours in that block (main margin €50, essential units out, cost defined);
+same unit rule as `matrix()` (≤ 30% of weeks missing, 50% fallback, at least 25 Iberian units, else the block is dropped and said so). Each block gets its own
+Italian week effect and factors (`em_factor` on that block's Italian rows).
+**Stage 1 (diagnostic only; nothing about ρ is estimated):** for each block and r = 0…5, the Iberian pre-cap R² of the counterfactual (the H1 definition),
+Xu's cross-validation error, and the unit counts; next to the baseline (all hours pooled, H1: −0.35, −0.27, −0.20, −0.06, 0.00, +0.03).
+**Rule for stage 2, fixed now:** go on to estimate ρ only if at r = 0 the median across the surviving blocks of the pre-cap R² exceeds the baseline's
+(−0.35) by at least 0.15 AND at least three of four blocks improve on it. Otherwise stop: matching on the hour of day does not make the Italian path track the
+Iberian level. If it passes, stage 2 (rules to be written into this note before it runs, not before): the dose by block (`ends` by block), ATT_{w,block}
+on g_{w,block} with block intercepts, ρ = 1 + b, timing permutation shifting weeks jointly across blocks, firm-block bootstrap, and the gas-control version.

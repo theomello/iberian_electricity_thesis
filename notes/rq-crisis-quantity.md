@@ -176,3 +176,44 @@ hours 1.27, 1.38, 1.18, 1.18, 1.16, 1.16 (0.99, 1.06, 0.96, 1.07, 0.97, 1.01).
   sits below both. A difference between what plants declare and what they offer near cost would be a finding
   in itself, but these intervals do not establish it.
 - A fourth Italian specification, requested after three failed; any write-up must say so.
+
+## B3 checks — rules fixed before running (2026-11-03)
+
+On the main (in-money, r = 0) B3; the all-hours sample reported beside, not decisive. Main interval
+[0.51, 1.03].
+
+1. **Timing permutation.** Shift g_w cyclically by k = 1 … n−1 weeks within the post-cap weeks that carry
+   g_w (n = 46), re-estimate b each time (ATT_w fixed). Pass if the real b is at or below the 5th percentile
+   of the shifted b's (one-sided p ≤ 0.05).
+2. **Leave one episode out.** Re-estimate without the weeks starting in December 2022, then without those
+   starting in October–November 2022. Pass if both ρ lie inside the main interval.
+3. **Gas price controls.** Add the weekly mean MIBGAS price (bid-time day-ahead index) and the weekly mean PSV
+   − MIBGAS spread as regressors. Pass if ρ lies inside the main interval.
+
+All three pass → B3 enters the paper as the Italian estimate. Any fails → B3 is corroboration only.
+
+### B3 check results (2026-11-03): ALL PASS on the main sample
+
+`scripts/analysis/gas_cap_quantity_b3_checks.py [--all-hours]` → `outputs/tables/gas_cap_quantity_b3_checks{,_allhours}.csv`.
+
+| check | in-money (main, r 0; interval [0.51, 1.03]) | all hours (r 2; [0.78, 1.50]) |
+|---|---|---|
+| 1. timing permutation: real b vs cyclic shifts | b −0.274; shifted median +0.018, 5th pct −0.189; p 0.000 (45 shifts) **pass** | b +0.178; p 1.000 (53 shifts): FAIL by the one-sided rule; the real b is above every shift |
+| 2. without December 2022 | ρ 0.74 **pass** | 1.19 pass |
+| 2. without October–November 2022 | ρ 0.73 **pass** | 1.20 pass |
+| 3. control MIBGAS | ρ 0.58 pass | 0.77 FAIL |
+| 3. control PSV − MIBGAS | ρ 0.70 pass | 1.08 pass |
+| 3. control both (decisive) | ρ 0.54 **pass** | 0.70 FAIL |
+
+**Reading.**
+- **Main sample: B3 enters the paper as the Italian estimate.** No shifted alignment of the subsidy path gives
+  a slope as negative as the real one (p < 1/45), so the slope follows the subsidy's timing, not chance. It does
+  not rest on one episode (0.73–0.74 without either).
+- **The gas price control moves the point down**, 0.73 → 0.54 with both controls, close to the interval's lower
+  end. So the plain ρ partly carries a different response of Iberian and Italian offers to the gas price level.
+  Quote the range: **ρ ≈ 0.55–0.75, no pass-through rejected, full pass-through at the edge without controls
+  and outside with them.**
+- **All hours fails as an estimate in its own right**: its slope is positive and above every shifted one, and
+  the MIBGAS control removes most of it (1.18 → 0.70–0.77). With both controls the two samples come closer
+  (0.54 in-money, 0.70 all hours). All hours drops to a footnote.
+- Resolution of the permutation p is 1/45; cyclic shifts keep ATT_w fixed, so they test the alignment only.

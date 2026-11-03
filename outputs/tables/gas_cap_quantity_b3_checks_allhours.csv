@@ -1,0 +1,7 @@
+check,value,p,q05,n,pass
+timing permutation,0.17827649527205167,1.0,-0.16390483958508995,53.0,False
+without December 2022,1.1927495893963453,,,,True
+without October-November 2022,1.2018692402898463,,,,True
+control MIBGAS,0.7691584194382556,,,,False
+control PSV - MIBGAS,1.0843058032232018,,,,True
+control both,0.6976730605885392,,,,False

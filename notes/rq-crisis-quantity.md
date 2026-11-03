@@ -217,3 +217,44 @@ All three pass → B3 enters the paper as the Italian estimate. Any fails → B3
   the MIBGAS control removes most of it (1.18 → 0.70–0.77). With both controls the two samples come closer
   (0.54 in-money, 0.70 all hours). All hours drops to a footnote.
 - Resolution of the permutation p is 1/45; cyclic shifts keep ATT_w fixed, so they test the alignment only.
+
+## C. The cap's pass-through in euros — definition fixed before computing (2026-11-03)
+
+The design's end goal (§3): ρ × subsidy × in-money volume. **This is the offer-side figure, not the consumer's
+saving.** V = Σ over Iberian unit-hours of the main sample (predicted in-money at margin €50, essential units
+out, cost defined, 2022-06-15 → 2023-02-25, subsidy > 0) of S_day × offered MW × 1 h (hourly periods; the
+panel's `offered_mw` is average MW). V is the subsidy attached to the capacity offered in hours the plant can
+expect to run; ρ × V is the part of it that went into those offers. Units: the 54 Iberian gas units with a
+plant-specific efficiency, so it **leaves out** other gas and coal plants. `offered_mw` is offered, not cleared,
+so V overstates what was paid out.
+
+Reported: V by month; ρ × V for ρ = 0.54 and 0.73 (B3 main, with and without gas controls), the interval ends
+0.51 and 1.03, and the declared-cost 0.9–1.0 for comparison. Not done here: the consumer's saving, which
+needs the price-setting step (how often a subsidised unit sets the price, times cleared demand) and a check
+against the observed price drop. No hour-level setter table is on disk.
+
+### C results (2026-11-03)
+
+`scripts/analysis/gas_cap_pass_through_eur.py` → `outputs/tables/gas_cap_pass_through_eur{,_monthly}.csv`.
+54 Iberian gas units, 1,558 in-money hours, 27,146 GWh of in-money offered capacity, **V = €4,122 m**. By
+month (€ m): Jun 344, Jul 622, **Aug 1,421**, Sep 1,116, Oct 258, Nov 60, Dec 286, Jan 13, Feb 2; August and
+September are 61% of V.
+
+| ρ | source | ρ × V (€ m) |
+|---|---|---|
+| 0.51 – 1.03 | B3 95% interval | 2,102 – 4,246 |
+| 0.54 | B3 with gas controls | 2,226 |
+| 0.55 – 0.75 | quoted B3 range | 2,267 – 3,092 |
+| 0.73 | B3 main | 3,009 |
+| 0.90 – 1.00 | declared costs | 3,710 – 4,122 |
+
+**Reading.** The part of the subsidy that reached these plants' offers is **about €2.3–3.1 bn** on B3's range
+(the interval runs €2.1–4.2 bn). The share not reflected is €1.0–1.9 bn at the same range, with the same
+caveat: ρ is estimated with a wide interval, and the uncertainty in ρ is the larger part of the uncertainty
+here.
+
+**What it is not.** (1) Not the consumer's saving: that is the price falling in hours these units set it, times
+cleared demand, and needs the price-setting step and a check against the observed price drop (not done; no
+hour-level setter table on disk). (2) V uses offered MW, not cleared, so it overstates the subsidy actually
+paid on these units' output; the euros are an upper bound on the offer side. (3) Only the 54 modelled gas
+units; other gas and coal plants are out. (4) ρ is B3's, a fourth Italian specification (see above).

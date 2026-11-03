@@ -389,3 +389,35 @@ purchases, which is the same base the wholesale saving applies to, so G − B co
 under bilateral contracts bore neither the charge nor, unless indexed, got the saving; (iii) the reference
 suppliers' customers are the clear net losers per MWh (€163 in August against a mean price fall of about €49 at
 ρ 0.73). Exports and the allocation by buyer type of the 1907 total are still not separated from this data.
+
+### D, scheduled demand by buyer group and exports (ESIOS, fetched 2026-11-03)
+
+Fetched 351 (free-market retailers), 352 (reference suppliers), 353 (direct consumers in the market), 10141 (total) —
+all "Demanda programada PBF" (the base schedule, bilateral contracts included) — and 32–35 (PBF exports to France,
+Portugal, Morocco, Andorra), peninsular, hourly, 2022-06-01 → 2023-06-30. Over the 5,397 valid hours:
+
+| | GWh | share of group demand |
+|---|---|---|
+| free-market retailers (351) | 126,637 | 88.4% |
+| reference suppliers (352) | 12,445 | 8.7% |
+| direct consumers (353) | 4,108 | 2.9% |
+| three groups / total (10141) | 143,190 / 143,273 | 99.94% |
+| exports (32–35; ESIOS signs them negative) | 17,201 | — |
+| cleared day-ahead buy volume (bids, status C) | 136,984 | — |
+
+**Three routes to the bill, valid hours (€ m):** 1908 × free + 1909 × reference suppliers = **5,266** (free market
+4,463; reference suppliers 803); 1907 × cleared buys = 5,184; B (S × cleared sell MWh of the 54 units) = 4,937.
+They agree within 7%. By month the group-priced bill reproduces B closely (Aug 1,580 against 1,504; Sep 1,110
+against 1,115; Nov 99 against 115) and exceeds it in Dec (472 against 359).
+
+**Reading.**
+- The group-priced bill adds the three groups' own charges and needs no assumption about the cleared-buy base:
+  it supports a total cost of **€5.3 bn**, 6% above the 54 units' B. The saving-net-of-bill therefore stays
+  between −€3.0 and −€1.9 bn at ρ 0.55–0.75 (54 units), as before.
+- Reference suppliers are 8.7% of group demand and **15% of the bill** (803 of 5,266).
+- Exports: charging them the 1907 rate on top would add about €0.7 bn (bill €6.0 bn), above every unit-set
+  bill built (4.9 / 5.9 for 54 / 97 units). The groups alone already reproduce the cost, which fits exports
+  **not** bearing the charge, but the totals cannot prove it (decree text not read).
+- Not done: the net for each group (its charge against its own share of the price fall), which needs the
+  group's spot-purchase share; the free ÷ reference ratio of 0.48–0.74 is an inference for that share, not
+  data.

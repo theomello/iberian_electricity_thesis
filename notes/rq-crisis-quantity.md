@@ -362,3 +362,30 @@ free-market supply and reference suppliers (1908/1909, 10404/10405), not fetched
   −€2.9 to −1.9 bn at ρ 0.55–0.75 and −€0.5 bn at ρ = 1.
 - Break-even needs ρ above about 1.1 on every set. The sign of the net figure does not depend on the unit set; its
   size does. Remaining unchecked: who the bill fell on (exports, bilateral), fixed other offers, buy bids fixed.
+
+### D, who bore the bill: ESIOS splits the charge by buyer type (2026-11-03)
+
+Fetched 1908 (free-market supply), 1909 (reference suppliers), 10404, 10405, same window. Monthly mean of the
+hourly day-ahead and intraday component, €/MWh:
+
+| month | all (1907) | free market (1908) | reference suppliers (1909) | free ÷ reference |
+|---|---|---|---|---|
+| 2022-06 | 26.1 | 24.2 | 49.9 | 0.48 |
+| 2022-07 | 62.2 | 57.3 | 116.3 | 0.49 |
+| 2022-08 | 86.5 | 79.5 | 163.3 | 0.49 |
+| 2022-09 | 62.5 | 58.8 | 109.3 | 0.54 |
+| 2022-10 | 21.6 | 20.5 | 37.1 | 0.55 |
+| 2022-11 | 5.8 | 5.5 | 9.2 | 0.60 |
+| 2022-12 | 25.9 | 24.5 | 39.9 | 0.61 |
+| 2023-01 | 1.1 | 1.1 | 1.4 | 0.74 |
+
+**Reading.** Reference suppliers (the regulated tariff) paid about **twice** the per-MWh charge of the free market
+in the summer. A natural reading, **not checked against the decree text**: the charge falls on energy bought in
+the spot market, reference suppliers buy nearly all of theirs there, and free-market retailers buy about half in
+the spot market and the rest by bilateral contract, so the ratio is the free-market spot share (0.48 in summer
+to 0.74 in January). That is the size of the physical bilateral share in PDBF (39–49% of scheduled sell in
+2018–2024, computed for earlier years, not for these months). If right, (i) the bill is a charge on spot
+purchases, which is the same base the wholesale saving applies to, so G − B compares like with like; (ii) energy
+under bilateral contracts bore neither the charge nor, unless indexed, got the saving; (iii) the reference
+suppliers' customers are the clear net losers per MWh (€163 in August against a mean price fall of about €49 at
+ρ 0.73). Exports and the allocation by buyer type of the 1907 total are still not separated from this data.

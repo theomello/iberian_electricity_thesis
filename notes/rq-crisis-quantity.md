@@ -318,3 +318,47 @@ B = Σ S_d × cleared sell MWh of the 54 units (€4,937 m in valid hours; €5,
   adjustment cost; (iv) buy-side demand is fixed and every other offer unchanged; (v) the counterfactual is
   "undo the passed-through part ρ", with the subsidy itself unchanged. It contradicts the public account of a
   net consumer saving, so it needs those checks before it is quoted.
+
+### D, bill check and wider unit sets — rules fixed before running (2026-11-03)
+
+**Bill check (done first, ESIOS fetched 2026-11-03: 1907, 10403, 10406–10408, `--geo 0`, 2022-06-01 → 2023-06-30).**
+ESIOS 1907 is REE's hourly average price component of the RD-L 10/2022 mechanism for the day-ahead and intraday
+markets (€/MWh charged to buyers); 10403 the same with the mechanism's name; 10406–10408 the monthly values.
+Check: Σ_h charge_h × cleared buy MWh_h over the valid hours, against B (S × cleared sell MWh of the 54 units).
+Pass if within 15%. If the ESIOS figure is much larger, the 54 units miss a material share of the subsidised
+energy and the unit-set rerun matters for the bill; if close, it matters little.
+
+**Wider sets** (`gas_cap_consumer_saving.py --units`): `ccgt_coal` = every unit OMIE's listing labels gas CCGT
+or coal (`tech_omie`, early label where missing) ∪ the 54; `thermal` = that ∪ cogeneration. Same S_d, same ρ
+(extrapolated beyond the 54, which is the only units ρ was estimated on); same hours and re-clear. Eligibility of
+cogeneration for the mechanism is **not checked**, so `thermal` is a sensitivity, `ccgt_coal` the main wider set.
+Reported beside the 54-unit result; no decision rule: the question is whether G and B move.
+
+### D, bill check and wider sets: results (2026-11-03)
+
+**Bill check passes.** ESIOS 1907 (REE's hourly price component of the mechanism, €/MWh charged to buyers) × cleared
+buy MWh over the valid hours = **€5,184 m**, against B = €4,937 m for the 54 units: ratio 1.05, inside the 15%
+rule. By month (ESIOS / B, € m): Jun 485 / 409, Jul 1,117 / 1,073, Aug 1,536 / 1,504, Sep 1,114 / 1,115, Oct 358 /
+333, Nov 99 / 115, Dec 476 / 359, Jan 13 / 16, Feb −14 / 14. The implied subsidised energy (charge × buys / S) is
+35.5 TWh against 37.1 TWh cleared by the 54 units, so **they carry about the whole subsidised energy**. Monthly
+average component (10406): Aug €88.8/MWh, Jul €66.9, Sep €65.0, Jun €27.5, Dec €32.2. Not checked: the decree's
+allocation of the bill between domestic buyers, exporters and bilateral contracts; ESIOS also splits the component by
+free-market supply and reference suppliers (1908/1909, 10404/10405), not fetched.
+
+**Wider unit sets** (`--units`): bill and gross saving (€ m), valid hours.
+
+| set | units | B | G at ρ 0.55 | G at 0.73 | G at 0.75 | G at 1.00 | net at 0.55 – 0.75 |
+|---|---|---|---|---|---|---|---|
+| 54 modelled gas (main) | 54 | 4,937 | 2,246 | 3,211 | 3,319 | 4,670 | −2,692 – −1,618 |
+| + OMIE gas CCGT and coal | 97 | 5,870 | 2,455 | 3,539 | 3,661 | 5,260 | −3,415 – −2,208 |
+| + cogeneration | 623 | 6,836 | 2,543 | 3,660 | 3,788 | 5,500 | −4,293 – −3,048 |
+
+**Reading.**
+- The official charge (€5.2 bn) sits **between the 54-unit bill (4.9) and the 97-unit one (5.9)**, and the cogeneration
+  set overshoots it by a third (6.8): cogeneration was largely not charged, or ran little under the mechanism. So
+  the wider main set is `ccgt_coal`, and the gross saving rises 9–10% for it against 17–18% for the bill.
+- **Widening the set makes the net more negative, not less.** G rises by about €0.2–0.4 bn and B by €0.9 bn: the
+  added plants add bill faster than they add saving. Against the official bill (5,184) the 54-unit net is
+  −€2.9 to −1.9 bn at ρ 0.55–0.75 and −€0.5 bn at ρ = 1.
+- Break-even needs ρ above about 1.1 on every set. The sign of the net figure does not depend on the unit set; its
+  size does. Remaining unchecked: who the bill fell on (exports, bilateral), fixed other offers, buy bids fixed.

@@ -2,10 +2,12 @@
 """The consumer's saving from the cap's pass-through: re-clear the day-ahead curve with the 54 modelled gas
 units' offers moved up by rho x S_day (notes/rq-crisis-quantity.md, section D, fixed before running).
 
-    .venv/bin/python scripts/analysis/gas_cap_consumer_saving.py [--months 202206 ...]
+    .venv/bin/python scripts/analysis/gas_cap_consumer_saving.py [--months 202206 ...] [--units panel|ccgt_coal|thermal]
 
 Effective curve and re-clear as in `step_curves.py`. Hours: 2022-06-15 -> 2023-02-25 with a subsidy, 24-period
 days, valid hours (unsplit, clearing identity holds, re-clear within 0.5 of the published price).
+`--units`: `panel` (default) the modelled gas units of the offer panel; `ccgt_coal` adds every unit OMIE's listing
+labels gas CCGT or coal; `thermal` adds cogeneration too (eligibility unchecked). Outputs get the suffix `_<units>`.
 Writes outputs/tables/gas_cap_consumer_saving.csv (by rho) and gas_cap_consumer_saving_hourly.parquet (rho 0.73).
 """
 from __future__ import annotations
@@ -38,6 +40,15 @@ def subsidy_and_units() -> tuple[pd.Series, set]:
     ib = h[h.iberia & h.cost.notna()]
     s = ib[ib.subsidy > 0].groupby("date").subsidy.max()
     return s[(s.index >= CAP0) & (s.index <= CAP1)], set(ib.unit.astype(str).unique())
+
+
+def wider(units: set, which: str) -> set:
+    if which == "panel":
+        return units
+    u = pd.read_parquet(ROOT / "data/omie/registry/unit_agents.parquet", columns=["unit", "tech_omie", "tech_omie_early"])
+    t = u.tech_omie.fillna(u.tech_omie_early)
+    keep = ["gas CCGT", "coal"] + (["cogeneration"] if which == "thermal" else [])
+    return units | set(u.unit[t.isin(keep)].astype(str))
 
 
 def month(ym: str, S: pd.Series, units: set, px: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -79,10 +90,13 @@ def month(ym: str, S: pd.Series, units: set, px: pd.DataFrame) -> tuple[pd.DataF
 def main() -> int:
     ap = ArgumentParser(description=__doc__)
     ap.add_argument("--months", nargs="*")
+    ap.add_argument("--units", choices=["panel", "ccgt_coal", "thermal"], default="panel")
     a = ap.parse_args()
+    sfx = "" if a.units == "panel" else f"_{a.units}"
     months = [m for m in MONTHS if not a.months or m in a.months]
     S, units = subsidy_and_units()
-    print(f"{len(units)} modelled gas units; subsidy on {len(S)} days (mean S {S.mean():.1f})")
+    units = wider(units, a.units)
+    print(f"{len(units)} units ({a.units}); subsidy on {len(S)} days (mean S {S.mean():.1f})")
     px = pd.read_parquet(DATA / "omie/prices/omie_day_ahead_prices.parquet", columns=["date", "period", "price_es", "price_pt", "resolution_min"])
     px["date"] = pd.to_datetime(px.date)
     px = px[px.resolution_min == 60]
@@ -98,7 +112,7 @@ def main() -> int:
     H = pd.concat(hs, ignore_index=True)
     V = H[H.valid]
     bill = float((V.S * V.gas_mw).sum() / 1e6)
-    print(f"\nvalid hours {len(V):,} of {len(H):,} ({len(V) / len(H):.1%}); subsidy bill B on the 54 units, valid hours: EUR {bill:,.0f} m "
+    print(f"\nvalid hours {len(V):,} of {len(H):,} ({len(V) / len(H):.1%}); subsidy bill B on these units, valid hours: EUR {bill:,.0f} m "
           f"(all hours EUR {float((H.S * H.gas_mw).sum() / 1e6):,.0f} m); unit at the margin in {V.at_margin.mean():.1%} of valid hours")
     rows = []
     for r in RHOS:
@@ -109,9 +123,9 @@ def main() -> int:
                      "p95_drop": float(d.quantile(0.95)), "max_drop": float(d.max())})
         print(f"  rho {r:.2f}: gross EUR {g:,.0f} m, net of the bill EUR {g - bill:,.0f} m; price moves in {rows[-1]['hours_price_moves']:.1%} "
               f"of hours, mean {d.mean():.2f}, p95 {d.quantile(0.95):.2f}, max {d.max():.1f} EUR/MWh")
-    pd.DataFrame(rows).to_csv(T / "gas_cap_consumer_saving.csv", index=False)
+    pd.DataFrame(rows).to_csv(T / f"gas_cap_consumer_saving{sfx}.csv", index=False)
     H[["hid", "date", "period", "valid", "S", "p_clear", "buy_mw", "gas_mw", "at_margin", "p0_0.73"]].to_parquet(
-        T / "gas_cap_consumer_saving_hourly.parquet", index=False)
+        T / f"gas_cap_consumer_saving_hourly{sfx}.parquet", index=False)
     return 0
 
 

@@ -899,3 +899,17 @@ Report each version's point estimate and 95% percentile interval, and the contra
 its mean and 95% interval. Rule, fixed now: an Iberian gas response apart from the subsidy is detectable only if the 95% interval of d lies wholly
 above 0 or wholly below 0; otherwise it is not detectable and the two estimates are quoted together. A controlled interval wider than the uncontrolled
 one is expected (H5); report the ratio of widths.
+
+### H6 results (2026-11-03; 199 draws, 10 Iberian and 12 Italian firms, r = 0)
+| version | point ρ | bootstrap mean | 95% interval | width |
+|---|---|---|---|---|
+| no control | 0.726 | 0.732 | [0.510, 1.031] | 0.52 |
+| MIBGAS | 0.583 | 0.560 | [0.118, 0.941] | 0.82 |
+| MIBGAS + spread | 0.544 | 0.527 | [0.097, 0.872] | 0.78 |
+| contrast d = none − both | +0.182 | +0.206 | [−0.119, +0.584] | 0.70 |
+Rule: d's interval includes 0, so a gas response apart from the subsidy is **not detectable**; quote both. Widths: both-controls / none 1.49,
+MIBGAS / none 1.58 (H5's simulated spread ratio of 2.4–5.8 overstates it: the simulation had no firm clustering, which dominates the real interval).
+Reading: the controlled interval [0.10, 0.87] contains the uncontrolled point and the uncontrolled interval [0.51, 1.03] contains the controlled
+point; they overlap on 0.51–0.87. Full pass-through (ρ = 1) is inside the uncontrolled interval and outside the controlled one; no pass-through
+(ρ = 0) is outside both, just. The break-even ρ of the net (Spain 1.4–1.5; Iberia with both bills about 1.05–1.1) lies above both intervals, so the
+negative net does not depend on which is quoted. Quoting range for the paper: 0.5–0.75 as the central band, with 0.10–1.03 as the union of the two 95% intervals.

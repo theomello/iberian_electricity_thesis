@@ -939,3 +939,28 @@ the others are worse (fewer hours per cell mean noisier weekly means on both sid
 something Italy's common path does not carry (the minimum-load, near-cost and withholding blocks of `rq-gas-cap-conduct.md`). Stage 2 is not run.
 Next candidate if the counterfactual is to be improved: a within-Iberia prediction of run20 from conditions known before the auction (gas price relative to cost,
 residual demand, wind and solar forecasts), fitted before the cap and extrapolated, with Italy kept as a check rather than the control. Not built.
+
+## I. Open questions closed or narrowed (2026-11-03)
+
+### I1. Did exports pay the charge? (decree text, `papers/BOE_RDL_10_2022_consolidado.pdf`; indicators 10406–10408)
+- Art. 7.4: the market operator's settlement is distributed "entre todas las unidades de adquisición de los agentes del mercado ibérico", pro rata to the
+  energy scheduled after the continuous market. Art. 7.7 excludes storage and pumping units, ancillary-service units and hedged energy (art. 8); **no article
+  mentions exports**. The decree's own rule on offer units (the OMIE rules it amends) defines import and export units as *"unidades externas al sistema ibérico"*, one
+  per agent and border (France, Andorra, Morocco), and the France coupling flow appears in the bids only as the pseudo-unit `MIEU`, which is not an agent's purchase
+  unit. Art. 12 spends extra congestion rents on the France border to reduce the total cost. So the text neither charges nor exempts exports; a plausible reading is
+  that coupling exports (France) were not charged and that exports by Iberian agents to Andorra and Morocco may have been.
+- ESIOS 10406 / 10408 do NOT help: their monthly values (27.5, 66.9, 88.8, 65.0, 22.5, 7.1, 32.2, 2.9, −0.7 for 2022-06 → 2023-02) equal the monthly mean of the hourly
+  1907 component (43.2, 55.9, 81.8, 61.3, 27.8, 3.9, 26.8, 1.4, −1.1), so they are €/MWh prices, not euro totals, and cannot pin down the charged base.
+- **It does not matter for the Spanish net.** The Spanish bill is what Spanish buyers were charged (ESIOS price × their scheduled demand, €5.43 bn), observed whoever
+  else paid. Whether exporters also paid only changes the exporters' own net (saving of €0.2–0.4 bn less any charge), not Spain's or Portugal's. It would matter if the
+  total were fixed and shared (it is not read that way here). Status: unresolved in law, immaterial for the headline.
+
+### I2. The Portuguese bill (web search 2026-11-03; ERSE's clarification page unreadable as fetched)
+- No source found with a euro figure for the cost charged to Portuguese buyers. The Portuguese government reports a "benefit" of €570 m from entry into force to 31 January 2023
+  (Lusa, 8 March 2023; market price reduction €43.78/MWh) and DGEG publishes "custo médio do ajustamento" and "benefício líquido" separately (Observador, 10 August 2022),
+  so the figure is probably net of the average adjustment cost, by the government's own three-price counterfactual, not mine. In December 2022 the secretary of state called
+  the 2022 net benefit positive but small and expected a much larger one in 2023 because the cost is spread over more consumers (Sábado, Lusa). The adjustment cost is charged
+  only to buyers exposed to wholesale prices (hedged and exempt consumption is excluded; ERSE Instrução 6/2022).
+- Comparison, with the caveat that counterfactuals differ: my saving to Portuguese buyers is €0.5–1.0 bn at ρ 0.55–1.0 (bill ≤ €0.97 bn, net −0.5 … +0.05 bn); the government's +€570 m
+  net to January 2023 lies at the top of my net range and above it at ρ 0.55–0.75. Nothing here pins the Portuguese bill; it stays an upper bound. Lead: DGEG's daily series of the
+  average adjustment cost (not fetched).

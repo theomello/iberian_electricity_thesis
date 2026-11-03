@@ -824,3 +824,7 @@ Reading, fixed now: the weekly estimator is vulnerable to a gas-correlated Iberi
 cell. Factors repair it if |bias at r̂| < 0.10 where |bias at r = 0| ≥ 0.10. The real pattern (ρ falls 0.16 from r = 0 to r = 5) is
 matched by a cell if its mean ρ̂ falls by ≥ 0.10 over the same range; the sign of κ in such a cell says which way the real r = 0 estimate
 would be biased if that scenario were true. This brackets the problem; it does not identify which scenario holds.
+Addition made after the one timing cell (k = 0, sign +, share 0.5, ρ0 0.5, 10 draws; not part of the results): the confound was so
+strong there (bias of ρ̂ at r = 0 of +0.57, with the weekly MIBGAS price correlated 0.98 with the dose over the post-cap weeks) that share 0.5 cannot
+bracket the size. Cells with share 0.05 are added, so the grid is true r {0, 2} × sign {+, −} × share {0.5, 0.05} × ρ0 {0.5, 1.0} = 16
+cells. Rules unchanged. Timing: 2 s a draw with one thread per worker (H2's 44 minutes was mostly threads fighting for four cores).

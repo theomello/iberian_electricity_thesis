@@ -521,3 +521,51 @@ estimate also survives its own permutation test, so the range does not narrow. *
 the size that matters**: an MIBGAS slope of −0.0016 per €/MWh over the ~€100/MWh the price rose between the
 placebo window and summer 2022 would move the gap by 0.16, against a B3 shift of 0.11 (b × g at b = −0.27,
 g = 0.4). So "not justified" is "not shown to be needed", not "shown to be unneeded".
+
+### E3. The documents (2026-11-03): what the decrees say, and three corrections to the above
+
+A background workflow read the primary texts, each claim then re-read independently (4 agents, 9 of 10 Spanish and
+8 of 9 Portuguese claims verified, one unverifiable: the 2023 extension decree). Sources: RDL 10/2022 (BOE-A-2022-7843);
+Decreto-Lei 33/2022 of 14 May 2022 (Diário da República); ERSE Diretiva 11/2022 and its technical note; Commission
+decision C(2022) 3942 (SA.102454 Spain, SA.102569 Portugal) and press release IP/22/3550 (8 June 2022).
+
+**Coverage.** Spain, art. 2.1: peninsular gas combined cycles, conventional coal, and gas cogeneration under the
+general remuneration modality (regulated CHP excluded). Portugal, DL 33/2022 art. 2(1): gas combined cycles and
+market-regime cogeneration; **coal not covered**. **Portuguese plants were inside the mechanism, under their own
+decree**; the Spanish RDL names no Portuguese plant. Physical bilateral output gets no compensation in either
+(RDL art. 2.2; DL art. 2(2)). Formula, RDL art. 3.1: Y = (PGN − PRGN) / 0.55, zero when PGN < PRGN; 0.55 the assumed
+55% efficiency (the 0.55 in the clawback's FMIG is a separate use). Confirms the subsidy used here.
+
+**Who pays.** Spain, art. 7.4: the market operator spreads the cost over all purchasing units of Iberian market
+agents in proportion to scheduled energy after the continuous market; art. 7.6 the system operator's leg on energy
+at plant busbars. **Portugal, DL art. 5(2): attributable exclusively to Portuguese-area buyers**, each side
+settling in its own system. Exempt in both: storage and pumping consumption, ancillary services, and
+**energy under fixed-price supply contracts signed before 26 April 2022** (RDL art. 8; DL art. 7), with the exemption
+lost on renewal or repricing and the cost phased in for hedged energy. The Commission: the charge starts on 41% of
+Spanish and 30% of Portuguese consumption. PVPC users get the cost as a component of the hourly price (art. 13.1,
+7.8). **Part of the cost is paid from France-border congestion rents** (art. 14), so buyers pay less than plants
+receive. Exports: no article charges or exempts them (checked); whether coupling export units count as purchasing
+units is not answered by the text.
+
+**Correction 1: Portuguese buyers did pay.** I wrote that the saving going to Portuguese buyers (22%, €0.70 bn at
+ρ 0.73) came at no cost to them. Under DL 33/2022 they paid for the Portuguese plants. The 10 Portuguese units'
+subsidy B is **€965 m** (19.5% of B; Spanish units €3,972 m), so Portuguese buyers' bill is up to that, less the
+hedged share (30% at the start), against a saving of €0.70 bn. The official Spanish charge, €5.27 bn, lines up with
+the **Spanish** plants (54-unit Spanish part 3.97 bn; with coal and the other combined cycles, the 97-unit set net
+of the Portuguese units is about 4.9 bn): consistent with each country charging its own buyers for its own
+plants, not proven. The 54-unit B in the tables above includes the Portuguese units.
+
+**Correction 2: the free ÷ reference ratio is the hedging exemption, not the spot share.** The free-market charge is
+lower because contracts at a fixed price signed before 26 April 2022 are exempt, and the exempt share shrinks as the
+contracts expire: the ratio rises from 0.48 (June) to 0.76 (February), as observed. The day-ahead ÷ scheduled
+demand share of free-market retailers did not rise (0.51 → 0.43). My earlier reading (a spot share) is withdrawn.
+Its group-net numbers stand (they use the official charge and the actual day-ahead purchases), but a free-market
+MWh under an exempt contract paid no charge and got no price fall either.
+
+**Correction 3: exports.** "Exports probably did not pay" rested on the group totals reproducing the cost; the
+documents do not settle it, and with the congestion-rent financing and the coal and cogeneration plants the cost
+total is not pinned down to the unit. Treat exports as unresolved.
+
+Also: the Commission's budget (€8.4 bn: €6.3 bn Spain, €2.1 bn Portugal) is a ceiling to 31 May 2023, not an outturn.
+Gas cogeneration under the general modality was eligible in both countries, which is why the cogeneration set
+overshoots the charge: only part of it qualified.

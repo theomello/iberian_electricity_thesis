@@ -853,3 +853,19 @@ Mean bias of ρ̂ − ρ0 (identical for ρ0 0.5 and 1.0 to within 0.02, so one 
   Iberian plants whose Iberian loading, estimated on pre-cap gas prices, extrapolates differently after the cap (H1). Not simulated.
 - **Not run:** the same confound with a gas-price control in the regression (does it repair the bias, and at what cost in spread; does it
   bias the unconfounded worlds?). That decides between ρ = 0.73 without and 0.41–0.45 with the controls.
+
+### H5. Does a gas-price control repair the confounded worlds? — rules fixed before running (`gas_cap_quantity_recovery_control.py`)
+H4 left open whether adding the weekly gas price to B3's regression repairs the bias a gas-linked Iberian response causes, and what it
+costs. Same data-generating process as H4 (S1 plus κ·z_w), grid true r {0, 2} × [sign {+, −} × share {0.5, 0.05}, plus share 0 (no confound)]
+× ρ0 {0.5, 1.0} = 20 cells, 60 draws each. Per draw: ρ̂ = 1 + b of ATT_w = a + b·g_w, without and with z_w (the standardised weekly MIBGAS) as a regressor,
+at Xu's r̂ and at fixed r = 0…5.
+Reading, fixed now:
+- **Repairs** the confound if |bias with the control at r̂| < 0.10 in every share 0.05 and 0.5 cell (the uncontrolled bias is ≥ 0.10 there, H4).
+- **Harmless** where nothing is confounded if |bias with the control at r̂| ≤ 0.05 in every share-0 cell.
+- **Cost:** report the ratio of the spread of ρ̂ with the control to without it, and the RMSE of both, per cell; the control is preferred in a
+  cell if its RMSE is lower.
+- If it repairs and is harmless, the uncontrolled 0.73 cannot be preferred without an argument that Iberian offers do not respond to the gas
+  price independently of the subsidy, and the controlled value (0.41–0.45 in the curve, G1) becomes the better-supported centre. If it repairs
+  but its RMSE is higher in the share-0 cells, report both. If it does not repair, controls give no protection.
+Limits stated in advance: the simulated confound is exactly linear in the controlled variable, which favours the control; a real response
+(offers relative to cost, kinked at the cap) need not be linear in MIBGAS. A control that works here is necessary, not sufficient.

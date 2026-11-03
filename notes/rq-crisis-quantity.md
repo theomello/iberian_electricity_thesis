@@ -474,3 +474,50 @@ charge is near zero. Supported roughly, not exactly.
 bill to Spanish buyers: about a third of the saving leaves the Spanish demand base and bilateral energy gets none.
 Limits: unit-to-group by the listing's latest owner; retail-owned generic units unresolved; exports sign and
 treatment as above; ρ is B3's.
+
+## E. Portugal's plants and the choice of gas controls — rules fixed before running (2026-11-03)
+
+The user asked for three things after the unit-set rerun: look into the Portuguese side, test whether Portuguese
+plants were subsidised, and pin down which gas-control set to quote for B3. Documentation search runs as a
+background workflow (Spain's RDL 10/2022 and Portugal's counterpart, with a verification pass); results come
+separately.
+
+**E1. Were the Portuguese plants subsidised? (declared-cost event, existing data).** The declared-cost
+script already carries 7 Portuguese units (Turbogás `RTG*` out): `gas_cap_declared_cost_firm.csv` shows ρ(bid) 0.96
+for Portugal (715 unit-days), 0.93 for Spain. New here, `gas_cap_declared_cost_pt.py`: the event statistic J(D)
+(median over units of the change in mean log(declared ÷ gross) from the 7 days before D to the 7 days from D)
+on Portuguese units alone, for 2022-06-15 against placebo dates 2021-09-08 → 2022-06-07, and the same for Spanish
+units. **Rule:** the Portuguese plants count as subsidised if J(2022-06-15) lies below the 2.5th percentile of their
+placebo J's and within 0.15 of the J a full pass-through would give. Otherwise they are not shown to be.
+
+**E2. Which control set for B3?** `gas_cap_quantity_b3_spec.py`. (a) Placebo: before the cap there is no subsidy,
+so the out-of-sample weekly gap (Xu 2017, treated as capped from 2022-01-01 and from 2022-03-01, r by cross-
+validation as in B1 and also r = 0) should not move with gas prices unless Iberian and Italian plants respond to
+them differently. Regress it on the weekly MIBGAS price and on the PSV − MIBGAS spread, firm-block bootstrap, 199
+draws. **Rule:** controls justified if the 95% interval of the MIBGAS slope excludes zero with the same sign at both
+placebo dates; not justified if it includes zero at both; mixed otherwise (report both ρ). (b) The timing
+permutation of B3's slope under both controls (45 cyclic shifts), pass if p ≤ 0.05.
+
+### E results (2026-11-03)
+
+**E1, Portuguese plants' declared cost (`gas_cap_declared_cost_pt.py` → `gas_cap_declared_cost_pt.csv`).** 7 Portuguese units
+(Lares 1–2, Pego 3–4, Ribatejo 1–3; Turbogás out as before) against 45 Spanish. J(2022-06-15): **Portugal −0.609**
+(full pass-through −0.744; placebo 2.5 / 50 / 97.5% = −0.161 / +0.005 / +0.121, min −0.276, 273 dates): **rule met**.
+Spain −0.544 (full −0.721; placebo −0.123 / +0.005 / +0.124): outside the placebo range, but 0.177 from full
+pass-through, so it misses the rule's closeness leg (0.15) — the closeness criterion is too tight to discriminate
+and is not repeated. On the day, the Portuguese median declared term falls from €177.5 (14 June) to €114.6 (15 June)
+against a net cost of €105.9, as the Spanish one does. **The Portuguese plants' declared costs responded to the
+subsidy exactly as the Spanish ones did, which fits their being covered by the mechanism.** Eligibility itself
+still needs the documents (workflow running).
+
+**E2, gas controls (`gas_cap_quantity_b3_spec.py` → `gas_cap_quantity_b3_spec.csv`).** (a) Placebo, out-of-sample
+weekly gap before the cap on MIBGAS and on the PSV − MIBGAS spread: no slope excludes zero at either placebo date
+(2022-01-01, 24 weeks; 2022-03-01, 15 weeks), r by cross-validation or 0. MIBGAS slope at 2022-01-01: −0.0002
+[−0.0016, +0.0008]; at 2022-03-01: −0.0025 [−0.0041, +0.0017]. **Rule: controls not justified.** (b) The timing
+permutation under both controls passes (real b −0.456, ρ 0.54; shifted 5th percentile −0.092; p < 1/45).
+
+**Reading.** By the rule the uncontrolled ρ 0.73 is the one to quote, with 0.54 as the sensitivity; the controlled
+estimate also survives its own permutation test, so the range does not narrow. **The placebo has little power for
+the size that matters**: an MIBGAS slope of −0.0016 per €/MWh over the ~€100/MWh the price rose between the
+placebo window and summer 2022 would move the gap by 0.16, against a B3 shift of 0.11 (b × g at b = −0.27,
+g = 0.4). So "not justified" is "not shown to be needed", not "shown to be unneeded".

@@ -718,3 +718,18 @@ Idea 3 of section G, chosen by the user. B3 averages the subsidy over a week, bu
 - **Reading, fixed now:** the daily dose sharpens the estimate only if the permutation passes AND the 95% interval is narrower
   than the weekly [0.51, 1.03] (width 0.52). Report the point estimate beside the weekly 0.73; if they differ, say so and do
   not choose between them. Stop if the permutation fails or fewer than 25 Iberian units survive the missing-days rule.
+
+### G2 results (2026-11-03)
+
+Unit × day panel, main margin: 41 Iberian and 39 Italian units × 638 days after the missing-days rule (the 30% threshold left
+fewer than 25 Iberian units, so the 50% fallback applied; 38% of cells missing), 10 Iberian and 10 Italian firms. 207 post-cap
+days carry g_d (182 with g > 0, max 0.671). Xu CV r = 3.
+- ρ = 0.82, 95% firm-block bootstrap [0.63, 1.01], width 0.38 (weekly B3: 0.73 [0.51, 1.03], width 0.52).
+- Timing permutation over 206 day shifts: shifted 5th percentile −0.201, **p 0.117 → fails**.
+- With a linear trend ρ 0.96 [0.84, 1.09], inside the main interval. Gas controls: MIBGAS 0.84, spread 0.87, both 0.89.
+- Rule: the daily dose does NOT sharpen the estimate (permutation fails). Stop; the narrower interval is not to be quoted.
+Why it does not carry over: the daily panel keeps fewer units (41 against 49 Iberian) and 38% of its cells are missing, since a
+unit has an in-money hour on only some days; the day-level outcome is noisy and the daily dose is mostly the same slow path of
+S as the weekly one, so the extra variation does not identify the slope against shifted timing. The point estimate (0.82)
+sits above the weekly 0.73 and the controls move it little, unlike in the weekly curve; both are inside each other's
+intervals, so they are not told apart. `ends()` in `gas_cap_quantity_b1.py` gained a `by` argument (default "w", unchanged).

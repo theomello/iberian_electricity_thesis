@@ -780,3 +780,32 @@ more than 0.10 between r = 0 and r = 5 in a cell where truth is not confounded, 
 fall (0.73 → 0.57) cannot be read as information; if mean ρ̂ is flat in r in all cells, the real fall comes from structure in
 the data (factors correlated with the gas path and the dose). The DGP uses the estimator's own model class, so this checks the
 estimator, not the model assumption. A confounded scenario (η correlated with the dose) is not run here.
+
+### H3. Idea for later (not run): an hour-of-day counterfactual
+Match Iberian and Italian plants on hour of day (unit × hour-of-day × week cells, or the 24 hourly profiles as extra factors),
+since offers differ between night and midday. The weekly Italian path has negative Iberian pre-cap R² (H1); this may track the
+Iberian level better. To build and test (pre-cap R², cross-validation, the permutation) before any estimate. User agreed to do it later.
+
+### H2 results (2026-11-03; 8 cells × 100 draws, 44 minutes on 4 workers)
+Bias of ρ̂ − ρ0 at Xu's cross-validated r̂ (and sd of ρ̂ across draws):
+| true r | scenario | ρ0 | bias at r̂ | sd | share r̂ = true r | bias at r = 0 / r = 5 |
+|---|---|---|---|---|---|---|
+| 0 | S1 | 0.5 | +0.007 | 0.026 | 100% | +0.007 / +0.003 |
+| 0 | S1 | 1.0 | +0.001 | 0.026 | 100% | +0.001 / +0.003 |
+| 0 | S2 | 0.5 | −0.004 | 0.057 | 97% | −0.004 / −0.004 |
+| 0 | S2 | 1.0 | +0.003 | 0.064 | 98% | +0.002 / +0.001 |
+| 2 | S1 | 0.5 | +0.027 | 0.042 | 48% | +0.040 / +0.016 |
+| 2 | S1 | 1.0 | +0.024 | 0.044 | 59% | +0.041 / +0.020 |
+| 2 | S2 | 0.5 | +0.020 | 0.078 | 14% | +0.027 / −0.000 |
+| 2 | S2 | 1.0 | +0.017 | 0.074 | 10% | +0.019 / −0.000 |
+- **Recovery adequate by the rule**: mean |bias| ≤ 0.03 at r̂ in every cell (rule: ≤ 0.10).
+- **No mechanical fall with r**: the slope of mean ρ̂ on r is −0.004 or closer to zero in every cell; the largest difference between
+  r = 0 and r = 5 is 0.04 (true r = 2, S1). The rule's reading: flat in r where nothing is confounded, so the real fall (0.73 → 0.57,
+  −0.16) is not the estimator's doing; it comes from structure in the data that is related to the dose (the gas-correlated factors,
+  H1). The simulation cannot say whether the lower ρ is bias removed or bias added; that needs the confounded scenario.
+- **Cross-validation under-picks**: with two true factors it finds r = 2 in 48–59% of draws under S1 and only 10–14% under S2
+  (Iberia has its own weekly path), so the cross-validated r = 0 in the real data is weak evidence that no factors exist. With
+  nothing confounded this costs ≤ 0.03 of bias.
+- **The spread is far too small** (sd 0.03–0.08 against a real bootstrap width of 0.52): no serial correlation and no firm
+  clustering were simulated. Inference rests on the firm bootstrap, not on these sds.
+- Not run: a scenario with η correlated with the dose (the case that could make ρ̂ depend on r).

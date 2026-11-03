@@ -809,3 +809,18 @@ Bias of ρ̂ − ρ0 at Xu's cross-validated r̂ (and sd of ρ̂ across draws):
 - **The spread is far too small** (sd 0.03–0.08 against a real bootstrap width of 0.52): no serial correlation and no firm
   clustering were simulated. Inference rests on the firm bootstrap, not on these sds.
 - Not run: a scenario with η correlated with the dose (the case that could make ρ̂ depend on r).
+
+### H4. Recovery simulation with a dose-correlated confound — rules fixed before running (`gas_cap_quantity_recovery_confound.py`)
+Question: if Iberian plants respond to the gas price in a way Italy's matrix does not carry, how far does B3's ρ̂ move at r = 0 and
+at the cross-validated r̂, and do added factors repair it? This is the one case where ρ̂ can depend on r (H2 found no such
+dependence without a confound).
+DGP as H2, scenario S1 (Iberia follows Italy's week path, η = 0) plus an Iberian-only gas response in every week:
+κ·z_w, with z_w the weekly MIBGAS price standardised by its pre-cap mean and sd (so it runs well above 1 after the cap),
+κ = sign × sqrt(share × variance of the Iberian pre-cap cross-unit residual path η_pre). Grid: true r {0, 2} × sign {+, −} ×
+share 0.5 × ρ0 {0.5, 1.0} = 8 cells; reps set after timing (target ≤ 60 per cell). The correlation of z_w with the dose g_w over post
+weeks is printed. Same planted effect (ρ0 − 1)·g_w, drift +0.13, noise as H2.
+Reported per cell: mean bias of ρ̂ − ρ0 at r = 0, at r̂ and at r = 5, and the share of r̂ = true r.
+Reading, fixed now: the weekly estimator is vulnerable to a gas-correlated Iberian response of this size if |bias at r = 0| ≥ 0.10 in any
+cell. Factors repair it if |bias at r̂| < 0.10 where |bias at r = 0| ≥ 0.10. The real pattern (ρ falls 0.16 from r = 0 to r = 5) is
+matched by a cell if its mean ρ̂ falls by ≥ 0.10 over the same range; the sign of κ in such a cell says which way the real r = 0 estimate
+would be biased if that scenario were true. This brackets the problem; it does not identify which scenario holds.

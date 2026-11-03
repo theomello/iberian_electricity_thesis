@@ -891,3 +891,11 @@ Mean bias of ρ̂ − ρ0 at r̂, uncontrolled (u) and with the weekly MIBGAS co
 - **Reading:** the controlled estimate is unbiased in every simulated world, the uncontrolled only if Iberian offers do not respond to the gas price
   apart from the subsidy. Quoting 0.73 alone rests on that assumption. Limits: the simulated confound is exactly linear in MIBGAS, which favours the
   control. The real firm-block bootstrap interval WITH the controls has not been computed.
+
+### H6. Bootstrap of B3 with the gas controls — rules fixed before running (`gas_cap_quantity_b3_boot_controls.py`)
+Firm-block bootstrap within country as B3 (199 draws, seed as B3, ATT re-estimated each draw, g_w fixed, r = 0 as chosen by cross-validation on the
+full sample). In each draw ρ̂ is computed without controls, with MIBGAS, and with MIBGAS and the PSV − MIBGAS spread; the same draws serve all three.
+Report each version's point estimate and 95% percentile interval, and the contrast d = ρ_uncontrolled − ρ_controlled (both controls) per draw:
+its mean and 95% interval. Rule, fixed now: an Iberian gas response apart from the subsidy is detectable only if the 95% interval of d lies wholly
+above 0 or wholly below 0; otherwise it is not detectable and the two estimates are quoted together. A controlled interval wider than the uncontrolled
+one is expected (H5); report the ratio of widths.

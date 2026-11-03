@@ -927,3 +927,15 @@ Xu's cross-validation error, and the unit counts; next to the baseline (all hour
 (−0.35) by at least 0.15 AND at least three of four blocks improve on it. Otherwise stop: matching on the hour of day does not make the Italian path track the
 Iberian level. If it passes, stage 2 (rules to be written into this note before it runs, not before): the dose by block (`ends` by block), ATT_{w,block}
 on g_{w,block} with block intercepts, ρ = 1 + b, timing permutation shifting weeks jointly across blocks, firm-block bootstrap, and the gas-control version.
+
+### H7 stage 1 results (2026-11-03; no ρ estimated)
+Main sample (predicted in-money hours, margin €50): the night (1–6) and afternoon (13–18) blocks are **dropped** — fewer than 25 Iberian gas units have
+enough in-money weeks there (cheap hours are out of the money at night and at midday). Surviving blocks, Iberian pre-cap R² at r = 0 / best r by cross-validation:
+7–12: −0.22 (r = 1; r = 4 reaches +0.16); 19–24: −1.18 (r = 2). Pooled baseline −0.35. Median across the two blocks −0.70, one of two improves.
+**Rule: STOP.** Added after the stop, diagnostic only and outside the rule (every hour, no in-money condition, all four blocks kept): R² at r = 0 pooled −0.63;
+blocks 1–6 −1.23, 7–12 −0.24, 13–18 −1.32, 19–24 −0.90; median −1.06, one of four improves; the same STOP.
+Reading: matching on the hour of day does not make the Italian path track the Iberian level; the morning ramp (7–12) is the only block that improves and
+the others are worse (fewer hours per cell mean noisier weekly means on both sides). The weak tracking is not hour-of-day mixing; Iberian offers are driven by
+something Italy's common path does not carry (the minimum-load, near-cost and withholding blocks of `rq-gas-cap-conduct.md`). Stage 2 is not run.
+Next candidate if the counterfactual is to be improved: a within-Iberia prediction of run20 from conditions known before the auction (gas price relative to cost,
+residual demand, wind and solar forecasts), fitted before the cap and extrapolated, with Italy kept as a check rather than the control. Not built.

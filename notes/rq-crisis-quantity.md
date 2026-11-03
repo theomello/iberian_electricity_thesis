@@ -421,3 +421,56 @@ against 1,115; Nov 99 against 115) and exceeds it in Dec (472 against 359).
 - Not done: the net for each group (its charge against its own share of the price fall), which needs the
   group's spot-purchase share; the free ÷ reference ratio of 0.48–0.74 is an inference for that share, not
   data.
+
+### D, net by buyer group — definition fixed before running (2026-11-03)
+
+For group g in {reference suppliers, free-market retailers}, over the valid hours, at ρ in {0.55, 0.73, 0.75, 1.00}
+(54 units):
+- **Bill_g** = Σ_h charge_g,h × PBF demand_g,h (ESIOS 1909 × 352; 1908 × 351): the official figures.
+- **Saving_g** = Σ_h (p0_h − p_h) × cleared day-ahead buy MWh of g's units in h (from the bids, status C buys by
+  unit). Reference-supplier units: Spanish units whose OMIE listing owner is a regulated pass-through supplier
+  (`is_pass_through`); free-market retailers: Spanish registry role `purchase_retail` not in that set. The
+  group's saving thus applies only to its day-ahead purchases, not to bilateral energy.
+- **Net_g** = Saving_g − Bill_g, in € m and per MWh of the group's PBF demand.
+- **Test of the spot-share inference:** the day-ahead buys of each group over its PBF demand, by month; the
+  inference says the free-market share ÷ reference share equals the charge ratio (0.48–0.74).
+Not decided in advance: any threshold. Limits: unit-to-group by the listing's owner (latest snapshot, not dated);
+retailers' bilateral energy gets no saving here (indexed contracts would); exports and Portugal excluded.
+
+### D, net by buyer group: results (2026-11-03)
+
+`scripts/analysis/gas_cap_group_net.py` → `gas_cap_group_net.csv`, `gas_cap_group_share_monthly.csv`,
+`gas_cap_saving_by_category.csv` (needs `gas_cap_consumer_saving.py` first; that script now stores the
+counterfactual price for ρ 0.51–1.03). 54 units, 5,397 valid hours. The unit groups are finer than fixed above:
+the first pass left a large "other" (36% of day-ahead buys), so it is split into reference suppliers, free-market
+retail (`purchase_retail`), generic units (`storage_mixed`, retailers' resale units, e.g. Naturgy's `GGNCOC1`),
+pumping, other Spanish, Portugal (registry country PT) and unknown (not in the registry: the interconnection
+pseudo-units, i.e. exports). The categories cover all cleared buys (asserted).
+
+**Net by group** (saving on the group's day-ahead buys − the official charge × its scheduled demand):
+
+| group | ρ | saving | bill | net | per MWh of its scheduled demand |
+|---|---|---|---|---|---|
+| reference suppliers | 0.55 / 0.73 / 0.75 / 1.00 | 160 / 228 / 236 / 332 | 803 | −644 / −575 / −568 / −472 | −€52 / −46 / −46 / −38 |
+| free-market retail | 0.55 / 0.73 / 0.75 / 1.00 | 1,014 / 1,449 / 1,498 / 2,108 | 4,463 | −3,449 / −3,014 / −2,965 / −2,356 | −€27 / −24 / −23 / −19 |
+
+With the generic units counted as free-market (ambiguous; they are retailers' resale units): saving +€398 m at ρ 0.73,
+net −€2,616 m. **Both groups are net losers at every ρ up to 1.** Even at full pass-through reference suppliers
+lose €38/MWh and the free market €19/MWh.
+
+**Who receives the wholesale saving (ρ 0.73, total €3,211 m):** free retail 45%, generic units 12%, reference
+suppliers 7%, other Spanish 4%, pumping 1%, **Portugal 22% (€699 m)**, **unknown / exports 8% (€256 m)**. About a
+third (€0.96 bn) goes to buyers outside the Spanish scheduled-demand base. The Spanish bill is the groups' charge
+only (exports and Portugal apparently did not pay, §above), so the same price fall that Spanish buyers
+financed lowered what Portuguese and exporting buyers paid. Not checked against the decree: whether Portuguese
+buyers or exports bore any charge, and in split hours (7% excluded) Portuguese price is separate.
+
+**Spot-share inference (day-ahead buys ÷ scheduled demand):** reference suppliers 0.79–0.84, not 1; free-market
+retail 0.43–0.53 (0.54–0.66 with the generic units). Ratio free ÷ reference 0.51–0.66 (0.65–0.84 with generic)
+against the charge ratio 0.48–0.76: the right level and direction in summer, loose in January–February where the
+charge is near zero. Supported roughly, not exactly.
+
+**Reading.** The wholesale price fall, even if every euro of the subsidy had been passed on, does not return the
+bill to Spanish buyers: about a third of the saving leaves the Spanish demand base and bilateral energy gets none.
+Limits: unit-to-group by the listing's latest owner; retail-owned generic units unresolved; exports sign and
+treatment as above; ρ is B3's.

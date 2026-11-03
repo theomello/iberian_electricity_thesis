@@ -124,7 +124,8 @@ def main() -> int:
         print(f"  rho {r:.2f}: gross EUR {g:,.0f} m, net of the bill EUR {g - bill:,.0f} m; price moves in {rows[-1]['hours_price_moves']:.1%} "
               f"of hours, mean {d.mean():.2f}, p95 {d.quantile(0.95):.2f}, max {d.max():.1f} EUR/MWh")
     pd.DataFrame(rows).to_csv(T / f"gas_cap_consumer_saving{sfx}.csv", index=False)
-    H[["hid", "date", "period", "valid", "S", "p_clear", "buy_mw", "gas_mw", "at_margin", "p0_0.73"]].to_parquet(
+    H[["hid", "date", "period", "valid", "S", "p_clear", "buy_mw", "gas_mw", "at_margin"]
+      + [f"p0_{r:.2f}" for r in RHOS]].to_parquet(
         T / f"gas_cap_consumer_saving_hourly{sfx}.parquet", index=False)
     return 0
 

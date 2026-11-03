@@ -994,3 +994,15 @@ post-cap check (mean gap after the subsidy ended +€168) as a level; as in B2 �
 - **Gates, as B3 (decisive):** the timing permutation over cyclic shifts of S̄_w, one-sided p ≤ 0.05 (the real c at or below the 5th percentile of shifted c's); ρ with a linear trend inside the main interval;
   ρ with the MIBGAS control reported, not decisive. If a gate fails: STOP and say the price outcome does not size ρ.
 - **Reading:** compare ρ and its interval with the share-based B3 (0.73 [0.51, 1.03]; 0.54 [0.10, 0.87] with gas controls) and the declared-cost ρ (0.91–0.96); say whether the intervals overlap, and nothing more.
+
+### I4 results (2026-11-03; 199 bootstrap draws, r = 1 by cross-validation for both outcomes)
+| outcome | Iberian / Italian units | ρ = −c | 95% interval | permutation p | ρ with trend | ρ with MIBGAS |
+|---|---|---|---|---|---|---|
+| y50 = p50 − cost_gross | 49 / 28 | 1.17 | [0.71, 1.74] | 0.000 | 1.05 [0.74, 1.39] | 0.62 |
+| ymid = p_mid − cost_gross | 48 / 25 | 1.34 | [0.95, 1.90] | 0.000 | 1.11 [0.87, 1.54] | 0.60 |
+Gates (permutation, trend inside the main interval): ALL PASS for both. Italian units fall to 28 and 25 because the weekly median needs enough in-money weeks per unit.
+Reading: the offer price falls by about 1.2–1.3 euros per euro of subsidy without a gas control, which is a ρ above 1 and an interval that overlaps the share-based B3 (0.73 [0.51, 1.03]) only on
+0.71–1.03 for y50; with the MIBGAS control it falls to 0.60–0.62, next to the share-based controlled value (0.54–0.58). Same pattern as H4–H5 shows in two outcomes: the uncontrolled slope absorbs
+whatever co-moves with the gas price (here the cost_gross term enters y directly), and the control brings the two outcomes to the same place. The two outcomes come from the same panel, so their agreement is
+not independent evidence. Other angles: declared-cost ρ 0.91–0.96 (relative to a pre-cap ratio), reference-price step 1 January 2023 implied ρ 0.78 (band about 0.4–1.2).
+All five sizing ideas of section G have now been run or ruled out; the binding limit remains about ten firm clusters.

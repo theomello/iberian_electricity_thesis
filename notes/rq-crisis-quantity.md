@@ -733,3 +733,50 @@ unit has an in-money hour on only some days; the day-level outcome is noisy and 
 S as the weekly one, so the extra variation does not identify the slope against shifted timing. The point estimate (0.82)
 sits above the weekly 0.73 and the controls move it little, unlike in the weekly curve; both are inside each other's
 intervals, so they are not told apart. `ends()` in `gas_cap_quantity_b1.py` gained a `by` argument (default "w", unchanged).
+
+## H. The counterfactual: what the factors do (2026-11-03)
+
+### H1. Descriptive diagnostics of the factor model (`gas_cap_quantity_factors.py`, run 2026-11-03)
+Weekly run20 matrices, 92 weeks (38 pre-cap). In-money main sample: 49 Iberian, 44 Italian units, 16% of cells missing.
+Every-hour sample: 51 Iberian, 53 Italian units, 9% missing.
+- **Bai & Ng's IC_p2 on the Italian matrix falls monotonically to k_max = 8 in both samples**: uninformative, as on the earlier
+  markup outcome. Xu's cross-validation is the only guide, and it is flat: in-money MSE 0.0202 (r = 0) against 0.0205–0.0218
+  for r = 1…5, best r = 0; every hour 0.0160 (r = 0), 0.0155, **0.0148 (r = 2)**, 0.0153, 0.0155, 0.0154 (7% below r = 0).
+- Share of the Italian two-way residual variance, factors 1–6: in-money 28 / 15 / 11 / 9 / 7 / 6%; every hour 19 / 16 / 12 / 11 /
+  7 / 6%. No clean elbow.
+- **The factors carry the gas path.** In-money: factors 3 and 4 correlate −0.35 / −0.34 with weekly MIBGAS and −0.16 / −0.39 with
+  the dose. Every hour: factor 2, the one cross-validation adds at r = 2, correlates −0.63 with MIBGAS, −0.67 with PSV and −0.55
+  with the dose.
+- **Iberian pre-cap R² of the counterfactual, by r = 0…5: in-money −0.35, −0.27, −0.20, −0.06, −0.00, +0.03; every hour −0.63,
+  −0.36, −0.19, −0.13, −0.05, +0.03.** At r = 0 the Italian week path adds noise to an Iberian plant (negative R² = worse than the
+  plant's own mean): Italy's common weekly movement does not describe Iberian offers in the 38 pre-cap weeks, and even five
+  factors reach only 0.03.
+- Mean gap after the subsidy ends (should be about 0): in-money +0.13 to +0.18 at every r (the drift B3's intercept absorbs);
+  every hour −0.02 to −0.06.
+- ρ by r: in-money 0.73, 0.70, 0.69, 0.63, 0.54, 0.57 (falls as factors 3 and 4, the gas-correlated ones, enter); every hour 1.27,
+  1.38, 1.18, 1.18, 1.16, 1.16 (above 1 at every r).
+Reading: the control group is a weak counterfactual for the level path, and the factors that improve it are gas-price factors
+whose Iberian loadings are estimated on pre-cap gas prices and extrapolated to the 2022 spike. That is the channel by which
+ρ moves with r. Whether it is bias or information is what H2 tests.
+
+### H2. Recovery simulation — rules fixed before running (`gas_cap_quantity_recovery.py`)
+Question: if the true pass-through is known, does the B3 estimator (gsc at the cross-validated r̂, and at each fixed r) return it,
+and does ρ̂ fall as r grows when nothing in the data-generating process makes it fall?
+Data-generating process, built from the real in-money matrix (same missing cells, same g_w, same units):
+1. Italian block: EM fit of rank k (k = true r ∈ {0, 2}) gives a_i, b_w, F_w; Italian units get their fitted values plus
+   independent normal noise with each unit's own residual sd.
+2. Iberian counterfactual: gsc's imputation at rank k (intercept and loadings from pre-cap weeks).
+   **Scenario S1** Iberia follows Italy's week path exactly (the model's own assumption). **Scenario S2** Iberia also has its own
+   weekly path η_w added: pre-cap η is the Iberian cross-unit mean's residual from the Italian path (calibrated to the observed
+   pre-cap fit); post-cap η is a moving-block resample (4-week blocks) of the demeaned pre-cap η, independent of the dose.
+3. Planted effect on Iberian post-cap weeks with g_w observed: (ρ0 − 1)·g_w, plus a constant drift +0.13 (as observed), ρ0 ∈ {0.5, 1.0}.
+4. Independent normal noise with each unit's pre-cap residual sd. Serial correlation within unit is NOT simulated, so spread
+   (not bias) is optimistic.
+Grid: true r {0, 2} × scenario {S1, S2} × ρ0 {0.5, 1.0}; reps per cell to be set after timing one (target 100).
+Per replication: r̂ by Xu's CV; ρ̂ = 1 + b of B3 (no controls, no trend) at r̂ and at each fixed r = 0…5.
+Reported per cell: mean, sd and RMSE of ρ̂ − ρ0 by estimator; share of replications where r̂ = true r; and the slope of mean ρ̂ on r.
+Reading, fixed now: recovery is adequate if at the CV-chosen r̂ the mean |ρ̂ − ρ0| ≤ 0.10 in every cell. If mean ρ̂ falls with r by
+more than 0.10 between r = 0 and r = 5 in a cell where truth is not confounded, the fall is the estimator's, and the real-data
+fall (0.73 → 0.57) cannot be read as information; if mean ρ̂ is flat in r in all cells, the real fall comes from structure in
+the data (factors correlated with the gas path and the dose). The DGP uses the estimator's own model class, so this checks the
+estimator, not the model assumption. A confounded scenario (η correlated with the dose) is not run here.

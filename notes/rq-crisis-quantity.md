@@ -671,3 +671,33 @@ costs only if the interval of d lies wholly above 0; wholly below 0 the reverse;
 Caveats stated in advance: the declared sample is 50 units in 11 firms, B3's 54 units in 12; the two ρ's are not the same
 object (declared term of the minimum-income condition vs the share of capacity offered near cost), so a difference can
 also be a difference in what is measured.
+
+### G1 results (2026-11-03)
+
+**Deviation from the rule above:** the €100 margin could not be built (no Iberian unit-hours more than €100 in the money in the
+8 weeks before the cap, so the reference curve for the ends is empty). Grid run: margin €20 / €50 / every hour × r 0…5 ×
+controls (none, MIBGAS, both) × trend × window end = 216 cells. The main cell (€50, r = 0, no controls, no trend, to
+2023-06-30) reproduces B3: ρ 0.726, permutation p 0.000, 46 weeks.
+
+**G1a. Specification curve.** All 216 cells: ρ min −0.25, 25% 0.32, median 0.70, 75% 0.87, max 1.38. 53% of cells inside
+B3's bootstrap interval [0.51, 1.03]; 71% have permutation p ≤ 0.05. By the reading rule the middle half spills below 0.51, so
+specification uncertainty is at least as large as the bootstrap interval and both must be quoted.
+Median ρ (25–75%) by axis:
+- margin: €20 0.30 (0.10–0.73); **€50 0.56 (0.37–0.68)**; every hour 0.96 (0.78–1.07);
+- controls: none 0.79 (0.72–1.01); MIBGAS 0.48 (0.25–0.78); both 0.45 (0.23–0.75);
+- r: 0.58–0.81 across 0…5; trend and window end: 0.67–0.71, they barely move it.
+Margin × controls (median ρ; share with permutation p ≤ 0.05): €20 none 0.74 (58%), MIBGAS 0.16 (92%), both 0.12 (92%);
+€50 none 0.73 (100%), MIBGAS 0.45 (100%), both 0.41 (100%); every hour none 1.07 (0%), MIBGAS 0.83 (46%), both 0.80 (50%).
+At the main margin (€50, 72 cells): min −0.02, quartiles 0.37 / 0.56 / 0.68, max 0.79; every cell passes the permutation; 57%
+inside [0.51, 1.03]. Main margin, no controls, no trend, to June 2023, by r: 0.73, 0.70, 0.69, 0.63, 0.54, 0.57 for r = 0…5.
+Reading: the choices that move ρ are the margin and whether gas-price controls are in; r, trend and window end do not.
+The cells are not equally credible. Every-hour fails the permutation without controls (it failed B3's checks too) and €20 was
+never run through B1's power check. E2 found that the placebo does not justify the gas controls (low power), yet two thirds of
+the cells carry them. So the curve widens the honest range at the main margin to about 0.4–0.75 (0.73 without controls,
+0.41–0.45 with them), not to the full 0.1–1.1.
+
+**G1b. Paired test.** Main sample, r = 0, 199 draws; 8 of the 10 Iberian firms declare a term. Offer ρ 0.73 (95% [0.53, 1.02]),
+declared ρ 0.91 ([0.86, 0.96]), d = declared − offer = +0.19 (mean +0.16, 95% [−0.12, +0.38]), 87% of draws d > 0, correlation
+of the two across draws +0.29. Rule: no difference detectable. Pairing removed little noise (the correlation is small); the
+interval of d is almost the offer interval, since the declared ρ is much tighter. Offers sit below declared costs by a point
+estimate, not by a significant margin.

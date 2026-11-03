@@ -76,7 +76,8 @@ def matrix(h: pd.DataFrame, y: str) -> tuple[pd.DataFrame, float]:
     return W.iloc[0:0], float("nan")
 
 
-def ends(h: pd.DataFrame) -> pd.DataFrame:
+def ends(h: pd.DataFrame, by: str = "w") -> pd.DataFrame:
+    """Mean full / none ends by `by` ("w" week, the B1 default, or "date" day: unit means first, then the mean over units)."""
     s, cost = iberia_steps()
     ib = h[h.iberia]
     # K per unit, as the panel defines it: 99th percentile of hourly offered MW before the cap.
@@ -115,8 +116,8 @@ def ends(h: pd.DataFrame) -> pd.DataFrame:
         out.append(g.assign(full_run20=F(np.full_like(S, RUN)), none_run20=F(RUN - S),
                             full_run20_gross=F(RUN + S), none_run20_gross=F(np.full_like(S, RUN))))
     e = pd.concat(out)
-    wk = e.groupby(["unit", "w"])[["full_run20", "none_run20", "full_run20_gross", "none_run20_gross", "subsidy"]].mean()
-    return wk.groupby("w").mean()
+    wk = e.groupby(["unit", by])[["full_run20", "none_run20", "full_run20_gross", "none_run20_gross", "subsidy"]].mean()
+    return wk.groupby(by).mean()
 
 
 def placebo_mde(W: pd.DataFrame, ib: np.ndarray, firm: np.ndarray, reps: int, rng) -> list[dict]:

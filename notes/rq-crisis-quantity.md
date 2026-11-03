@@ -569,3 +569,347 @@ total is not pinned down to the unit. Treat exports as unresolved.
 Also: the Commission's budget (€8.4 bn: €6.3 bn Spain, €2.1 bn Portugal) is a ceiling to 31 May 2023, not an outturn.
 Gas cogeneration under the general modality was eligible in both countries, which is why the cogeneration set
 overshoots the charge: only part of it qualified.
+
+## F. The net with Spain and Portugal separated — definition fixed before running (2026-11-03)
+
+After E3 (each country charges its own buyers for its own plants; the price fall is joint). Over the valid hours,
+at ρ in {0.55, 0.73, 0.75, 1.00}, for two plant sets (the 54 modelled gas units, and the 97 OMIE-listed gas CCGT
+and coal units ∪ the 54), with the same counterfactual re-clear as D (all subsidised units moved up by ρS):
+- **Saving by buyer's country**, from the day-ahead buys by category (`gas_cap_group_net.py`): Spanish buyers =
+  reference suppliers + free-market retail + generic units + other Spanish + pumping; Portuguese buyers = registry
+  country PT; exports / unregistered units reported apart.
+- **Spanish bill** = the official ESIOS charge × scheduled demand over all three groups (1908 × 351 + 1909 × 352 +
+  1907 × 353). **Portuguese bill**: not observed; bounded above by B_PT = S × cleared MWh of the Portuguese
+  plants (the cost to be recovered; congestion rents and phase-in lower it).
+- **Net_ES** = saving to Spanish buyers − Spanish bill. **Net_PT** = saving to Portuguese buyers − B_PT (a
+  lower bound on the net; the net is at most the saving itself). Also B_ES = S × cleared MWh of the Spanish plants,
+  against the Spanish bill (the part of the plants' receipts not charged to Spanish buyers).
+No decision rule. Limits as in D: the same ρ for every plant (extrapolated beyond the 54 and across countries),
+fixed other offers, bilateral energy gets no saving, exports unresolved.
+
+### F results (2026-11-03)
+
+`scripts/analysis/gas_cap_net_by_country.py [--units panel|ccgt_coal]` → `outputs/tables/gas_cap_net_by_country{,_ccgt_coal}.csv`
+(`gas_cap_consumer_saving.py --units ccgt_coal` regenerated so its hourly file carries every ρ). € m, valid hours.
+
+| plant set | ρ | saving to Spanish buyers | Spanish bill (ESIOS) | **net Spain** | saving to Portuguese buyers | Portuguese bill ≤ | **net Portugal ≥** | exports / unregistered |
+|---|---|---|---|---|---|---|---|---|
+| 54 gas units | 0.55 | 1,579 | 5,427 | **−3,848** | 489 | 965 | −476 | 178 |
+| | 0.73 | 2,255 | 5,427 | **−3,172** | 699 | 965 | −266 | 256 |
+| | 0.75 | 2,332 | 5,427 | **−3,095** | 722 | 965 | −243 | 265 |
+| | 1.00 | 3,278 | 5,427 | **−2,149** | 1,016 | 965 | +51 | 375 |
+| 97 gas CCGT + coal | 0.55 | 1,723 | 5,427 | **−3,704** | 536 | 965 | −429 | 195 |
+| | 0.73 | 2,483 | 5,427 | **−2,944** | 773 | 965 | −192 | 283 |
+| | 0.75 | 2,568 | 5,427 | **−2,858** | 800 | 965 | −165 | 293 |
+| | 1.00 | 3,690 | 5,427 | **−1,737** | 1,149 | 965 | +184 | 421 |
+
+Spanish bill = ESIOS 1908 × 351 + 1909 × 352 + 1907 × 353 (the direct consumers add €160 m to the earlier €5,266 m).
+Subsidy on the plants: Portuguese plants €965 m (8,149 GWh, same in both sets); Spanish plants €3,972 m (54 set) and
+€4,905 m (97 set), so the Spanish bill is 1.37 and 1.11 times what the Spanish plants earn in the day-ahead market
+in these sets: the rest is intraday and balancing receipts and plants outside the sets (cogeneration under the
+general regime), the congestion rents pull the other way.
+
+**Reading.**
+- **Spanish buyers lose €2.9–3.8 bn at ρ 0.55–0.75 and still €1.7–2.1 bn at full pass-through** (ρ = 1). Break-even
+  would need ρ of roughly 1.4–1.5, above any admissible value. Separating the countries makes Spain's net **about €0.7–1.2 bn
+  worse** than the combined −1.9 to −3.0 bn: a third of the price fall goes to buyers who do not pay the Spanish charge.
+- **Portuguese buyers are roughly at break-even to slightly behind:** −€0.2 to −0.5 bn at ρ 0.55–0.75 on the
+  worst-case bill (the whole subsidy to the Portuguese plants), about zero at ρ = 1; the true bill is lower
+  (congestion rents, phase-in), so these are lower bounds.
+- Exports / unregistered units take €0.2–0.4 bn; whether they paid is unresolved (E3).
+- The joint price fall comes from every plant's pass-through, so "Spain's saving" is what Spanish buyers received
+  of a fall that the Portuguese plants also helped cause; no split by the plants' own country is attempted.
+
+## G. Ideas for sizing B3 (2026-11-03, proposed, not run)
+
+The interval [0.51, 1.03] is limited by about a dozen Iberian firms as bootstrap clusters; none of these adds firms.
+Ranked by what each buys:
+1. **Specification curve.** Report ρ over every defensible choice (run10 / run20 / run50, margin €20 / €50 / all hours, r = 0…5,
+   gas controls on or off, 54 or 97 units, window end) as one distribution, and quote its range as the size
+   uncertainty instead of picking. Cheap; makes the 0.54–0.73 spread a result.
+2. **Paired test against the declared costs.** The same units give a declared-cost ρ (≈ 0.95) and an offer ρ (B3).
+   Estimate the difference with the firm-block bootstrap on the pairs: common noise drops out, and it turns the
+   "offers pass through less than declared costs" tension into a test.
+3. **Daily dose.** g_w averages away day-to-day swings in S inside a week (S moved from 70 to 140 within June 2022).
+   A unit-day Xu panel with g_ud (permutation over days) gives the slope more usable variation; inference still
+   clusters on firms, so it sharpens the estimate more than the interval.
+4. **Linear-in-S price outcome.** Offer price at p25 / p50 / p75 minus cost, ATT in € per € of S, weekly, with
+   the permutation and gas controls. Natural units and continuous. The earlier price designs failed their
+   pre-cap checks, so it needs the placebo first.
+5. **Regulatory steps in the reference price** (PRGN 40 → 45 → 50 → 55 on 1 January, 1 February, 1 March 2023): S falls
+   by about €9 each time at a given gas price, independent of plants and market. A check on the declared-cost ρ, not
+   on B3; the steps are small.
+Not worth it: more pre-cap weeks (the offer limits changed on 2021-07-07), more small plants (efficiency unknown),
+a second control country (Great Britain failed).
+
+## G1. Specification curve and paired test — rules fixed before running (2026-11-03)
+
+User asked to resume the sizing ideas (1 and 2 of section G). Nothing below has been run.
+
+**G1a. Specification curve** (`gas_cap_quantity_b3_curve.py`). Point estimates of B3's ρ = 1 + b over a grid, no bootstrap
+(a bootstrap per cell would multiply cost 199-fold and the grid is the uncertainty being reported here):
+- margin for the predicted in-money condition: €20, €50 (main), €100, every hour; the B1 ends are recomputed for each
+  (`gas_cap_quantity_b1.ends`, run20 only);
+- r = 0 … 5 (Xu 2017 factors; the CV choice is one of them);
+- gas controls: none / MIBGAS / MIBGAS + PSV − MIBGAS spread;
+- time trend: without / with;
+- window end: 2023-06-30 (main) / 2023-02-25 (last week with a subsidy).
+Not in the grid, because the stored panel carries only `run20` and the 54 modelled units: run10 / run50 thresholds and the
+97-unit set. Say so when quoting. For each cell also the timing permutation p (cyclic shifts, as in the B3 checks).
+Reading, fixed now: no pass/fail. Quote (i) the range of the middle half of cells (25th–75th percentile) as the size
+uncertainty across specifications, (ii) the full min–max, (iii) the share of cells whose ρ lies inside B3's bootstrap
+interval [0.51, 1.03], (iv) the share with permutation p ≤ 0.05, and (v) by axis, the range of cell medians, to show which
+choice moves ρ most. If the middle half lies wholly inside [0.51, 1.03] the bootstrap interval is the binding uncertainty;
+if it spills outside, specification uncertainty is at least as large and must be quoted with it.
+
+**G1b. Paired test against the declared costs** (`gas_cap_quantity_b3_paired.py`). One firm-block bootstrap, 199 draws,
+resampling firms within country as in B3. In each draw: ρ_offer = 1 + b of B3 (r by CV on the full sample, no controls,
+the ATT re-estimated on the draw, g_w fixed); ρ_decl = the median over the drawn Iberian firms' unit-days with S ≥ €20,
+2022-06-15 → 2023-02-25, of `rho_bid` from `gas_cap_declared_cost.panel()` (a firm drawn twice counts twice). d = ρ_decl − ρ_offer.
+Report mean d, the 95% percentile interval and the share of draws with d > 0. Rule: offers pass through less than declared
+costs only if the interval of d lies wholly above 0; wholly below 0 the reverse; otherwise no difference is detectable.
+Caveats stated in advance: the declared sample is 50 units in 11 firms, B3's 54 units in 12; the two ρ's are not the same
+object (declared term of the minimum-income condition vs the share of capacity offered near cost), so a difference can
+also be a difference in what is measured.
+
+### G1 results (2026-11-03)
+
+**Deviation from the rule above:** the €100 margin could not be built (no Iberian unit-hours more than €100 in the money in the
+8 weeks before the cap, so the reference curve for the ends is empty). Grid run: margin €20 / €50 / every hour × r 0…5 ×
+controls (none, MIBGAS, both) × trend × window end = 216 cells. The main cell (€50, r = 0, no controls, no trend, to
+2023-06-30) reproduces B3: ρ 0.726, permutation p 0.000, 46 weeks.
+
+**G1a. Specification curve.** All 216 cells: ρ min −0.25, 25% 0.32, median 0.70, 75% 0.87, max 1.38. 53% of cells inside
+B3's bootstrap interval [0.51, 1.03]; 71% have permutation p ≤ 0.05. By the reading rule the middle half spills below 0.51, so
+specification uncertainty is at least as large as the bootstrap interval and both must be quoted.
+Median ρ (25–75%) by axis:
+- margin: €20 0.30 (0.10–0.73); **€50 0.56 (0.37–0.68)**; every hour 0.96 (0.78–1.07);
+- controls: none 0.79 (0.72–1.01); MIBGAS 0.48 (0.25–0.78); both 0.45 (0.23–0.75);
+- r: 0.58–0.81 across 0…5; trend and window end: 0.67–0.71, they barely move it.
+Margin × controls (median ρ; share with permutation p ≤ 0.05): €20 none 0.74 (58%), MIBGAS 0.16 (92%), both 0.12 (92%);
+€50 none 0.73 (100%), MIBGAS 0.45 (100%), both 0.41 (100%); every hour none 1.07 (0%), MIBGAS 0.83 (46%), both 0.80 (50%).
+At the main margin (€50, 72 cells): min −0.02, quartiles 0.37 / 0.56 / 0.68, max 0.79; every cell passes the permutation; 57%
+inside [0.51, 1.03]. Main margin, no controls, no trend, to June 2023, by r: 0.73, 0.70, 0.69, 0.63, 0.54, 0.57 for r = 0…5.
+Reading: the choices that move ρ are the margin and whether gas-price controls are in; r, trend and window end do not.
+The cells are not equally credible. Every-hour fails the permutation without controls (it failed B3's checks too) and €20 was
+never run through B1's power check. E2 found that the placebo does not justify the gas controls (low power), yet two thirds of
+the cells carry them. So the curve widens the honest range at the main margin to about 0.4–0.75 (0.73 without controls,
+0.41–0.45 with them), not to the full 0.1–1.1.
+
+**G1b. Paired test.** Main sample, r = 0, 199 draws; 8 of the 10 Iberian firms declare a term. Offer ρ 0.73 (95% [0.53, 1.02]),
+declared ρ 0.91 ([0.86, 0.96]), d = declared − offer = +0.19 (mean +0.16, 95% [−0.12, +0.38]), 87% of draws d > 0, correlation
+of the two across draws +0.29. Rule: no difference detectable. Pairing removed little noise (the correlation is small); the
+interval of d is almost the offer interval, since the declared ρ is much tighter. Offers sit below declared costs by a point
+estimate, not by a significant margin.
+
+## G2. Daily dose — rules fixed before running (2026-11-03)
+
+Idea 3 of section G, chosen by the user. B3 averages the subsidy over a week, but S moves a lot inside a week (about €70 to
+€140 within June 2022). A unit-day panel gives the slope that variation.
+- **Outcome:** per unit and day, the mean of `run20` over the unit's predicted in-money hours that day (main margin €50, same
+  sample as B1/B3: essential units out, cost defined). **Dose:** g_d = mean over units of the day's full − none gap, from the
+  B1 ends computed by day instead of by week (same reference curve, same K); the weekly code is reused with `by="date"`.
+- **Estimator:** Xu (2017) `gsc` on the unit × day matrix, pre = days before 2022-06-15, r by cross-validation on the pre days.
+  Unit rule as in the weekly matrix: at most 30% of days missing (50% if fewer than 25 Iberian units pass; stop below 25).
+  Then ATT_d = a + b·g_d over post-cap days carrying g_d, ρ = 1 + b.
+- **Inference:** firm block bootstrap within country, 199 draws, ATT re-estimated each draw (whole firm series resampled, so
+  serial correlation within a firm is kept); timing permutation over cyclic day shifts, pass if one-sided p ≤ 0.05; with a
+  linear trend, ρ must stay inside the main interval; gas controls (daily MIBGAS, daily PSV − MIBGAS) reported, not decisive.
+- **Reading, fixed now:** the daily dose sharpens the estimate only if the permutation passes AND the 95% interval is narrower
+  than the weekly [0.51, 1.03] (width 0.52). Report the point estimate beside the weekly 0.73; if they differ, say so and do
+  not choose between them. Stop if the permutation fails or fewer than 25 Iberian units survive the missing-days rule.
+
+### G2 results (2026-11-03)
+
+Unit × day panel, main margin: 41 Iberian and 39 Italian units × 638 days after the missing-days rule (the 30% threshold left
+fewer than 25 Iberian units, so the 50% fallback applied; 38% of cells missing), 10 Iberian and 10 Italian firms. 207 post-cap
+days carry g_d (182 with g > 0, max 0.671). Xu CV r = 3.
+- ρ = 0.82, 95% firm-block bootstrap [0.63, 1.01], width 0.38 (weekly B3: 0.73 [0.51, 1.03], width 0.52).
+- Timing permutation over 206 day shifts: shifted 5th percentile −0.201, **p 0.117 → fails**.
+- With a linear trend ρ 0.96 [0.84, 1.09], inside the main interval. Gas controls: MIBGAS 0.84, spread 0.87, both 0.89.
+- Rule: the daily dose does NOT sharpen the estimate (permutation fails). Stop; the narrower interval is not to be quoted.
+Why it does not carry over: the daily panel keeps fewer units (41 against 49 Iberian) and 38% of its cells are missing, since a
+unit has an in-money hour on only some days; the day-level outcome is noisy and the daily dose is mostly the same slow path of
+S as the weekly one, so the extra variation does not identify the slope against shifted timing. The point estimate (0.82)
+sits above the weekly 0.73 and the controls move it little, unlike in the weekly curve; both are inside each other's
+intervals, so they are not told apart. `ends()` in `gas_cap_quantity_b1.py` gained a `by` argument (default "w", unchanged).
+
+## H. The counterfactual: what the factors do (2026-11-03)
+
+### H1. Descriptive diagnostics of the factor model (`gas_cap_quantity_factors.py`, run 2026-11-03)
+Weekly run20 matrices, 92 weeks (38 pre-cap). In-money main sample: 49 Iberian, 44 Italian units, 16% of cells missing.
+Every-hour sample: 51 Iberian, 53 Italian units, 9% missing.
+- **Bai & Ng's IC_p2 on the Italian matrix falls monotonically to k_max = 8 in both samples**: uninformative, as on the earlier
+  markup outcome. Xu's cross-validation is the only guide, and it is flat: in-money MSE 0.0202 (r = 0) against 0.0205–0.0218
+  for r = 1…5, best r = 0; every hour 0.0160 (r = 0), 0.0155, **0.0148 (r = 2)**, 0.0153, 0.0155, 0.0154 (7% below r = 0).
+- Share of the Italian two-way residual variance, factors 1–6: in-money 28 / 15 / 11 / 9 / 7 / 6%; every hour 19 / 16 / 12 / 11 /
+  7 / 6%. No clean elbow.
+- **The factors carry the gas path.** In-money: factors 3 and 4 correlate −0.35 / −0.34 with weekly MIBGAS and −0.16 / −0.39 with
+  the dose. Every hour: factor 2, the one cross-validation adds at r = 2, correlates −0.63 with MIBGAS, −0.67 with PSV and −0.55
+  with the dose.
+- **Iberian pre-cap R² of the counterfactual, by r = 0…5: in-money −0.35, −0.27, −0.20, −0.06, −0.00, +0.03; every hour −0.63,
+  −0.36, −0.19, −0.13, −0.05, +0.03.** At r = 0 the Italian week path adds noise to an Iberian plant (negative R² = worse than the
+  plant's own mean): Italy's common weekly movement does not describe Iberian offers in the 38 pre-cap weeks, and even five
+  factors reach only 0.03.
+- Mean gap after the subsidy ends (should be about 0): in-money +0.13 to +0.18 at every r (the drift B3's intercept absorbs);
+  every hour −0.02 to −0.06.
+- ρ by r: in-money 0.73, 0.70, 0.69, 0.63, 0.54, 0.57 (falls as factors 3 and 4, the gas-correlated ones, enter); every hour 1.27,
+  1.38, 1.18, 1.18, 1.16, 1.16 (above 1 at every r).
+Reading: the control group is a weak counterfactual for the level path, and the factors that improve it are gas-price factors
+whose Iberian loadings are estimated on pre-cap gas prices and extrapolated to the 2022 spike. That is the channel by which
+ρ moves with r. Whether it is bias or information is what H2 tests.
+
+### H2. Recovery simulation — rules fixed before running (`gas_cap_quantity_recovery.py`)
+Question: if the true pass-through is known, does the B3 estimator (gsc at the cross-validated r̂, and at each fixed r) return it,
+and does ρ̂ fall as r grows when nothing in the data-generating process makes it fall?
+Data-generating process, built from the real in-money matrix (same missing cells, same g_w, same units):
+1. Italian block: EM fit of rank k (k = true r ∈ {0, 2}) gives a_i, b_w, F_w; Italian units get their fitted values plus
+   independent normal noise with each unit's own residual sd.
+2. Iberian counterfactual: gsc's imputation at rank k (intercept and loadings from pre-cap weeks).
+   **Scenario S1** Iberia follows Italy's week path exactly (the model's own assumption). **Scenario S2** Iberia also has its own
+   weekly path η_w added: pre-cap η is the Iberian cross-unit mean's residual from the Italian path (calibrated to the observed
+   pre-cap fit); post-cap η is a moving-block resample (4-week blocks) of the demeaned pre-cap η, independent of the dose.
+3. Planted effect on Iberian post-cap weeks with g_w observed: (ρ0 − 1)·g_w, plus a constant drift +0.13 (as observed), ρ0 ∈ {0.5, 1.0}.
+4. Independent normal noise with each unit's pre-cap residual sd. Serial correlation within unit is NOT simulated, so spread
+   (not bias) is optimistic.
+Grid: true r {0, 2} × scenario {S1, S2} × ρ0 {0.5, 1.0}; reps per cell to be set after timing one (target 100).
+Per replication: r̂ by Xu's CV; ρ̂ = 1 + b of B3 (no controls, no trend) at r̂ and at each fixed r = 0…5.
+Reported per cell: mean, sd and RMSE of ρ̂ − ρ0 by estimator; share of replications where r̂ = true r; and the slope of mean ρ̂ on r.
+Reading, fixed now: recovery is adequate if at the CV-chosen r̂ the mean |ρ̂ − ρ0| ≤ 0.10 in every cell. If mean ρ̂ falls with r by
+more than 0.10 between r = 0 and r = 5 in a cell where truth is not confounded, the fall is the estimator's, and the real-data
+fall (0.73 → 0.57) cannot be read as information; if mean ρ̂ is flat in r in all cells, the real fall comes from structure in
+the data (factors correlated with the gas path and the dose). The DGP uses the estimator's own model class, so this checks the
+estimator, not the model assumption. A confounded scenario (η correlated with the dose) is not run here.
+
+### H3. Idea for later (not run): an hour-of-day counterfactual
+Match Iberian and Italian plants on hour of day (unit × hour-of-day × week cells, or the 24 hourly profiles as extra factors),
+since offers differ between night and midday. The weekly Italian path has negative Iberian pre-cap R² (H1); this may track the
+Iberian level better. To build and test (pre-cap R², cross-validation, the permutation) before any estimate. User agreed to do it later.
+
+### H2 results (2026-11-03; 8 cells × 100 draws, 44 minutes on 4 workers)
+Bias of ρ̂ − ρ0 at Xu's cross-validated r̂ (and sd of ρ̂ across draws):
+| true r | scenario | ρ0 | bias at r̂ | sd | share r̂ = true r | bias at r = 0 / r = 5 |
+|---|---|---|---|---|---|---|
+| 0 | S1 | 0.5 | +0.007 | 0.026 | 100% | +0.007 / +0.003 |
+| 0 | S1 | 1.0 | +0.001 | 0.026 | 100% | +0.001 / +0.003 |
+| 0 | S2 | 0.5 | −0.004 | 0.057 | 97% | −0.004 / −0.004 |
+| 0 | S2 | 1.0 | +0.003 | 0.064 | 98% | +0.002 / +0.001 |
+| 2 | S1 | 0.5 | +0.027 | 0.042 | 48% | +0.040 / +0.016 |
+| 2 | S1 | 1.0 | +0.024 | 0.044 | 59% | +0.041 / +0.020 |
+| 2 | S2 | 0.5 | +0.020 | 0.078 | 14% | +0.027 / −0.000 |
+| 2 | S2 | 1.0 | +0.017 | 0.074 | 10% | +0.019 / −0.000 |
+- **Recovery adequate by the rule**: mean |bias| ≤ 0.03 at r̂ in every cell (rule: ≤ 0.10).
+- **No mechanical fall with r**: the slope of mean ρ̂ on r is −0.004 or closer to zero in every cell; the largest difference between
+  r = 0 and r = 5 is 0.04 (true r = 2, S1). The rule's reading: flat in r where nothing is confounded, so the real fall (0.73 → 0.57,
+  −0.16) is not the estimator's doing; it comes from structure in the data that is related to the dose (the gas-correlated factors,
+  H1). The simulation cannot say whether the lower ρ is bias removed or bias added; that needs the confounded scenario.
+- **Cross-validation under-picks**: with two true factors it finds r = 2 in 48–59% of draws under S1 and only 10–14% under S2
+  (Iberia has its own weekly path), so the cross-validated r = 0 in the real data is weak evidence that no factors exist. With
+  nothing confounded this costs ≤ 0.03 of bias.
+- **The spread is far too small** (sd 0.03–0.08 against a real bootstrap width of 0.52): no serial correlation and no firm
+  clustering were simulated. Inference rests on the firm bootstrap, not on these sds.
+- Not run: a scenario with η correlated with the dose (the case that could make ρ̂ depend on r).
+
+### H4. Recovery simulation with a dose-correlated confound — rules fixed before running (`gas_cap_quantity_recovery_confound.py`)
+Question: if Iberian plants respond to the gas price in a way Italy's matrix does not carry, how far does B3's ρ̂ move at r = 0 and
+at the cross-validated r̂, and do added factors repair it? This is the one case where ρ̂ can depend on r (H2 found no such
+dependence without a confound).
+DGP as H2, scenario S1 (Iberia follows Italy's week path, η = 0) plus an Iberian-only gas response in every week:
+κ·z_w, with z_w the weekly MIBGAS price standardised by its pre-cap mean and sd (so it runs well above 1 after the cap),
+κ = sign × sqrt(share × variance of the Iberian pre-cap cross-unit residual path η_pre). Grid: true r {0, 2} × sign {+, −} ×
+share 0.5 × ρ0 {0.5, 1.0} = 8 cells; reps set after timing (target ≤ 60 per cell). The correlation of z_w with the dose g_w over post
+weeks is printed. Same planted effect (ρ0 − 1)·g_w, drift +0.13, noise as H2.
+Reported per cell: mean bias of ρ̂ − ρ0 at r = 0, at r̂ and at r = 5, and the share of r̂ = true r.
+Reading, fixed now: the weekly estimator is vulnerable to a gas-correlated Iberian response of this size if |bias at r = 0| ≥ 0.10 in any
+cell. Factors repair it if |bias at r̂| < 0.10 where |bias at r = 0| ≥ 0.10. The real pattern (ρ falls 0.16 from r = 0 to r = 5) is
+matched by a cell if its mean ρ̂ falls by ≥ 0.10 over the same range; the sign of κ in such a cell says which way the real r = 0 estimate
+would be biased if that scenario were true. This brackets the problem; it does not identify which scenario holds.
+Addition made after the one timing cell (k = 0, sign +, share 0.5, ρ0 0.5, 10 draws; not part of the results): the confound was so
+strong there (bias of ρ̂ at r = 0 of +0.57, with the weekly MIBGAS price correlated 0.98 with the dose over the post-cap weeks) that share 0.5 cannot
+bracket the size. Cells with share 0.05 are added, so the grid is true r {0, 2} × sign {+, −} × share {0.5, 0.05} × ρ0 {0.5, 1.0} = 16
+cells. Rules unchanged. Timing: 2 s a draw with one thread per worker (H2's 44 minutes was mostly threads fighting for four cores).
+
+### H4 results (2026-11-03; 16 cells × 60 draws, about 6 minutes)
+Mean bias of ρ̂ − ρ0 (identical for ρ0 0.5 and 1.0 to within 0.02, so one row per cell); weekly MIBGAS and the dose correlate **0.978** over the post-cap weeks.
+| true r | κ sign | share | bias at r = 0 | at r̂ | at r = 5 | share r̂ = true r |
+|---|---|---|---|---|---|---|
+| 0 | + | 0.05 | +0.17 / +0.18 | +0.17 / +0.18 | +0.17 / +0.18 | 98–100% |
+| 0 | + | 0.50 | +0.56 | +0.56 | +0.56 | 97–98% |
+| 0 | − | 0.05 | −0.18 | −0.18 | −0.18 | 100% |
+| 0 | − | 0.50 | −0.55 | −0.55 | −0.55 | 97–100% |
+| 2 | + | 0.05 | +0.21 | +0.20 | +0.19–0.21 | 48–50% |
+| 2 | + | 0.50 | +0.58–0.59 | +0.59–0.60 | +0.59 | 35–38% |
+| 2 | − | 0.05 | −0.14 | −0.15 / −0.16 | −0.17 | 45–50% |
+| 2 | − | 0.50 | −0.51 | −0.53 | −0.56 | 28–30% |
+- **Rule readings:** the weekly estimator IS vulnerable (|bias at r = 0| ≥ 0.10 in all 16 cells, 0.13–0.59); factors do NOT repair it
+  (|bias at r̂| ≥ 0.15 in every cell, and at r = 5 as large as at r = 0); no cell reproduces the real fall of 0.16 from r = 0 to r = 5 (the
+  largest fall is 0.05). The sign of the bias follows the sign of the Iberian gas response.
+- **Size of the weak confound.** Share 0.05 means κ = 0.017 of the run20 share per pre-cap sd of MIBGAS; the weekly gas price reaches 5.8 pre-cap
+  sds in the summer of 2022, so the Iberian share is shifted by at most 0.10 (mean Iberian run20 0.69 before the cap; the dose g peaks at
+  0.625, mean 0.19 post-cap). A gas response of 0.10 at the peak biases ρ̂ by about 0.17.
+- **What it means.** An Iberian-only response to the gas price is almost the same signal as the subsidy, and Italy's factors, which are
+  estimated on Italian plants, cannot remove it. So the weekly ρ is exposed to exactly the confound the gas controls address, in either
+  direction, by a few tenths. The factors' fall with r in the real data is not this: it needs a gas-linked factor shared by Italian and
+  Iberian plants whose Iberian loading, estimated on pre-cap gas prices, extrapolates differently after the cap (H1). Not simulated.
+- **Not run:** the same confound with a gas-price control in the regression (does it repair the bias, and at what cost in spread; does it
+  bias the unconfounded worlds?). That decides between ρ = 0.73 without and 0.41–0.45 with the controls.
+
+### H5. Does a gas-price control repair the confounded worlds? — rules fixed before running (`gas_cap_quantity_recovery_control.py`)
+H4 left open whether adding the weekly gas price to B3's regression repairs the bias a gas-linked Iberian response causes, and what it
+costs. Same data-generating process as H4 (S1 plus κ·z_w), grid true r {0, 2} × [sign {+, −} × share {0.5, 0.05}, plus share 0 (no confound)]
+× ρ0 {0.5, 1.0} = 20 cells, 60 draws each. Per draw: ρ̂ = 1 + b of ATT_w = a + b·g_w, without and with z_w (the standardised weekly MIBGAS) as a regressor,
+at Xu's r̂ and at fixed r = 0…5.
+Reading, fixed now:
+- **Repairs** the confound if |bias with the control at r̂| < 0.10 in every share 0.05 and 0.5 cell (the uncontrolled bias is ≥ 0.10 there, H4).
+- **Harmless** where nothing is confounded if |bias with the control at r̂| ≤ 0.05 in every share-0 cell.
+- **Cost:** report the ratio of the spread of ρ̂ with the control to without it, and the RMSE of both, per cell; the control is preferred in a
+  cell if its RMSE is lower.
+- If it repairs and is harmless, the uncontrolled 0.73 cannot be preferred without an argument that Iberian offers do not respond to the gas
+  price independently of the subsidy, and the controlled value (0.41–0.45 in the curve, G1) becomes the better-supported centre. If it repairs
+  but its RMSE is higher in the share-0 cells, report both. If it does not repair, controls give no protection.
+Limits stated in advance: the simulated confound is exactly linear in the controlled variable, which favours the control; a real response
+(offers relative to cost, kinked at the cap) need not be linear in MIBGAS. A control that works here is necessary, not sufficient.
+
+### H5 results (2026-11-03; 20 cells × 60 draws, about 10 minutes)
+Mean bias of ρ̂ − ρ0 at r̂, uncontrolled (u) and with the weekly MIBGAS control (c); sd across draws; ranges over the two ρ0 and the two signs.
+| world | bias u | bias c | sd u | sd c | sd ratio | RMSE u | RMSE c |
+|---|---|---|---|---|---|---|---|
+| true r 0, no confound | 0.00 | +0.005 / +0.007 | 0.03 | 0.12–0.13 | 4.4–4.7 | 0.03 | 0.12–0.13 |
+| true r 2, no confound | +0.02 | +0.003 / +0.018 | 0.04 | 0.12–0.13 | 3.0–3.7 | 0.04 | 0.11–0.13 |
+| true r 0, share 0.05 | ±0.17–0.18 | −0.03 … +0.02 | 0.03 | 0.12–0.15 | 3.9–5.7 | 0.17–0.19 | 0.12–0.15 |
+| true r 0, share 0.5 | ±0.55–0.56 | −0.01 … −0.00 | 0.02–0.03 | 0.12–0.14 | 3.9–5.8 | 0.55–0.56 | 0.12–0.14 |
+| true r 2, share 0.05 | ±0.15–0.21 | −0.03 … +0.04 | 0.04–0.05 | 0.11–0.13 | 2.4–2.9 | 0.16–0.21 | 0.11–0.13 |
+| true r 2, share 0.5 | ±0.54–0.59 | −0.04 … +0.04 | 0.05 | 0.13–0.15 | 2.6–3.0 | 0.54–0.60 | 0.14–0.15 |
+- **Rules:** the control repairs the confound (largest |bias c| 0.044 in any confounded cell, rule < 0.10) and is harmless where nothing is
+  confounded (largest |bias c| 0.018, rule ≤ 0.05). **Cost:** the spread of ρ̂ is 2.4–5.8 times larger (sd 0.11–0.15 against 0.02–0.05), because
+  the gas price and the dose correlate 0.98; the control's RMSE is lower in every confounded cell and higher (0.11–0.13 against 0.03–0.04) in the
+  unconfounded ones. Two clauses of the rule fired together (repairs and harmless: the uncontrolled estimate cannot be preferred without an
+  argument; repairs but higher RMSE where nothing is confounded: report both) — applied here as: report both.
+- **Applied to the real estimates** (main specification, r = 0, `gas_cap_quantity_b3_checks.csv`): without controls 0.73; MIBGAS 0.58; MIBGAS and the
+  PSV − MIBGAS spread 0.54; the permutation holds with each. The gap, 0.15–0.19, is about the bias a weak positive Iberian gas response (share 0.05) would
+  put into the uncontrolled estimate (+0.17–0.18), and about one to one and a half controlled sds (0.12–0.15), so the data cannot tell the two apart.
+- **Reading:** the controlled estimate is unbiased in every simulated world, the uncontrolled only if Iberian offers do not respond to the gas price
+  apart from the subsidy. Quoting 0.73 alone rests on that assumption. Limits: the simulated confound is exactly linear in MIBGAS, which favours the
+  control. The real firm-block bootstrap interval WITH the controls has not been computed.
+
+### H6. Bootstrap of B3 with the gas controls — rules fixed before running (`gas_cap_quantity_b3_boot_controls.py`)
+Firm-block bootstrap within country as B3 (199 draws, seed as B3, ATT re-estimated each draw, g_w fixed, r = 0 as chosen by cross-validation on the
+full sample). In each draw ρ̂ is computed without controls, with MIBGAS, and with MIBGAS and the PSV − MIBGAS spread; the same draws serve all three.
+Report each version's point estimate and 95% percentile interval, and the contrast d = ρ_uncontrolled − ρ_controlled (both controls) per draw:
+its mean and 95% interval. Rule, fixed now: an Iberian gas response apart from the subsidy is detectable only if the 95% interval of d lies wholly
+above 0 or wholly below 0; otherwise it is not detectable and the two estimates are quoted together. A controlled interval wider than the uncontrolled
+one is expected (H5); report the ratio of widths.
+
+### H6 results (2026-11-03; 199 draws, 10 Iberian and 12 Italian firms, r = 0)
+| version | point ρ | bootstrap mean | 95% interval | width |
+|---|---|---|---|---|
+| no control | 0.726 | 0.732 | [0.510, 1.031] | 0.52 |
+| MIBGAS | 0.583 | 0.560 | [0.118, 0.941] | 0.82 |
+| MIBGAS + spread | 0.544 | 0.527 | [0.097, 0.872] | 0.78 |
+| contrast d = none − both | +0.182 | +0.206 | [−0.119, +0.584] | 0.70 |
+Rule: d's interval includes 0, so a gas response apart from the subsidy is **not detectable**; quote both. Widths: both-controls / none 1.49,
+MIBGAS / none 1.58 (H5's simulated spread ratio of 2.4–5.8 overstates it: the simulation had no firm clustering, which dominates the real interval).
+Reading: the controlled interval [0.10, 0.87] contains the uncontrolled point and the uncontrolled interval [0.51, 1.03] contains the controlled
+point; they overlap on 0.51–0.87. Full pass-through (ρ = 1) is inside the uncontrolled interval and outside the controlled one; no pass-through
+(ρ = 0) is outside both, just. The break-even ρ of the net (Spain 1.4–1.5; Iberia with both bills about 1.05–1.1) lies above both intervals, so the
+negative net does not depend on which is quoted. Quoting range for the paper: 0.5–0.75 as the central band, with 0.10–1.03 as the union of the two 95% intervals.

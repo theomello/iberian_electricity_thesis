@@ -569,3 +569,53 @@ total is not pinned down to the unit. Treat exports as unresolved.
 Also: the Commission's budget (€8.4 bn: €6.3 bn Spain, €2.1 bn Portugal) is a ceiling to 31 May 2023, not an outturn.
 Gas cogeneration under the general modality was eligible in both countries, which is why the cogeneration set
 overshoots the charge: only part of it qualified.
+
+## F. The net with Spain and Portugal separated — definition fixed before running (2026-11-03)
+
+After E3 (each country charges its own buyers for its own plants; the price fall is joint). Over the valid hours,
+at ρ in {0.55, 0.73, 0.75, 1.00}, for two plant sets (the 54 modelled gas units, and the 97 OMIE-listed gas CCGT
+and coal units ∪ the 54), with the same counterfactual re-clear as D (all subsidised units moved up by ρS):
+- **Saving by buyer's country**, from the day-ahead buys by category (`gas_cap_group_net.py`): Spanish buyers =
+  reference suppliers + free-market retail + generic units + other Spanish + pumping; Portuguese buyers = registry
+  country PT; exports / unregistered units reported apart.
+- **Spanish bill** = the official ESIOS charge × scheduled demand over all three groups (1908 × 351 + 1909 × 352 +
+  1907 × 353). **Portuguese bill**: not observed; bounded above by B_PT = S × cleared MWh of the Portuguese
+  plants (the cost to be recovered; congestion rents and phase-in lower it).
+- **Net_ES** = saving to Spanish buyers − Spanish bill. **Net_PT** = saving to Portuguese buyers − B_PT (a
+  lower bound on the net; the net is at most the saving itself). Also B_ES = S × cleared MWh of the Spanish plants,
+  against the Spanish bill (the part of the plants' receipts not charged to Spanish buyers).
+No decision rule. Limits as in D: the same ρ for every plant (extrapolated beyond the 54 and across countries),
+fixed other offers, bilateral energy gets no saving, exports unresolved.
+
+### F results (2026-11-03)
+
+`scripts/analysis/gas_cap_net_by_country.py [--units panel|ccgt_coal]` → `outputs/tables/gas_cap_net_by_country{,_ccgt_coal}.csv`
+(`gas_cap_consumer_saving.py --units ccgt_coal` regenerated so its hourly file carries every ρ). € m, valid hours.
+
+| plant set | ρ | saving to Spanish buyers | Spanish bill (ESIOS) | **net Spain** | saving to Portuguese buyers | Portuguese bill ≤ | **net Portugal ≥** | exports / unregistered |
+|---|---|---|---|---|---|---|---|---|
+| 54 gas units | 0.55 | 1,579 | 5,427 | **−3,848** | 489 | 965 | −476 | 178 |
+| | 0.73 | 2,255 | 5,427 | **−3,172** | 699 | 965 | −266 | 256 |
+| | 0.75 | 2,332 | 5,427 | **−3,095** | 722 | 965 | −243 | 265 |
+| | 1.00 | 3,278 | 5,427 | **−2,149** | 1,016 | 965 | +51 | 375 |
+| 97 gas CCGT + coal | 0.55 | 1,723 | 5,427 | **−3,704** | 536 | 965 | −429 | 195 |
+| | 0.73 | 2,483 | 5,427 | **−2,944** | 773 | 965 | −192 | 283 |
+| | 0.75 | 2,568 | 5,427 | **−2,858** | 800 | 965 | −165 | 293 |
+| | 1.00 | 3,690 | 5,427 | **−1,737** | 1,149 | 965 | +184 | 421 |
+
+Spanish bill = ESIOS 1908 × 351 + 1909 × 352 + 1907 × 353 (the direct consumers add €160 m to the earlier €5,266 m).
+Subsidy on the plants: Portuguese plants €965 m (8,149 GWh, same in both sets); Spanish plants €3,972 m (54 set) and
+€4,905 m (97 set), so the Spanish bill is 1.37 and 1.11 times what the Spanish plants earn in the day-ahead market
+in these sets: the rest is intraday and balancing receipts and plants outside the sets (cogeneration under the
+general regime), the congestion rents pull the other way.
+
+**Reading.**
+- **Spanish buyers lose €2.9–3.8 bn at ρ 0.55–0.75 and still €1.7–2.1 bn at full pass-through** (ρ = 1). Break-even
+  would need ρ of roughly 1.4–1.5, above any admissible value. Separating the countries makes Spain's net **about €0.7–1.2 bn
+  worse** than the combined −1.9 to −3.0 bn: a third of the price fall goes to buyers who do not pay the Spanish charge.
+- **Portuguese buyers are roughly at break-even to slightly behind:** −€0.2 to −0.5 bn at ρ 0.55–0.75 on the
+  worst-case bill (the whole subsidy to the Portuguese plants), about zero at ρ = 1; the true bill is lower
+  (congestion rents, phase-in), so these are lower bounds.
+- Exports / unregistered units take €0.2–0.4 bn; whether they paid is unresolved (E3).
+- The joint price fall comes from every plant's pass-through, so "Spain's saving" is what Spanish buyers received
+  of a fall that the Portuguese plants also helped cause; no split by the plants' own country is attempted.

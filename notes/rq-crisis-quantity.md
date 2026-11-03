@@ -964,3 +964,13 @@ residual demand, wind and solar forecasts), fitted before the cap and extrapolat
 - Comparison, with the caveat that counterfactuals differ: my saving to Portuguese buyers is €0.5–1.0 bn at ρ 0.55–1.0 (bill ≤ €0.97 bn, net −0.5 … +0.05 bn); the government's +€570 m
   net to January 2023 lies at the top of my net range and above it at ρ 0.55–0.75. Nothing here pins the Portuguese bill; it stays an upper bound. Lead: DGEG's daily series of the
   average adjustment cost (not fetched).
+
+### I3. Idea 5, the reference-price steps on the declared cost — rule fixed before running (`gas_cap_declared_cost_steps.py`)
+PRGN rose from €40 to 45 on 1 January 2023, to 50 on 1 February and to 55 on 1 March (decree art. 3 as amended by RDL 3/2023), cutting the subsidy
+S = (PGN − PRGN)/0.55 by €9.1/MWh at a given gas price, whatever the plants do. A plant passing a share ρ of S into its declared cost (the `cab` minimum-income variable term v,
+the same units and sample as `gas_cap_declared_cost.py`) should see v/gross change by Δ mean log(1 − ρS/gross) across the step, relative to its reference ratio.
+For each step date D: the actual J(D) as in that script (median over units of the change in mean log(v/gross) from the seven days before D to the seven from D); the J predicted at
+ρ = 0 and ρ = 1 from the same unit-days' S and gross; the implied ρ (the value on a grid −1 … 2 whose predicted J equals the actual).
+**Power rule, fixed now:** report an implied ρ only if |J(ρ=1) − J(ρ=0)| at that step is at least twice the standard deviation of J over the 273 pre-cap placebo dates (`gas_cap_declared_cost_event.csv`);
+otherwise write that the step cannot size ρ. A step with S = 0 on the dates inside its windows is skipped (the cap stopped binding in March 2023). No decision rule on the value: it is a check on the 0.91–0.96
+day-one and monthly declared-cost ρ, read as consistent if inside [0.5, 1.5] where it is reported.

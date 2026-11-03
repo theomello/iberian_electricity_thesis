@@ -701,3 +701,20 @@ declared ρ 0.91 ([0.86, 0.96]), d = declared − offer = +0.19 (mean +0.16, 95%
 of the two across draws +0.29. Rule: no difference detectable. Pairing removed little noise (the correlation is small); the
 interval of d is almost the offer interval, since the declared ρ is much tighter. Offers sit below declared costs by a point
 estimate, not by a significant margin.
+
+## G2. Daily dose — rules fixed before running (2026-11-03)
+
+Idea 3 of section G, chosen by the user. B3 averages the subsidy over a week, but S moves a lot inside a week (about €70 to
+€140 within June 2022). A unit-day panel gives the slope that variation.
+- **Outcome:** per unit and day, the mean of `run20` over the unit's predicted in-money hours that day (main margin €50, same
+  sample as B1/B3: essential units out, cost defined). **Dose:** g_d = mean over units of the day's full − none gap, from the
+  B1 ends computed by day instead of by week (same reference curve, same K); the weekly code is reused with `by="date"`.
+- **Estimator:** Xu (2017) `gsc` on the unit × day matrix, pre = days before 2022-06-15, r by cross-validation on the pre days.
+  Unit rule as in the weekly matrix: at most 30% of days missing (50% if fewer than 25 Iberian units pass; stop below 25).
+  Then ATT_d = a + b·g_d over post-cap days carrying g_d, ρ = 1 + b.
+- **Inference:** firm block bootstrap within country, 199 draws, ATT re-estimated each draw (whole firm series resampled, so
+  serial correlation within a firm is kept); timing permutation over cyclic day shifts, pass if one-sided p ≤ 0.05; with a
+  linear trend, ρ must stay inside the main interval; gas controls (daily MIBGAS, daily PSV − MIBGAS) reported, not decisive.
+- **Reading, fixed now:** the daily dose sharpens the estimate only if the permutation passes AND the 95% interval is narrower
+  than the weekly [0.51, 1.03] (width 0.52). Report the point estimate beside the weekly 0.73; if they differ, say so and do
+  not choose between them. Stop if the permutation fails or fewer than 25 Iberian units survive the missing-days rule.

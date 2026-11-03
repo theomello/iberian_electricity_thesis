@@ -619,3 +619,25 @@ general regime), the congestion rents pull the other way.
 - Exports / unregistered units take €0.2–0.4 bn; whether they paid is unresolved (E3).
 - The joint price fall comes from every plant's pass-through, so "Spain's saving" is what Spanish buyers received
   of a fall that the Portuguese plants also helped cause; no split by the plants' own country is attempted.
+
+## G. Ideas for sizing B3 (2026-11-03, proposed, not run)
+
+The interval [0.51, 1.03] is limited by about a dozen Iberian firms as bootstrap clusters; none of these adds firms.
+Ranked by what each buys:
+1. **Specification curve.** Report ρ over every defensible choice (run10 / run20 / run50, margin €20 / €50 / all hours, r = 0…5,
+   gas controls on or off, 54 or 97 units, window end) as one distribution, and quote its range as the size
+   uncertainty instead of picking. Cheap; makes the 0.54–0.73 spread a result.
+2. **Paired test against the declared costs.** The same units give a declared-cost ρ (≈ 0.95) and an offer ρ (B3).
+   Estimate the difference with the firm-block bootstrap on the pairs: common noise drops out, and it turns the
+   "offers pass through less than declared costs" tension into a test.
+3. **Daily dose.** g_w averages away day-to-day swings in S inside a week (S moved from 70 to 140 within June 2022).
+   A unit-day Xu panel with g_ud (permutation over days) gives the slope more usable variation; inference still
+   clusters on firms, so it sharpens the estimate more than the interval.
+4. **Linear-in-S price outcome.** Offer price at p25 / p50 / p75 minus cost, ATT in € per € of S, weekly, with
+   the permutation and gas controls. Natural units and continuous. The earlier price designs failed their
+   pre-cap checks, so it needs the placebo first.
+5. **Regulatory steps in the reference price** (PRGN 40 → 45 → 50 → 55 on 1 January, 1 February, 1 March 2023): S falls
+   by about €9 each time at a given gas price, independent of plants and market. A check on the declared-cost ρ, not
+   on B3; the steps are small.
+Not worth it: more pre-cap weeks (the offer limits changed on 2021-07-07), more small plants (efficiency unknown),
+a second control country (Great Britain failed).

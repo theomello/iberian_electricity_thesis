@@ -983,3 +983,14 @@ Placebo J (273 pre-cap dates) sd 0.056, so the power bar is |J(ρ=1) − J(ρ=0)
 - **1 March 2023 (50 → 55):** skipped, S > 0 on only 15% of unit-days in the windows.
 Reading: the one step with power gives a point estimate under the day-one figure, with a band that contains it. A single event cannot separate 0.78 from 0.93; it adds one more independent angle (a
 regulatory change in S, unrelated to plants and the market) that does not contradict the declared-cost ρ near 0.9 and is nearer the offer-side central band. Idea 4 (offer price in euros per euro of subsidy) is the only sizing idea left.
+
+### I4. Idea 4, the offer price in euros per euro of subsidy — rule fixed before running (`gas_cap_quantity_price.py`)
+An offer at net cost plus a markup m sits at p = cost_gross − ρS + m, so y = p − cost_gross falls by ρ euros per euro of S. The earlier price designs (`rq-gas-cap-conduct.md`, steps 2 and 2c) failed their
+post-cap check (mean gap after the subsidy ended +€168) as a level; as in B2 → B3, the slope on the dose with an intercept absorbs a constant drift, so the same move is made here.
+- **Outcomes:** y50 = min(p50, 1000) − cost_gross (the price at half of the unit's offered volume) and ymid = min(p_mid, 1000) − cost_gross; per unit and week the **median** over the predicted in-money
+  hours (margin €50, essential units out, cost defined), the sample, unit rule and weeks of B1–B3 (`panel()`, `matrix()`, Italy as control).
+- **Dose:** S̄_w = mean subsidy over the Iberian main-sample unit-hours of week w (zero in weeks without a subsidy).
+- **Estimate:** Xu (2017) `gsc`, r by cross-validation; ATT_w = a + c·S̄_w over the post-cap weeks; ρ = −c (full pass-through c = −1, none c = 0); firm-block bootstrap (199).
+- **Gates, as B3 (decisive):** the timing permutation over cyclic shifts of S̄_w, one-sided p ≤ 0.05 (the real c at or below the 5th percentile of shifted c's); ρ with a linear trend inside the main interval;
+  ρ with the MIBGAS control reported, not decisive. If a gate fails: STOP and say the price outcome does not size ρ.
+- **Reading:** compare ρ and its interval with the share-based B3 (0.73 [0.51, 1.03]; 0.54 [0.10, 0.87] with gas controls) and the declared-cost ρ (0.91–0.96); say whether the intervals overlap, and nothing more.

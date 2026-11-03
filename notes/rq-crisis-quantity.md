@@ -974,3 +974,12 @@ For each step date D: the actual J(D) as in that script (median over units of th
 **Power rule, fixed now:** report an implied ρ only if |J(ρ=1) − J(ρ=0)| at that step is at least twice the standard deviation of J over the 273 pre-cap placebo dates (`gas_cap_declared_cost_event.csv`);
 otherwise write that the step cannot size ρ. A step with S = 0 on the dates inside its windows is skipped (the cap stopped binding in March 2023). No decision rule on the value: it is a check on the 0.91–0.96
 day-one and monthly declared-cost ρ, read as consistent if inside [0.5, 1.5] where it is reported.
+
+### I3 results (2026-11-03)
+Placebo J (273 pre-cap dates) sd 0.056, so the power bar is |J(ρ=1) − J(ρ=0)| ≥ 0.112.
+- **1 January 2023 (PRGN 40 → 45):** 48 units, mean S €41.0. J actual +0.106; predicted +0.000 at ρ = 0 and +0.148 at ρ = 1; gap 0.148 ≥ 0.112 → powered. **Implied ρ = 0.78.** One placebo
+  standard deviation of J moves the implied ρ by about 0.38 (0.056 / 0.148), so the band is roughly 0.4–1.2; inside the rule's [0.5, 1.5] read as consistent with the day-one 0.91–0.96, and below it by a point estimate.
+- **1 February 2023 (45 → 50):** 49 units, mean S €15.3; gap 0.057 < 0.112 → the step cannot size ρ (the implied 0.63 is not reported).
+- **1 March 2023 (50 → 55):** skipped, S > 0 on only 15% of unit-days in the windows.
+Reading: the one step with power gives a point estimate under the day-one figure, with a band that contains it. A single event cannot separate 0.78 from 0.93; it adds one more independent angle (a
+regulatory change in S, unrelated to plants and the market) that does not contradict the declared-cost ρ near 0.9 and is nearer the offer-side central band. Idea 4 (offer price in euros per euro of subsidy) is the only sizing idea left.

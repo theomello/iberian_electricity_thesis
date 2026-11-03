@@ -869,3 +869,25 @@ Reading, fixed now:
   but its RMSE is higher in the share-0 cells, report both. If it does not repair, controls give no protection.
 Limits stated in advance: the simulated confound is exactly linear in the controlled variable, which favours the control; a real response
 (offers relative to cost, kinked at the cap) need not be linear in MIBGAS. A control that works here is necessary, not sufficient.
+
+### H5 results (2026-11-03; 20 cells × 60 draws, about 10 minutes)
+Mean bias of ρ̂ − ρ0 at r̂, uncontrolled (u) and with the weekly MIBGAS control (c); sd across draws; ranges over the two ρ0 and the two signs.
+| world | bias u | bias c | sd u | sd c | sd ratio | RMSE u | RMSE c |
+|---|---|---|---|---|---|---|---|
+| true r 0, no confound | 0.00 | +0.005 / +0.007 | 0.03 | 0.12–0.13 | 4.4–4.7 | 0.03 | 0.12–0.13 |
+| true r 2, no confound | +0.02 | +0.003 / +0.018 | 0.04 | 0.12–0.13 | 3.0–3.7 | 0.04 | 0.11–0.13 |
+| true r 0, share 0.05 | ±0.17–0.18 | −0.03 … +0.02 | 0.03 | 0.12–0.15 | 3.9–5.7 | 0.17–0.19 | 0.12–0.15 |
+| true r 0, share 0.5 | ±0.55–0.56 | −0.01 … −0.00 | 0.02–0.03 | 0.12–0.14 | 3.9–5.8 | 0.55–0.56 | 0.12–0.14 |
+| true r 2, share 0.05 | ±0.15–0.21 | −0.03 … +0.04 | 0.04–0.05 | 0.11–0.13 | 2.4–2.9 | 0.16–0.21 | 0.11–0.13 |
+| true r 2, share 0.5 | ±0.54–0.59 | −0.04 … +0.04 | 0.05 | 0.13–0.15 | 2.6–3.0 | 0.54–0.60 | 0.14–0.15 |
+- **Rules:** the control repairs the confound (largest |bias c| 0.044 in any confounded cell, rule < 0.10) and is harmless where nothing is
+  confounded (largest |bias c| 0.018, rule ≤ 0.05). **Cost:** the spread of ρ̂ is 2.4–5.8 times larger (sd 0.11–0.15 against 0.02–0.05), because
+  the gas price and the dose correlate 0.98; the control's RMSE is lower in every confounded cell and higher (0.11–0.13 against 0.03–0.04) in the
+  unconfounded ones. Two clauses of the rule fired together (repairs and harmless: the uncontrolled estimate cannot be preferred without an
+  argument; repairs but higher RMSE where nothing is confounded: report both) — applied here as: report both.
+- **Applied to the real estimates** (main specification, r = 0, `gas_cap_quantity_b3_checks.csv`): without controls 0.73; MIBGAS 0.58; MIBGAS and the
+  PSV − MIBGAS spread 0.54; the permutation holds with each. The gap, 0.15–0.19, is about the bias a weak positive Iberian gas response (share 0.05) would
+  put into the uncontrolled estimate (+0.17–0.18), and about one to one and a half controlled sds (0.12–0.15), so the data cannot tell the two apart.
+- **Reading:** the controlled estimate is unbiased in every simulated world, the uncontrolled only if Iberian offers do not respond to the gas price
+  apart from the subsidy. Quoting 0.73 alone rests on that assumption. Limits: the simulated confound is exactly linear in MIBGAS, which favours the
+  control. The real firm-block bootstrap interval WITH the controls has not been computed.

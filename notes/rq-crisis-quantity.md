@@ -828,3 +828,28 @@ Addition made after the one timing cell (k = 0, sign +, share 0.5, ρ0 0.5, 10 d
 strong there (bias of ρ̂ at r = 0 of +0.57, with the weekly MIBGAS price correlated 0.98 with the dose over the post-cap weeks) that share 0.5 cannot
 bracket the size. Cells with share 0.05 are added, so the grid is true r {0, 2} × sign {+, −} × share {0.5, 0.05} × ρ0 {0.5, 1.0} = 16
 cells. Rules unchanged. Timing: 2 s a draw with one thread per worker (H2's 44 minutes was mostly threads fighting for four cores).
+
+### H4 results (2026-11-03; 16 cells × 60 draws, about 6 minutes)
+Mean bias of ρ̂ − ρ0 (identical for ρ0 0.5 and 1.0 to within 0.02, so one row per cell); weekly MIBGAS and the dose correlate **0.978** over the post-cap weeks.
+| true r | κ sign | share | bias at r = 0 | at r̂ | at r = 5 | share r̂ = true r |
+|---|---|---|---|---|---|---|
+| 0 | + | 0.05 | +0.17 / +0.18 | +0.17 / +0.18 | +0.17 / +0.18 | 98–100% |
+| 0 | + | 0.50 | +0.56 | +0.56 | +0.56 | 97–98% |
+| 0 | − | 0.05 | −0.18 | −0.18 | −0.18 | 100% |
+| 0 | − | 0.50 | −0.55 | −0.55 | −0.55 | 97–100% |
+| 2 | + | 0.05 | +0.21 | +0.20 | +0.19–0.21 | 48–50% |
+| 2 | + | 0.50 | +0.58–0.59 | +0.59–0.60 | +0.59 | 35–38% |
+| 2 | − | 0.05 | −0.14 | −0.15 / −0.16 | −0.17 | 45–50% |
+| 2 | − | 0.50 | −0.51 | −0.53 | −0.56 | 28–30% |
+- **Rule readings:** the weekly estimator IS vulnerable (|bias at r = 0| ≥ 0.10 in all 16 cells, 0.13–0.59); factors do NOT repair it
+  (|bias at r̂| ≥ 0.15 in every cell, and at r = 5 as large as at r = 0); no cell reproduces the real fall of 0.16 from r = 0 to r = 5 (the
+  largest fall is 0.05). The sign of the bias follows the sign of the Iberian gas response.
+- **Size of the weak confound.** Share 0.05 means κ = 0.017 of the run20 share per pre-cap sd of MIBGAS; the weekly gas price reaches 5.8 pre-cap
+  sds in the summer of 2022, so the Iberian share is shifted by at most 0.10 (mean Iberian run20 0.69 before the cap; the dose g peaks at
+  0.625, mean 0.19 post-cap). A gas response of 0.10 at the peak biases ρ̂ by about 0.17.
+- **What it means.** An Iberian-only response to the gas price is almost the same signal as the subsidy, and Italy's factors, which are
+  estimated on Italian plants, cannot remove it. So the weekly ρ is exposed to exactly the confound the gas controls address, in either
+  direction, by a few tenths. The factors' fall with r in the real data is not this: it needs a gas-linked factor shared by Italian and
+  Iberian plants whose Iberian loading, estimated on pre-cap gas prices, extrapolates differently after the cap (H1). Not simulated.
+- **Not run:** the same confound with a gas-price control in the regression (does it repair the bias, and at what cost in spread; does it
+  bias the unconfounded worlds?). That decides between ρ = 0.73 without and 0.41–0.45 with the controls.

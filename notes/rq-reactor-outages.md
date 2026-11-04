@@ -465,3 +465,20 @@ rebuilt on 2026-10-22. Same code, same specification, rebuilt inputs, in order: 
 `outage_offer_test.py` (about 48 minutes). Nothing in the design changes. The old table is §6 above (and `outage_offer_results.csv` in git history).
 Reading, fixed now: quote the new numbers; if the pooled 25% row's 95% set stops containing 0, or β = 1 stops being rejected at 5% (p ≤ 0.05),
 say so and flag §6's reading as changed; otherwise §6 stands with the new numbers beside the old.
+
+### 12.1 Results of the rerun (2026-11-03; run in the user's terminal, 7.82 M unit-hours, 178 units; dose > 0 in 4.37% (unplanned) and 18.27% (planned) of unit-hours)
+Inputs rebuilt (reactor doses, `outage_offer_panel.parquet`), same code, same specification. All 28 rows of `outage_offer_results.csv` move by almost nothing:
+| row (both doses unless noted) | β old → new | F old → new | 95% AR set, new | p, β = 0 | p, β = 1 |
+|---|---|---|---|---|---|
+| all units, 25% | −0.88 → −0.89 | 10.2 → 10.0 | [−4.29, 0.66] | 0.11 | **0.03** |
+| all units, 50% | −0.73 → −0.74 | 10.2 → 10.0 | [−4.04, 1.26] | 0.14 | 0.06 |
+| month clusters, 25% | −0.88 → −0.89 | 11.4 → 11.1 | [−4.28, 0.34] | 0.07 | **0.03** (was 0.02) |
+| no zero-price hours, 25% | −0.87 → −0.89 | 10.6 → 10.4 | [−4.12, 0.78] | 0.14 | **0.04** |
+| unplanned only, 25% | −2.79 → −2.80 | 9.8 → 9.6 | [−8.00, −0.18] | **0.04** | **0.01** |
+| planned only, 25% | +0.47 → +0.47 | 9.0 → 8.7 | [−3.18, 4.24] | 0.74 | 0.71 |
+| hydro, 50% | +0.41 → +0.41 | 8.4 → 8.1 | [−1.83, 2.22] | 0.33 | 0.28 |
+| combined cycle, 50% | −2.38 → −2.41 | 10.5 → 10.2 | [−8.87, 1.99] | 0.17 | 0.10 |
+| coal, 50% | +3.48 → +3.48 | 7.4 → 7.4 | [−3.85, 12.02] | 0.45 | 0.68 |
+| thermal, offer − c_bid | −1.58 → −1.60 | 11.2 → 11.2 | [−7.03, 2.78] | 0.27 | 0.17 |
+Rule (§12): the pooled 25% set still contains 0 and β = 1 is still rejected at 5% (p 0.03), so **§6 stands**; the new numbers replace the old ones in the pooled figure. The ownership fixes of
+21 October (Movhera's Douro dams, EDP Energia's sale, Castejón) change no result by more than 0.02 in β or 0.4 in F. The old table is in git history.

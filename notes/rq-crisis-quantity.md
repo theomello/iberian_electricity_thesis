@@ -1006,3 +1006,17 @@ Reading: the offer price falls by about 1.2–1.3 euros per euro of subsidy with
 whatever co-moves with the gas price (here the cost_gross term enters y directly), and the control brings the two outcomes to the same place. The two outcomes come from the same panel, so their agreement is
 not independent evidence. Other angles: declared-cost ρ 0.91–0.96 (relative to a pre-cap ratio), reference-price step 1 January 2023 implied ρ 0.78 (band about 0.4–1.2).
 All five sizing ideas of section G have now been run or ruled out; the binding limit remains about ten firm clusters.
+
+### I2 addendum. DGEG's daily balance fetched (2026-11-04; `scripts/fetch/fetch_dgeg_mecanismo_iberico.py`, `data/dgeg/`)
+DGEG's workbook (`dgeg-mie-20240103.xlsx`, open download; the DGEG page itself now redirects to the home page, the link comes from an Internet Archive capture) gives per day, 2022-06-15 → 2023-12-31
+(565 days), in EUR/MWh and **with no volumes or totals**: the Portuguese OMIE spot, `adjust_cost` (OMIE's daily average adjustment charge per MWh bought by the buyers who pay it), their sum, MIBGAS, and
+DGEG's counterfactual `price_no_mech` = spot + (gas − cap)/0.55, which is a formula on the already-capped spot price, not a re-clearing. The "differential" is price_no_mech − final price.
+- Adjust cost is positive on 194 days, 2022-06-15 → 2023-02-03: mean €67.00/MWh over 2022-06-15 → 2023-01-31 (€65.43 weighted by Portuguese demand); by quarter 92 (from 15 June), 124, 28, then 0.
+  Differential mean 42.95 over the same days (the Lusa figure of 43.78 does not reproduce exactly).
+- **The €570 m does not reproduce** from the file with REN consumption (32.0 TWh): differential × all consumption = €1.37 bn; adjust cost × all consumption = €2.10 bn (an upper bound on the Portuguese charge).
+  €570 m / €43.78 = 13.0 TWh, about 40% of consumption: if both figures refer to the same exposed volume (not stated anywhere), the Portuguese bill is about adjust cost × 13.0 TWh = **€0.85–0.87 bn**,
+  below my plant-side upper bound of €0.965 bn. That is an inference from two press figures, not a published number.
+- DGEG's cap path in the workbook (40 to 2023-03-31, then 55 / 56.1) is not the decree's. The consolidated RDL 10/2022 art. 3 (read again 2026-11-04) gives 40 initially and from January 2023 45, 50, 55, 56.1 (April) rising to 65 in December,
+  which is the path this repo uses; DGEG's counterfactual is therefore wrong in January–March 2023 and is not used for anything here beyond its adjust-cost column.
+- Portuguese net with this bill: my saving to Portuguese buyers (all day-ahead purchases, exempt buyers included) €0.49–1.02 bn at ρ 0.55–1.0 minus about €0.86 bn = about −€0.37 … +€0.16 bn; the earlier bound was −0.48 … +0.05.
+  The government's +€570 m is a formula benefit (the subsidy added in full to the price without the mechanism, ρ = 1 and no re-clearing) on the exposed volume, not comparable with a re-cleared saving.

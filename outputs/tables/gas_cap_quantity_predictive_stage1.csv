@@ -1,0 +1,5 @@
+country,variant,predictors,lambda,r2_origins,origins_positive,r2_high_gas,mae_model,mae_gsc,mae_hg_model,mae_hg_gsc,gate_a,gate_b,gate_c,pass
+ES,gas_in,psv_bid+eua_bid+netload_fc+temp_es,0.1,"[np.float64(0.175), np.float64(0.126), np.float64(0.042), np.float64(0.085)]",4,0.01727912721393643,0.10749906529265878,0.12026330588483403,0.10539287425906317,0.10003056632496461,True,True,False,False
+ES,gas_out,eua_bid+netload_fc+temp_es,0.1,"[np.float64(0.003), np.float64(0.05), np.float64(0.055), np.float64(0.092)]",4,0.0020546046588069133,0.11174677033617911,0.12026330588483403,0.09710749817130947,0.10003056632496461,True,True,False,False
+IT,gas_in,psv_bid+eua_bid+temp_it,0.1,"[np.float64(-0.012), np.float64(0.004), np.float64(0.125), np.float64(-0.025)]",2,-0.03700252009283811,0.16930347133852144,,0.16017264542914322,,False,False,True,False
+IT,gas_out,eua_bid+temp_it,0.1,"[np.float64(-0.008), np.float64(0.005), np.float64(0.084), np.float64(-0.015)]",2,0.01992515042017362,0.17029683614662178,,0.1529518741572926,,False,True,True,False

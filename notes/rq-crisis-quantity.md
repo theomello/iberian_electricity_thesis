@@ -1043,3 +1043,17 @@ Diagnostics, all reported: dose-positive post weeks with PSV and residual load i
 Italy placebo (only if the Italian recipe passes the same Stage-1 gate): the Italian ATT regressed on the Iberian g_w; passes if its 90% block-bootstrap interval lies inside [−0.25, +0.25] and is narrower than 0.6 (a pass without that width has no power).
 **Uninformative, said in advance:** Stage 1 fails for both variants; fewer than 15 dose-positive post weeks inside the fit range; partial R² of g_w on x above 0.9; mean |ATT| in the in-range g_w = 0 weeks at or above 0.05; the real b inside the fake-date range; the Italy placebo fails or lacks power;
 the gas-in and gas-out ρ intervals overlap by less than half of the narrower width. In any of these cases the result is reported as a bound on the predictive model, not as pass-through. Even if everything passes it is corroboration only: it shares B3's dose and the gas-dose collinearity.
+
+### H8 stage 1 results (2026-11-04; `gas_cap_quantity_predictive_stage1.py`, no ρ computed)
+49 Iberian and 44 Italian units, 36 fit weeks (2021-10-04 → 2022-06-06), 54 post weeks of which 34 carry a positive dose. Penalty λ = 0.1 (the least shrinkage) was chosen in every case.
+| country, variant | (a) R² vs unit mean, four origins | (b) high-gas holdout R² | (c) MAE model / gsc r = 0 (rolling origins; high-gas holdout) | gate |
+|---|---|---|---|---|
+| Iberia, gas in | +0.175, +0.126, +0.042, +0.085 (4 of 4) | +0.017 | 0.1075 / 0.1203 = 0.89; 0.1054 / 0.1000 = 1.05 | **FAIL (c)** |
+| Iberia, gas out | +0.003, +0.050, +0.055, +0.092 (4 of 4) | +0.002 | 0.1117 / 0.1203 = 0.93; 0.0971 / 0.1000 = 0.97 | **FAIL (c)** |
+| Italy, gas in | −0.012, +0.004, +0.125, −0.025 (2 of 4) | −0.037 | not defined for Italy | FAIL (a), (b) |
+| Italy, gas out | −0.008, +0.005, +0.084, −0.015 (2 of 4) | +0.020 | not defined for Italy | FAIL (a) |
+**Rule: both Iberian variants fail gate (c) (needs ≤ 0.80 of the Italy-based MAE on both sets of cells), so the exercise STOPS; stage 2 is not run, and the Italy placebo cannot be run either (its recipe fails the gate).**
+Reading: conditions known at bid time do explain some of the Iberian out-of-sample variation around each unit's own mean (R² 0.04–0.18 with gas, 0.00–0.09 without) and they beat Italy's path by 7–11% on average, but on the one test of extrapolation to
+high gas prices (the high-gas holdout) they are no better than the Italian path (1.05 and 0.97 of its MAE). The pre-cap run20 of an Iberian unit is mostly unit-specific noise that neither the Italian path nor the weekly conditions describe. This is a fact about the
+data, not about one counterfactual: with no better counterfactual of the level available, B3's intercept absorbs the level error and the slope on the dose keeps its one exposure, an Iberian response to the gas price that tracks the dose (H4–H6).
+Built for this: `scripts/build/build_weekly_conditions.py` (weekly bid-time conditions, `outputs/tables/gas_cap_weekly_conditions.parquet`, not committed), `scripts/analysis/gas_cap_predictive.py` (model code).

@@ -24,9 +24,14 @@ that in 2019 to mid-2021, and the gas cap's subsidy was passed through.
 6. **Hydro.** λ* checked on EDP (within 6%, correlation 0.81–0.91). The departure of +0.25 in 2019–21H1, on
    all ten seeds, ending in June 2021, the month the clawback was announced. Robustness. The headline
    section.
-7. **Gas cap.** Declared costs fall by 0.9–1.0 of the subsidy (`notes/rq-gas-cap-declared-cost.md`).
-   Quantities: ρ ≈ 1.1 within Iberia; Italy as corroboration (`notes/rq-crisis-quantity.md`, all-hours B2:
-   ρ 1.17 [0.97, 1.50], chosen after seeing the main result).
+7. **Gas cap** (policy section, 2026-11-05 revision; see `notes/rq-gas-cap-*.md`, `notes/rq-crisis-quantity.md` §J).
+   Opens by saying what it identifies: declared costs, not offers. 7.1 mechanism and cost rule. 7.2 declared
+   costs fall by 0.9-1.0 of the subsidy, within Iberia (`rq-gas-cap-declared-cost.md`). 7.3 offers against Italy:
+   rho conditional on whether Iberian offers respond to gas apart from the subsidy; quote 0.73 [0.51, 1.03]
+   uncontrolled, controlled 0.54-0.85, no direction of bias (`rq-gas-cap-control.md`); recovery simulations show
+   why the band cannot be narrowed. 7.4 welfare: at rho 0.73 Spanish buyers lose EUR 3.2 bn, 74% transfer to
+   sellers, 17% deadweight loss (dispatch), 9% leaked abroad; deadweight loss is half the loss at rho 1.
+   Hydro offers did not follow the cap's cost shock (`rq-gas-cap-hydro-link.md`).
 8. **Discussion.** Who sets the price (44% of hours a unit with a cost, 16% via the open France line, 23% buy
    bids) limits what β speaks to. Static markups ignoring start-up costs are biased upward (Jha & Leslie).
    Physical bilateral contracts are a proxy for hedging, not a measure of it.

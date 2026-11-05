@@ -1,0 +1,9 @@
+world,c_star_per_eur_mwh,per_100_eur
+mibgas_all_through (gap 0.726->both),0.0008710672550697559,0.0871067255069756
+mibgas_only (gap 0.726->MIBGAS),0.0006857223111326528,0.06857223111326528
+spread_all_through (gap 0.726->both),0.001793571498208988,0.17935714982089881
+"delta mibgas_dd on g (post-cap, 46 weeks)",209.336075003864,
+"delta mibgas_bid on g (post-cap, 46 weeks)",211.13449751326283,
+"delta spread_dd on g (post-cap, 46 weeks)",101.66631239556267,
+"delta spread_bid on g (post-cap, 46 weeks)",105.97057243596714,
+"delta psv_bid on g (post-cap, 46 weeks)",317.1050699492299,

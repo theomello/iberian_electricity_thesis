@@ -384,3 +384,264 @@ margin is rejected over 2019–2026. Together with T2, where a price-taker cuts 
 much in total, **the nuclear cuts show no market power that this design can detect**. They
 look like price-taking at a book-value fuel cost, plus a supply rule: keep the owners'
 own customers covered.
+
+## 7. Snapshot days and the gas cap (2026-11-05)
+
+`analysis/nuclear_cuts_snapshot_split.py` → `outputs/tables/nuclear_cuts_snapshot_split*.csv`. Imports
+its estimators from `nuclear_cuts_conduct.py` (the IV, `matrices`, `ols`, `shares`, `firm_hours`),
+`nuclear_cuts_benchmark.py` (`compare`, `simulate`, `limits`). Reads the stored T3 panel
+(`nuclear_cuts_conduct_panel.parquet`, 2026-10-19), does not rebuild it.
+
+### 7.0 Rules, written before the run
+
+**Why.** (1) §2 says most whole-day stops in 2024–2026 fall on days the outage register (`indisp`,
+OMIE's unit-unavailability file) has no snapshot for. The same gap can hide a fault declared that day
+inside "cut" (a reactor that is down for a fault the register missed looks like a chosen cut). The
+slope test is least precise in exactly those years. (2) The gas cap (RDL, a royal decree-law, 10/2022)
+lowered the price the reactors face in 2022-06-15 → 2023-12-31. A reservation-price rule should follow
+whatever price or cost it is set against, and the slope test's Nash benchmark (what full market power
+would imply) depends on the price-taker's response, which also differs by period.
+
+**By example.** Almaraz 1's cut on 12 March 2025 is "chosen" only if no fault was declared that day.
+OMIE holds no `indisp` snapshot for 12 March 2025, so a fault declared that morning is invisible and
+the whole drop counts as a cut. Dropping such days costs sample, and the question is how much.
+
+**Definitions.**
+- **Snapshot day** = local date on which `indisp` holds at least one snapshot (the same set as
+  `build_reactor_outages.declarations()`, which marks `undeclared_gap`). Check: no day flagged
+  `undeclared_gap` may be a snapshot day.
+- **Gap day** = not a snapshot day.
+- **Periods:** pre-cap 2019-01-01 → 2022-06-14; cap 2022-06-15 → 2023-12-31; post-cap 2024-01-01 →
+  2026-05-31 (the slope test starts 2019, when REE's forecasts start). Operators: CNAT (Almaraz 1 and
+  2, Trillo), ANAV (Ascó 1 and 2, Vandellós II), Iberdrola (Cofrentes).
+- **Slope test** = `nuclear_cuts_conduct.slope_test` spec 2, "refuelling, cut opportunity
+  controlled": dev on Z_plan, P_plan, Z_wind, simcut, margin, Zp_simcut, Zp_margin, 1/|RD′|, Z_unpl,
+  Z_rain; reactor × month and day-of-week effects, week clusters. The panel preparation (1/|RD′|, P,
+  controls) is inline in `slope_test()`, so it is restated here; **the full-sample run must reproduce
+  `nuclear_cuts_slope_test.csv` to 6 digits or the script stops.** Spec 1 (no opportunity control)
+  is carried as a check.
+- **P̂** = the loading of dev on P_plan, MW per €/MWh. **Nash value** P_N = γ_N × λ, where γ_N = minus
+  the slope of the c_acct price-taker's simulated cut on p_exp in the same cell and effects (1.49
+  full sample, 3.27 in 2024–26, reproducing §6's 1.5 and 3.3), and λ = the loading of the owners' X
+  on P_plan under the same regressors. **Primary λ is the full-sample, all-days value** (X moves with
+  P mechanically, so it should not vary by cell, and in-cell λ is noisy: §6.2 has −0.71, se 1.12 in
+  2024–26); in-cell λ is carried beside it.
+- **β-equivalent** of P̂ = P̂ / P_N (β = 1 is Nash, 0 is price-taking). Interval = (P̂ ± 1.96 se) / P_N.
+- **Minimum detectable effect (MDE)** at 5% size and 80% power = 2.8 se, reported in P units and as a
+  β (MDE_β = 2.8 se / |P_N|). It says how large a departure the cell could have found.
+
+**Part 1: snapshot days only.** Samples: all days, snapshot days, gap days; windows 2019–2026 and
+2024–2026. Run on each: (a) the slope test; (b) the T3 IV (all four instruments, outages, regional
+wind; Anderson–Rubin (AR) 95% sets) and the null band for the all-four spec (price-takers with cost
+c_acct + δ + ε, simulated on the full panel, then restricted); (c) T2's actual-against-price-taker
+comparison at c_acct. Recount the 2024–2026 cut volume (partial cuts and whole stops, TWh) by snapshot
+day / gap day.
+- *Power improves* if se(P̂) on snapshot days in 2024–26 is below 0.9 × its all-days se. Dropping
+  days cannot be expected to do this unless the dropped days are very noisy; if it does not, say
+  power falls and by how much.
+- *The answer changes* if the Nash verdict flips (|P̂ − P_N|/se above 1.96 versus below) in 2024–26,
+  or if the T3 AR set's verdict on γ = 0 flips at 5%.
+- *Gap days differ from snapshot days* if the difference in P̂ over its combined se exceeds 1.96
+  (a plain z, ignoring shared weeks, so it overstates significance slightly). That would be
+  evidence the missing register contaminates dev.
+- **Stop rule:** a cell with fewer than 100 dosed reactor-days (Z_plan > 0) gets no estimate; a cell
+  with MDE_β above 1 is **uninformative about Nash** (even full market power would likely be missed)
+  and is reported that way, not as "no effect".
+
+**Part 2: the gas cap.** Slope test (spec 2) by period × operator (and by period pooled), on all days
+and on snapshot days, same rules. For the reservation price, from the daily file (`resv_price`, the
+MW-weighted price of the reservation-priced MW that day, 0 < p < €200): partial-cut days only, since a
+step offered on a day with no cut (ANAV's €98–150 top step before 2022) is not a cut's reservation
+price. By operator × period: median, quartiles, days, the share of partial-cut days offering one,
+mean p_exp, mean realised price, mean c_acct. Differences between consecutive periods with 95%
+intervals (week-block bootstrap, 2,000 draws, seed 0). Within each cell the slope of the daily
+reservation price on p_exp (week clusters).
+- A reservation price **moved with the price** if the 95% interval of its change between periods
+  excludes 0 and has the sign of the change in mean p_exp. It **did not move** if the interval lies
+  inside ±€5 (a band set before looking, about the size of the tax and fee changes in c_acct).
+  Otherwise the data do not say. A flat price in a period where p_exp swung by €50 or more is a
+  fixed rule; a level that follows c_acct is a book-cost rule.
+- **Limit I know of already:** three periods cannot separate the cap from the 2021–22 gas crisis.
+  The cap period's forward price is high because of the crisis and low because of the cap; its
+  sign against the pre-cap and post-cap periods does not tell the cap's own effect. The cap is a
+  *period* here, not a design. A within-period slope on p_exp is the only variation the cap
+  does not confound.
+
+**Part 3: wording.** Write "price-taking" only if, in the cell that carries the claim, the 95% interval
+of the β-equivalent contains 0, lies below 0.5, and MDE_β ≤ 1. If only β = 1 is excluded, write
+"no detectable market power at this power". If MDE_β > 1, write "no information". Either way,
+the T2 misfit (reactors and price-taker share under half of cut volume) and the supply rule of §6.2
+say the reactors are not price-takers in the benchmark's sense.
+
+**What would change my reading:** a cell where in-cell λ and the full-sample λ imply opposite Nash
+verdicts (then Nash is not pinned down there and I say so); a full-sample run that does not
+reproduce the stored slope CSV (stop); a gap-day / snapshot-day difference that is large and
+significant (then the earlier §6 numbers carry contamination and the snapshot-day numbers replace
+them); a reservation price that moves with the price only in one operator (then it is that
+operator's rule, not the reactors').
+
+### 7.1 Results (2026-11-05)
+
+Every number below is in
+`outputs/tables/nuclear_cuts_snapshot_split_*.csv` (`coverage`, `slope`, `gapdiff`, `t2`, `t3`,
+`nullband`, `resv`, `resv_diff`, `resv_slope`). Script run twice with identical numbers (the second
+run only fixed a verdict label and a divide-by-zero warning).
+
+**Deviations from §7.0, kept visible.**
+1. *The reproduction rule (6 digits) failed and was relaxed.* The restated slope test matches the
+   stored `nuclear_cuts_slope_test.csv` to at most 0.15% of any standard error (largest difference
+   0.008 on a coefficient of −220). Cause, found before relaxing: 1/|RD′| is restated from
+   `firm_x.parquet`, rebuilt 2026-10-22, three days after the stored CSV (2026-10-19). The panel's own
+   X and n_full are the 2026-10-19 vintage; I did not rebuild them. Revised rule: stop above 0.5% of
+   the se. §6's published numbers stand to the digits quoted there.
+2. *The "uninformative" tag* now applies only to a failure to reject Nash. A rejection is a result at
+   any power; the first run printed "Nash rejected; uninformative" on cells where MDE_β was just
+   above 1, which was misleading. The numbers did not change.
+3. *Nash value uses the spec-consistent λ.* Pooled λ for the main spec is −1.04 (spec 1: −0.92, the
+   value §6.2 used). So the 2024–26 Nash value is P_N = −3.39 here, against about −2.3 in §6.2
+   (which used the in-cell λ −0.71).
+
+#### Part 1. How much cut volume is on snapshot days
+
+| 2024–2026, TWh | snapshot days | gap days | share on snapshot days |
+|---|---|---|---|
+| partial cuts (10.95) | 1.87 | 9.08 | **17%** |
+| whole-day stops (7.55) | 0.66 | 6.89 | **9%** |
+
+By year, partial cuts on snapshot days: 2024 1.33 of 4.67 TWh (28%), 2025 0.33 of 3.34 (10%), 2026
+0.22 of 2.95 (7%). Coverage of reactor-days in the T3 panel: 100% in 2019, 92–93% in 2020–21, 99.7%
+in 2022, 55% in 2023, 34% in 2024, 27% in 2025, 10% in 2026. The restriction keeps 11,392 of 16,326
+reactor-days over 2019–2026 but only **1,357 of 4,926 in 2024–2026**. (No day flagged
+`undeclared_gap` is a snapshot day: the check passed.)
+
+#### Part 1. Does 2024–26 get sharper on snapshot days? No, it gets blunter
+
+Slope test, main spec, P̂ in MW per €/MWh, all operators (`_slope.csv`):
+
+| sample, window | n (dosed) | P̂ (se) | 95% interval | β-equivalent [interval] | MDE_β | Nash p |
+|---|---|---|---|---|---|---|
+| all days, 2019–26 | 16,326 (5,703) | +0.29 (0.64) | [−0.97, 1.54] | −0.19 [−1.00, 0.63] | 1.16 | 0.004 |
+| snapshot days, 2019–26 | 11,392 (3,409) | +0.29 (0.45) | [−0.59, 1.18] | −0.36 [−1.44, 0.72] | 1.54 | 0.013 |
+| gap days, 2019–26 | 4,934 (2,294) | +3.29 (1.99) | [−0.62, 7.19] | −0.90 [−1.96, 0.17] | 1.52 | 0.000 |
+| all days, 2024–26 | 4,926 (2,001) | +1.82 (3.04) | [−4.14, 7.78] | −0.54 [−2.29, 1.22] | 2.51 | 0.087 |
+| **snapshot days, 2024–26** | 1,357 (439) | **+2.54 (4.82)** | [−6.90, 11.98] | −1.84 [−8.65, 4.98] | **9.74** | 0.415 |
+| gap days, 2024–26 | 3,569 (1,562) | +4.99 (4.95) | [−4.72, 14.70] | −1.13 [−3.32, 1.07] | 3.13 | 0.057 |
+
+- **Power does not improve; it falls by 60%.** The se of P̂ goes from 3.04 to 4.82 (ratio 1.58;
+  the rule asked for under 0.9). In β units the smallest effect the 2024–26 snapshot sample could
+  find at 80% power is 9.7 times full market power. It cannot tell price-taking from Nash.
+- **The Nash verdict does not change** (not rejected on either; p 0.09 and 0.42). It was never
+  informative in 2024–26 (MDE_β 2.5 on all days). §6.2's "points the same way" cannot be sharpened.
+- **Gap days do not differ detectably from snapshot days in 2024–26** (P̂ 5.0 against 2.5, z 0.35).
+  Over 2019–26 the pooled difference is z 1.47, and 2.07 for CNAT and 3.06 for Cofrentes
+  (`_gapdiff.csv`); that is also a shift in composition (gap days are 2023–26, when reactors flex
+  more), so it is a hint of contamination, not proof of it.
+- **T3's IV is where the answer changes.** All four instruments, 2019–26: all days +3.0 (4.7),
+  AR p(γ = 0) 0.003; **snapshot days −0.8 (2.6), AR p 0.13**; gap days +13.3 (5.1), p 0.033. The
+  rejection of "no departure from price-taking linked to X" is carried by gap days. In 2024–26
+  all four instruments: all days +14.3 (6.0), AR p 0.003, F 3.7; **snapshot days +0.5 (4.8), AR p
+  0.032, F 3.2** (AR set [2.0, 65.5], which excludes the 2SLS estimate itself: the instruments are
+  weak and disagree). Outages alone on snapshot days stay at +15.7 (6.0), F 5.2, AR [9.8, 61.0];
+  regional wind alone loses its first stage (F 1.3).
+- **Null band** (price-takers with cost errors, all-four IV): 2024–26 all days [−0.8, 4.0], snapshot
+  days [−5.3, 2.2]. The all-days +14.3 lies far outside the band; the snapshot-days +0.5 lies inside
+  it. 2019–26: [−1.3, 2.6] all days, [−2.3, 2.9] snapshot days.
+- **T2 is unchanged** (2024–26, c_acct): the price-taker's cut against the actual is 2.26 against
+  1.87 TWh on snapshot days (11.77 against 10.95 on all days); the shared share is 51% against 46%;
+  daily correlation 0.52 against 0.44. A price-taker cuts about as much, on only about half the same
+  days.
+
+**Reading of Part 1.** The register gap is a real limit, not a footnote: 83% of the 2024–26 partial
+cut and 91% of the whole stops fall on days where a fault declared that day would be invisible. On
+the 17% that can be checked, the T3 departure from price-taking in 2024–26 shrinks to nothing in the
+all-instrument version and survives in the outage-only version (F 5.2). So T3 is **not answered in
+either direction for 2024–26**, and the T3 rejection over 2019–26 should not be quoted without the
+note that it is carried by gap days.
+
+#### Part 2. The gas cap
+
+Slope test by period, main spec, all operators (`_slope.csv`; β-equivalent with 95% interval):
+
+| window | all days: P̂ (se), β [interval], MDE_β | snapshot days: P̂ (se), β [interval], MDE_β |
+|---|---|---|
+| pre-cap, 2019 → 2022-06-14 | +0.48 (0.40), −1.05 [−2.76, 0.66], 2.45 | +0.45 (0.37), −1.08 [−2.84, 0.68], 2.51 |
+| **cap**, 2022-06-15 → 2023-12-31 | **−0.02 (0.44), +0.01 [−0.45, 0.47], 0.66** | **+0.21 (0.36), −0.11 [−0.48, 0.26], 0.52** |
+| post-cap, 2024 → 2026-05 | +1.82 (3.04), −0.54 [−2.29, 1.22], 2.51 | +2.54 (4.82), −1.84 [−8.65, 4.98], 9.74 |
+
+By operator, all days, P̂ (se) [Nash value with the pooled λ]; n days dosed ≥ 100 in each:
+
+| | pre-cap | cap | post-cap |
+|---|---|---|---|
+| CNAT (Almaraz, Trillo) | +0.73 (0.85) [−0.36] | +2.63 (1.24) [−1.72] | +3.08 (4.00) [−2.61] |
+| ANAV (Ascó, Vandellós) | −1.02 (0.66) [−0.53] | −0.82 (0.61) [−2.24] | −9.77 (9.62) [−4.28] |
+| Iberdrola (Cofrentes) | +1.82 (1.15) [−0.55] | +0.14 (0.25) [−1.26] | +13.3 (3.14) [−3.44] |
+
+- **Only the cap period has the power to say anything** (MDE_β 0.5–0.7, against 2.4–2.5 before and
+  after). There the pooled estimate is on zero, with Nash rejected, on both all days and snapshot
+  days. The price-taker's own response to price is largest then (γ_N 1.8–1.9 MW per €/MWh against
+  0.4 before the cap and 3.3 after), so the same dose should have shown more.
+- **Before the cap the test is blunt because a price-taker rarely cuts** (γ_N 0.44): Nash would
+  have been a small number, and the test cannot tell it from zero (MDE_β 2.5). After the cap it is
+  blunt because the sample is noisy (se 3.0).
+- **Operators.** Cofrentes post-cap is +13.3 (3.1), a loading of the **wrong sign** for the price
+  motive (Nash is negative); its in-cell λ is +3.4, not −1.0, so its Nash value is not pinned down
+  and the "Nash rejected" in the CSV for that cell should not be read as a rejection. The same holds
+  for ANAV in 2019–26, pre-cap and post-cap, where in-cell λ is positive (+0.7 to +1.7): ANAV's
+  owners' X rises with P there. In 13 of the 43 estimable main-spec cells (6 of 16 on all days) the
+  pooled-λ and in-cell-λ verdicts disagree (column `nash_verdicts_agree`). Per the rule, Nash is not pinned in those cells.
+- **Positive P̂ is what the supply rule predicts** (the cut grows with the dose even on steep days),
+  not what a price motive predicts; it appears at CNAT in the cap period (+2.6 (1.2)) and in
+  Cofrentes after it.
+
+**Reservation price, partial-cut days** (`_resv.csv`, MW-weighted daily price, 0 < p < €200):
+
+| | pre-cap | cap | post-cap |
+|---|---|---|---|
+| ANAV: median (IQR), days | **98.01** (98.00–98.01), 1,241 of 1,424 | **15 days (2%): not estimated** | **35.01** (35.00–35.01), 415 of 1,108 |
+| CNAT: median (IQR), days | 52.5 (20.3–180.3), 66 of 526 | 22.9 (17.8–23.0), 25 of 458 | 27.9 (27.6–89.1), 61 of 619 |
+| Cofrentes | 180.3 (23.0–180.3), 49 of 160 | 4 days | 8 days |
+| mean p_exp / realised, all three | 71.9 / 72.8 | 109.9 / 109.8 | 52.7 / 53.6 |
+| mean c_acct | 25.4 | 24.7 | 28.0 |
+
+- **ANAV's €98 before the cap is not a cut's reservation price.** It is the top step noted in §2
+  (identical to the cent for three and a half years), offered on 87% of partial-cut days. Comparing
+  it with the 2024 level (€35) is comparing two different objects. By the rule's letter the
+  pre → post change "moved with the price" (−€63, interval [−63.0, −63.0], p_exp −€16); I do not
+  read it that way: the price fell by 16 and the offer by 63, and the offer is a different offer.
+- **In the cap period the question cannot be asked of ANAV**: on 98% of its partial-cut days it
+  offered no reservation-priced MW at all, and I have not looked at what it did instead. CNAT
+  offers one on 5% of cut days (25 days in 5 weeks).
+- **Did the reservation price move with the cap? The data do not say.** CNAT's change from the
+  cap to post-cap is +€5.0 with an interval of [−10.4, 50.7]; pre-cap to cap −€29.7 [−157.4, 15.1].
+  Neither excludes 0 and neither lies inside ±€5. For the one operator and period where it is a cut
+  price, ANAV after the cap, the price is fixed: the slope on p_exp is −0.07 (0.03), so a €10
+  move in the forward price moves it by under €1.3 (95% interval [−0.125, −0.020]; sd of p_exp
+  20.8). CNAT post-cap: −0.55 (0.54), n = 61.
+- **The premise is not supported by the periods.** The cap period's mean price was higher (€110)
+  than either neighbour (€72, €53), because of the 2021–22 gas crisis. The cap lowers the price
+  *relative to what it would have been*, which three periods cannot show. A rule that follows price
+  would have moved with a forward price twice the neighbouring periods'; CNAT's €22.9 sits at its c_acct (median
+  minus c_acct −€1.5, against +€0.06 post-cap), which fits a book-cost rule that stays put whatever
+  price the reactor faces. That is n = 25 days in 5 weeks, with no interval computed on it.
+
+#### Part 3. Can the nuclear result be called price-taking?
+
+Not on this evidence; at most "no detectable market power at the power available", and only for
+some periods. By the wording rule: the only cells that pass the "price-taking" test (interval for β
+containing 0, upper end below 0.5, MDE_β ≤ 1) are the cap period pooled over operators, on all
+days (β 0.01 [−0.45, 0.47], MDE_β 0.66) and on snapshot days (−0.11 [−0.48, 0.26], 0.52); the
+pre-cap and post-cap windows have MDE_β between 2.4 and 9.7, so for them the right wording is "no
+information", even though Nash is nominally "rejected" pre-cap. Over 2019–26 pooled, Nash is
+rejected (p 0.004) but β up to 0.63 is not excluded (MDE_β 1.16): "no detectable market power"
+and not "price-taking". And the quantity benchmark itself fails for other reasons: reactors and
+a price-taker share only 46% (2024–26) to 15% (cap period) of cut volume (T2), and the cut follows
+the lost output of the owner's fleet, not the price stake (§6.2). That is a supply rule, not
+price-taking. The slope test says a *price* motive is not detectable in how the cut responds to
+refuelling elsewhere; it does not say the reactors maximise against the forward price. In 2024–26,
+which holds most of the cut, the test cannot say either way, and the restriction to days with a
+register snapshot makes that worse, not better.
+
+**What I did not do.** No identification of the cap's own effect (three periods confound it with the
+gas crisis; Italy and Great Britain are separate designs). No bid-level look at what ANAV offered on
+cut days in the cap period. No interval on the CNAT cap-period gap to c_acct. The T3 sign test was
+not rerun on snapshot days. The panel's X and n_full are the 2026-10-19 vintage.

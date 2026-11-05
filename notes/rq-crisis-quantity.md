@@ -913,3 +913,332 @@ Reading: the controlled interval [0.10, 0.87] contains the uncontrolled point an
 point; they overlap on 0.51–0.87. Full pass-through (ρ = 1) is inside the uncontrolled interval and outside the controlled one; no pass-through
 (ρ = 0) is outside both, just. The break-even ρ of the net (Spain 1.4–1.5; Iberia with both bills about 1.05–1.1) lies above both intervals, so the
 negative net does not depend on which is quoted. Quoting range for the paper: 0.5–0.75 as the central band, with 0.10–1.03 as the union of the two 95% intervals.
+
+### H7. Hour-of-day counterfactual — rules fixed before running (user chose it, 2026-11-03; `gas_cap_quantity_hod_fit.py`, stage 2 later)
+Why: H1 found Italy's weekly path adds noise to an Iberian plant before the cap (R² −0.35 at r = 0); offers at night and at midday behave differently,
+so a week effect averaged over all hours may be the wrong control. Idea: match Iberian and Italian plants within the same hour-of-day block.
+**Blocks:** four six-hour blocks of the local delivery hour (periods 1–6, 7–12, 13–18, 19–24; quarter-hours in 2025 are not in the window). One matrix per block:
+rows units, columns weeks, the weekly mean of run20 over the unit's predicted in-money hours in that block (main margin €50, essential units out, cost defined);
+same unit rule as `matrix()` (≤ 30% of weeks missing, 50% fallback, at least 25 Iberian units, else the block is dropped and said so). Each block gets its own
+Italian week effect and factors (`em_factor` on that block's Italian rows).
+**Stage 1 (diagnostic only; nothing about ρ is estimated):** for each block and r = 0…5, the Iberian pre-cap R² of the counterfactual (the H1 definition),
+Xu's cross-validation error, and the unit counts; next to the baseline (all hours pooled, H1: −0.35, −0.27, −0.20, −0.06, 0.00, +0.03).
+**Rule for stage 2, fixed now:** go on to estimate ρ only if at r = 0 the median across the surviving blocks of the pre-cap R² exceeds the baseline's
+(−0.35) by at least 0.15 AND at least three of four blocks improve on it. Otherwise stop: matching on the hour of day does not make the Italian path track the
+Iberian level. If it passes, stage 2 (rules to be written into this note before it runs, not before): the dose by block (`ends` by block), ATT_{w,block}
+on g_{w,block} with block intercepts, ρ = 1 + b, timing permutation shifting weeks jointly across blocks, firm-block bootstrap, and the gas-control version.
+
+### H7 stage 1 results (2026-11-03; no ρ estimated)
+Main sample (predicted in-money hours, margin €50): the night (1–6) and afternoon (13–18) blocks are **dropped** — fewer than 25 Iberian gas units have
+enough in-money weeks there (cheap hours are out of the money at night and at midday). Surviving blocks, Iberian pre-cap R² at r = 0 / best r by cross-validation:
+7–12: −0.22 (r = 1; r = 4 reaches +0.16); 19–24: −1.18 (r = 2). Pooled baseline −0.35. Median across the two blocks −0.70, one of two improves.
+**Rule: STOP.** Added after the stop, diagnostic only and outside the rule (every hour, no in-money condition, all four blocks kept): R² at r = 0 pooled −0.63;
+blocks 1–6 −1.23, 7–12 −0.24, 13–18 −1.32, 19–24 −0.90; median −1.06, one of four improves; the same STOP.
+Reading: matching on the hour of day does not make the Italian path track the Iberian level; the morning ramp (7–12) is the only block that improves and
+the others are worse (fewer hours per cell mean noisier weekly means on both sides). The weak tracking is not hour-of-day mixing; Iberian offers are driven by
+something Italy's common path does not carry (the minimum-load, near-cost and withholding blocks of `rq-gas-cap-conduct.md`). Stage 2 is not run.
+Next candidate if the counterfactual is to be improved: a within-Iberia prediction of run20 from conditions known before the auction (gas price relative to cost,
+residual demand, wind and solar forecasts), fitted before the cap and extrapolated, with Italy kept as a check rather than the control. Not built.
+
+## I. Open questions closed or narrowed (2026-11-03)
+
+### I1. Did exports pay the charge? (decree text, `papers/BOE_RDL_10_2022_consolidado.pdf`; indicators 10406–10408)
+- Art. 7.4: the market operator's settlement is distributed "entre todas las unidades de adquisición de los agentes del mercado ibérico", pro rata to the
+  energy scheduled after the continuous market. Art. 7.7 excludes storage and pumping units, ancillary-service units and hedged energy (art. 8); **no article
+  mentions exports**. The decree's own rule on offer units (the OMIE rules it amends) defines import and export units as *"unidades externas al sistema ibérico"*, one
+  per agent and border (France, Andorra, Morocco), and the France coupling flow appears in the bids only as the pseudo-unit `MIEU`, which is not an agent's purchase
+  unit. Art. 12 spends extra congestion rents on the France border to reduce the total cost. So the text neither charges nor exempts exports; a plausible reading is
+  that coupling exports (France) were not charged and that exports by Iberian agents to Andorra and Morocco may have been.
+- ESIOS 10406 / 10408 do NOT help: their monthly values (27.5, 66.9, 88.8, 65.0, 22.5, 7.1, 32.2, 2.9, −0.7 for 2022-06 → 2023-02) equal the monthly mean of the hourly
+  1907 component (43.2, 55.9, 81.8, 61.3, 27.8, 3.9, 26.8, 1.4, −1.1), so they are €/MWh prices, not euro totals, and cannot pin down the charged base.
+- **It does not matter for the Spanish net.** The Spanish bill is what Spanish buyers were charged (ESIOS price × their scheduled demand, €5.43 bn), observed whoever
+  else paid. Whether exporters also paid only changes the exporters' own net (saving of €0.2–0.4 bn less any charge), not Spain's or Portugal's. It would matter if the
+  total were fixed and shared (it is not read that way here). Status: unresolved in law, immaterial for the headline.
+
+### I2. The Portuguese bill (web search 2026-11-03; ERSE's clarification page unreadable as fetched)
+- No source found with a euro figure for the cost charged to Portuguese buyers. The Portuguese government reports a "benefit" of €570 m from entry into force to 31 January 2023
+  (Lusa, 8 March 2023; market price reduction €43.78/MWh) and DGEG publishes "custo médio do ajustamento" and "benefício líquido" separately (Observador, 10 August 2022),
+  so the figure is probably net of the average adjustment cost, by the government's own three-price counterfactual, not mine. In December 2022 the secretary of state called
+  the 2022 net benefit positive but small and expected a much larger one in 2023 because the cost is spread over more consumers (Sábado, Lusa). The adjustment cost is charged
+  only to buyers exposed to wholesale prices (hedged and exempt consumption is excluded; ERSE Instrução 6/2022).
+- Comparison, with the caveat that counterfactuals differ: my saving to Portuguese buyers is €0.5–1.0 bn at ρ 0.55–1.0 (bill ≤ €0.97 bn, net −0.5 … +0.05 bn); the government's +€570 m
+  net to January 2023 lies at the top of my net range and above it at ρ 0.55–0.75. Nothing here pins the Portuguese bill; it stays an upper bound. Lead: DGEG's daily series of the
+  average adjustment cost (not fetched).
+
+### I3. Idea 5, the reference-price steps on the declared cost — rule fixed before running (`gas_cap_declared_cost_steps.py`)
+PRGN rose from €40 to 45 on 1 January 2023, to 50 on 1 February and to 55 on 1 March (decree art. 3 as amended by RDL 3/2023), cutting the subsidy
+S = (PGN − PRGN)/0.55 by €9.1/MWh at a given gas price, whatever the plants do. A plant passing a share ρ of S into its declared cost (the `cab` minimum-income variable term v,
+the same units and sample as `gas_cap_declared_cost.py`) should see v/gross change by Δ mean log(1 − ρS/gross) across the step, relative to its reference ratio.
+For each step date D: the actual J(D) as in that script (median over units of the change in mean log(v/gross) from the seven days before D to the seven from D); the J predicted at
+ρ = 0 and ρ = 1 from the same unit-days' S and gross; the implied ρ (the value on a grid −1 … 2 whose predicted J equals the actual).
+**Power rule, fixed now:** report an implied ρ only if |J(ρ=1) − J(ρ=0)| at that step is at least twice the standard deviation of J over the 273 pre-cap placebo dates (`gas_cap_declared_cost_event.csv`);
+otherwise write that the step cannot size ρ. A step with S = 0 on the dates inside its windows is skipped (the cap stopped binding in March 2023). No decision rule on the value: it is a check on the 0.91–0.96
+day-one and monthly declared-cost ρ, read as consistent if inside [0.5, 1.5] where it is reported.
+
+### I3 results (2026-11-03)
+Placebo J (273 pre-cap dates) sd 0.056, so the power bar is |J(ρ=1) − J(ρ=0)| ≥ 0.112.
+- **1 January 2023 (PRGN 40 → 45):** 48 units, mean S €41.0. J actual +0.106; predicted +0.000 at ρ = 0 and +0.148 at ρ = 1; gap 0.148 ≥ 0.112 → powered. **Implied ρ = 0.78.** One placebo
+  standard deviation of J moves the implied ρ by about 0.38 (0.056 / 0.148), so the band is roughly 0.4–1.2; inside the rule's [0.5, 1.5] read as consistent with the day-one 0.91–0.96, and below it by a point estimate.
+- **1 February 2023 (45 → 50):** 49 units, mean S €15.3; gap 0.057 < 0.112 → the step cannot size ρ (the implied 0.63 is not reported).
+- **1 March 2023 (50 → 55):** skipped, S > 0 on only 15% of unit-days in the windows.
+Reading: the one step with power gives a point estimate under the day-one figure, with a band that contains it. A single event cannot separate 0.78 from 0.93; it adds one more independent angle (a
+regulatory change in S, unrelated to plants and the market) that does not contradict the declared-cost ρ near 0.9 and is nearer the offer-side central band. Idea 4 (offer price in euros per euro of subsidy) is the only sizing idea left.
+
+### I4. Idea 4, the offer price in euros per euro of subsidy — rule fixed before running (`gas_cap_quantity_price.py`)
+An offer at net cost plus a markup m sits at p = cost_gross − ρS + m, so y = p − cost_gross falls by ρ euros per euro of S. The earlier price designs (`rq-gas-cap-conduct.md`, steps 2 and 2c) failed their
+post-cap check (mean gap after the subsidy ended +€168) as a level; as in B2 → B3, the slope on the dose with an intercept absorbs a constant drift, so the same move is made here.
+- **Outcomes:** y50 = min(p50, 1000) − cost_gross (the price at half of the unit's offered volume) and ymid = min(p_mid, 1000) − cost_gross; per unit and week the **median** over the predicted in-money
+  hours (margin €50, essential units out, cost defined), the sample, unit rule and weeks of B1–B3 (`panel()`, `matrix()`, Italy as control).
+- **Dose:** S̄_w = mean subsidy over the Iberian main-sample unit-hours of week w (zero in weeks without a subsidy).
+- **Estimate:** Xu (2017) `gsc`, r by cross-validation; ATT_w = a + c·S̄_w over the post-cap weeks; ρ = −c (full pass-through c = −1, none c = 0); firm-block bootstrap (199).
+- **Gates, as B3 (decisive):** the timing permutation over cyclic shifts of S̄_w, one-sided p ≤ 0.05 (the real c at or below the 5th percentile of shifted c's); ρ with a linear trend inside the main interval;
+  ρ with the MIBGAS control reported, not decisive. If a gate fails: STOP and say the price outcome does not size ρ.
+- **Reading:** compare ρ and its interval with the share-based B3 (0.73 [0.51, 1.03]; 0.54 [0.10, 0.87] with gas controls) and the declared-cost ρ (0.91–0.96); say whether the intervals overlap, and nothing more.
+
+### I4 results (2026-11-03; 199 bootstrap draws, r = 1 by cross-validation for both outcomes)
+| outcome | Iberian / Italian units | ρ = −c | 95% interval | permutation p | ρ with trend | ρ with MIBGAS |
+|---|---|---|---|---|---|---|
+| y50 = p50 − cost_gross | 49 / 28 | 1.17 | [0.71, 1.74] | 0.000 | 1.05 [0.74, 1.39] | 0.62 |
+| ymid = p_mid − cost_gross | 48 / 25 | 1.34 | [0.95, 1.90] | 0.000 | 1.11 [0.87, 1.54] | 0.60 |
+Gates (permutation, trend inside the main interval): ALL PASS for both. Italian units fall to 28 and 25 because the weekly median needs enough in-money weeks per unit.
+Reading: the offer price falls by about 1.2–1.3 euros per euro of subsidy without a gas control, which is a ρ above 1 and an interval that overlaps the share-based B3 (0.73 [0.51, 1.03]) only on
+0.71–1.03 for y50; with the MIBGAS control it falls to 0.60–0.62, next to the share-based controlled value (0.54–0.58). Same pattern as H4–H5 shows in two outcomes: the uncontrolled slope absorbs
+whatever co-moves with the gas price (here the cost_gross term enters y directly), and the control brings the two outcomes to the same place. The two outcomes come from the same panel, so their agreement is
+not independent evidence. Other angles: declared-cost ρ 0.91–0.96 (relative to a pre-cap ratio), reference-price step 1 January 2023 implied ρ 0.78 (band about 0.4–1.2).
+All five sizing ideas of section G have now been run or ruled out; the binding limit remains about ten firm clusters.
+
+### I2 addendum. DGEG's daily balance fetched (2026-11-04; `scripts/fetch/fetch_dgeg_mecanismo_iberico.py`, `data/dgeg/`)
+DGEG's workbook (`dgeg-mie-20240103.xlsx`, open download; the DGEG page itself now redirects to the home page, the link comes from an Internet Archive capture) gives per day, 2022-06-15 → 2023-12-31
+(565 days), in EUR/MWh and **with no volumes or totals**: the Portuguese OMIE spot, `adjust_cost` (OMIE's daily average adjustment charge per MWh bought by the buyers who pay it), their sum, MIBGAS, and
+DGEG's counterfactual `price_no_mech` = spot + (gas − cap)/0.55, which is a formula on the already-capped spot price, not a re-clearing. The "differential" is price_no_mech − final price.
+- Adjust cost is positive on 194 days, 2022-06-15 → 2023-02-03: mean €67.00/MWh over 2022-06-15 → 2023-01-31 (€65.43 weighted by Portuguese demand); by quarter 92 (from 15 June), 124, 28, then 0.
+  Differential mean 42.95 over the same days (the Lusa figure of 43.78 does not reproduce exactly).
+- **The €570 m does not reproduce** from the file with REN consumption (32.0 TWh): differential × all consumption = €1.37 bn; adjust cost × all consumption = €2.10 bn (an upper bound on the Portuguese charge).
+  €570 m / €43.78 = 13.0 TWh, about 40% of consumption: if both figures refer to the same exposed volume (not stated anywhere), the Portuguese bill is about adjust cost × 13.0 TWh = **€0.85–0.87 bn**,
+  below my plant-side upper bound of €0.965 bn. That is an inference from two press figures, not a published number.
+- DGEG's cap path in the workbook (40 to 2023-03-31, then 55 / 56.1) is not the decree's. The consolidated RDL 10/2022 art. 3 (read again 2026-11-04) gives 40 initially and from January 2023 45, 50, 55, 56.1 (April) rising to 65 in December,
+  which is the path this repo uses; DGEG's counterfactual is therefore wrong in January–March 2023 and is not used for anything here beyond its adjust-cost column.
+- Portuguese net with this bill: my saving to Portuguese buyers (all day-ahead purchases, exempt buyers included) €0.49–1.02 bn at ρ 0.55–1.0 minus about €0.86 bn = about −€0.37 … +€0.16 bn; the earlier bound was −0.48 … +0.05.
+  The government's +€570 m is a formula benefit (the subsidy added in full to the price without the mechanism, ρ = 1 and no re-clearing) on the exposed volume, not comparable with a re-cleared saving.
+
+### H8. A within-Iberia counterfactual — rules fixed before running (2026-11-04; user chose it; an independent design review and a predictor inventory shaped it)
+Why: H1 shows Italy's weekly path adds noise to an Iberian plant before the cap (R² −0.35), and H4–H5 show the weekly ρ is exposed to any Iberian-only response to the gas price (which correlates 0.98 with the dose). Here the no-cap path of
+each Iberian unit's run20 is predicted from conditions known at bid time, fitted on the pre-cap weeks only; Italy is a check, not the control.
+**What the review found, and how the design answers it** (all five of its fatal flaws bind and are kept in view):
+(1) identification is by extrapolation, because g_w is zero before the cap and the post-cap gas prices lie partly outside the pre-cap range → report the in-range count and the in-range result; (2) the gas dilemma (in x: extrapolation, MIBGAS moved by the cap; out of x: the Iberian gas response loads on the dose) →
+two variants, gas in and gas out, with the **non-Iberian gas price PSV**, and ρ reported as the span of both; (3) the outcome's cost definition: run20 is measured against net cost after the cap, so the prediction target is the no-cap path measured against gross cost; ATT = 0 under full pass-through and −g under none, the B1 ends, unchanged;
+(4) the errors are week-level, not unit-level → the bootstrap resamples firms AND moving blocks of weeks (training and post); (5) predictors changed by the cap are excluded: MIBGAS, Spanish, Portuguese and French day-ahead prices, OMIP forwards, interconnection occupation, the capped or subsidised costs, every outcome column.
+**Sample and weeks:** as B1–B3 (predicted in-money hours at margin €50, essential units out, 49 Iberian and 44 Italian units, weekly unit mean of run20). Fit weeks 2021-10-04 → 2022-06-06 (36 weeks); the week of 2022-06-13 (two days before the cap, five after) is dropped from fit and
+regression; post weeks 2022-06-20 → 2023-06-26 (54 weeks, about 37 with g_w > 0). The in-money classification is the panel's (actual lagged price minus net cost): a known limit, kept for comparability with B3.
+**Predictors,** weekly means of daily values known by 12:00 on D−1 (prices with the D−2 rule, as the `_bid` costs): PSV (GME reference price), EUA, the ESIOS day-ahead residual-load forecast (demand − wind − PV forecasts; Spain only), population-weighted temperature (Spain; Italy for Italy).
+Gas in: {PSV, EUA, residual load, temperature}; gas out: {EUA, residual load, temperature}. Italy (no Italian load forecast in the repo): gas in {PSV, EUA, temperature}, gas out {EUA, temperature}.
+**Model:** y_iw = a_i + x_w'β + e, unit intercepts free, common slopes, ridge on standardised x with penalty λ ∈ {0.1, 1, 10} chosen by rolling-origin cross-validation inside the fit weeks (expanding window; origins at fit weeks 20, 24, 28, 32, horizon 4 weeks); predictions clipped to [0, 1].
+ATT_w = mean over Iberian units with y observed of (y − ŷ).
+**Stage 1 (no ρ computed):** per variant, (a) out-of-sample R² relative to the unit-mean-only model > 0 in at least 3 of the 4 origins; (b) the high-gas holdout (fit on fit weeks with PSV at or below its fit-week median, predict the weeks above) has R² relative to the unit-mean-only model > 0;
+(c) the out-of-sample MAE on the same predictions at least 20% below that of the Italy-based `gsc` at r = 0 fitted on the same training weeks. A variant that fails any of the three is dropped and said so; if both fail the exercise STOPS.
+**Stage 2 (only for variants that passed):** ρ = 1 + b of ATT_w = a + b g_w over post weeks with g_w observed (and with a linear trend); timing permutation over cyclic shifts of g_w (one-sided p ≤ 0.05); firm-block bootstrap 999 draws, each resampling firms within country,
+resampling the fit weeks in moving blocks of 6 for the refit (λ fixed at its full-sample choice), predicting the full path with actual x, and moving-block resampling (6) of the post weeks for the final regression; percentile 95% interval.
+Fake-cap placebo: fake cap dates every two weeks from 2021-12-27 to 2022-04-18; refit on the weeks before each, predict the 12 weeks after, regress ATT on the first 12 values of the real dose sequence, b_fake; the real b must lie outside the 5th–95th percentile range of the b_fake.
+Diagnostics, all reported: dose-positive post weeks with PSV and residual load inside the fit-week min–max; the partial R² of g_w on x over the post weeks; the mean ATT in post weeks with g_w = 0 and PSV inside the fit range (model-validity check: |mean| < 0.05 in run20 units).
+Italy placebo (only if the Italian recipe passes the same Stage-1 gate): the Italian ATT regressed on the Iberian g_w; passes if its 90% block-bootstrap interval lies inside [−0.25, +0.25] and is narrower than 0.6 (a pass without that width has no power).
+**Uninformative, said in advance:** Stage 1 fails for both variants; fewer than 15 dose-positive post weeks inside the fit range; partial R² of g_w on x above 0.9; mean |ATT| in the in-range g_w = 0 weeks at or above 0.05; the real b inside the fake-date range; the Italy placebo fails or lacks power;
+the gas-in and gas-out ρ intervals overlap by less than half of the narrower width. In any of these cases the result is reported as a bound on the predictive model, not as pass-through. Even if everything passes it is corroboration only: it shares B3's dose and the gas-dose collinearity.
+
+### H8 stage 1 results (2026-11-04; `gas_cap_quantity_predictive_stage1.py`, no ρ computed)
+49 Iberian and 44 Italian units, 36 fit weeks (2021-10-04 → 2022-06-06), 54 post weeks of which 34 carry a positive dose. Penalty λ = 0.1 (the least shrinkage) was chosen in every case.
+| country, variant | (a) R² vs unit mean, four origins | (b) high-gas holdout R² | (c) MAE model / gsc r = 0 (rolling origins; high-gas holdout) | gate |
+|---|---|---|---|---|
+| Iberia, gas in | +0.175, +0.126, +0.042, +0.085 (4 of 4) | +0.017 | 0.1075 / 0.1203 = 0.89; 0.1054 / 0.1000 = 1.05 | **FAIL (c)** |
+| Iberia, gas out | +0.003, +0.050, +0.055, +0.092 (4 of 4) | +0.002 | 0.1117 / 0.1203 = 0.93; 0.0971 / 0.1000 = 0.97 | **FAIL (c)** |
+| Italy, gas in | −0.012, +0.004, +0.125, −0.025 (2 of 4) | −0.037 | not defined for Italy | FAIL (a), (b) |
+| Italy, gas out | −0.008, +0.005, +0.084, −0.015 (2 of 4) | +0.020 | not defined for Italy | FAIL (a) |
+**Rule: both Iberian variants fail gate (c) (needs ≤ 0.80 of the Italy-based MAE on both sets of cells), so the exercise STOPS; stage 2 is not run, and the Italy placebo cannot be run either (its recipe fails the gate).**
+Reading: conditions known at bid time do explain some of the Iberian out-of-sample variation around each unit's own mean (R² 0.04–0.18 with gas, 0.00–0.09 without) and they beat Italy's path by 7–11% on average, but on the one test of extrapolation to
+high gas prices (the high-gas holdout) they are no better than the Italian path (1.05 and 0.97 of its MAE). The pre-cap run20 of an Iberian unit is mostly unit-specific noise that neither the Italian path nor the weekly conditions describe. This is a fact about the
+data, not about one counterfactual: with no better counterfactual of the level available, B3's intercept absorbs the level error and the slope on the dose keeps its one exposure, an Iberian response to the gas price that tracks the dose (H4–H6).
+Built for this: `scripts/build/build_weekly_conditions.py` (weekly bid-time conditions, `outputs/tables/gas_cap_weekly_conditions.parquet`, not committed), `scripts/analysis/gas_cap_predictive.py` (model code).
+
+## J. Welfare accounting of the pass-through: who gains, who loses, and the dispatch distortion (rules fixed before running, 2026-11-05)
+
+User asked (2026-11-05) to investigate the deadweight loss as well as the transfers. Section D priced the pass-through as a change in the
+price times cleared volume. That counts a euro paid by buyers and received by a plant as zero, and it holds volume fixed. This section
+keeps the same re-clear and adds what D leaves out: who receives the money, and what the lower offers do to which plants run.
+
+**Plain example (one hour).** The observed price is €100. If the 54 gas units had not lowered their offers by ρS, the price would have been
+€110, and the units would have been paid €110. At €100 the buyers of 30,000 MWh pay €300,000 less; every plant paid the price loses €10 a MWh;
+the gas units are repaid by the subsidy. Those are **transfers**: one party's loss is another's gain. A **deadweight loss** appears only if
+the lower offers change *what runs*: a gas unit whose true fuel cost is €105 runs and pushes out a coal unit costing €95. Society then burns €10
+more fuel per MWh of that swap, and nobody gains it. Likewise, if the €100 price lets a buyer worth €102 take a MWh that costs €105 to
+produce, society loses €3.
+
+### J1. Definitions (fixed now)
+
+- **Two worlds, same hours.** *Observed* world = the effective curve of `step_curves.py` (accepted rows below the price, offered rows at and
+  above it), with the offers as they were: already net of the pass-through ρS for the modelled gas units. *Counterfactual* world = the same
+  curve with every sell row of the modelled gas units (the 55 panel units with a cost; 54 have a subsidy day) raised by ρS_day. Both are
+  re-cleared by the same rule as `gas_cap_consumer_saving.py` (lowest price at which supply covers the buy volume strictly above it: demand
+  is the buy bids, so volume responds to price). ρ takes every value of the saving script's `RHOS` (0.51, 0.54, 0.55, 0.73, 0.75, 1.00, 1.03); the
+  headline reads 0.55, 0.73 and 1.00. Δ always means observed minus counterfactual: the effect of the pass-through.
+- **Hours.** The saving script's valid hours (2022-06-15 → 2023-02-25, 24-period days, S > 0, unsplit Spain/Portugal, clearing identity
+  holds, re-clear within €0.5 of the published price). I report the hours kept and dropped, per month and in total, and the bill (S times
+  cleared MWh of the 54 units) in the dropped hours. Every euro figure covers the valid hours only; nothing is scaled up.
+- **Quantity each unit gets.** At the clearing price p, sell rows priced below p run in full; sell rows priced at p are cut pro rata to fill
+  the volume Q = min(supply at or below p, buy volume at or above p); the same on the buy side. This is the volume-maximising allocation. It
+  need not equal the actual allocation at the margin; the observed world here is the *re-cleared* observed world, and I report how far its
+  volume is from the actual cleared buy volume.
+- **True resource cost (a proxy, stated as one).** A modelled gas step costs its counterfactual offer price, offer + ρS: the cost the plant
+  would have offered without the subsidy. Every other step costs its own offer price. For non-gas plants an offer is not a cost: hydro offers a
+  water value, a coal or older plant may add a markup. So "dispatch distortion" means *relative to the plants' own offers*, with only gas
+  moved. It leaves out distortions among non-modelled plants (other gas, cogeneration, coal under the mechanism, whose offers I do not move).
+  With ρ < 1, (1 − ρ)S per MWh stays in the plant's profit, and is a transfer.
+- **Buyers' gross benefit** = the area under the accepted buy bids, Σ accepted MW × bid price (one hour = 1 h). Extra volume taken in the
+  observed world is valued at the bid of the marginal buyers.
+- **Welfare** W = gross benefit − true cost of the accepted sell rows. In the counterfactual world the dispatch is the cheapest one for
+  the true-cost ladder, by construction, so W_cf ≥ W_obs hour by hour, and **DWL = W_cf − W_obs ≥ 0** (reported as a positive loss).
+
+### J2. Exports, imports and the interconnection legs (stated treatment)
+
+The coupled flow with France is the pseudo-unit `MIEU` (and `MIE`/`MIP`, which appear only in split hours; the valid screen removes those).
+In August 2022 it is an export bid at €1,500 in 743 of 744 hours, and one import offer at −€300; these prices are not valuations or costs. Its
+volume is **held fixed in both worlds** (it is accepted at any price reached, so a different Iberian price would in fact move the flow; this
+design cannot represent that). I report two treatments, and check that they differ only by a transfer:
+- **(A) Exports as part of demand.** Export bids are buy rows valued at their bid, and imports sell rows at their offer. Because the volumes are the
+  same in both worlds, their gross benefit and cost cancel exactly in every Δ. I check that volumes are identical.
+- **(B) Separately, Iberian view.** Exports earn p per MWh, and imports cost p per MWh, to the Iberian system. The change is Δp × (exports − imports):
+  the price fall is a **gain to the foreign buyer** of Iberian exports. This is the part that "leaked abroad" through the interconnection.
+  Congestion rent (the French price differs from p when the line is full) is **not** modelled; it would enter the bill (decree art. 12).
+
+### J3. What is computed, per ρ (€ m, valid hours)
+
+1. **Buyers' payment change** ΔPay = p_obs × Q − p_cf × Q_cf, by buyer class: *Spanish* (every buy unit not Portuguese and not an interconnection
+   pseudo-unit; units absent from the registry are counted Spanish and their volume reported), *Portuguese* (registry country PT) and *exports*
+   (`MIEU`, `MIE`, `MIP`). Also the change in gross benefit, so that the quantity response is not hidden in the payment.
+2. **Buyers' subsidy charge.** For Spanish buyers the ESIOS charge (the existing `gas_cap_net_by_country.py` figure: 1908 × 351 + 1909 × 352 + 1907 × 353,
+   same valid hours). For Portuguese buyers the upper bound (S × MWh of the Portuguese modelled plants), as in F. The model-consistent subsidy to the
+   Spanish modelled plants (S × observed re-cleared MWh) is also computed; **ESIOS charge − that** is carried as its own line, "charge not tied
+   to modelled plants" (goes to plants I do not model, and its dispatch effect is not in the DWL).
+3. **Revenue changes by seller class:** modelled gas units, Spain and Portugal (market revenue, and separately the subsidy they receive in the
+   observed world, which is zero in the counterfactual), other generators Spain and Portugal, and the interconnection import leg.
+4. **Party ledger.** Each party's net change = ΔGross benefit − ΔPayment − charge (buyers) and ΔRevenue − ΔTrue cost + subsidy received (sellers). Parties:
+   Spanish buyers, Portuguese buyers, exporters, modelled gas (Spain), modelled gas (Portugal), unmodelled recipients of the rest of the Spanish
+   bill, other generators (Spain, Portugal), importers.
+5. **Decomposition of the DWL.** Let TCmin(Q) = the cheapest true cost of supplying volume Q (integral of the true-cost ladder, which is the
+   counterfactual's sell side).
+   - **(b) Allocation effect** = true cost of the observed dispatch − TCmin(Q_obs): the extra cost of running the wrong plants *at the observed volume*. ≥ 0.
+   - **(a) Quantity effect** = [GB(Q_cf) − TCmin(Q_cf)] − [GB(Q_obs) − TCmin(Q_obs)]: the loss from taking more (or less) volume than the efficient
+     point, with the cheapest plants. Because the counterfactual is efficient, this is ≥ 0 as a loss.
+   - By construction **DWL = allocation + quantity.** The sample month tests this and the other identities before totals are trusted.
+
+### J4. Checks, and what each failure means (fixed now)
+
+- **C1 re-clear.** My observed and counterfactual prices equal the saving script's `p_clear` and `p0_ρ` (`gas_cap_consumer_saving_hourly.parquet`)
+  within €0.011 in at least 99.9% of valid hours, every ρ. Below that: find the cause (float ties) before any total is used.
+- **C2 market balance.** In every hour, accepted buy volume equals accepted sell volume within 0.01 MW (at least 99.9% of hours), and Σ buyers'
+  payments = Σ sellers' revenue within €1 per hour. A failure is a bug in the allocation: STOP, no totals.
+- **C3 identity (sample month).** ΔW computed from gross benefit and true cost = the sum of the party ledger (with the charge and the subsidy
+  netting) = allocation + quantity effect, each within €0.01 m. A failure: STOP.
+- **C4 efficiency property.** The counterfactual welfare is not below the observed in more than 0.1% of hours, and the sum of the negative hourly
+  DWL is under 0.1% of total DWL (float ties and pro rata cuts at the margin make tiny exceptions). A failure means the true-cost ladder and the
+  clearing rule disagree: report and do not interpret the split.
+- **C5 volume.** The observed world's re-cleared volume against the actual cleared buy volume (bids, status C): report the mean and the 95th
+  percentile of the gap; flag it if the mean |gap| exceeds 0.5% of volume. It affects levels, not the Δ; reported, not a stop.
+- **C6 fixed legs.** Interconnection volumes identical in both worlds (A); otherwise (A) and (B) are not comparable: STOP.
+- **C7 monotone in ρ.** DWL non-decreasing in ρ across the 7 values, hour totals; reported, not a stop.
+- **Timing.** One month first (August 2022, the largest), time reported, then all nine months (202206 → 202302) with single-thread BLAS.
+
+**Reading rules.** The headline is three numbers per ρ, all of the Spanish buyers' net loss N = −(their net change): the part that is a transfer
+to Spanish sellers, the part that is deadweight loss, and the part that leaks outside Spain (Portugal + exporters + importers + Portuguese plants).
+They add to N by the identity (N = DWL + net gain of Spanish sellers + net gain outside Spain). I will not call DWL "small" or "large" against a
+threshold set after the fact; I will state it in euros and as a share of N, and that it is a proxy-based figure that covers only the modelled
+gas units' offers. **What would change my reading:** a DWL that is not stable across ρ in sign or order of magnitude; an allocation effect that
+vanishes if non-gas offers are costs (it cannot be tested here); any C-check failing.
+
+### J5. Amendments after the one-month test (2026-11-05; the original rules above stay as written)
+
+The test month (August 2022, 681 valid hours) ran in 13 s and passed C1–C4 and C6 (price match 100%, no unbalanced hour, no hour with W_cf < W_obs, identities
+to 1e-8 m). I saw its headline numbers before writing this, so these amendments are not blind to them; none relaxes a check.
+- **A1. First-order reconciliation (new check C8).** The saving of D is (p_cf − p_obs) × cleared buys, volume held fixed. J computes the surplus change, which also
+  counts the volume response. For each ρ I report both for all buyers; the first-order figure must equal D's gross saving `G(ρ)` in `gas_cap_consumer_saving.csv`
+  within €1 m (same hours, same prices). Their difference is the volume response, not an error.
+- **A2. Allocation effect = the DWL under fixed volume.** It depends only on the observed volume and the true-cost ladder, not on the counterfactual price. The quantity
+  effect is the extra loss from the buy bids' response. In the test month the counterfactual volume is 3–4% below the observed in every hour: buy bids sit at round
+  prices (€250–500) that a higher counterfactual price crosses. The quantity effect therefore rests on the submitted bid ladder, not on an estimated elasticity, and
+  is reported apart.
+- **A3. Sensitivity on the plant set (no gate).** `--units ccgt_coal` repeats everything with the 97 units of D's wider set moved (the 54 plus every gas CCGT and coal unit of
+  OMIE's listing); their class label stays "modelled gas". It removes part of the limit in J1 (subsidised plants whose offers were not moved) and is reported beside
+  the main result. The 54-unit run is the main one.
+
+### J6. Results (2026-11-05; `scripts/analysis/gas_cap_dispatch_welfare.py` → `outputs/tables/gas_cap_dispatch_welfare{,_headline,_ledger,_monthly,_hours,_checks}.csv`, `_hourly.parquet`; `_ccgt_coal` twins)
+
+**Timing.** One month (August 2022, 7 values of ρ): 13 s. All nine months, single thread: 100 s (the wider set, 124 s). No multiprocessing needed.
+
+**Hours.** 5,808 hours in the cap months, **5,397 valid (92.9%)**, 411 dropped (split Spain/Portugal, identity failures, re-clear off by more than €0.5): the saving script's screen, same hours. The
+bill on the modelled units in the dropped hours is €331 m against €4,937 m in the valid ones (6.3% of €5,268 m), so every euro figure below covers about 94% of the subsidy and is not scaled up.
+Dropped by month: Jun 11, Jul 71, Aug 63, Sep 25, Oct 66, Nov 42, Dec 29, Jan 68, Feb 36.
+
+**Checks (all nine months; both unit sets).** C1 passes: the observed and every counterfactual price equal the saving script's in 100.0% of hours. C2: no hour where volume bought differs
+from volume sold by more than 0.01 MW; payments equal revenue to €0.6 in total. C3: the ledger total equals the welfare change, DWL equals allocation + quantity, and N equals DWL + Spanish sellers + outside
+Spain, all to 1e-8 m. C4: no hour with W_cf below W_obs; the counterfactual dispatch costs the same as the ladder's cheapest supply of its volume to 1e-8. C5: the re-cleared observed volume is within 0.005% of the actual
+cleared buys (mean gap). C6: the interconnection volumes are identical in both worlds, so exports and imports drop out of every difference (their gross benefit and cost change by exactly 0). C7: DWL rises with ρ at every step.
+**C8 passes**: my first-order saving over all buyers equals D's gross saving (€3,211 m at ρ 0.73) to 1e-12. Bill: S times the re-cleared observed MWh of the 54 units is €4,938 m against €4,937 m from actual cleared MWh. **No check failed.**
+
+**Result, 54 modelled gas units (€ m, valid hours; Δ = observed − counterfactual).** N is the Spanish buyers' net loss: the ESIOS charge (€5,427 m) less their surplus gain.
+
+| ρ | Spanish buyers' net loss N | transfer: net gain of Spanish sellers | **deadweight loss** (allocation + quantity) | leaks outside Spain (exporters + Portugal + importers) |
+|---|---|---|---|---|
+| 0.55 | 3,880 | 3,374 (87%) | **274** (7%) = 215 + 59 | 233 (6%) = 178 + 56 − 1 |
+| 0.73 | 3,229 | 2,397 (74%) | **539** (17%) = 441 + 98 | 294 (9%) = 256 + 39 − 2 |
+| 0.75 | 3,157 | 2,283 (72%) | **574** (18%) = 471 + 103 | 299 (9%) = 265 + 36 |
+| 1.00 | 2,265 | 805 (36%) | **1,127** (50%) = 922 + 204 | 334 (15%) = 375 − 39 − 2 |
+
+The columns add to N in every row (checked). Across the full interval of B3 (ρ 0.51–1.03): DWL €229–1,206 m, N €4,025–2,164 m.
+
+**The ledger** (€ m, net change of each party, observed minus counterfactual; ρ 0.55 / 0.73 / 1.00):
+
+| party | 0.55 | 0.73 | 1.00 |
+|---|---|---|---|
+| Spanish buyers (surplus gain less the ESIOS charge) | −3,880 | −3,229 | −2,265 |
+| modelled gas plants, Spain (market revenue − true cost + subsidy) | +3,128 | +2,678 | +1,908 |
+| the rest of the Spanish bill, to plants not modelled (ESIOS charge − subsidy on the 54 units) | +1,454 | +1,454 | +1,454 |
+| other generators, Spain (lower price, same offers) | −1,209 | −1,736 | −2,557 |
+| *Spanish sellers together* | *+3,374* | *+2,397* | *+805* |
+| Portuguese buyers (charge taken as the upper bound, the subsidy on Portuguese plants, €965 m) | −488 | −284 | +17 |
+| modelled gas plants, Portugal | +786 | +699 | +547 |
+| other generators, Portugal | −242 | −375 | −603 |
+| exporters (lower price on fixed export volume) | +178 | +256 | +375 |
+| importers | −1 | −2 | −2 |
+| **all parties = −DWL** | **−274** | **−539** | **−1,127** |
+
+The gross flows are larger than the net. At ρ 0.73 the gas plants and unmodelled recipients gain €4.1 bn and the other Spanish generators lose €1.7 bn through the lower price; buyers
+save €2.2 bn of wholesale cost and pay €5.4 bn. Portugal's net does not depend on the charge assumed: the charge and the subsidy on its plants are equal and cancel (+€38 m at ρ 0.73, −€39 m at ρ 1).
+
+**What the dispatch distortion is.** At ρ 0.73 the observed world runs the 54 gas units for 10.2 TWh more than the counterfactual (37.1 against 26.9 TWh; at ρ 1, 14.7 TWh) and other plants for 7.5 TWh less;
+the 2.7 TWh left over is the extra volume (observed volume is 2.0% above the counterfactual's, 137.0 against 134.3 TWh). The allocation effect (€441 m) is the extra true cost of the 7.5 TWh of substitution at the
+observed volume: about €59 for each MWh swapped, the gap between gas's true cost (offer + ρS) and the offers of the plants it displaced. The quantity effect (€98 m) is buyers taking 2.7 TWh that the cheapest supply would not serve at the
+true cost; it rests on the submitted bid ladder (buy bids at round prices of €250–500 that the higher counterfactual price crosses), not on an estimated elasticity. DWL by month at ρ 0.73 (€ m): Jun 41, Jul 128,
+**Aug 205**, Sep 105, Oct 14, Nov 6, Dec 39, Jan 1, Feb 0.2: the same months as the subsidy (Aug and Sep carry 58%).
+
+**Reconciliation with F and D.** N differs from F's net Spain (−3,848 / −3,172 / −2,149) by €32–116 m (1–5%): F is first-order (volume fixed) and leaves unregistered units outside Spain; J counts the volume
+response (it lowers the all-buyer surplus gain from D's €2,246 / 3,211 / 4,670 m to €2,202 / 3,135 / 4,519 m) and puts unregistered buyers in Spain. I did not split that gap further.
+
+**Exports as demand, and the Iberian view (J2).** (A) with exports and imports as fixed-volume rows, welfare falls by the DWL: €274 / 539 / 1,127 m. (B) Iberian welfare, which also loses the
+exporters' gain (and the importers' loss), falls by **€451 / 794 / 1,500 m**; the difference is the leak through the interconnection (€177 / 255 / 373 m net).
+
+**Sensitivity, 97 units moved (54 + OMIE gas CCGT and coal; no gate).** DWL €294 / 578 / 1,221 m at ρ 0.55 / 0.73 / 1.00 (+7 to +8% on the main run); N €3,741 / 3,012 / 1,878 m;
+transfer 85% / 70% / 15% of N; DWL 8% / 19% / 65%; outside Spain 7% / 11% / 20%. The bill not tied to modelled plants shrinks from €1,454 m to €522 m. The ranking of the three shares at each ρ
+is unchanged; the transfer shrinks and the DWL grows as the set widens, most at ρ = 1.
+
+### J7. Statement, and what it does not show
+
+**At ρ 0.73 (B3 main), Spanish buyers lose €3.2 bn net of the saving they got.** About **€2.4 bn (74%) is a transfer** to Spanish sellers: the gas plants and the other recipients of the bill gain €4.1 bn,
+and the other Spanish generators lose €1.7 bn of that back through the lower price. About **€0.54 bn (17%) is deadweight loss** from dispatch: gas running ahead of cheaper plants (€0.44 bn) and buyers
+taking volume that costs more than they value it at the true cost (€0.10 bn). About **€0.29 bn (9%) leaks outside Spain**, almost all of it (€0.26 bn) to the foreign buyers of Spanish exports through
+the lower price; Portugal's net is +€0.04 bn. On B3's range (ρ 0.55–0.75) the shares are transfer 72–87%, DWL 7–18%, outside Spain 6–9%. They move steeply with ρ: at full pass-through the buyers get
+most of the subsidy back in price, so N falls to €2.3 bn, but DWL rises to €1.1 bn and is half of N. **The DWL is not small at the high end of ρ**, and it grows faster than the price saving does.
+
+**Limits, all in the figures above.** (1) The true-cost proxy: non-gas offers are not costs (a hydro or coal markup would change which swaps are inefficient). Only the 54 (or 97) units' offers
+are moved; other subsidised plants' lowered offers stay as observed in both worlds, so distortions among them are missing. The 97-unit run raises DWL by 7–8%, the 54-unit run is a lower figure for that
+reason. (2) The interconnection volumes are fixed; a higher Iberian price would cut exports and raise imports, so the exporters' gain is conditional on the observed flows. French congestion rent is not
+modelled. (3) The quantity effect uses the submitted buy ladder. (4) The pro rata cut at the margin is the model's, not OMIE's allocation. (5) ρ is B3's, estimated on 54 units with a wide interval, and
+the subsidy bill in the counterfactual is zero by design, so this compares the cap with pass-through ρ against a world with neither. (6) Valid hours only (92.9% of hours, 94% of the subsidy). (7) The Spanish
+charge is ESIOS's and the Portuguese one an upper bound; nothing here tests the decree's allocation of the bill to exports or Portuguese buyers (I1, I2).

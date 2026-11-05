@@ -229,3 +229,178 @@ The Iberian day-ahead price and the share of units in the money were left out as
 4. The "controlled" ρ is not stable: 0.58 with MIBGAS as averaged over the delivery days, 0.72 with the price known at noon, 0.85 with PSV, 0.82 with both bid-time prices; each is inside the others' intervals, and no control set explains the no-dose weeks.
 5. So the 0.54 is not better supported than 0.73: the dose and the gas price are 98% collinear, and the lower number comes from one vintage of one regressor.
 6. Which ρ to quote: the uncontrolled **0.73 [0.51, 1.03]**, with the statement that gas controls move it anywhere from 0.54 to 0.85 depending on the series, all within noise (so the H6 "central band 0.5-0.75" should read 0.5-0.85, and no direction of bias is established); the no-dose test does not favour a control set.
+
+## LNG and storage: rules, fixed before running (2026-11-05)
+
+**Plain worked example.** Compare two weeks. In the week of 2022-08-15 the dose g was 0.54, bid-time MIBGAS was €151, Iberian LNG tanks were 76% full and storage was 84% full. In the week of 2022-11-07 g was 0.02, MIBGAS €47, tanks 84% and storage 97%. So between August and November the dose fell and the physical gas system got fuller. Suppose plants holding contracted LNG offer more capacity near cost when tanks are full, because the gas has to be burned, whatever the price. Then run20 moves for a physical reason that the dose regression partly credits to the dose. Across all 46 weeks, tank fill rises slightly with the dose (corr +0.36) and the storage anomaly falls with it (−0.72). The sign of any bias is therefore set by those slopes, not by the story. A physical shock that works *through* MIBGAS is already inside the dose, because own cost is built from MIBGAS. The confound tested here is a channel that bypasses the price.
+
+**What was looked at.** Only the GIE series, their correlations and slopes with g_w and with bid-time MIBGAS, their ranges, and week counts. Nothing involving ATT_w, run20, offers or any outcome coefficient was computed.
+
+### Construction (every series: Iberia = ES + PT summed before dividing)
+- **Vintage: gas day D−3.**
+  - A gas day runs 06:00–06:00 CET. GIE publishes it in the evening of the following day. This is GIE's stated schedule, from memory, not on disk.
+  - So at 12:00 on D−1, when offers for D close, the newest published gas day is D−3. That is one day older than MIBGAS `_bid` (D−2), which settles by noon.
+  - Code: `bwc.lagged(daily, 3)` (five-day forward fill), then `bwc.weekly` (Monday-start weeks, mean over the seven delivery days), the same as every `_bid` series.
+  - Sensitivities: lag 1 (shippers know their own nominations sooner) and lag 7.
+- **Main candidates** (decisive in stage 1, flaggable in stage 2, used in control sets):
+  - **P1 LNG tank fill** = Σ`inventory.gwh` / Σ`dtmi.gwh`. Used as a level, because the physical limit is how full the tanks are in absolute terms (full tanks mean ships queue offshore).
+  - **P2 storage fill anomaly** = Σ`gasInStorage` / Σ`workingGasVolume`, minus the 2018–2021 mean for the same ISO week (clipped at 52). The anomaly is computed on daily data before lagging. This is the construction the MITECO anomaly in `build_series` already uses.
+  - **P3 LNG arrivals** = 7-day sum ending D−3 of (Δ`inventory.gwh` + `sendOut`), in GWh.
+- **Send-out's mechanical link, handled by an identity.** Send-out = arrivals − Δtank stock.
+  - Arrivals (P3) are set by cargo schedules fixed weeks ahead.
+  - The tank stock (P1) is a state at D−3.
+  - Send-out itself is driven by gas burned for power, i.e. by the same bids, and lagging does not cure this: weekly send-out at D−3 correlates 0.91 with the delivery week's own.
+  - So **send-out, Sines utilisation (PT `sendOut`/`dtrs`), days of cover (inventory / 7-day mean send-out) and storage net withdrawal (`withdrawal` − `injection`, also gas burned) are diagnostic rows only**. They are reported in stages 1–2, cannot be flagged, and never enter a control set.
+  - Iberian utilisation is dropped: Spain's `dtrs` is 1,910.4 GWh/d on 670 of 677 window days, so utilisation is send-out rescaled.
+- **Screen-only rows:** P1 as an anomaly (same baseline as P2) and P2 as a level.
+
+### Descriptives (recomputed; 46 = B3's post-cap weeks 2022-06-20 → 2023-06-19, 34 with g > 0; the week of 2022-06-13 counts as pre-cap)
+- **δ** is the slope of x on g.
+- **c\*** = 0.182/δ is the response that would by itself explain 0.73 → 0.54, shown per within-no-dose standard deviation. That sd is taken over 36 pre-cap weeks plus 18 calendar post-subsidy weeks. The script recomputes it on the 11 post-subsidy weeks with ATT.
+- **R²** is the share of x's variance in the 46 weeks explained by g and MIBGAS together.
+
+| x | corr g | corr MIBGAS | R² (g, MIBGAS) | c\* per sd | g>0 range | pre-cap range | post-subsidy range |
+|---|---|---|---|---|---|---|---|
+| P1 tank fill | +0.36 | +0.32 | 0.15 | **+0.117** | 0.42–0.84 | 0.38–0.84 | 0.43–0.76 |
+| P2 storage anomaly | **−0.72** | −0.71 | 0.52 | **−0.034** | 0.05–0.22 | −0.11–0.03 | 0.17–0.29 |
+| P3 arrivals | +0.12 | +0.06 | 0.09 | +0.30 | | | |
+| tank-fill anomaly (screen) | +0.47 | +0.44 | 0.23 | +0.093 | | | |
+| storage fill level (screen) | −0.41 | −0.41 | 0.17 | −0.088 | 0.74–0.98 | 0.59–0.82 | 0.81–0.97 |
+| send-out (diag.) | +0.07 | +0.03 | 0.04 | +0.45 | | | |
+| Sines utilisation (diag.) | +0.41 | +0.36 | 0.22 | +0.062 | | | |
+| net withdrawal (diag.) | −0.46 | −0.38 | 0.30 | −0.10 | | | |
+| days of cover (diag.) | +0.15 | +0.18 | 0.04 | +0.19 | | | |
+
+- **Lag barely matters.** Lag 1 against lag 3 correlates 0.95–1.00 weekly for every row except arrivals (0.89); lag 7 against lag 3 correlates 0.68–1.00. Correlations with g move by at most 0.10 across lags 1, 3 and 7.
+- **Unlike MIBGAS, these can be separated from the dose.** MIBGAS keeps 4% of its variance after the dose (variance inflation 23). P2 keeps 48% (variance inflation about 2.1). The others keep 70–96%.
+
+### Where they enter (existing thresholds, same 199 draws, seed 20261102, r = 0)
+1. **No-dose tests.**
+   - Samples, intercepts, intervals (double bootstrap as main, firm bootstrap, Newey-West with 3 lags) and the 80% power rule are all unchanged.
+   - P1, P2 and P3 are run one at a time, standardised, then together, then each with bid-time MIBGAS.
+   - For each candidate:
+     - **Detected:** the double-bootstrap and Newey-West intervals both exclude 0.
+     - **Gap world rejected:** the interval excludes c\*_x and power at c\*_x is at least 80%.
+     - **Uninformative:** anything else.
+   - The sign that would make 0.73 too high is **c > 0 for P1 and P3, and c < 0 for P2**.
+   - Expected power, stated now from the published MIBGAS test (smallest detectable slope about 0.07 per sd): P1 and P3 are testable. **P2's c\* (0.034) is below it, so "uninformative" is the expected verdict for storage.**
+   - Variants (not decisive): the existing ones (trend, 2022-03-21 cut, the week of 2022-06-13, r = 1 and 2), plus:
+     - pre-cap from 2021-11-01 (32 weeks), after the Maghreb–Europe pipeline closed (Iberian send-out 785 GWh/d in October 2021 against 994 in December 2021–May 2022);
+     - lags 1 and 7;
+     - the level and anomaly versions swapped.
+2. **Confounder screen.**
+   - P1–P3 and the two screen rows are added to the 21-row table at lag 3 only, with the same gates: |corr g| ≥ 0.30, the no-dose interval excludes 0, and |Δρ| ≥ 0.10.
+   - P3 fails the first gate already.
+   - With 5 new flaggable rows, about 0.25 chance hits are expected at 5%.
+   - Diagnostic rows and the other lags are reported, not flagged.
+3. **Control sets.**
+   - New sets:
+     - {P1, P2, P3};
+     - the same plus bid-time MIBGAS and PSV;
+     - P1 alone;
+     - P2 alone.
+   - Flagged rows join the existing survivors set.
+   - Each set gets the firm-bootstrap ρ, the width ratio and the shift against 0.726. "Favoured" keeps its meaning: lowest blocked-CV error and a gain of at least 10% over intercept-only.
+4. **Contamination checks (fixed now).**
+   - **Lead placebo:** the candidate built from the delivery week itself (lag 0), or from the following week, must not have a lower blocked-CV error on the no-dose weeks than the lag-3 version. If it does, the series carries feedback from the bids and is not used as a control.
+   - **Lag stability:** a sign flip between lags 1, 3 and 7 makes the candidate's result "specification, not evidence", as in the existing rule.
+
+### What each outcome means for the ρ the paper quotes
+- **A main candidate is detected with the sign that makes 0.73 too high, and passes both checks.**
+  - Centre: the favoured physical set's ρ, or {P1, P2, P3} + MIBGAS + PSV if no set is favoured.
+  - 0.73 [0.51, 1.03] is quoted beside it.
+- **Detected with the opposite sign:** 0.73 stays the centre and is called conservative on this channel. The physical-controlled ρ is reported beside it.
+- **Gap world rejected for P1 and P3:**
+  - The LNG channel is ruled out at the pre-set power, and the "one open confound" sentence is withdrawn for LNG.
+  - Storage keeps whatever verdict P2 gets.
+  - Quote 0.73 with the 0.54–0.85 gas-vintage band.
+- **Uninformative, or nothing flagged:** no change. Quote 0.73 [0.51, 1.03] with the 0.54–0.85 band, and state that physical supply could be tested only at low power (for storage, as predicted here).
+
+### Limits, stated in advance
+- **Revised data, not what bidders saw.**
+  - Every window LNG row was last updated 2023-10-26 (PT) or 2025-05-13 (ES).
+  - Portuguese storage rows have a median update 115 days after the gas day.
+  - Spanish storage rows have a median of 1 day, so they are close to first release.
+  - Revisions can carry information bidders lacked, which tilts the test toward detection.
+- **Country totals, not shippers' own positions.** The large owners are LNG shippers and knew their own cargoes earlier and more precisely, which biases a detected response toward 0. A firm-specific take-or-pay story is beyond this test.
+- **Stocks still carry past dispatch.** Tank fill at D−3 is cumulative past send-out, so lagging removes same-week feedback but not persistence.
+- **Storage was policy-driven.** Storage after the cap followed the EU filling rule (Regulation 2022/1032, from memory) and the season: P2 correlates 0.71 with the annual sine over the 46 weeks. Its g > 0 weeks (0.05–0.22) lie above the whole pre-cap range and only partly inside the post-subsidy one, so with sample intercepts its dose-week values are largely extrapolated.
+- **Italy is not covered.** No Italian LNG or storage is on disk. GIE has them, but fetching them would need a new rule.
+- **Short post-subsidy sample.** It is 11 weeks with MIBGAS at €25–48, so a response that exists only under 2022-level tightness is outside what it can see.
+
+**Reviewer notes**
+- **Which 46 weeks.** Drafts B and C said B3's 46 weeks drop an unknown week. It is 2022-06-13: `core()` reindexes g to the matrix weeks and treats weeks before `CAP0` (2022-06-15) as pre-cap. 34 of the 46 have g > 0 (B said 35 of 47).
+- **`dtrs` is not quite constant.** A and C said Spain's is constant. It is 1,910.4 on 670 of 677 days and 2,132.3 on 7. Dropping Iberian utilisation still stands.
+- **Send-out and net withdrawal.** A kept net withdrawal as a candidate, and B made Sines utilisation a main candidate. Both are gas-burn flows, i.e. bad controls, so they were made diagnostic rows. The mechanical link is handled by the identity send-out = arrivals − Δstock, with A's and C's "report only" status.
+- **Storage baseline.** B used 2018–2020, A and C 2018–2021. I chose 2018–2021 by ISO week to match the existing MITECO anomaly. B's own check shows the two correlate 0.997.
+- **Tank fill level or anomaly.** C made the anomaly the main version, A and B the level. I chose the level as main, because the must-burn story is about absolute fullness. The anomaly is a screen row.
+- **Which lags can flag.** C made other lags flaggable. Only lag 3 can flag here, to keep the number of chance hits down; the other lags are reported.
+- **Dropped checks.** C's dispatch check (send-out on lagged combined-cycle output) is dropped: that output comes from the same bids, and the identity already handles the problem. C's lead placebo is kept.
+- **Coverage claim.** A said 82–100% of dose-week values lie inside the no-dose ranges. That misleads under sample intercepts, so the table gives each sample's range separately instead.
+- **Arrivals count.** C reported 66 of 644 days with arrivals below −50 GWh. It is 71 of 677 days on 2021-09-01 → 2023-07-09; it depends on the window.
+- **What I verified.** All kept numbers were recomputed: c\* per sd (A's and B's agree with mine to rounding), R², ranges, lag correlations, revision dates. Scratch script: /private/tmp/claude-501/-Users-theodor-projects-vre-spain-thesis/53005151-88f1-46f1-9e65-a5d2c166c2b5/scratchpad/review/gie_review.py
+
+*Drafted by three independent drafts merged by a reviewer (workflow wf_15171db0-f0b, 2026-11-05), read before committing. Nothing above was run on the outcome.*
+
+### Amendment A1: Italian rows (2026-11-05, written before any of this test was run; the user asked for it)
+
+**Why.** The outcome is Iberia *minus* the Italian counterfactual, so Italian physical gas conditions can move it as
+much as Iberian ones. GIE covers Italy with the same key; `fetch_gie_gas.py` now fetches IT too (every gas day
+2018-01-01 → 2026-11-03; 2022 send-out 147 TWh, working gas ~195 TWh, both plausible).
+
+**Rows added**, built exactly as the Iberian ones (lag 3, weekly mean, ratios on the time-varying capacities, which matters
+for Italy: its LNG capacity grew with the Piombino and Ravenna floating terminals):
+- Italian P1 tank fill, P2 storage anomaly (2018–2021 same-ISO-week baseline), P3 arrivals: main candidates, on the same
+  footing as the Iberian three.
+- Relative rows: P1 and P2 as Iberia minus Italy. Main candidates. (Arrivals are not differenced: GWh scales differ.)
+
+**Where they enter.** All three stages, with the same thresholds and checks (lead placebo, lag stability) as the Iberian
+main candidates. New control sets: Italian P1–P3; Iberian + Italian P1–P3; the two relative rows. With 5 more flaggable
+rows, about 0.5 chance hits are expected in the screen in all.
+
+**Sign.** For every row the bias in B3's slope is c·δ (c = the outcome's slope on the row in no-dose weeks, δ = the row's slope
+on the dose), so "the sign that makes 0.73 too high" is c·δ > 0 for Italian and relative rows too; c*_x = 0.182 / δ_x.
+
+**Verdict.** A detected Italian or relative row counts exactly as a detected Iberian main candidate does in the outcome list
+above. Same limits; in addition Italian storage is about five times Iberia's and was under the same EU filling rule.
+
+**Outputs** go to new files, `outputs/tables/gas_cap_control_physical_*.csv`, from a new stage `--stage physical`, so the
+earlier control-test files are untouched.
+
+## LNG and storage: results (2026-11-05)
+
+`gas_cap_control_tests.py --stage physical` (lag 3, pooled no-dose weeks: 36 pre-cap + 11 post-subsidy). Files:
+`outputs/tables/gas_cap_control_physical_{nodose,contamination,confounders,sets,reading}.csv`.
+
+**Reading, by the rule: gap world rejected for Iberian P1 and P3 — the LNG channel is ruled out at the pre-set power.**
+Storage stays uninformative, as predicted. The quote is unchanged: ρ 0.73 [0.51, 1.03], band 0.54–0.85.
+
+| row | slope per sd [double bootstrap] | c\* needed | power | verdict |
+|---|---|---|---|---|
+| Iberian P1 tank fill | −0.004 [−0.038, 0.032] | +0.119 | 1.00 | gap world rejected |
+| Iberian P3 arrivals | [−0.054, 0.013] | +0.305 | 1.00 | gap world rejected |
+| Iberian P2 storage anomaly | — | (see scale note) | 0.42 | uninformative |
+
+- **Robust**: the two Iberian rejections hold in every variant (trend, early pre-period, with 2022-06-13, pre-period from
+  2021-11-01 with n = 32, one and two factors).
+- **Screen**: nothing flagged.
+- **Control sets** (ρ [95%]): Iberian P1–P3 0.762 [0.615, 0.916]; + bid-time MIBGAS + PSV 0.914 [0.376, 1.318]; Italian
+  P1–P3 0.689; Iberian + Italian 0.766; relative P1, P2 0.689. **None is favoured**: none beats no controls on blocked CV by 10%
+  (best overall: bid-time MIBGAS, +0.008).
+- **Contamination**: the lead placebo fails for Iberian P2, Italian P1, P2, P3 and relative P2 (differences in CV error
+  ~1e-5, e.g. 0.0064 vs 0.0065); Italian arrivals flip sign across lags (−0.0065, −0.0012, +0.0033). By the rule these rows
+  are not controls and their results are specification, not evidence. **The code did not apply this to the sets and the
+  gap-rejected list**: so the Italian P1/P3 rejections and the sets containing those rows (Iberian P2 alone, Italian P1–P3,
+  Iberian + Italian, relative) are reported only, not quoted as evidence. The reading rests on Iberian P1 and P3, which pass
+  both checks.
+
+**Deviations found by the audit (none changes a verdict or ρ):**
+- **"Per sd" scale.** The code divides by the total sd over the 47 pooled weeks; the rule's table used the within-sample
+  sd. Same for P1 and P3 (within 2%). For storage anomalies, whose level differs between the samples, the CSV's per-sd
+  numbers are ~2.8× the rule's: Iberian P2 c\* −0.096 and MDE 0.153 in the CSV, −0.034 and ~0.054 on the rule's scale. Quote
+  the within-sd figures. Verdicts, power and ρ are scale-invariant.
+- **Variants not run as no-dose variants**: lags 1 and 7 appear only as point slopes in the contamination table, and the
+  level/anomaly swap only as single screen rows (no swapped joint set). The screen runs at lag 3 only. Non-decisive.
+
+**Verified** by an independent rebuild of the three Iberian series from `data/gie` (no shared helpers): every no-dose
+statistic matches the CSV to machine precision, and ρ for Iberian P1–P3 matches exactly (workflow wf_86594153-4a4).

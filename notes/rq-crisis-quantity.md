@@ -213,6 +213,11 @@ All three pass → B3 enters the paper as the Italian estimate. Any fails → B3
   end. So the plain ρ partly carries a different response of Iberian and Italian offers to the gas price level.
   Quote the range: **ρ ≈ 0.55–0.75, no pass-through rejected, full pass-through at the edge without controls
   and outside with them.**
+  *Corrected 2026-11-05 (`notes/rq-gas-cap-control.md`, part 3):* the controlled ρ is not one number. It is
+  0.54–0.85 depending on which gas series is the control (delivery-day or bid-time MIBGAS, PSV), all within noise,
+  and no control set is favoured. Quote **0.73 [0.51, 1.03]**, with a central band of **0.5–0.85** and no known
+  direction of bias. The euro figures below were computed on 0.55–0.75 and are not recomputed; ρ = 1 is reported
+  beside them, and 0.85 lies between, so every net stays negative (break-even ≥ 1.05).
 - **All hours fails as an estimate in its own right**: its slope is positive and above every shifted one, and
   the MIBGAS control removes most of it (1.18 → 0.70–0.77). With both controls the two samples come closer
   (0.54 in-money, 0.70 all hours). All hours drops to a footnote.
@@ -913,6 +918,8 @@ Reading: the controlled interval [0.10, 0.87] contains the uncontrolled point an
 point; they overlap on 0.51–0.87. Full pass-through (ρ = 1) is inside the uncontrolled interval and outside the controlled one; no pass-through
 (ρ = 0) is outside both, just. The break-even ρ of the net (Spain 1.4–1.5; Iberia with both bills about 1.05–1.1) lies above both intervals, so the
 negative net does not depend on which is quoted. Quoting range for the paper: 0.5–0.75 as the central band, with 0.10–1.03 as the union of the two 95% intervals.
+*Corrected 2026-11-05:* the central band is **0.5–0.85**, not 0.5–0.75: with bid-time MIBGAS or PSV as the control, ρ is
+0.72–0.85 (`notes/rq-gas-cap-control.md`, part 3). The union of the intervals widens to 0.10–1.21. No direction of bias is established.
 
 ### H7. Hour-of-day counterfactual — rules fixed before running (user chose it, 2026-11-03; `gas_cap_quantity_hod_fit.py`, stage 2 later)
 Why: H1 found Italy's weekly path adds noise to an Iberian plant before the cap (R² −0.35 at r = 0); offers at night and at midday behave differently,

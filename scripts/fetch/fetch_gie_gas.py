@@ -4,7 +4,7 @@
     .venv/bin/python scripts/fetch/fetch_gie_gas.py [--start 2018-01-01] [--end YYYY-MM-DD]
 
 Writes data/gie/gie_storage_daily.parquet and data/gie/gie_lng_daily.parquet, one row per country
-(ES, PT) and gas day, and keeps every answer as served (gzipped JSON) in data/gie/raw/. A
+(ES, PT, and IT for the Italian comparison) and gas day, and keeps every answer as served (gzipped JSON) in data/gie/raw/. A
 completed year already on disk is not requested again; the current year is.
 
 Source: Gas Infrastructure Europe's transparency platforms, https://agsi.gie.eu (storage) and
@@ -41,7 +41,7 @@ from config import require_token  # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent.parent
 BASE = ROOT / "data" / "gie"
 HOSTS = {"storage": "https://agsi.gie.eu/api", "lng": "https://alsi.gie.eu/api"}
-COUNTRIES = ("ES", "PT")
+COUNTRIES = ("ES", "PT", "IT")
 PAUSE = 1.0
 
 

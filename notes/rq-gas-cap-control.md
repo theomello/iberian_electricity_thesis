@@ -341,3 +341,28 @@ The Iberian day-ahead price and the share of units in the money were left out as
 - **What I verified.** All kept numbers were recomputed: c\* per sd (A's and B's agree with mine to rounding), R², ranges, lag correlations, revision dates. Scratch script: /private/tmp/claude-501/-Users-theodor-projects-vre-spain-thesis/53005151-88f1-46f1-9e65-a5d2c166c2b5/scratchpad/review/gie_review.py
 
 *Drafted by three independent drafts merged by a reviewer (workflow wf_15171db0-f0b, 2026-11-05), read before committing. Nothing above was run on the outcome.*
+
+### Amendment A1: Italian rows (2026-11-05, written before any of this test was run; the user asked for it)
+
+**Why.** The outcome is Iberia *minus* the Italian counterfactual, so Italian physical gas conditions can move it as
+much as Iberian ones. GIE covers Italy with the same key; `fetch_gie_gas.py` now fetches IT too (every gas day
+2018-01-01 → 2026-11-03; 2022 send-out 147 TWh, working gas ~195 TWh, both plausible).
+
+**Rows added**, built exactly as the Iberian ones (lag 3, weekly mean, ratios on the time-varying capacities, which matters
+for Italy: its LNG capacity grew with the Piombino and Ravenna floating terminals):
+- Italian P1 tank fill, P2 storage anomaly (2018–2021 same-ISO-week baseline), P3 arrivals: main candidates, on the same
+  footing as the Iberian three.
+- Relative rows: P1 and P2 as Iberia minus Italy. Main candidates. (Arrivals are not differenced: GWh scales differ.)
+
+**Where they enter.** All three stages, with the same thresholds and checks (lead placebo, lag stability) as the Iberian
+main candidates. New control sets: Italian P1–P3; Iberian + Italian P1–P3; the two relative rows. With 5 more flaggable
+rows, about 0.5 chance hits are expected in the screen in all.
+
+**Sign.** For every row the bias in B3's slope is c·δ (c = the outcome's slope on the row in no-dose weeks, δ = the row's slope
+on the dose), so "the sign that makes 0.73 too high" is c·δ > 0 for Italian and relative rows too; c*_x = 0.182 / δ_x.
+
+**Verdict.** A detected Italian or relative row counts exactly as a detected Iberian main candidate does in the outcome list
+above. Same limits; in addition Italian storage is about five times Iberia's and was under the same EU filling rule.
+
+**Outputs** go to new files, `outputs/tables/gas_cap_control_physical_*.csv`, from a new stage `--stage physical`, so the
+earlier control-test files are untouched.

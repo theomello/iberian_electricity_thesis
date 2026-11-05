@@ -124,6 +124,7 @@ scripts/
 | `fetch/fetch_ons_gas_sap.py` | ONS, Great Britain gas System Average Price (daily) | no | `data/ons/gas_sap_daily.parquet` |
 | `fetch/fetch_uka_carbon_price.py` | investing.com UKA futures (browser-captured) | no, but not resumable | `data/investing/uka_carbon_price_daily.parquet` |
 | `build/build_gb_marginal_cost.py` | JRC UK + ONS SAP + UKA + CPS + ECB GBP | no | `data/jrc_ppdb/gb_implied_marginal_cost_daily.parquet` |
+| `fetch/fetch_gie_gas.py` | GIE AGSI+ (gas storage) and ALSI (LNG terminals), Spain and Portugal | **yes** (`GIE_API_KEY`) | `data/gie/gie_{storage,lng}_daily.parquet` |
 
 `lib/omie_common.py` holds shared parsing and DST/resolution logic;
 `lib/config.py` loads tokens from a gitignored `.env`; `lib/regions.py` gives a
@@ -1601,6 +1602,18 @@ from investing.com ("UK Emissions Allowances Energy c1", captured by hand 2026-1
 Price Support. `build/build_gb_marginal_cost.py` costs 91 British gas units (75 plant-specific, 68 with
 an Elexon id) in pounds and in euros (ECB GBP rate, `data/ecb/ecb_gbp_eur_daily.parquet`); 2022 median
 £181/MWh. Its ceiling is £1,000: small peaking turbines at efficiencies of 0.25–0.29 reach £868.
+
+### Iberian gas storage and LNG send-out — GIE (2026-11-05)
+`fetch/fetch_gie_gas.py`: Gas Infrastructure Europe's AGSI+ (storage) and ALSI (LNG terminals), country
+level, **every gas day 2018-01-01 → 2026-11-03 for ES and PT** (3,229 days each), raw answers kept in
+`data/gie/raw/`. A free personal key (`GIE_API_KEY`, `x-key` header; registered by the user 2026-11-05)
+serves both platforms. Cite GIE as the source. Fields keep GIE's names: storage `gasInStorage` (TWh),
+`injection`/`withdrawal` (GWh/d), `workingGasVolume`, `full` (%); LNG `sendOut` (GWh/d into the grid),
+`inventory.gwh`, `dtrs` (declared send-out capacity). `status` E marks GIE's estimated days (LNG 157,
+storage 40). Checks: Spanish send-out 189 TWh in 2021 and 281 TWh in 2022, the jump after the
+Maghreb–Europe pipeline closed (November 2021); working gas ~35 TWh in Spain, 3.57 TWh in Portugal
+(Carriço). Exists for the one confound the gas-cap control tests left open: Iberian offers responding
+to physical gas supply rather than the price (`notes/rq-gas-cap-control.md`).
 
 ### Eurostat NUTS 2021 regions — country and autonomous community of a coordinate
 `data/gisco/nuts2_iberia.parquet`, fetched 2026-10-05 by `fetch/fetch_gisco_nuts.py`:

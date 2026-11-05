@@ -197,6 +197,12 @@ register snapshot. Re-fetchable.
 `fetch_ons_gas_sap.py`. `gas_sap_daily.parquet`: daily System Average Price, p/kWh and £/MWh;
 `raw/` keeps the ONS workbook.
 
+## `gie/` — Iberian gas storage and LNG terminals
+
+`fetch_gie_gas.py` (needs `GIE_API_KEY`). `gie_storage_daily.parquet`, `gie_lng_daily.parquet`: one row per
+country (ES, PT) and gas day; `raw/{storage,lng}/<country>_<year>.json.gz`: the answers as served. Re-fetchable
+with the key.
+
 ## `entsoe/` — empty
 
 **Token-gated** and nothing fetched. The only series still missing anywhere in

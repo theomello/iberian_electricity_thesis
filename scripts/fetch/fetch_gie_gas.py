@@ -92,7 +92,9 @@ def tidy(rows: list, country: str) -> pd.DataFrame:
     df["gas_day"] = pd.to_datetime(df.gasDayStart).dt.date
     for c in df.columns:
         if c not in ("country", "gas_day", "gasDayStart", "name", "code", "url", "status", "info", "updatedAt"):
-            df[c] = pd.to_numeric(df[c].replace({"-": None, "": None}), errors="ignore")
+            v = pd.to_numeric(df[c].replace({"-": None, "": None}), errors="coerce")
+            if v.notna().sum() >= df[c].replace({"-": None, "": None}).notna().sum():
+                df[c] = v  # convert only columns that are wholly numeric
     return df
 
 

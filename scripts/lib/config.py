@@ -5,8 +5,9 @@ process environment. Never commit them.
 
     ESIOS_TOKEN=...
     ENTSOE_TOKEN=...
+    GIE_API_KEY=...
 
-How to obtain them (both free, both require a human):
+How to obtain them (all free, all require a human):
 
 * **ESIOS** -- request a personal token with the form at
   https://www.esios.ree.es/es/token (REE's route since 2026-09-18; its desk
@@ -16,6 +17,9 @@ How to obtain them (both free, both require a human):
 * **ENTSO-E** -- register at https://transparency.entsoe.eu, then email
   ``transparency@entsoe.eu`` from the registered address asking for API
   access. The token then appears in your account settings.
+* **GIE** (AGSI+ gas storage, ALSI LNG terminals) -- register at
+  https://agsi.gie.eu/account; the personal API key on the account page serves
+  both platforms and goes in the ``x-key`` header. Free; cite GIE as the source.
 """
 
 from __future__ import annotations

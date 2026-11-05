@@ -6,6 +6,7 @@
     .venv/bin/python scripts/analysis/gas_cap_control_tests.py --stage confounders  # (2) candidates: dose, outcome, rho shift
     .venv/bin/python scripts/analysis/gas_cap_control_tests.py --stage controls     # (3) rho under better control sets
     .venv/bin/python scripts/analysis/gas_cap_control_tests.py --stage all
+    .venv/bin/python scripts/analysis/gas_cap_control_tests.py --stage physical     # (4) LNG and storage, Iberia and Italy (GIE)
 
 B3's outcome ATT_w (Xu 2017 generalised synthetic control, r by cross-validation = 0) is regressed on weekly gas prices and other candidates
 in the two samples with zero dose (pre-cap weeks; weeks after the subsidy ended). Intervals: double bootstrap (199 firm-block draws of B3,
@@ -458,12 +459,259 @@ def stage_controls(c, S, att, D, reps, R2=None):
     return R
 
 
+
+# ---------------------------------------------------------------- stage 4: physical gas supply (rules: "LNG and storage" + amendment A1)
+
+GIE = DATA / "gie"
+PHYS_LAG = 3                                   # GIE publishes a gas day the evening after: newest at noon on D-1 is D-3
+PRE_MAGHREB = pd.Timestamp("2021-11-01")
+MAIN_PHYS = ["ib_tank_fill", "ib_storage_anom", "ib_arrivals", "it_tank_fill", "it_storage_anom", "it_arrivals",
+             "d_tank_fill", "d_storage_anom"]
+SCREEN_PHYS = ["ib_tank_anom", "ib_storage_level"]
+DIAG_PHYS = ["ib_sendout", "pt_sines_util", "ib_days_cover", "ib_net_withdrawal"]
+
+
+def _anom(x: pd.Series) -> pd.Series:
+    """Deviation from the 2018-2021 mean of the same ISO week (week 53 folded into 52), on daily data."""
+    iso = pd.Series(x.index.isocalendar().week.clip(upper=52).to_numpy(), index=x.index)
+    base_rows = (x.index.year >= 2018) & (x.index.year <= 2021)
+    base = x[base_rows].groupby(iso[base_rows]).mean()
+    return x - iso.map(base)
+
+
+def gie_daily() -> pd.DataFrame:
+    """Daily physical series by gas day, before any lag. Iberia = ES + PT summed before dividing."""
+    l = pd.read_parquet(GIE / "gie_lng_daily.parquet")
+    st = pd.read_parquet(GIE / "gie_storage_daily.parquet")
+    for df in (l, st):
+        df["gas_day"] = pd.to_datetime(df.gas_day)
+    reg = {"ib": ["ES", "PT"], "it": ["IT"]}
+    out = {}
+    for k, cc in reg.items():
+        L = l[l.country.isin(cc)].groupby("gas_day")[["inventory.gwh", "dtmi.gwh", "sendOut"]].sum(min_count=len(cc))
+        S_ = st[st.country.isin(cc)].groupby("gas_day")[["gasInStorage", "workingGasVolume", "injection", "withdrawal"]].sum(min_count=len(cc))
+        idx = pd.date_range("2018-01-01", L.index.max())
+        L, S_ = L.reindex(idx), S_.reindex(idx)
+        tank = L["inventory.gwh"] / L["dtmi.gwh"]
+        sfill = S_.gasInStorage / S_.workingGasVolume
+        arr = (L["inventory.gwh"].diff() + L.sendOut).rolling(7, min_periods=7).sum()
+        out[f"{k}_tank_fill"] = tank
+        out[f"{k}_storage_anom"] = _anom(sfill)
+        out[f"{k}_arrivals"] = arr
+        if k == "ib":
+            out["ib_tank_anom"] = _anom(tank)
+            out["ib_storage_level"] = sfill
+            out["ib_sendout"] = L.sendOut
+            out["ib_days_cover"] = L["inventory.gwh"] / L.sendOut.rolling(7, min_periods=7).mean()
+            out["ib_net_withdrawal"] = S_.withdrawal - S_.injection
+    pt = l[l.country == "PT"].set_index("gas_day")
+    out["pt_sines_util"] = (pt.sendOut / pt.dtrs).reindex(pd.date_range("2018-01-01", pt.index.max()))
+    D_ = pd.DataFrame(out)
+    D_["d_tank_fill"] = D_.ib_tank_fill - D_.it_tank_fill
+    D_["d_storage_anom"] = D_.ib_storage_anom - D_.it_storage_anom
+    return D_
+
+
+def gie_weekly(cols: pd.DatetimeIndex, lag: int) -> pd.DataFrame:
+    """Each daily series known `lag` days before the delivery day (five-day forward fill), then the mean over the week's delivery days."""
+    daily = gie_daily()
+    return pd.DataFrame({c_: bwc.weekly(bwc.lagged(daily[c_], lag)).reindex(cols) for c_ in daily.columns})
+
+
+def stage_physical(c, S, att, D, reps):
+    cols = c["cols"]
+    postg = ~c["pre"] & ~np.isnan(c["g"]) & ~np.isnan(att)
+    rho_u = rho_with(att, c, None)
+    rho_b = rho_with(att, c, S[["mibgas_dd", "spread_dd"]].to_numpy())
+    assert abs(rho_u - 0.726) < 5e-4 and abs(rho_b - 0.544) < 5e-4, "does not reproduce B3 / H6"
+    gap = rho_u - rho_b
+    P = {lag: gie_weekly(cols, lag) for lag in (PHYS_LAG, 1, 7, 0, -7)}
+    P3 = P[PHYS_LAG]
+    names = MAIN_PHYS + SCREEN_PHYS + DIAG_PHYS
+    role = {**{n: "main" for n in MAIN_PHYS}, **{n: "screen" for n in SCREEN_PHYS}, **{n: "diagnostic" for n in DIAG_PHYS}}
+    sm = Samples(cols, att, reps, "main")
+    rr, ll = sm.rows("pooled")
+    for lag, Pl in P.items():
+        miss = Pl[names].iloc[np.r_[rr, np.flatnonzero(postg)]].isna().sum()
+        assert miss.sum() == 0, f"lag {lag}: missing weeks inside the samples: {miss[miss > 0].to_dict()}"
+
+    def zsd(Pl):  # standardise by the sd over the pooled no-dose weeks (the rule's "per sd")
+        return (Pl - Pl.iloc[rr].mean()) / Pl.iloc[rr].std()
+
+    Z3 = zsd(P3)
+    mib = zs(S)[["mibgas_bid"]]
+
+    def one(vname, y, Dy, smp, X, trend=False, which="pooled"):
+        r_, l_ = smp.rows(which)
+        b0 = coef(y, X, r_, l_, trend)
+        nw = newey_west(y, X, r_, l_, trend)
+        dbl = np.array([coef(Dy[d], X, *smp.rows(which, d), trend) for d in range(reps)])
+        firm = np.array([coef(Dy[d], X, r_, l_, trend) for d in range(reps)])
+        return b0, nw, dbl, firm
+
+    # ---- (1) no-dose tests
+    rows = []
+    variants = [("main", "main", False, att, D, None), ("trend", "main", True, att, D, None), ("early_pre", "early", False, att, D, None),
+                ("with0613", "with0613", False, att, D, None), ("pre_from_2021-11-01", "main", False, att, D, PRE_MAGHREB)]
+    for r_ in (1, 2):
+        a_r, D_r = make_draws(c, reps, r=r_)
+        variants.append((f"r{r_}", "main", False, a_r, D_r, None))
+    for vname, var, trend, y, Dy, pre0 in variants:
+        smp = Samples(cols, y, reps, var)
+        if pre0 is not None:
+            keep = cols[smp.pre] >= pre0
+            smp.pre = smp.pre[keep]
+            smp.blk["pre"] = [Samples._blocks(len(smp.pre), np.random.default_rng(5 + d)) for d in range(reps)]
+        specs = {n: [n] for n in names} if vname == "main" else {n: [n] for n in MAIN_PHYS}
+        if vname == "main":
+            specs.update({"ib P1+P2+P3": ["ib_tank_fill", "ib_storage_anom", "ib_arrivals"],
+                          "it P1+P2+P3": ["it_tank_fill", "it_storage_anom", "it_arrivals"]})
+            specs.update({f"{n} + MIBGAS": [n, "mibgas_bid"] for n in MAIN_PHYS})
+        for sp, vs in specs.items():
+            ZZ = pd.concat([Z3, mib], axis=1)[vs].to_numpy()
+            for which in (("pre", "post", "pooled") if vname == "main" else ("pooled",)):
+                b0, nw, dbl, firm = one(vname, y, Dy, smp, ZZ, trend, which)
+                for j, v in enumerate(vs):
+                    if v == "mibgas_bid":
+                        continue
+                    xz = Z3[v].to_numpy()
+                    delta = np.polyfit(c["g"][postg], xz[postg], 1)[0]
+                    cst = gap / delta
+                    se_b = np.nanstd(dbl[:, j], ddof=1)
+                    dlo, dhi = pct(dbl[:, j])
+                    flo, fhi = pct(firm[:, j])
+                    nlo, nhi = b0[j] - 1.96 * nw[j], b0[j] + 1.96 * nw[j]
+                    power = norm.cdf(abs(cst) / se_b - 1.96) + norm.cdf(-abs(cst) / se_b - 1.96)
+                    det = ((dlo > 0) or (dhi < 0)) and ((nlo > 0) or (nhi < 0))
+                    if det:
+                        verdict = "detected, biases 0.73 up" if b0[j] * delta > 0 else "detected, opposite sign"
+                    elif (cst < dlo or cst > dhi) and power >= 0.8:
+                        verdict = "gap world rejected"
+                    else:
+                        verdict = "uninformative"
+                    rows.append({"variant": vname, "sample": which, "spec": sp, "var": v, "role": role[v], "n": len(smp.rows(which)[0]),
+                                 "coef_per_sd": b0[j], "nw_lo": nlo, "nw_hi": nhi, "dbl_lo": dlo, "dbl_hi": dhi, "firm_lo": flo, "firm_hi": fhi,
+                                 "se_dbl": se_b, "mde_80": 2.8 * se_b, "delta_on_g": delta, "corr_dose": np.corrcoef(c["g"][postg], xz[postg])[0, 1],
+                                 "cstar_per_sd": cst, "power_at_cstar": power, "verdict": verdict})
+    R1 = pd.DataFrame(rows)
+    R1.to_csv(T / "gas_cap_control_physical_nodose.csv", index=False)
+    pd.set_option("display.width", 250)
+    m = R1[(R1.variant == "main") & (R1["sample"] == "pooled") & (R1.spec == R1["var"])]
+    print("\n(1) no-dose tests, pooled, lag 3, one candidate at a time (per sd)")
+    print(m[["var", "role", "n", "coef_per_sd", "dbl_lo", "dbl_hi", "nw_lo", "nw_hi", "corr_dose", "cstar_per_sd", "mde_80", "power_at_cstar", "verdict"]]
+          .round(3).to_string(index=False))
+    jt = R1[(R1.variant == "main") & (R1["sample"] == "pooled") & (R1.spec != R1["var"])]
+    print("\n    joint and with MIBGAS\n" + jt[["spec", "var", "coef_per_sd", "dbl_lo", "dbl_hi", "verdict"]].round(3).to_string(index=False))
+    vv = R1[(R1.variant != "main") & (R1["sample"] == "pooled")].pivot_table(index="var", columns="variant", values="verdict", aggfunc="first")
+    print("\n    verdict by variant (main candidates)\n" + vv.to_string())
+
+    # ---- contamination checks: lead placebo and lag stability (main candidates)
+    crow = []
+    for v in MAIN_PHYS:
+        e = {}
+        for lag in (PHYS_LAG, 0, -7):
+            e[lag] = cv_error(att, zsd(P[lag])[[v]].to_numpy(), sm)[0]
+        sg = {}
+        for lag in (1, PHYS_LAG, 7):
+            sg[lag] = coef(att, zsd(P[lag])[[v]].to_numpy(), rr, ll)[0]
+        crow.append({"var": v, "cv_lag3": e[PHYS_LAG], "cv_lag0": e[0], "cv_lead7": e[-7],
+                     "lead_placebo_fails": (e[0] < e[PHYS_LAG]) or (e[-7] < e[PHYS_LAG]),
+                     "coef_lag1": sg[1], "coef_lag3": sg[PHYS_LAG], "coef_lag7": sg[7],
+                     "sign_flip": len({np.sign(x) for x in sg.values()}) > 1})
+    C = pd.DataFrame(crow)
+    C.to_csv(T / "gas_cap_control_physical_contamination.csv", index=False)
+    print("\ncontamination checks\n" + C.round(4).to_string(index=False))
+
+    # ---- (2) confounder screen: same gates; only main and screen rows at lag 3 can flag
+    rho0_d = np.array([rho_with(D[d], c, None) for d in range(reps)])
+    rp, _ = sm.rows("pre")
+    rq, _ = sm.rows("post")
+    srow = []
+    for v in names:
+        z = Z3[v].to_numpy()
+        a = np.corrcoef(c["g"][postg], z[postg])[0, 1]
+        X = z[:, None]
+        sl = coef(att, X, rr, ll)[0]
+        dbl = np.array([coef(D[d], X, *sm.rows("pooled", d))[0] for d in range(reps)])
+        lo, hi = pct(dbl)
+        rc = rho_with(att, c, X)
+        dlo, dhi = pct(np.array([rho_with(D[d], c, X) for d in range(reps)]) - rho0_d)
+        dz = np.polyfit(c["g"][postg], z[postg], 1)[0]
+        pa, pb, pc_ = abs(a) >= 0.30, (lo > 0) or (hi < 0), abs(rc - rho_u) >= 0.10
+        srow.append({"candidate": v, "role": role[v], "a_corr_dose": a, "b_corr_pre": np.corrcoef(att[rp], z[rp])[0, 1],
+                     "b_corr_post": np.corrcoef(att[rq], z[rq])[0, 1], "b_slope_z": sl, "b_lo": lo, "b_hi": hi,
+                     "rho_with": rc, "d_rho": rc - rho_u, "d_rho_lo": dlo, "d_rho_hi": dhi, "pred_d_rho": -sl * dz,
+                     "pass_a": pa, "pass_b": pb, "pass_c": pc_, "flag": pa and pb and pc_ and role[v] != "diagnostic"})
+    R2 = pd.DataFrame(srow)
+    R2.to_csv(T / "gas_cap_control_physical_confounders.csv", index=False)
+    print("\n(2) confounder screen (lag 3)\n" + R2.drop(columns=["b_corr_pre", "b_corr_post"]).round(3).to_string(index=False))
+    flagged = R2[R2.flag].candidate.tolist()
+    print("flagged:", flagged)
+
+    # ---- (3) control sets (the earlier sets recomputed beside the new ones, so 'favoured' is chosen over all of them)
+    ZS_ = pd.concat([zs(S), Z3], axis=1)
+    nongas = ["eua_bid", "netload_fc", "temp_es", "temp_it"]
+    ibm, itm = ["ib_tank_fill", "ib_storage_anom", "ib_arrivals"], ["it_tank_fill", "it_storage_anom", "it_arrivals"]
+    sets = {"none": [], "existing MIBGAS (delivery-day)": ["mibgas_dd"], "existing MIBGAS + spread (delivery-day)": ["mibgas_dd", "spread_dd"],
+            "bid-time MIBGAS": ["mibgas_bid"], "bid-time MIBGAS + PSV": ["mibgas_bid", "psv_bid"], "PSV alone (bid-time)": ["psv_bid"],
+            "conditions without gas": nongas, "conditions with both gas prices": ["mibgas_bid", "psv_bid"] + nongas,
+            "Iberian P1+P2+P3": ibm, "Iberian P1-P3 + MIBGAS + PSV": ibm + ["mibgas_bid", "psv_bid"],
+            "Iberian P1 alone": ["ib_tank_fill"], "Iberian P2 alone": ["ib_storage_anom"],
+            "Italian P1+P2+P3": itm, "Iberian + Italian P1-P3": ibm + itm, "relative P1, P2 (Iberia - Italy)": ["d_tank_fill", "d_storage_anom"]}
+    if flagged:
+        sets["physical survivors + MIBGAS + PSV"] = ["mibgas_bid", "psv_bid"] + flagged
+    srows = []
+    for name, vs in sets.items():
+        X = ZS_[vs].to_numpy() if vs else None
+        pt = rho_with(att, c, X)
+        dr = np.array([rho_with(D[d], c, X) for d in range(reps)])
+        lo, hi = pct(dr)
+        clo, chi = pct(dr - rho0_d)
+        if vs:
+            cve, cv0 = cv_error(att, ZS_[vs].to_numpy(), sm)
+            p2p = pre_to_post(att, ZS_[vs].to_numpy(), sm)
+        else:
+            cve = cv0 = cv_error(att, np.zeros((len(att), 0)), sm)[1]
+            p2p = np.nan
+        srows.append({"set": name, "new": name not in ("none",) and any(v in names for v in vs), "k": len(vs), "rho": pt, "lo": lo, "hi": hi,
+                      "width": hi - lo, "contrast_vs_none": pt - rho_u, "contrast_lo": clo, "contrast_hi": chi,
+                      "cv_gain": 1 - cve / cv0, "cv_mse": cve, "pre_to_post_mse_ratio": p2p})
+    R3 = pd.DataFrame(srows)
+    R3["width_ratio"] = R3.width / R3.loc[R3.set == "none", "width"].iloc[0]
+    cand = R3[R3.k > 0]
+    best = cand.loc[cand.cv_mse.idxmin()]
+    R3["favoured"] = (R3.set == best.set) & (best.cv_gain >= 0.10)
+    R3.to_csv(T / "gas_cap_control_physical_sets.csv", index=False)
+    print("\n(3) control sets\n" + R3[["set", "k", "rho", "lo", "hi", "width_ratio", "contrast_vs_none", "contrast_lo", "contrast_hi", "cv_gain",
+                                       "pre_to_post_mse_ratio", "favoured"]].round(3).to_string(index=False))
+    print(f"lowest CV error: {best.set} (gain {best.cv_gain:+.3f}); favoured by the 10% rule: {bool(best.cv_gain >= 0.10)}")
+
+    # ---- the reading rule
+    mm = m[m.role == "main"].set_index("var")
+    ok = C.set_index("var")
+    up = [v for v in MAIN_PHYS if mm.loc[v, "verdict"] == "detected, biases 0.73 up" and not ok.loc[v, "lead_placebo_fails"] and not ok.loc[v, "sign_flip"]]
+    opp = [v for v in MAIN_PHYS if mm.loc[v, "verdict"] == "detected, opposite sign"]
+    rej = [v for v in MAIN_PHYS if mm.loc[v, "verdict"] == "gap world rejected"]
+    if up:
+        reading = f"physical response detected that biases 0.73 up ({', '.join(up)}): centre on the favoured physical set, 0.73 beside it"
+    elif opp:
+        reading = f"detected with the opposite sign ({', '.join(opp)}): 0.73 stays, conservative on this channel"
+    elif {"ib_tank_fill", "ib_arrivals"} <= set(rej):
+        reading = "gap world rejected for Iberian P1 and P3: LNG channel ruled out at the pre-set power"
+    else:
+        reading = "uninformative or nothing flagged: no change; quote 0.73 [0.51, 1.03] with the 0.54-0.85 band"
+    print("\nREADING:", reading, "| gap world rejected for:", rej)
+    pd.DataFrame([{"reading": reading, "detected_up": ";".join(up), "detected_opposite": ";".join(opp), "gap_rejected": ";".join(rej),
+                   "flagged": ";".join(flagged), "favoured_set": best.set if best.cv_gain >= 0.10 else ""}]
+                 ).to_csv(T / "gas_cap_control_physical_reading.csv", index=False)
+
+
 # ---------------------------------------------------------------- main
 
 def main() -> int:
     faulthandler.dump_traceback_later(900, exit=True)
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--stage", choices=["draws", "nodose", "confounders", "controls", "all"], default="all")
+    ap.add_argument("--stage", choices=["draws", "nodose", "confounders", "controls", "physical", "all"], default="all")
     ap.add_argument("--reps", type=int, default=199)
     a = ap.parse_args()
     c = core()
@@ -481,6 +729,8 @@ def main() -> int:
         R2 = stage_confounders(c, S, att, D, a.reps)
     if a.stage in ("controls", "all"):
         stage_controls(c, S, att, D, a.reps, R2)
+    if a.stage == "physical":
+        stage_physical(c, S, att, D, a.reps)
     return 0
 
 

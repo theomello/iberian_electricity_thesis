@@ -366,3 +366,41 @@ above. Same limits; in addition Italian storage is about five times Iberia's and
 
 **Outputs** go to new files, `outputs/tables/gas_cap_control_physical_*.csv`, from a new stage `--stage physical`, so the
 earlier control-test files are untouched.
+
+## LNG and storage: results (2026-11-05)
+
+`gas_cap_control_tests.py --stage physical` (lag 3, pooled no-dose weeks: 36 pre-cap + 11 post-subsidy). Files:
+`outputs/tables/gas_cap_control_physical_{nodose,contamination,confounders,sets,reading}.csv`.
+
+**Reading, by the rule: gap world rejected for Iberian P1 and P3 — the LNG channel is ruled out at the pre-set power.**
+Storage stays uninformative, as predicted. The quote is unchanged: ρ 0.73 [0.51, 1.03], band 0.54–0.85.
+
+| row | slope per sd [double bootstrap] | c\* needed | power | verdict |
+|---|---|---|---|---|
+| Iberian P1 tank fill | −0.004 [−0.038, 0.032] | +0.119 | 1.00 | gap world rejected |
+| Iberian P3 arrivals | [−0.054, 0.013] | +0.305 | 1.00 | gap world rejected |
+| Iberian P2 storage anomaly | — | (see scale note) | 0.42 | uninformative |
+
+- **Robust**: the two Iberian rejections hold in every variant (trend, early pre-period, with 2022-06-13, pre-period from
+  2021-11-01 with n = 32, one and two factors).
+- **Screen**: nothing flagged.
+- **Control sets** (ρ [95%]): Iberian P1–P3 0.762 [0.615, 0.916]; + bid-time MIBGAS + PSV 0.914 [0.376, 1.318]; Italian
+  P1–P3 0.689; Iberian + Italian 0.766; relative P1, P2 0.689. **None is favoured**: none beats no controls on blocked CV by 10%
+  (best overall: bid-time MIBGAS, +0.008).
+- **Contamination**: the lead placebo fails for Iberian P2, Italian P1, P2, P3 and relative P2 (differences in CV error
+  ~1e-5, e.g. 0.0064 vs 0.0065); Italian arrivals flip sign across lags (−0.0065, −0.0012, +0.0033). By the rule these rows
+  are not controls and their results are specification, not evidence. **The code did not apply this to the sets and the
+  gap-rejected list**: so the Italian P1/P3 rejections and the sets containing those rows (Iberian P2 alone, Italian P1–P3,
+  Iberian + Italian, relative) are reported only, not quoted as evidence. The reading rests on Iberian P1 and P3, which pass
+  both checks.
+
+**Deviations found by the audit (none changes a verdict or ρ):**
+- **"Per sd" scale.** The code divides by the total sd over the 47 pooled weeks; the rule's table used the within-sample
+  sd. Same for P1 and P3 (within 2%). For storage anomalies, whose level differs between the samples, the CSV's per-sd
+  numbers are ~2.8× the rule's: Iberian P2 c\* −0.096 and MDE 0.153 in the CSV, −0.034 and ~0.054 on the rule's scale. Quote
+  the within-sd figures. Verdicts, power and ρ are scale-invariant.
+- **Variants not run as no-dose variants**: lags 1 and 7 appear only as point slopes in the contamination table, and the
+  level/anomaly swap only as single screen rows (no swapped joint set). The screen runs at lag 3 only. Non-decisive.
+
+**Verified** by an independent rebuild of the three Iberian series from `data/gie` (no shared helpers): every no-dose
+statistic matches the CSV to machine precision, and ρ for Iberian P1–P3 matches exactly (workflow wf_86594153-4a4).

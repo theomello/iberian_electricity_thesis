@@ -1,0 +1,81 @@
+sample,year,group,n_days,share_E_ok,median_E_eur,median_shortfall_of_failures_eur
+clean-V declaring days (the gate),2018,ES gas,714,1.0,12307.700000000012,0.0
+clean-V declaring days (the gate),2018,PT gas,1580,1.0,38331.64608688354,0.0
+clean-V declaring days (the gate),2018,all,6875,1.0,33275.340000000026,0.0
+clean-V declaring days (the gate),2018,coal,4581,1.0,37132.47499999998,0.0
+clean-V declaring days (the gate),2018,gas,2294,1.0,26136.47500000002,0.0
+clean-V declaring days (the gate),2019,ES gas,3522,1.0,26198.40999999999,0.0
+clean-V declaring days (the gate),2019,PT gas,1701,1.0,30843.74000000002,0.0
+clean-V declaring days (the gate),2019,all,6663,1.0,29020.356382446276,0.0
+clean-V declaring days (the gate),2019,coal,1440,1.0,35950.42749999999,0.0
+clean-V declaring days (the gate),2019,gas,5223,1.0,27840.49000000002,0.0
+clean-V declaring days (the gate),2020,ES gas,2028,1.0,27064.378610305794,0.0
+clean-V declaring days (the gate),2020,PT gas,1745,1.0,39630.399999999994,0.0
+clean-V declaring days (the gate),2020,all,4155,1.0,33250.45000000001,0.0
+clean-V declaring days (the gate),2020,coal,382,1.0,40613.99250000001,0.0
+clean-V declaring days (the gate),2020,gas,3773,1.0,32231.458231201163,0.0
+clean-V declaring days (the gate),2021,ES gas,2041,1.0,46005.41162658692,0.0
+clean-V declaring days (the gate),2021,PT gas,1287,1.0,68946.20000000007,0.0
+clean-V declaring days (the gate),2021,all,3512,1.0,55021.06999999983,0.0
+clean-V declaring days (the gate),2021,coal,184,1.0,80369.66004577637,0.0
+clean-V declaring days (the gate),2021,gas,3328,1.0,53800.33127105719,0.0
+clean-V declaring days (the gate),2022,ES gas,1610,1.0,74850.76376708981,0.0
+clean-V declaring days (the gate),2022,PT gas,639,1.0,162518.5,0.0
+clean-V declaring days (the gate),2022,all,2284,1.0,93296.565,0.0
+clean-V declaring days (the gate),2022,coal,35,1.0,101823.0,0.0
+clean-V declaring days (the gate),2022,gas,2249,1.0,92792.8999999999,0.0
+clean-V declaring days (the gate),2023,ES gas,1818,1.0,33213.69707534788,0.0
+clean-V declaring days (the gate),2023,PT gas,872,1.0,73968.03499999992,0.0
+clean-V declaring days (the gate),2023,all,2693,1.0,43818.79999999993,0.0
+clean-V declaring days (the gate),2023,coal,3,1.0,26955.00993255616,0.0
+clean-V declaring days (the gate),2023,gas,2690,1.0,43835.87455589295,0.0
+clean-V declaring days (the gate),2024,ES gas,881,1.0,18979.747019653325,0.0
+clean-V declaring days (the gate),2024,PT gas,121,1.0,40318.119999999995,0.0
+clean-V declaring days (the gate),2024,all,1006,1.0,20487.014036865236,0.0
+clean-V declaring days (the gate),2024,coal,4,1.0,13319.267981796234,0.0
+clean-V declaring days (the gate),2024,gas,1002,1.0,20644.214036865233,0.0
+clean-V declaring days (the gate),2025,ES gas,175,1.0,22713.20965698239,0.0
+clean-V declaring days (the gate),2025,PT gas,9,1.0,31916.550000000047,0.0
+clean-V declaring days (the gate),2025,all,186,1.0,22944.180467987055,0.0
+clean-V declaring days (the gate),2025,coal,2,1.0,13121.296994247416,0.0
+clean-V declaring days (the gate),2025,gas,184,1.0,22944.180467987055,0.0
+all declaring days with V < 999,2018,ES gas,714,1.0,12307.700000000012,0.0
+all declaring days with V < 999,2018,PT gas,1581,1.0,38343.850000000006,0.0
+all declaring days with V < 999,2018,all,6899,1.0,33350.529758071876,0.0
+all declaring days with V < 999,2018,coal,4604,1.0,37379.46394378663,0.0
+all declaring days with V < 999,2018,gas,2295,1.0,26144.600000000035,0.0
+all declaring days with V < 999,2019,ES gas,3606,1.0,26968.574999999997,0.0
+all declaring days with V < 999,2019,PT gas,1774,1.0,32610.30163543702,0.0
+all declaring days with V < 999,2019,all,6822,1.0,29921.75999999998,0.0
+all declaring days with V < 999,2019,coal,1442,1.0,35950.42749999999,0.0
+all declaring days with V < 999,2019,gas,5380,1.0,28756.778748474157,0.0
+all declaring days with V < 999,2020,ES gas,2031,1.0,27088.02000000002,0.0
+all declaring days with V < 999,2020,PT gas,1767,1.0,40173.59999999998,0.0
+all declaring days with V < 999,2020,all,4253,1.0,33869.687995910645,0.0
+all declaring days with V < 999,2020,coal,455,1.0,45315.20000000001,0.0
+all declaring days with V < 999,2020,gas,3798,1.0,32376.075864868137,0.0
+all declaring days with V < 999,2021,ES gas,2055,1.0,46747.71588592534,0.0
+all declaring days with V < 999,2021,PT gas,1462,1.0,81487.62999999995,0.0
+all declaring days with V < 999,2021,all,3701,1.0,60234.050081787165,0.0
+all declaring days with V < 999,2021,coal,184,1.0,80369.66004577637,0.0
+all declaring days with V < 999,2021,gas,3517,1.0,59391.99999999988,0.0
+all declaring days with V < 999,2022,ES gas,1610,1.0,74850.76376708981,0.0
+all declaring days with V < 999,2022,PT gas,871,1.0,224960.8500000001,0.0
+all declaring days with V < 999,2022,all,2516,1.0,108741.13999999996,0.0
+all declaring days with V < 999,2022,coal,35,1.0,101823.0,0.0
+all declaring days with V < 999,2022,gas,2481,1.0,109032.5,0.0
+all declaring days with V < 999,2023,ES gas,1823,1.0,33250.34,0.0
+all declaring days with V < 999,2023,PT gas,876,1.0,74458.65500000003,0.0
+all declaring days with V < 999,2023,all,2702,1.0,44097.7563221741,0.0
+all declaring days with V < 999,2023,coal,3,1.0,26955.00993255616,0.0
+all declaring days with V < 999,2023,gas,2699,1.0,44191.05512756354,0.0
+all declaring days with V < 999,2024,ES gas,882,1.0,18981.123509826662,0.0
+all declaring days with V < 999,2024,PT gas,178,1.0,56807.43965148926,0.0
+all declaring days with V < 999,2024,all,1064,1.0,22095.600000000006,0.0
+all declaring days with V < 999,2024,coal,4,1.0,13319.267981796234,0.0
+all declaring days with V < 999,2024,gas,1060,1.0,22155.724447097746,0.0
+all declaring days with V < 999,2025,ES gas,175,1.0,22713.20965698239,0.0
+all declaring days with V < 999,2025,PT gas,9,1.0,31916.550000000047,0.0
+all declaring days with V < 999,2025,all,186,1.0,22944.180467987055,0.0
+all declaring days with V < 999,2025,coal,2,1.0,13121.296994247416,0.0
+all declaring days with V < 999,2025,gas,184,1.0,22944.180467987055,0.0

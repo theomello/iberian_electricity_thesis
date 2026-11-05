@@ -163,5 +163,10 @@ Rscript scripts/analysis/descriptives.R
 Only `build/` and `analysis/` depend on order; the fetchers are independent of
 each other. Budget several hours and ~8 GB for a full rebuild.
 
+Added 2026-11-05 (all in `analysis/`, each with its running note in `../notes/`):
+`startup_cost_correction.py` (declared start-up share of the static gap), `gas_cap_hydro_link.py`,
+`gas_cap_dispatch_welfare.py` (crisis-quantity note §J), `gas_cap_control_tests.py`, `own_wind_net_position.py`,
+`nuclear_cuts_snapshot_split.py`, `hydro_unoffered_incentive.py`.
+
 See [`../data/README.md`](../data/README.md) for what each output folder
 contains, and `../CLAUDE.md` for the verified data facts and traps.

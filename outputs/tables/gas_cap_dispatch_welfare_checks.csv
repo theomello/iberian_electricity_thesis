@@ -1,0 +1,57 @@
+check,rho,hours,value,pass_if
+C1 p_cf equals saving script's p0,0.51,5397,1.0,>= 0.999
+C1 p_cf equals saving script's p0,0.54,5397,1.0,>= 0.999
+C1 p_cf equals saving script's p0,0.55,5397,1.0,>= 0.999
+C1 p_cf equals saving script's p0,0.73,5397,1.0,>= 0.999
+C1 p_cf equals saving script's p0,0.75,5397,1.0,>= 0.999
+C1 p_cf equals saving script's p0,1.0,5397,1.0,>= 0.999
+C1 p_cf equals saving script's p0,1.03,5397,1.0,>= 0.999
+C1 p_obs equals saving script's p_clear,,5397,1.0,>= 0.999
+"C8 first-order saving (all buyers, EUR m) minus D's gross saving",0.51,5397,-2.2737367544323206e-13,|.| <= 1
+"C8 first-order saving (all buyers, EUR m) minus D's gross saving",0.54,5397,-4.547473508864641e-13,|.| <= 1
+"C8 first-order saving (all buyers, EUR m) minus D's gross saving",0.55,5397,0.0,|.| <= 1
+"C8 first-order saving (all buyers, EUR m) minus D's gross saving",0.73,5397,0.0,|.| <= 1
+"C8 first-order saving (all buyers, EUR m) minus D's gross saving",0.75,5397,0.0,|.| <= 1
+"C8 first-order saving (all buyers, EUR m) minus D's gross saving",1.0,5397,0.0,|.| <= 1
+"C8 first-order saving (all buyers, EUR m) minus D's gross saving",1.03,5397,-9.094947017729282e-13,|.| <= 1
+hours with no clearing price in a world (dropped from that rho),,5397,0.0,report
+"C2 hours volume bought != volume sold, observed",,5397,0.0,<= 0.1% of hours
+"C2 same, counterfactual",,5397,0.0,<= 0.1% of hours
+C4 hours with W_cf < W_obs - EUR 1,,5397,0.0,<= 0.1% of hours
+C6 interconnection volumes differ between worlds,,5397,0.0,== 0
+"C2 max |payments - revenue| per rho (EUR, total)",,5397,0.6244797706604004,<= EUR 1 per hour
+"C4 TC of counterfactual dispatch vs ladder TCmin(Q_cf), max |gap| in an hour (EUR)",,5397,1.1175870895385742e-08,~0
+C4 sum of negative hourly DWL / total DWL,0.51,5397,0.0,<= 0.001 in magnitude
+C4 sum of negative hourly DWL / total DWL,0.54,5397,0.0,<= 0.001 in magnitude
+C4 sum of negative hourly DWL / total DWL,0.55,5397,0.0,<= 0.001 in magnitude
+C4 sum of negative hourly DWL / total DWL,0.73,5397,0.0,<= 0.001 in magnitude
+C4 sum of negative hourly DWL / total DWL,0.75,5397,0.0,<= 0.001 in magnitude
+C4 sum of negative hourly DWL / total DWL,1.0,5397,0.0,<= 0.001 in magnitude
+C4 sum of negative hourly DWL / total DWL,1.03,5397,0.0,<= 0.001 in magnitude
+C5 re-cleared observed volume vs actual cleared buys: mean gap,,5397,3.499070561178605e-05,|mean| <= 0.005
+C5 same: mean |gap|,,5397,5.3706317675902935e-05,report
+C5 same: 95th percentile of |gap|,,5397,4.685683002267386e-08,report
+"bill: model subsidy S x re-cleared observed MWh (modelled units, EUR m)",,5397,4937.950540834601,vs S x actual cleared
+bill: S x actual cleared MWh of the modelled units (EUR m),,5397,4937.37216319733,report
+C3 ledger total - welfare change (EUR m),0.51,5397,-3.387727645076666e-07,|.| <= 0.01
+C3 N - (DWL + Spanish sellers + outside Spain) (EUR m),0.51,5397,3.387726792425383e-07,|.| <= 0.01
+C3 DWL - (allocation + quantity) (EUR m),0.51,5397,-2.7142732506035827e-12,|.| <= 0.01
+C3 ledger total - welfare change (EUR m),0.54,5397,-2.983645117637934e-07,|.| <= 0.01
+C3 N - (DWL + Spanish sellers + outside Spain) (EUR m),0.54,5397,2.983638296427671e-07,|.| <= 0.01
+C3 DWL - (allocation + quantity) (EUR m),0.54,5397,-2.6787461138155777e-12,|.| <= 0.01
+C3 ledger total - welfare change (EUR m),0.55,5397,-3.5524288932720083e-07,|.| <= 0.01
+C3 N - (DWL + Spanish sellers + outside Spain) (EUR m),0.55,5397,3.5524317354429513e-07,|.| <= 0.01
+C3 DWL - (allocation + quantity) (EUR m),0.55,5397,3.716138508025324e-12,|.| <= 0.01
+C3 ledger total - welfare change (EUR m),0.73,5397,-4.2034230318677146e-07,|.| <= 0.01
+C3 N - (DWL + Spanish sellers + outside Spain) (EUR m),0.73,5397,4.20342075813096e-07,|.| <= 0.01
+C3 DWL - (allocation + quantity) (EUR m),0.73,5397,9.521272659185342e-13,|.| <= 0.01
+C3 ledger total - welfare change (EUR m),0.75,5397,-4.3521527004486416e-07,|.| <= 0.01
+C3 N - (DWL + Spanish sellers + outside Spain) (EUR m),0.75,5397,4.352154974185396e-07,|.| <= 0.01
+C3 DWL - (allocation + quantity) (EUR m),0.75,5397,8.355982572538778e-12,|.| <= 0.01
+C3 ledger total - welfare change (EUR m),1.0,5397,-4.853659447690006e-07,|.| <= 0.01
+C3 N - (DWL + Spanish sellers + outside Spain) (EUR m),1.0,5397,4.853654900216497e-07,|.| <= 0.01
+C3 DWL - (allocation + quantity) (EUR m),1.0,5397,5.172751116333529e-12,|.| <= 0.01
+C3 ledger total - welfare change (EUR m),1.03,5397,-4.026069291285239e-07,|.| <= 0.01
+C3 N - (DWL + Spanish sellers + outside Spain) (EUR m),1.03,5397,4.026073838758748e-07,|.| <= 0.01
+C3 DWL - (allocation + quantity) (EUR m),1.03,5397,1.1937117960769683e-12,|.| <= 0.01
+C7 DWL non-decreasing in rho (1 = yes),,5397,1.0,report

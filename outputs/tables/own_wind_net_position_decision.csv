@@ -1,0 +1,33 @@
+panel,item,F,verdict,se_NX_auc,r_nash,power_ok,NX_auc,B_a,B_b,NX_tot
+refreshed,G1 first-stage F,1609.4525147516965,pass,,,,,,,
+refreshed,G3 power,,pass,0.07208785561442761,0.21732280051165276,True,,,,
+refreshed,pooled reading (C0),,net auction position rises with own wind (not in the rules' tree),,,,+0.275 (0.072),-0.233 (0.064),+0.082 (0.065),-0.119 (0.066)
+refreshed,check: main (C0),,net auction position rises with own wind (not in the rules' tree),,,,,,,
+refreshed,check: firm × date effects,,net auction position rises with own wind (not in the rules' tree),,,,,,,
+refreshed,check: Spanish price above €5,,net auction position rises with own wind (not in the rules' tree),,,,,,,
+refreshed,check: 2022 on,,STOP: cannot tell 0 from the Nash cut on the net auction position (G3),,,,,,,
+refreshed,check: Wdev_fc as instrument,,net auction position rises with own wind (not in the rules' tree),,,,,,,
+refreshed,check: week clusters,,STOP: cannot tell 0 from the Nash cut on the net auction position (G3),,,,,,,
+refreshed,check: C1 controls (retail as control; bad control for retail outcomes),,net auction position rises with own wind (not in the rules' tree),,,,,,,
+refreshed,stability,,4 of 6 checks give the pooled reading,,,,,,,
+refreshed,firm EDP,206.26667923668435,STOP: cannot tell 0 from the Nash cut on the net auction position (G3),0.9202839028281327,0.35844963232065025,False,+1.854 (0.920),-0.112 (0.479),-0.246 (0.528),+2.042 (0.923)
+refreshed,firm ENDESA,1020.5746999712885,STOP: cannot tell 0 from the Nash cut on the net auction position (G3),0.3614282277201262,0.07988540068205752,False,-0.112 (0.361),+0.415 (0.378),-0.718 (0.384),-0.022 (0.348)
+refreshed,firm IBERDROLA,986.3314442392402,net auction position rises with own wind (not in the rules' tree),0.12655668406519321,0.3968093862889917,True,+0.358 (0.127),-0.291 (0.099),+0.251 (0.099),-0.148 (0.118)
+refreshed,firm NATURGY,2214.3425004924443,STOP: cannot tell 0 from the Nash cut on the net auction position (G3),0.19560317401969426,0.0483134702249496,False,+0.827 (0.196),-0.439 (0.104),+0.135 (0.101),+0.498 (0.188)
+refreshed,firm REPSOL,1385.6743888976303,STOP: cannot tell 0 from the Nash cut on the net auction position (G3),0.1375063082752775,0.029001743192530224,False,-0.305 (0.138),-0.287 (0.094),-0.109 (0.096),-0.626 (0.137)
+stored,G1 first-stage F,1609.4525147516965,pass,,,,,,,
+stored,G3 power,,pass,0.07201952826544127,0.21732280051165276,True,,,,
+stored,pooled reading (C0),,net auction position rises with own wind (not in the rules' tree),,,,+0.273 (0.072),-0.233 (0.064),+0.083 (0.065),-0.120 (0.066)
+stored,check: main (C0),,net auction position rises with own wind (not in the rules' tree),,,,,,,
+stored,check: firm × date effects,,net auction position rises with own wind (not in the rules' tree),,,,,,,
+stored,check: Spanish price above €5,,net auction position rises with own wind (not in the rules' tree),,,,,,,
+stored,check: 2022 on,,STOP: cannot tell 0 from the Nash cut on the net auction position (G3),,,,,,,
+stored,check: Wdev_fc as instrument,,net auction position rises with own wind (not in the rules' tree),,,,,,,
+stored,check: week clusters,,STOP: cannot tell 0 from the Nash cut on the net auction position (G3),,,,,,,
+stored,check: C1 controls (retail as control; bad control for retail outcomes),,net auction position rises with own wind (not in the rules' tree),,,,,,,
+stored,stability,,4 of 6 checks give the pooled reading,,,,,,,
+stored,firm EDP,206.26667923668435,STOP: cannot tell 0 from the Nash cut on the net auction position (G3),0.9306979316062667,0.35844963232065025,False,+2.008 (0.931),-0.112 (0.479),-0.290 (0.530),+2.239 (0.937)
+stored,firm ENDESA,1020.5746999712885,STOP: cannot tell 0 from the Nash cut on the net auction position (G3),0.3595344455046282,0.07988540068205752,False,-0.051 (0.360),+0.415 (0.378),-0.729 (0.384),+0.050 (0.348)
+stored,firm IBERDROLA,986.3314442392402,net auction position rises with own wind (not in the rules' tree),0.12664501968277742,0.3968093862889917,True,+0.343 (0.127),-0.291 (0.099),+0.254 (0.099),-0.167 (0.118)
+stored,firm NATURGY,2214.3425004924443,STOP: cannot tell 0 from the Nash cut on the net auction position (G3),0.1959790162957891,0.0483134702249496,False,+0.789 (0.196),-0.439 (0.104),+0.139 (0.101),+0.454 (0.188)
+stored,firm REPSOL,1385.6743888976303,STOP: cannot tell 0 from the Nash cut on the net auction position (G3),0.13940762143984267,0.029001743192530224,False,-0.274 (0.139),-0.287 (0.094),-0.112 (0.096),-0.592 (0.139)

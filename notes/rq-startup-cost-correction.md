@@ -304,3 +304,78 @@ amendment) was driven by days with a few MWh. The original thresholds in rule 1.
 5. Limits: strategic declaration, declaring days selected, 84 plants with a plant-specific
    efficiency, 2018 to 18 March 2025 only, and a gate that failed as written and passed after an
    amendment made with the failure in view.
+
+---
+
+## 5. After 2025-03-19: the SCO lump sum (2026-11-05)
+
+### 5.1 What the SCO term is (scoping, workflow wf_3464975a-9b8; sources below)
+
+From 2025-03-19 the minimum-income condition is the **Scalable Complex Order (SCO)**: one fixed term `Fijoeuro` in EUR
+per unit and day (`cab` `sco_fixed_eur`), and the condition (CNMC resolution of 28-02-2025, BOE-A-2025-4908, Anexo 1
+§2.2.1; EUPHEMIA public description §5.3.1) is
+
+    Σ_h Σ_k p_h q_hk  ≥  Fijo + Σ_h Σ_k b_hk q_hk
+
+with `b_hk` the offer price of each cleared tranche. There is no V: the variable cost is the price of each step. Plants
+now offer their minimum-load block at about €1/MWh (48% of cleared volume on accepted declaring days), so **its fuel
+cost has moved into Fijo**. Fijo is therefore neither a start-up term nor a whole-day cost: Spanish gas declares
+~€150k a day (0.16× a full day's fuel at full output), Portuguese gas ~€820k (0.9×). Around the switch SAGU2 goes from
+F = 0, V = 167.5 to Fijo ≈ €152k; Ribatejo 1 from F = 150,000, V = 125 to Fijo ≈ €943k.
+
+**So the lower bound (F share) is not identified after 2025-03-19**: Fijo − fuel of the minimum-load block reads
+0.77 of the gap against 0.05 before, a reshuffle of the declaration, not of behaviour. **Only the upper bound has a
+counterpart**: everything declared beyond fuel, `D = Fijo + Σ b q − c Q`, against the old `F + W = F + (V − c) Q`.
+
+### 5.2 RULES — written after the scoping saw the headline (stated, not hidden)
+
+The scoping computed (Fijo + Σbq − cQ)/M ≈ 0.78 before these rules were written, so this is a pre-specified
+**reproduction and extension**, not a blind test.
+
+- **Sample.** The same `units()` (82 units in current data: 44 ES gas, 10 PT gas, 28 coal), 2025-03-19 → the last day
+  with prices (2026-05-31). Unit-days with a sell `cab` header, `sco_fixed_eur > 0` (declaring) and cleared Q > 0;
+  the `SHORT = 3` cut of §3.1 kept. Coal is reported but not read (one unit, two accepted days in the scoping).
+- **Tranche prices.** Cleared rows of SCO offers carry −500 (data trap, §5.4), so `Σ b q` is the cleared quantity
+  filled up the offered (status O) curve in price order, per unit and period; energy = MW × resolution_min/60.
+- **Gate.** `R ≥ Fijo + Σ b q − 100` on ≥ 95% of accepted declaring days, by group; otherwise stop and report.
+- **Computed, by group (ES gas, PT gas, gas) and by quarter for ES gas, ratios of sums:** M/Q, `D/M` (the upper bound),
+  `Fijo/M` and the slack `(R − Fijo − Σbq)/Fijo` (median), n days, GWh; and the selection table: cleared share and
+  GWh on declaring against non-declaring unit-days.
+- **Comparison.** `D/M` against the pre-switch `(F + W)/M` (ES gas 2024 0.73, 2025 to 03-18 0.74). Reading: within
+  ±0.10 = "the declared requirement explains the same share of the gap across the switch"; otherwise report the
+  difference. No lower bound is quoted after the switch.
+- **Outputs.** `outputs/tables/startup_cost_correction_sco.csv`, `..._sco_selection.csv`; `--sco` stage of the script.
+
+### 5.3 Results (run 2026-11-05, `--sco`)
+
+| group | accepted declaring days | GWh | gap €/MWh | **D / M (upper bound)** | gate | slack (median) |
+|---|---|---|---|---|---|---|
+| ES gas | 294 | 840 | 31.4 | **0.785** | 100% | 8.6% of Fijo |
+| PT gas | 9 | 60 | 32.9 | 0.853 | 100% | 6.5% |
+| gas | 303 | 899 | 31.5 | **0.790** | 100% | 8.4% |
+| coal | 2 | 7 | −68.9 | not read | | |
+
+ES gas by quarter: 2025Q2 0.80, Q3 0.75, Q4 0.80, 2026Q1 0.85 (16 days). Offered curve covers the cleared quantity in
+100% of periods.
+
+- **Reading, by rule 5.2: the declared requirement explains the same share of the gap across the switch.** 0.785
+  against 0.73 (2024) and 0.74 (2025 to 03-18) for Spanish gas, within ±0.10.
+- **The gate binds tightly** (median slack 8.6% of Fijo): plants set Fijo close to what the day pays. That is what a
+  strategic declaration looks like, which is why D is an upper bound, not a cost.
+- **Selection is much harsher than before.** Declaring Spanish gas unit-days clear 4.5% of the time against 14.5% for
+  non-declaring ones; 840 of 3,680 GWh of Spanish gas output. Portuguese gas: declaring days clear 0.4%. 18 Spanish
+  combined cycles never declare an SCO.
+- **No lower bound after 2025-03-19** (§5.1). The paper's "5–13% (lower bound) to 28–70% (upper bound)" range holds to
+  2025-03-18; after it, only the upper bound, ~0.79, on a thin and selected sample.
+
+### 5.4 Data traps found
+
+- **Cleared (C) bid rows of SCO offers carry −500 €/MWh, not the step price.** 100% of 7,423 cleared rows of declaring
+  thermal units in July 2025 (96% in January 2026); 19–36% of non-declaring ones. Before 2025-03-19 cleared rows carry
+  real prices. Take step prices from the offered (O) curve.
+- **`offer_type` in the bid parquet is empty until 2025-12 and filled from 2026-01** (`S`, `C01`, `C02` = SCO, `C04`).
+  Whether the raw files carry it earlier and the parser drops it is not checked.
+
+Sources: OMIE file spec v1.37 (pp. 25, 27–28), https://www.omie.es/sites/default/files/2025-09/formato_ficheros_inf_pub_137.pdf;
+CNMC resolution 28-02-2025 (BOE-A-2025-4908), https://cnmc.es/sites/default/files/5813806.pdf; EUPHEMIA public description
+(NEMO Committee, Dec 2025), https://www.nemo-committee.eu/assets/files/euphemia-public-description.pdf.

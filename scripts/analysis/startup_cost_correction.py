@@ -3,6 +3,7 @@
 
     .venv/bin/python scripts/analysis/startup_cost_correction.py              # build the panel, then tables
     .venv/bin/python scripts/analysis/startup_cost_correction.py --from-panel # tables only, from the saved panel
+    .venv/bin/python scripts/analysis/startup_cost_correction.py --sco        # after 2025-03-19 (note §5)
 
 Rules are written in notes/rq-startup-cost-correction.md §1 before the first run.
 
@@ -358,7 +359,96 @@ def show(out: dict) -> None:
     print(out["vre_terciles"].round(3).to_string(index=False))
 
 
+SCO_START = pd.Timestamp("2025-03-19")
+SCO_MONTHS = pd.period_range("2025-03", "2026-06", freq="M")
+
+
+def sco_stage() -> None:
+    """Note §5: upper bound D = Fijo + sum b q - c Q against the gap M, Scalable Complex Order era.
+
+    Cleared rows of SCO offers carry -500, so the tranche value sum b q fills the cleared quantity up the
+    offered curve in price order, per unit and period.
+    """
+    u = units()
+    U = u.unit.tolist()
+    country = u.set_index("unit").country
+    p = pd.read_parquet(DATA / "omie/prices/omie_day_ahead_prices.parquet", columns=["date", "period", "price_es", "price_pt"])
+    p["date"] = pd.to_datetime(p.date)
+    last = p.date.max()
+    c = pd.read_parquet(DATA / "jrc_ppdb/implied_marginal_cost_daily.parquet",
+                        columns=["unit", "date", "marginal_cost_bid_eur_mwh"], filters=[("unit", "in", U)])
+    c["date"] = pd.to_datetime(c.date)
+    c = c.rename(columns={"marginal_cost_bid_eur_mwh": "c"})
+
+    hd, days = [], []
+    for per in SCO_MONTHS:
+        ym = per.strftime("%Y%m")
+        h = pd.read_parquet(DATA / f"omie/cab/parquet/cab_{ym}.parquet",
+                            columns=["date", "unit", "side", "ofer_plazo", "sco_fixed_eur"], filters=[("unit", "in", U)])
+        h["date"] = pd.to_datetime(h.date)
+        h = h[(h.side == "V") & (h.date >= SCO_START) & (h.date <= last)]
+        h = h.sort_values("ofer_plazo", key=lambda x: x.ne("O")).drop_duplicates(["unit", "date"])[["unit", "date", "sco_fixed_eur"]]
+        hd.append(h)
+        b = pd.read_parquet(DATA / f"omie/bids/parquet/bids_{ym}.parquet",
+                            columns=["date", "period", "unit", "power_mw", "price_eur_mwh", "status", "resolution_min"],
+                            filters=[("unit", "in", U), ("side", "=", "V")])
+        b["date"] = pd.to_datetime(b.date)
+        b = b[(b.date >= SCO_START) & (b.date <= last)]
+        cl = b[b.status == "C"].groupby(["unit", "date", "period"], as_index=False).agg(qc=("power_mw", "sum"),
+                                                                                       res=("resolution_min", "first"))
+        cl = cl[cl.qc > 1e-6]
+        o = b[b.status == "O"].sort_values(["unit", "date", "period", "price_eur_mwh"]).copy()
+        o["cum"] = o.groupby(["unit", "date", "period"]).power_mw.cumsum()
+        o = o.merge(cl[["unit", "date", "period", "qc"]], on=["unit", "date", "period"])
+        o["tk"] = np.clip(o.qc - (o.cum - o.power_mw), 0, o.power_mw)
+        o["bq"] = o.tk * o.price_eur_mwh * o.resolution_min / 60
+        fill = o.groupby(["unit", "date", "period"], as_index=False).agg(tk=("tk", "sum"), bq=("bq", "sum"))
+        cl = cl.merge(fill, on=["unit", "date", "period"], how="left").merge(p, on=["date", "period"])
+        cl["price"] = np.where(cl.unit.map(country) == "ES", cl.price_es, cl.price_pt)
+        cl["q"] = cl.qc * cl.res / 60
+        cl["covered"] = cl.tk.fillna(0) >= cl.qc - 0.1
+        days.append(cl.assign(r=cl.q * cl.price).groupby(["unit", "date"], as_index=False).agg(
+            Q=("q", "sum"), R=("r", "sum"), BQ=("bq", "sum"), n_periods=("period", "nunique"), covered=("covered", "mean")))
+        print(f"  {ym}: {len(days[-1]):,} cleared unit-days", flush=True)
+    h = pd.concat(hd, ignore_index=True)
+    q = pd.concat(days, ignore_index=True)
+    d = h.merge(u, on="unit").merge(q, on=["unit", "date"], how="left").merge(c, on=["unit", "date"], how="left")
+    d["Q"] = d.Q.fillna(0.0)
+    d["decl"] = d.sco_fixed_eur.fillna(0) > 0
+    print(f"{len(d):,} unit-days with a sell header, {d.decl.sum():,} declaring, last price day {last.date()}; "
+          f"cleared periods covered by the offered curve {q.covered.mean():.4f}")
+
+    sel = d.groupby(["group", "decl"]).agg(unit_days=("Q", "size"), cleared_share=("Q", lambda s: (s > 0).mean()),
+                                         GWh=("Q", lambda s: s.sum() / 1e3)).reset_index()
+    print(sel.round(3).to_string(index=False))
+    sel.to_csv(OUT / "startup_cost_correction_sco_selection.csv", index=False)
+
+    a = d[d.decl & (d.Q > 0) & (d.n_periods > SHORT) & d.c.notna()].copy()
+    a["M"] = a.R - a.c * a.Q
+    a["D"] = a.sco_fixed_eur + a.BQ - a.c * a.Q
+    a["gate"] = a.R >= a.sco_fixed_eur + a.BQ - TOL
+    a["slack"] = (a.R - a.sco_fixed_eur - a.BQ) / a.sco_fixed_eur
+    a["quarter"] = a.date.dt.to_period("Q").astype(str)
+
+    def row(x, label, cell):
+        return {"group": label, "cell": cell, "n_days": len(x), "GWh": x.Q.sum() / 1e3, "gap_eur_mwh": x.M.sum() / x.Q.sum(),
+                "D_share_of_gap": x.D.sum() / x.M.sum(), "Fijo_share_of_gap": x.sco_fixed_eur.sum() / x.M.sum(),
+                "gate_pass": x.gate.mean(), "slack_median": x.slack.median()}
+    rows = [row(x, g, "all") for g, x in a.groupby("group")]
+    rows.append(row(a[a.group != "coal"], "gas", "all"))
+    rows += [row(x, "ES gas", qq) for qq, x in a[a.group == "ES gas"].groupby("quarter")]
+    t = pd.DataFrame(rows)
+    print(t.round(3).to_string(index=False))
+    t.to_csv(OUT / "startup_cost_correction_sco.csv", index=False)
+    for g, x in a.groupby("group"):
+        if x.gate.mean() < 0.95:
+            print(f"GATE FAILS for {g}: {x.gate.mean():.3f} < 0.95 -> stop and report")
+
+
 def main() -> None:
+    if "--sco" in sys.argv:
+        sco_stage()
+        return
     OUT.mkdir(parents=True, exist_ok=True)
     d = pd.read_parquet(PANEL) if "--from-panel" in sys.argv else build_panel()
     d, n = prepare(d)

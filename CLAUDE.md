@@ -1922,6 +1922,13 @@ before that date**: read a rise in high-priced blocks across mid-2021 as the lim
 The clearing price itself never came near either limit (Spanish maximum €700, minimum −€15).
 **The comparison countries' limits did not move the same way** (checked 2026-10-28, offered sell side): GME's Italian offers already reach €3,000 in June 2021 (11% of rows above €180.30), the ceiling rises to €4,000 from May 2022 and the floor goes €0 → −€500 in September 2021; Iberia's ceiling stays €3,000 through 2022 (floor −€300 in practice). British balancing offers run to £9,999 throughout, no change. So only Iberia gained room to post high prices inside the gas-cap comparison's pre-period.
 
+### Cleared rows of SCO offers carry −500, not their step price
+Found 2026-11-05. From 2025-03-19 a unit offering a Scalable Complex Order (a `cab` `sco_fixed_eur` > 0) gets
+**−500 €/MWh on every cleared (`C`) row** of `curva_pbc_uof` (100% of 7,423 rows of declaring thermal units in July 2025;
+19–36% of non-declaring ones). Before the switch cleared rows carry the step price. Anything reading offer prices off
+`C` rows in the SCO era is wrong: fill the cleared quantity up the offered (`O`) curve in price order instead
+(`startup_cost_correction.py --sco`). `offer_type` is empty until 2025-12 and filled from 2026-01 (`C02` = SCO).
+
 ### The 15-minute switch on 2025-10-01
 OMIE moved from hourly to **15-minute market time units** on 2025-10-01 (the
 EU-wide MTU change). Days have 96 periods from that date, 24 before. Any

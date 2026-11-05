@@ -1055,6 +1055,11 @@ Three format changes, all silent:
   participant from 2024-12-15** (`END` Endesa, `GN` Naturgy, `HC` Hidrocantábrico, …): per-unit
   reserve ends there.
 
+**France-line congestion rents — `data/esios/esios_{1117,1118}.parquet`**, fetched 2026-11-05 by `--ids 1117 1118 --geo 0
+--start 2021-06-01 --end 2023-12-31`: day-ahead implicit (SDAC) rent, import and export direction, € per hour, `Península`. **Gross for
+both systems** (split 50/50 under Reg. 1222/2015), and below (French − Spanish price) × PBF scheduled export (€1.11 bn against €1.97 bn,
+2022-06-15 → 2023-02; hourly corr 0.94), since PBF exports include long-term-rights nominations. Used in `notes/rq-crisis-quantity.md` I1c.
+
 ENTSO-E's token is still pending (ticket #9472601); `fetch/fetch_entsoe_spain.py`
 is written but never executed.
 

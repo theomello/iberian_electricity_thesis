@@ -1275,3 +1275,35 @@ textual basis; I1's point that this does not move the Spanish or Portuguese net 
   recovery of the export pull. ESIOS 1117/1118 carry them; not fetched.
 - **Effect on J:** Morocco/Andorra export units were counted with Spanish buyers in the price fall (€39 m at ρ 0.73) but their charge is not
   in the ESIOS group bill. Moving them changes no total (transfers only; DWL unchanged) and Spanish buyers' net by under €0.1 bn.
+
+### I1c. France: the gain went to the border, not to French buyers (2026-11-05; `scripts/analysis/gas_cap_france_rents.py`)
+
+Fetched ESIOS 1117/1118 (day-ahead implicit congestion rents on the France line, import / export direction, € per hour, **gross for
+both systems**, split 50/50 under Reg. 1222/2015), 2021-06-01 → 2023-12-31. Output `outputs/tables/gas_cap_france_rents.csv`.
+
+**Mechanism.** J books Δp × (scheduled France export) as a gain to "exporters". Under coupling, when the line is export-full the French price
+does not follow the Iberian fall; the extra gap × flow is collected as congestion rent, half to each side. Only in open hours does a lower
+Iberian price reach French buyers.
+
+**Line state in the 5,397 valid hours: export-full 87.9%, open 9.1%, import-full 3.0%.** So at ρ 0.73 (ρ 0.55 / 1.0 in brackets):
+
+| who gets the €254 m (176 / 371) | € m |
+|---|---|
+| congestion rent, export-full hours | 251 (175 / 368) |
+| of which Spanish half: reduced the cap's cost (rule 51 bis.2, RENTAFR) | **126** (87 / 184) |
+| of which French half: to the French side of the border | **126** (87 / 184) |
+| French buyers, through a lower French price (open hours) | **2** (2 / 3) |
+
+**Check.** Over 2022-06-15 → 2023-02, ESIOS 1118 is €1,108 m against €1,974 m for (French − Spanish price) × PBF scheduled export, hourly
+correlation 0.943. The level gap fits PBF exports including flow nominated on long-term transmission rights, whose share of the gap is paid to
+rights holders out of the rent rather than counted in it (the decree deducts that remuneration from RENTAFR). So part of each "half" above
+may go to long-term rights holders instead; not separable from this data. Gross rent over the valid hours: €1,036 m, Spanish half €518 m — the
+whole rent, of which the cap's own price fall accounts for about €126 m on the Spanish side.
+
+**Reading.**
+- **French buyers gained almost nothing (≈ €2 m).** The line was full nearly every hour, so the cap's price fall widened the border spread
+  instead of lowering French prices. "France got cheap Iberian power for free" is wrong as stated; the French *side of the border* gained
+  ~€0.09–0.18 bn of rent.
+- **Leak abroad through France: €0.25 bn → ≈ €0.13 bn** at ρ 0.73. The Spanish half is already inside the observed ESIOS charge (it lowered it),
+  so in J it sits in the "rest of the Spanish bill" residual. Totals and DWL unchanged (transfers).
+- Supersedes I1b's "French buyers gained €254 m". Morocco and Andorra rows of I1b stand (not coupled; no implicit rent).

@@ -64,9 +64,9 @@ def F(cur, x):
     return np.where(i > 0, cw[np.maximum(i - 1, 0)], 0.0)
 
 
-def dose(h: pd.DataFrame, s, cost, D: pd.Timestamp, S: pd.Series, stop: pd.Timestamp) -> pd.Series:
+def dose(h: pd.DataFrame, s, cost, D: pd.Timestamp, S: pd.Series, stop: pd.Timestamp, cur=None) -> pd.Series:
     """g_iw for dates D..stop, from the subsidy path S (indexed by date)."""
-    cur = curves(h, s, cost, D)
+    cur = curves(h, s, cost, D) if cur is None else cur
     post = h[h.date.between(D, stop)][["unit", "date", "period", "w"]].copy()
     post["S"] = post.date.map(S).fillna(0.0).to_numpy()
     post["hod"] = post.period.clip(upper=24)
@@ -80,11 +80,15 @@ def dose(h: pd.DataFrame, s, cost, D: pd.Timestamp, S: pd.Series, stop: pd.Times
     return e.groupby(["unit", "w"]).g.mean()
 
 
-def twfe(y: np.ndarray, g: np.ndarray, uid: np.ndarray, wid: np.ndarray) -> float:
-    """OLS slope on g with unit and week dummies (rows already filtered to observed cells)."""
+def twfe(y: np.ndarray, g: np.ndarray, uid: np.ndarray, wid: np.ndarray, trend: bool = False) -> float:
+    """OLS slope on g with unit and week dummies (rows already filtered to observed cells); `trend` adds a
+    linear trend per unit."""
     U = pd.get_dummies(uid).to_numpy(float)
     Wd = pd.get_dummies(wid).to_numpy(float)[:, 1:]
     X = np.column_stack([g, U, Wd])
+    if trend:
+        tt = (pd.to_datetime(pd.Series(wid)) - pd.Timestamp("2022-06-15")).dt.days.to_numpy() / 365.0
+        X = np.column_stack([X, U * tt[:, None]])
     return float(np.linalg.lstsq(X, y, rcond=None)[0][0])
 
 
@@ -97,6 +101,7 @@ def long(W: pd.DataFrame, G: pd.DataFrame, keep_cols) -> pd.DataFrame:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--reps", type=int, default=199)
+    ap.add_argument("--stage", type=int, choices=(1, 2), default=1)
     a = ap.parse_args()
     rng = np.random.default_rng(20261108)
 
@@ -108,6 +113,8 @@ def main() -> int:
     firm = meta.firm.reindex(W.index)
     h = h[h.unit.isin(W.index)]
     print(f"units: {int(ib.sum())} Iberian, {int((~ib).sum())} Italian (missing-week threshold {thr})")
+    if a.stage == 2:
+        return step2(h, W, ib, firm, a.reps, rng)
 
     si, ci = iberia_steps()
     st, ct = italy_steps()
@@ -196,6 +203,111 @@ def main() -> int:
     else:
         f = "STOP: Iberian and triple-difference placebos both exclude 0 at some date"
     print("Rule 2 (flatness):", f)
+    return 0
+
+
+def boot_b(L: dict, reps: int, rng, trend: bool = False) -> np.ndarray:
+    """Firm block bootstrap within country; returns draws of [b_IB, b_IT] (b_IT NaN if Italy absent)."""
+    out = []
+    for _ in range(reps):
+        bd = []
+        for c in (True, False):
+            d = L.get(c)
+            if d is None:
+                bd.append(np.nan)
+                continue
+            fs = d.firm.unique()
+            pick = rng.choice(fs, size=len(fs), replace=True)
+            dd = pd.concat([d[d.firm == f].assign(unit=lambda x, k=k: x.unit + f"#{k}") for k, f in enumerate(pick)])
+            bd.append(twfe(dd.y.to_numpy(), dd.g.to_numpy(), dd.unit.to_numpy(), dd.w.to_numpy(), trend))
+        out.append(bd)
+    return np.array(out)
+
+
+def step2(h, W, ib, firm, reps, rng) -> int:
+    """Section K step 2: the real rho within Iberia, with the checks fixed in the note."""
+    si, ci = iberia_steps()
+    st, ct = italy_steps()
+    S = ci.groupby("date").subsidy.max()
+    src = {True: (si, ci), False: (st, ct)}
+    cols = [w for w in W.columns if not (w < CAP0 and w + pd.Timedelta(days=7) > CAP0 - REF)]
+    cur = {c: curves(h[h.iberia == c], *src[c], CAP0) for c in (True, False)}
+
+    def frame(c, Spath, hh=None, Wm=None):
+        hh = h if hh is None else hh
+        Wm = W if Wm is None else Wm
+        G = dose(hh[hh.iberia == c], *src[c], CAP0, Spath, END, cur[c]).unstack()
+        d = long(Wm[ib.reindex(Wm.index) == c], G, cols)
+        d["firm"] = d.unit.map(firm)
+        return d
+
+    def b_of(d, trend=False):
+        return twfe(d.y.to_numpy(), d.g.to_numpy(), d.unit.to_numpy(), d.w.to_numpy(), trend)
+
+    L = {c: frame(c, S) for c in (True, False)}
+    b0, bt = b_of(L[True]), b_of(L[True], True)
+    dr = boot_b({True: L[True]}, reps, rng)[:, 0]
+    lo, hi = np.nanpercentile(dr, [2.5, 97.5])
+    drt = boot_b({True: L[True]}, reps, rng, trend=True)[:, 0]
+    tlo, thi = np.nanpercentile(drt, [2.5, 97.5])
+    stop_trend = not (1 + lo <= 1 + bt <= 1 + hi)
+    print(f"\nmain (within Iberia): {len(L[True])} unit-weeks, {L[True].unit.nunique()} units, "
+          f"{L[True].firm.nunique()} firms, {len(cols)} weeks")
+    print(f"  rho = 1 + b          {1 + b0:.3f}  95% [{1 + lo:.3f}, {1 + hi:.3f}]  width {hi - lo:.3f}")
+    print(f"  with unit trends     {1 + bt:.3f}  95% [{1 + tlo:.3f}, {1 + thi:.3f}]  "
+          f"{'<-- outside main interval: STOP' if stop_trend else '(inside main interval: check holds)'}")
+
+    # timing permutation: cyclic shifts of the post-cap S path by whole weeks
+    days = pd.date_range(CAP0, END)
+    Sv = S.reindex(days).fillna(0.0).to_numpy()
+    nw = len(days) // 7
+    shifted = []
+    for k in range(1, nw):
+        Sk = pd.Series(np.roll(Sv, 7 * k), index=days)
+        shifted.append(b_of(frame(True, Sk)))
+    shifted = np.array(shifted)
+    p = float(np.mean(shifted <= b0))
+    print(f"  timing permutation: {len(shifted)} shifts, 5th pct of shifted b {np.percentile(shifted, 5):+.3f}, "
+          f"real b {b0:+.3f}, one-sided p {p:.3f}")
+
+    # triple difference (check)
+    bit = b_of(L[False])
+    drr = boot_b(L, reps, rng)
+    trip = drr[:, 0] - drr[:, 1]
+    tl, th = np.nanpercentile(trip, [2.5, 97.5])
+    il, ih = np.nanpercentile(drr[:, 1], [2.5, 97.5])
+    print(f"  Italy would-be b     {bit:+.3f}  95% [{il:+.3f}, {ih:+.3f}]")
+    print(f"  triple rho           {1 + b0 - bit:.3f}  95% [{1 + tl:.3f}, {1 + th:.3f}]")
+
+    # reported beside: reference weeks kept; gross-cost in-money sample
+    cols_all = list(W.columns)
+    Gr = dose(h[h.iberia], *src[True], CAP0, S, END, cur[True]).unstack()
+    dk = long(W[ib], Gr, cols_all)
+    b_ref = b_of(dk)
+    hg = h[(h.price_lag - h.cost_gross) > 50]
+    Wg = hg.groupby(["unit", "w"]).run20.mean().unstack().reindex(index=W.index, columns=W.columns)
+    Wg.index.name = "unit"
+    dg = frame(True, S, hg, Wg)
+    b_g = b_of(dg)
+    print(f"  reference weeks kept: rho {1 + b_ref:.3f};  gross-cost in-money sample: rho {1 + b_g:.3f} "
+          f"({len(dg)} unit-weeks)")
+
+    pd.DataFrame([
+        {"estimate": "main", "rho": 1 + b0, "lo": 1 + lo, "hi": 1 + hi, "unit_weeks": len(L[True])},
+        {"estimate": "unit trends", "rho": 1 + bt, "lo": 1 + tlo, "hi": 1 + thi, "stop": stop_trend},
+        {"estimate": "permutation", "rho": 1 + b0, "p": p, "shifts": len(shifted),
+         "shifted_b_p5": np.percentile(shifted, 5)},
+        {"estimate": "italy would-be b", "rho": bit, "lo": il, "hi": ih},
+        {"estimate": "triple", "rho": 1 + b0 - bit, "lo": 1 + tl, "hi": 1 + th},
+        {"estimate": "reference weeks kept", "rho": 1 + b_ref},
+        {"estimate": "gross-cost in-money sample", "rho": 1 + b_g, "unit_weeks": len(dg)},
+    ]).to_csv(T / "gas_cap_quantity_unit_dose_rho.csv", index=False)
+
+    excl1 = not (1 + lo <= 1 <= 1 + hi)
+    print("\nRule:", "STOP (unit trends)" if stop_trend else
+          ("incomplete pass-through claimed and " + ("timing supports it" if p <= 0.05 else "timing FAILS: STOP"))
+          if excl1 else f"interval includes rho = 1 (full pass-through not rejected); permutation p {p:.3f} reported")
+    print("B3 for comparison: 0.73 [0.51, 1.03], width 0.52")
     return 0
 
 

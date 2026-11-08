@@ -1399,3 +1399,74 @@ offered more capacity just around cost drift down relative to others over the fo
 shows no such drift, so the triple difference at 2022-01-01 *excludes* 0 (+0.22) only because Italy moves. That is the
 same lesson as before: Italy has its own dynamics, and here it would bias the triple difference, not the within-Iberia
 slope. A reason to keep the triple difference as a check only, which the power rule already says.
+
+### K step 2. The real ρ within Iberia — rules fixed before running (2026-11-08; user's go-ahead)
+
+**Main:** D = 2022-06-15, real S, Iberian units, y_iw = α_i + δ_w + b·g_iw over every week 2021-10 → 2023-06 except those
+overlapping the reference window (2022-04-20 → 2022-06-14; this drops the cap week too), g = 0 before the cap.
+ρ = 1 + b; 95% firm block bootstrap (199 draws, seed 20261108, doses fixed).
+
+**Checks, fixed now:**
+1. **Unit trends (stop rule):** add a linear trend per unit. If that ρ falls outside the main 95% interval → STOP (the slope
+   picks up plant-specific drift, not the subsidy).
+2. **Timing permutation:** recompute g with the post-cap S path shifted cyclically by 1…k whole weeks (every shift that
+   moves it), re-estimate b. One-sided p = share of shifted b ≤ real b. Binding only for a claim of incomplete pass-through:
+   if the main interval excludes ρ = 1, that claim needs p ≤ 0.05, else it STOPS. If the interval includes 1, report p.
+3. **Triple difference (check):** b_IB − b_IT with the Italian would-be dose, same bootstrap. Reported, not decisive
+   (step 1: MDE 0.70, Italy drifts). Say whether it agrees with the main estimate.
+4. **Reported beside, not decisive:** the reference weeks kept; the Iberian sample restricted in every week to hours
+   in the money on *gross* cost (removes the sample's widening at the cap; same units, more missing cells).
+
+**Reading, fixed now:** quote the main ρ beside B3's 0.73 [0.51, 1.03]. Say whether the intervals overlap; do not choose
+between them on the point estimate. If the main interval is narrower than B3's (width 0.52) and checks 1–2 hold, it is the
+sharper estimate and the one whose identification does not rest on Italy.
+
+### K step 2 results (2026-11-08; `gas_cap_quantity_unit_dose.py --stage 2`, 199 draws → `gas_cap_quantity_unit_dose_rho.csv`)
+
+49 Iberian units, 10 firms, 83 weeks, 3,307 unit-weeks.
+
+| estimate | ρ | 95% |
+|---|---|---|
+| **main, within Iberia** | **0.87** | **[0.62, 1.03]** (width 0.41) |
+| with unit trends (check 1) | 0.87 | [0.59, 1.10] — inside the main interval: holds |
+| timing permutation (check 2) | 53 shifts, shifted 5th pct b −0.122, real b −0.134 | p 0.019 |
+| triple difference (check 3) | 1.08 | [0.71, 1.36]; Italy's would-be b −0.21 [−0.47, −0.07] |
+| reference weeks kept | 0.87 | — |
+| gross-cost in-money sample | 1.02 | — (2,203 unit-weeks) |
+
+**Reading, by the rules:** check 1 holds; the interval includes ρ = 1, so full pass-through is not rejected, and the
+permutation (p 0.019) is reported, not binding. The interval (0.41) is narrower than B3's (0.52) and checks 1–2 hold, so
+**this is the sharper estimate, and the one whose identification does not rest on Italy.** It overlaps B3's 0.73
+[0.51, 1.03]; the point estimates differ by 0.14, inside both intervals — not told apart.
+- On the sample whose in-money hours do not widen at the cap (gross cost), ρ is 1.02: the widening pulls the main estimate
+  down, if anything. Reported only.
+- The triple difference sits higher (1.08) because Italy's would-be slope is negative; see the drift below.
+
+### K: the Italian drift (2026-11-08; descriptive, user asked; `gas_cap_quantity_unit_dose_drift.py` + a gas-price cut)
+
+Why Italian plants with a high would-be dose drift down with no subsidy. Two things, both checked by dose terciles
+(run20 minus each week's cross-unit mean):
+
+1. **Regression to the mean, at the January placebo.** Italy's high tercile: +0.140 before the reference window, **+0.255
+   in it** (Nov–Dec 2021), +0.119 after. The plants picked as high-dose were unusually high exactly in the weeks that
+   picked them, and then went back. Iberia's high tercile shows a smaller bump (0.113 → 0.158 → 0.128). At the March
+   placebo neither country shows a bump (Italy 0.220 / 0.197 / 0.190), and Italy's slope there is noise ([−0.75, 0.21]).
+2. **The gap between high- and low-dose plants narrows when gas is dear — in Italy, before the cap too.** Weekly
+   high-minus-low gap (terciles of the real-cap dose) against the gas price:
+
+   | | pre-cap weeks | post-cap weeks |
+   |---|---|---|
+   | Italy vs PSV | corr −0.36, −0.18 per €100 | corr −0.62, −0.10 per €100 |
+   | Iberia vs MIBGAS | corr −0.17, −0.04 per €100 | (treatment: not evidence) |
+
+   After the cap the would-be dose rises with the gas price (S does), so this compression is what makes Italy's post-cap
+   would-be slope −0.21. It is not cheap vs expensive plants: the dose is uncorrelated with plant cost (−0.16, −0.01); it
+   is the plants that usually offer much capacity near cost (Edison, Eni, A2A, mostly NORD) offering less of it near cost
+   when gas is dear.
+
+**What it means for the main estimate.** Iberia's pre-cap compression is a fifth of Italy's per € and has no interval
+(37 weeks, the reference weeks included, so mean reversion is mixed in). If it is real, it works in the same direction as
+the effect: part of the within-Iberia b (−0.13) would be gas, not subsidy, and ρ would sit closer to 1. Rough size: at
+S ≈ €100, b·g ≈ −0.13 × 0.25 = −0.034, and −0.04 per €100 of gas is the same order. So 0.87 is better read as a lower
+end than a centre; it cannot be pushed below by this channel. Not tested with a rule; a test would put weekly gas into
+the within-Iberia regression interacted with each plant's dose curve.

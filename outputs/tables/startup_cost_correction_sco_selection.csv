@@ -1,0 +1,7 @@
+group,decl,unit_days,cleared_share,GWh
+ES gas,False,7039,0.14476489,2838.4285
+ES gas,True,6691,0.04453744,842.73145
+PT gas,False,394,0.5431472,494.7269
+PT gas,True,2452,0.0036704731,59.522373
+coal,False,1,1.0,3.5923998
+coal,True,431,0.004640371,6.61

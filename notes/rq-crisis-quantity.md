@@ -1623,3 +1623,62 @@ What limits it is Italian noise around the March 2022 break (Italy's own interva
 is now valid in its assumptions as far as the placebos can tell, but cannot tell ρ = 1 from ρ = 0.4 at that date.
 In the paper: six Italian specifications, the last with flat placebos and insufficient power; Italy's role is the
 falsification test (step 3: would-be slope −0.06 [−0.28, +0.07] with the gas term).
+
+## L. Dispatch response: did the subsidy make gas plants run more? — rules fixed before running (2026-11-08; user chose it, Italy included)
+
+**Question.** The welfare section (J) re-clears the offer curves, so it assumes subsidised plants were dispatched exactly
+by merit order. This measures the realised dispatch shift and compares it with that mechanical one.
+
+**Objects, per plant and hour, 2021-10-01 → 2023-06-30, all hours:**
+- **Outcome** y = output / K: Iberia, PDBF schedule summed over role codes (auction + bilateral); Italy, GME accepted
+  sell quantity (status ACC, bilateral rows included). K = 99th percentile of hourly offered MW before the cap (the
+  panel's K). Weekly plant mean.
+- **Margin** x = same zone-hour price the day before − the plant's bid-time gross cost (Iberia ES/PT price; Italy the
+  unit's zonal price).
+- **Dose** flip(S) = 1[x ≤ 0 < x + S]: the subsidy moves the plant from out of the money to in it. g_iw = weekly mean
+  of flip(S_d) after the date, 0 before. Italy: the Iberian S_d applied (would-be dose).
+- **Near-margin propensity** z_i = mean flip(€100) over the plant's hours from 2021-10-01 to the day before the date.
+- **Controls** (weekly, standardised, each × z_i, per country): Iberia: MIBGAS (lag 2); peninsular demand − wind − solar
+  D-1 forecasts (ESIOS 1775 − 1777 − 1779); stored hydro energy (ESIOS 623). Italy: PSV (lag 2); national accepted
+  purchases (GME BID ACC); implicit net imports (accepted purchases − accepted sales). **Limit:** Italy has no wind,
+  solar or hydro series on disk, so its drought channel is only proxied through demand and imports.
+- **Mechanical benchmark** m (per country, pre-cap): within plant-week, the slope of hourly y on 1[x > 0]. Merit-order
+  dispatch predicts b ≈ m; κ = b / m is the share of the mechanical shift realised.
+- **Estimator:** y_iw = α_i + δ_w + b·g_iw + Σ c_k·control_kw·z_i, per country. Triple: b_IB − b_IT. Firm-block bootstrap
+  within country, 199 draws, seed 20261108. Italian essential units out; plants with output data in ≥ 70% of weeks.
+
+**Step 1 (this run): no post-cap estimate.**
+(a) Overlap: plant mean post-cap dose and z, Iberia vs Italy (quantiles); entropy-balance Italian plants to Iberia's
+means of both; effective number of Italian plants.
+(b) Italy and Iberia, monthly mean capacity factor Sep 2021 → Jun 2022: is there a March 2022 break in Italian dispatch?
+(c) m for each country.
+(d) Placebos 2022-01-01 and 2022-03-01 (S path shifted as in K): b_IB, b_IT, triple; 95% intervals; MDE = 2.8 × sd.
+
+**Rules, fixed now:**
+1. **Within Iberia (main):** STOP if its placebo interval excludes 0 at either date or its MDE exceeds 0.5·m_IB at either.
+2. **Triple (check, seventh specification using Italy, first on this outcome):** read in step 2 only if the effective
+   number of Italian plants is ≥ 20, both triple placebo intervals include 0, and both triple MDEs are ≤ 0.5·m_IB.
+   Otherwise it is reported as not usable, and Italy's own placebo slope serves as the falsification test.
+3. (b) is descriptive and decides nothing.
+
+### L step 1 results (2026-11-08; `gas_cap_dispatch_dose.py`, 199 draws → `gas_cap_dispatch_dose_{overlap,monthly,placebo}.csv`): STOP
+
+Iberia 55 plants (12 firms), Italy 71 (13). Implementation detail not in the rule: ESIOS 623 storage lagged two weeks
+(its publication delay).
+
+- **(c) Mechanical benchmark is small:** m = 0.067 (Iberia), 0.137 (Italy). Within a plant-week, hours predicted in the
+  money by yesterday's price run only 7 points of capacity more than hours predicted out of it: combined cycles run in
+  blocks across days, and yesterday's hourly price is a weak predictor of a given hour's dispatch.
+- **(a) The dose barely differs across Iberian plants:** plant mean post-cap dose 0.47 (10th pct) to 0.52 (90th). In
+  2022 the gross cost of every Iberian CCGT sat above the price in most hours and within S of it, so the subsidy
+  "flips" about half the hours of every plant alike. Italy's would-be dose is 0.12–0.26; entropy balancing leaves
+  **2.0 effective Italian plants** (largest weight 35).
+- **(b)** Italian capacity factor 0.41–0.46 to March 2022, then 0.30–0.32 in April–May; Iberia 0.10–0.29, with no common
+  break. Descriptive.
+- **(d) Placebos:** every interval includes 0, but within-Iberia MDE 0.87 at both dates = **13× m**; triple MDE 15× m.
+
+**Reading, by the rules: rule 1 STOP (MDE far above 0.5·m); rule 2 triple not usable (overlap 2.0 < 20, MDE).** The
+dispatch effect cannot be measured with this dose: the subsidy hit every Iberian combined cycle's hourly margin almost
+equally, so there is no cross-plant variation to use, and the hourly in-money flag barely predicts dispatch. The welfare
+section's dispatch shift stays an assumption of the re-clearing model, stated as such. Italian wind, solar and hydro
+data would not change this: neither failure involves the Italian controls.

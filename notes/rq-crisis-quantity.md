@@ -1592,3 +1592,34 @@ regression; triple ρ = 1 + b_IB − b_IT, bootstrap within country.
   18). Its placebos then fail on both counts (January excludes 0; both MDEs above 0.5). Italy has too few plants that
   look like Iberia's, which is what the conduct comparison found too (`7611791`). It stays out of the paper except as
   a reported failure.
+
+### K step 5. Unweighted triple difference with gas terms and a gap before the reference window — rules fixed before running (2026-11-08; the user asked for it after 4g stopped)
+
+**Declared:** the **sixth specification using Italy** (B1, B2, B3, K's step-1 triple, 4g, this one), chosen after seeing
+4g fail. Any write-up must list all six. It can corroborate the headline; it can never replace it.
+
+**Changes from 4g:** no entropy weights (overlap was the failure); Italian units at the 50% missing-week rule as in 4g;
+gas·z term per country (MIBGAS / PSV, as step 3); the reference curve (dose and z) built from the 8 weeks ending
+**4 weeks before** D, and both the reference and the 4 gap weeks dropped from the regression, against the regression to
+the mean seen at the January placebo. The same construction in both countries; so Iberia's b here differs slightly from
+the headline's.
+
+**Placebos first** (2022-01-01, 2022-03-01; S path shifted as in step 1): triple b = b_IB − b_IT with 95% firm-block
+interval (199 draws within country, seed 20261108) and MDE = 2.8 × bootstrap sd.
+**Rule:** read the triple ρ only if both placebo intervals include 0 **and** both MDEs are ≤ 0.5. Otherwise STOP.
+**If read:** ρ_triple = 1 + b_IB − b_IT with interval; Italy's b alone (the falsification test); say whether the interval
+overlaps the headline's [0.48, 1.00]. Check only.
+
+### K step 5 results (2026-11-08; `gas_cap_quantity_unit_dose_triple.py`, 199 draws → `gas_cap_quantity_unit_dose_triple.csv`)
+
+| placebo | Iberia b | Italy b | triple b | MDE |
+|---|---|---|---|---|
+| 2022-01-01 (48 / 55 units) | +0.056 [−0.027, +0.148] | −0.015 [−0.202, +0.259] | +0.071 [−0.211, +0.274] | 0.37 |
+| 2022-03-01 (49 / 56 units) | −0.012 [−0.141, +0.200] | −0.170 [−0.490, +0.225] | +0.159 [−0.280, +0.592] | **0.62** |
+
+**Reading, by the rule: STOP.** Both placebos are now flat — the gas term and the gap removed the January failure
+(step 1: +0.22 excluding 0; here +0.07 [−0.21, +0.27]) — but the March MDE is 0.62, above 0.5. The triple ρ is not read.
+What limits it is Italian noise around the March 2022 break (Italy's own interval at that date spans 0.7). The design
+is now valid in its assumptions as far as the placebos can tell, but cannot tell ρ = 1 from ρ = 0.4 at that date.
+In the paper: six Italian specifications, the last with flat placebos and insufficient power; Italy's role is the
+falsification test (step 3: would-be slope −0.06 [−0.28, +0.07] with the gas term).

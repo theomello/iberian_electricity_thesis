@@ -52,21 +52,22 @@ not a test. Read: a small markup on a few steps that does not reach the price.
 | 3.5 | Unoffered hydro capacity and the incentive | 2019–2025-09, 13 Spanish units | +0.15 pp of capacity per sd [0.05, 0.25]; every pooled interval below 0.55 pp | — | — | the pre-fixed bar (1 pp) not reached | B |
 | 3.6 | Gas/coal fault starts and the owner's stake | 2018–2026, 39,758 unit-days | −0.0014 pp per €/MWh of X, p 0.86 | — | — | no | B |
 
-### Claim 4 — The gas cap reached declared costs almost one-for-one, offers by somewhat less
+### Claim 4 — The gas cap reached declared costs almost one-for-one, and offers nearly so (updated 2026-11-08)
 
 | # | What | Sample | Estimate [95%] | Grade |
 |---|---|---|---|---|
 | 4.1 | Declared variable cost (minimum-income term), jump on 15 June 2022 | 50 Iberian gas units | −0.544 log points; full pass-through −0.721; placebo dates ±0.125 | A |
 | 4.2 | Declared cost, pass-through | June 2022 → Jan 2023 | ρ 0.91 [0.86, 0.96]; 0.92–1.00 in Jun–Oct 2022 | A |
-| 4.3 | Offers: capacity offered within €20 of net cost, dose-response against Italy | 49 Iberian / 44 Italian units, 92 weeks | ρ 0.73 [0.51, 1.03]; with gas-price controls 0.54–0.85; with physical-supply controls 0.76 [0.62, 0.92] | B (depends on whether Iberian offers respond to gas apart from the subsidy; LNG channel ruled out, storage uninformative) |
-| 4.4 | Offers minus declared costs | same, 8 of 10 firms | d +0.19 [−0.12, 0.38] | B (not distinguishable from 0) |
+| 4.3 | **Offers, plant-level dose within Iberia** (design K, 2026-11-08): capacity offered within €20 of net cost, plant × week with week fixed effects; does not rest on Italy | 49 Iberian units, 10 firms, 83 weeks | **ρ 0.87 [0.48, 1.00]** (wild cluster bootstrap, the widest of three; firm block [0.62, 1.03], jackknife [0.62, 1.11]); with a gas × near-cost-mass term 0.84; with Italy's gas response imposed 0.92–0.94; no difference by dose or efficiency tercile; re-weighted triple difference with Italy fails its placebos | B (all pre-fixed checks pass; ten firms, Iberdrola 34% of the weight; heterogeneity not detected but tercile intervals ±0.3) |
+| 4.3b | Offers: same outcome, dose-response against Italy (B3; superseded as the headline by 4.3) | 49 Iberian / 44 Italian units, 92 weeks | ρ 0.73 [0.51, 1.03]; with gas-price controls 0.54–0.85; with physical-supply controls 0.76 [0.62, 0.92] | B (depends on whether Iberian offers respond to gas apart from the subsidy; LNG channel ruled out, storage uninformative) |
+| 4.4 | Offers minus declared costs | same, 8 of 10 firms | d +0.19 [−0.12, 0.38] against B3; against 4.3 the point gap is about +0.04 (0.91 − 0.87; not bootstrapped) | B (not distinguishable from 0) |
 | 4.5 | Declared start-up cost as a share of the static price–cost gap | 84 plants, 2019–24 | 5–13% (fixed term); up to 28–70% with the variable term | B (bound; declarations are strategic) |
 
 ## 2. What the table supports, and what it does not
 
 - **Supported (A/B rows):** across thermal and hydro offers, and across four quantity margins, every interval excludes
   Nash and almost every one includes the price-taker band. The cap's subsidy reached declared costs at 0.9–1.0 and
-  offers at 0.5–1.0.
+  offers at 0.84–0.87 within Iberia (wild-bootstrap interval 0.48–1.00; 0.73 [0.51, 1.03] against Italy).
 - **One exception:** hydro 2019–21H1, a markup of about €1/MWh on price-setting steps, resting on one firm, with no
   effect on the price, and not reproduced by the second hydro design.
 - **Not supported:** "price-taking" as a positive finding outside rows 1.1–1.2 (thermal), where an equivalence test
@@ -75,7 +76,8 @@ not a test. Read: a small markup on a few steps that does not reach the price.
   departure is (2.1 vs 1.6); (ii) leg D's buyer markdown (β− 0.19, no interval) conflicts with the simulation, which
   finds no stable buyer pattern, and with the fixed step, which traces it to contract routing; (iii) the
   reactor-outage instrument gives a price-taker band near 0 in its own design but −0.40 / −0.59 in the step estimator;
-  (iv) the welfare figures use ρ 0.55 / 0.73 / 1.0 — the corrected band (0.54–0.85) is covered by that grid.
+  (iv) the welfare figures use ρ 0.55 / 0.73 / 1.0 — the new headline 0.84–0.87 lies between the last two grid points;
+  the welfare section should add a run at 0.87 (not yet done).
 
 ## 3. Full register (80 rows, with the verifier's corrections)
 
@@ -323,7 +325,7 @@ Estimates in the listed notes that the extraction does not have as their own row
 (6) rq-reactor-outages.md §12.1. Unplanned doses only, 25%: -2.80 [-8.00, -0.18], p(beta = 0) 0.04, p(beta = 1) 0.01; this sub-row excludes zero. Planned only: +0.47 [-3.18, 4.24]. Hydro 50%: +0.41 [-1.83, 2.22]. Combined cycle 50%: -2.41 [-8.87, 1.99]. Thermal offer minus c_bid: -1.60 [-7.03, 2.78]. §11 price-taker band: thermal cost +0.006 [-0.006, 0.018]; hydro lambda* +0.08 [-0.12, 0.24]. §7, rain alone (30 days): -2.46 [-7.18, 1.52], F 9.5. §9.1, regional wind measured, effects B: +3.37 [0.07, 7.45], excludes 0, a check only.
 (7) rq-fixed-step.md, ten seeds. Iberdrola seller, n with Zb: +6.8 EUR per GW [3.2, 10.6], differs, read as book management. Ladder at 1.5 cf_s in the departure periods: +0.29 [+0.01, +0.60] at ten seeds, then no longer differs after the 2026-10-21 rerun (b 0.210, low end -0.023).
 (8) Conduct and pass-through estimates in notes outside the list (not fully verified here):
-- rq-crisis-quantity.md: in-money rho 0.73 [0.51, 1.03] (line 157/218), central band 0.5-0.85.
+- rq-crisis-quantity.md: in-money rho 0.73 [0.51, 1.03] (line 157/218), central band 0.5-0.85. Superseded as the headline by §K (2026-11-08): within-Iberia plant-level dose rho 0.87 [0.62, 1.03], 0.84 [0.58, 0.99] with the gas term.
 - rq-gas-cap-declared-cost.md §2: the declared minimum-income cost passes through about nine-tenths of the gas subsidy.
 - rq-ivpee-tax-test.md: pass-through theta 1.45, p 0.18 for theta = 1, p < 0.001 for theta = 0.
 - rq-gas-cap-control.md / rq-gas-cap-conduct.md: Design B p_mid rho 1.06 [0.58, 1.90] (per memory).
@@ -502,7 +504,7 @@ Outside the listed notes, recorded in CLAUDE.md and memory but not in this set; 
 - Price-taking simulation and fixed-step hydro departures: 2019–21H1 +0.25 on ten seeds.
 - Leg B at-cost.
 - Gas-cap pass-through of the declared minimum-income cost: about 0.9–1.0 of the subsidy.
-- Crisis quantity design: ρ 0.73 [0.51, 1.03], or 0.54 [0.10, 0.87] with gas controls.
+- Crisis quantity design: ρ 0.73 [0.51, 1.03], or 0.54 [0.10, 0.87] with gas controls (B3, against Italy); within Iberia, plant-level dose (§K, 2026-11-08): 0.87 [0.62, 1.03], 0.84 [0.58, 0.99] with the gas term.
 - Gas-cap vs Italy and Great Britain tests (2c Design B p_mid ρ 1.06 [0.58, 1.90]).
 
 **Open conflicts flagged by the extractor:**
@@ -543,134 +545,11 @@ Estimate: rho = 0.73 (quoted with a central band 0.5-0.85 across gas controls). 
 Nash rejected: not tested. Price-taking rejected: no. Status: current. Checks: All pre-fixed checks pass on the main sample: timing permutation p 0.000 (45 shifts); without Dec 2022 0.74, without Oct-Nov 0.73; gas controls 0.54-0.58 inside. Trend version 0.79 [0.66, 0.91] excludes 1. Fourth Italian specification, requested after three failed. LNG confound ruled out at pre-set power (power 1.00); storage uninformative (power 0.42). About ten firm clusters bind.  
 Source: notes/rq-crisis-quantity.md B3 results and B3 check results; notes/rq-gas-cap-control.md Plain reading and LNG and storage: results.
 > Later figure: Unchanged by the later physical-supply test. notes/rq-gas-cap-control.md 'LNG and storage: results' (2026-11-05): 'The quote is unchanged: ρ 0.73 [0.51, 1.03], band 0.54–0.85.' Physical control sets give 'Iberian P1–P3 0.762 [0.615, 0.916]; + bid-time MIBGAS + PSV 0.914 [0.376, 1.318]'. None is favoured.
+> Later figure (2026-11-08): superseded as the headline offer-side estimate by G5b (plant-level dose within Iberia, ρ 0.87 [0.62, 1.03]), which does not rest on Italy.
 
-**G6. Does controlling for gas prices change the offer pass-through estimate?**  
-gas combined-cycle offers, run20 (as B3); B3 with weekly gas-price controls (delivery-day or bid-time MIBGAS, PSV, spread), same firm-block bootstrap draws; H6 contrast and control-set comparison. Sample: as B3 main (r = 0, 199 draws, 10 Iberian / 12 Italian firms).  
-Estimate: rho 0.544 (delivery-day MIBGAS + spread); 0.583 (delivery-day MIBGAS); 0.722 (bid-time MIBGAS); 0.847 (PSV alone); 0.823 (bid-time MIBGAS + PSV). Interval: [0.097, 0.872] (MIBGAS + spread); [0.118, 0.941] (MIBGAS); [0.237, 1.128] (bid-time MIBGAS); [0.622, 1.085] (PSV). Benchmarks: as B3: rho = 1 full pass-through, rho = 0 subsidy kept.  
-Nash rejected: not tested. Price-taking rejected: not tested. Status: current. Checks: Contrast none minus both controls +0.182 [-0.119, +0.584]: gas response not detectable. No-dose test uninformative by rule (power 22%). No control set favoured by blocked CV (best gain 0.8% vs 10% required). Dose explains 95.7% of MIBGAS variance. Earlier quoted band 0.55-0.75 superseded by 0.5-0.85. Full pass-through outside the delivery-day-controlled interval, inside the bid-time/PSV ones.  
-Source: notes/rq-gas-cap-control.md (3) Better controls; notes/rq-crisis-quantity.md H6 results.
-> Later figure: Add the interval for bid-time MIBGAS + PSV: 0.823 [0.334, 1.206] (rq-gas-cap-control.md (3)). Add the physical-supply sets from 'LNG and storage: results': Iberian LNG/storage rows 0.762 [0.615, 0.916]; with bid-time MIBGAS + PSV 0.914 [0.376, 1.318].
-
-**G7. How sensitive is the offer pass-through to specification choices?**  
-gas combined-cycle offers, run20; Specification curve over B3: margin (EUR 20/50/all hours) x r 0-5 x gas controls x trend x window end; point estimates, 216 cells. Sample: as B3; 216 cells (72 at the main EUR 50 margin).  
-Estimate: all cells median rho 0.70 (middle half 0.32-0.87); main margin quartiles 0.37 / 0.56 / 0.68; honest range at main margin about 0.4-0.75. Interval: none (spread across specifications, not a confidence interval). Benchmarks: rho = 1 full pass-through, rho = 0 subsidy kept.  
-Nash rejected: not tested. Price-taking rejected: not tested. Status: current. Checks: Margin and gas controls move rho; r, trend, window end do not. 71% of cells pass permutation (all at main margin). Run before the 2026-11-05 correction that bid-time/PSV controls give 0.72-0.85, so the 'with controls 0.41-0.45' reading uses delivery-day MIBGAS only.  
-Source: notes/rq-crisis-quantity.md, G1 results (G1a).
-> Later figure: The 'with controls 0.41-0.45' reading at the main margin uses delivery-day MIBGAS only. rq-gas-cap-control.md (3), 2026-11-05: controlled rho is 0.54-0.85 depending on the gas series. rq-crisis-quantity.md H6 correction: 'the central band is **0.5–0.85**, not 0.5–0.75'.
-
-**G8. Do offers pass through less of the subsidy than declared costs?**  
-difference: declared-cost rho minus offer (run20) rho; Paired firm-block bootstrap of declared rho and B3 offer rho on the same draws. Sample: main B3 sample, r = 0, 199 draws; 8 of 10 Iberian firms declare.  
-Estimate: d = +0.19 (mean +0.16); offer rho 0.73, declared rho 0.91. Interval: [-0.12, +0.38]. Benchmarks: d = 0: offers and declarations pass through the same share; d > 0: offers keep more of the subsidy than declared costs suggest.  
-Nash rejected: not tested. Price-taking rejected: not tested. Status: current. Checks: Rule: no difference detectable (interval holds 0); 87% of draws d > 0; pairing removed little noise (correlation +0.29). The two rho are different objects.  
-Source: notes/rq-crisis-quantity.md, G1 results (G1b).
-
-**G9. Does the offer price fall one euro per euro of subsidy?**  
-gas combined-cycle offer prices: p50 (price at half of offered volume) and p_mid, minus gross cost; I4: Xu generalised synthetic control vs Italy, weekly median in predicted in-money hours; ATT_w = a + c * mean weekly subsidy; rho = -c. Sample: 49 Iberian / 28 Italian units (y50), 48 / 25 (ymid); post-cap weeks 2022-06 to 2023-06; r = 1 by cross-validation.  
-Estimate: rho 1.17 (y50), 1.34 (ymid); with MIBGAS control 0.62 / 0.60. Interval: y50 [0.71, 1.74]; ymid [0.95, 1.90] (firm-block bootstrap, 199). Benchmarks: rho = 1 (c = -1): full pass-through, offer falls by the subsidy (price-taking cost pass-through); rho = 0: no fall (subsidy kept).  
-Nash rejected: not tested. Price-taking rejected: no. Status: current. Checks: Gates pass for both: permutation p 0.000; trend version 1.05 [0.74, 1.39] / 1.11 [0.87, 1.54] inside. Uncontrolled slope absorbs gas co-movement (cost_gross enters y); not independent of B3 (same panel). Earlier price-level designs failed their post-cap check (+EUR 168).  
-Source: notes/rq-crisis-quantity.md, I4 results.
-
-**G10. Within Iberia, did offers near cost reach the full pass-through end?**  
-gas combined-cycle offers, run20 and run20_gross; B1: actual Iberian mean vs two ends built from each unit's last eight pre-cap weeks of markups carried forward (no Italian counterfactual); linear interpolation. Sample: Iberian main sample, 35 weeks with a subsidy (mean subsidy EUR 102).  
-Estimate: rho approx. 1.1 on run20 (actual 0.665 vs full end 0.646, none end 0.388). Interval: none. Benchmarks: rho = 1: full pass-through (offers at net cost); rho = 0: pre-cap markups over gross cost kept.  
-Nash rejected: not tested. Price-taking rejected: not tested. Status: current. Checks: Descriptive only. B1's power check for the Italian design STOPPED: MDE 0.133 vs half-gap 0.129 (run20), run20_gross far off; passes only after a post-result amendment restricting to high-subsidy months (gap 0.410).  
-Source: notes/rq-crisis-quantity.md, B1 The two ends and the minimum detectable effect.
-
-**G11. Mean pass-through against Italy over high-subsidy weeks (in-money hours)?**  
-gas combined-cycle offers, run20, predicted in-money hours; B2: Xu generalised synthetic control vs Italy, ATT over 19 high-subsidy weeks; rho = 1 + ATT/0.410. Sample: 49 Iberian and 44 Italian units x 92 weeks; 10 Iberian / 12 Italian firms.  
-Estimate: rho 1.06 (ATT +0.025). Interval: [0.87, 1.29]. Benchmarks: rho = 1 full pass-through; rho = 0 subsidy kept.  
-Nash rejected: not tested. Price-taking rejected: not tested. Status: failed a check. Checks: STOP: post-subsidy gap should be ~0 but is +0.134 [+0.019, +0.197], outside +/-0.05 at every r; rho cannot be read. Superseded by B3.  
-Source: notes/rq-crisis-quantity.md, B2. Pass-through against Italy.
-
-**G12. Mean and dose pass-through against Italy using all hours?**  
-gas combined-cycle offers, run20, every hour; B2 and B3 on all hours (sample chosen after the in-money B2 stopped); Xu r = 2. Sample: 51 Iberian and 53 Italian units x 92 weeks; 12 / 13 firms.  
-Estimate: B2 rho 1.17; B3 rho 1.18 (0.96 with trend). Interval: B2 [0.97, 1.50]; B3 [0.78, 1.50]. Benchmarks: rho = 1 full pass-through; rho = 0 subsidy kept.  
-Nash rejected: not tested. Price-taking rejected: no. Status: failed a check. Checks: B1 power fails on all hours (placebo MDE 0.207 > 0.170); B2 after-check holds at r = 2 only (fails at r = 1, 4, 5); B3 all-hours fails timing permutation (p 1.000) and MIBGAS control (0.70-0.77). Corroboration/footnote only.  
-Source: notes/rq-crisis-quantity.md, B2 on all hours; B3 check results.
-> Later figure: Superseded by B3 in-money 0.73 [0.51, 1.03]. B2 note: 'For scale only, not a result: subtracting the after-gap would give ρ ≈ 0.73.'
-
-**G13. Does a daily dose sharpen the offer pass-through estimate?**  
-gas combined-cycle offers, run20, unit-day; G2: Xu generalised synthetic control on unit x day matrix, ATT_d on daily dose g_d; rho = 1 + b. Sample: 41 Iberian and 39 Italian units x 638 days; 10 / 10 firms; r = 3.  
-Estimate: rho 0.82. Interval: [0.63, 1.01] (not to be quoted per rule). Benchmarks: rho = 1 full pass-through; rho = 0 subsidy kept.  
-Nash rejected: not tested. Price-taking rejected: not tested. Status: failed a check. Checks: Timing permutation fails (p 0.117 over 206 day shifts) -> STOP. Trend 0.96 [0.84, 1.09]; controls 0.84-0.89. 38% of cells missing.  
-Source: notes/rq-crisis-quantity.md, G2 results.
-> Later figure: B3 all hours with trend: 0.96 [0.76, 1.19]. rq-crisis-quantity.md B3 check results: 'All hours drops to a footnote.'
-
-**G14. Can a better counterfactual (hour-of-day or within-Iberia) estimate pass-through?**  
-gas combined-cycle offers, run20; H7 hour-of-day blocks vs Italy; H8 within-Iberia ridge prediction from bid-time conditions; both gated on pre-cap fit before any rho. Sample: as B3 (49 Iberian, 44 Italian units); H8 36 fit weeks.  
-Estimate: none (no rho computed). Interval: none. Benchmarks: would be rho = 1 full pass-through, rho = 0 subsidy kept.  
-Nash rejected: not tested. Price-taking rejected: not tested. Status: stopped before estimate. Checks: H7 STOP: pre-cap R2 median -0.70 vs baseline -0.35 (two blocks dropped). H8 STOP: both Iberian variants fail gate (c), MAE 0.89-1.05 of Italy-based vs <=0.80 required.  
-Source: notes/rq-crisis-quantity.md, H7 stage 1 results; H8 stage 1 results.
-
-**G15. Did hydro offers, relative to the price-taking water value, move at the cap start?**  
-hydro offers: ocf (offer price at expected running share) over lambda* (price-taking forward water value); Event J: change in median log(ocf/lambda*), 7 days before vs 7 days from 2022-06-15, against 273 placebo dates; per firm. Sample: EDP 5 units, Iberdrola 7, all eligible 20; non-pumped storage hydro; Endesa and Naturgy STOP (too few units).  
-Estimate: J EDP -0.102, Iberdrola -0.075, pooled -0.061; EDP minus Iberdrola -0.027 (log points). Interval: none (placebo band EDP -0.311/+0.280; Iberdrola -0.162/+0.206; pooled -0.120/+0.193). Benchmarks: J = 0: offer moves with lambda* (stays relative to the price-taking water value); J = -0.72: thermal-style fall (pricing off the subsidised gas cost). Measures a change, not the level of conduct..  
-Nash rejected: not tested. Price-taking rejected: not tested. Status: current. Checks: Inside band for both firms and the contrast; thermal-sized fall (-0.544) lies outside both bands; checks (a)-(f) leave firm positions unchanged; pooled row not robust under lambda*90s. lambda* fell the week before, so flat ratio means offers caught up. Clawback date (2021-06-01) secondary: all inside.  
-Source: notes/rq-gas-cap-hydro-link.md, §2.2 The cap start, 2022-06-15.
-
-**G16. Did hydro offers fall relative to lambda* on the cap's first day (post hoc)?**  
-hydro offers relative to lambda*; Post hoc one-day change D-1 to D at 2022-06-15 against 269 placebo dates; plus capacity-weighted 7-day J. Sample: EDP 5, Iberdrola 7, all eligible 20 units.  
-Estimate: one-day change EDP -0.214, Iberdrola -0.275, pooled -0.155; capacity-weighted 7-day J Iberdrola -0.225. Interval: none (placebo band EDP -0.168/+0.182; Iberdrola -0.184/+0.166). Benchmarks: 0: offers track lambda*; -0.72: thermal-style fall.  
-Nash rejected: not tested. Price-taking rejected: not tested. Status: current. Checks: Post hoc, not pre-registered; below band in both firms but day before is the ratio's peak (partly undoes a run-up). Unit-level: DUER, TAJO, HCHI unusual; with 20 units 1-2 extremes expected by chance; read as a lead.  
-Source: notes/rq-gas-cap-hydro-link.md, §2.4 Post hoc: the one-day change.
-
-**G17. Do hydro offers relative to lambda* move with the daily subsidy dose?**  
-hydro offers relative to lambda*; Dose regression y = a_u + phi * x_d (log fall in gas cost from subsidy), with/without log MIBGAS; placebo shifted windows. Sample: 2022-06-01 to 2023-03-31; EDP 7 units, Iberdrola 9, all eligible 27.  
-Estimate: phi Iberdrola 0.171 (0.157 with gas); EDP 0.052 (0.447 with gas); pooled 0.145 (0.223 with gas). Interval: none (placebo bands: Iberdrola -0.39/+0.34; EDP -0.39/+0.30 and -0.39/+0.28 with gas; standard errors indicative). Benchmarks: phi = 0: offer does not move relative to lambda*; phi = 1: thermal-style response to the gas cost shifter.  
-Nash rejected: not tested. Price-taking rejected: not tested. Status: current. Checks: Only EDP with gas control above band (1 of 4 firm cells); about 8 independent placebo windows; one episode collinear with winter gas hump. Endesa, Naturgy not findings.  
-Source: notes/rq-gas-cap-hydro-link.md, §2.5 Dose.
-> Later figure: Capacity-weighted 7-day J, in full (§2.4): EDP −0.140 (6.6th pct, two-sided 0.12); Iberdrola −0.225 (2.6th pct, two-sided 0.055); all eligible −0.143 (2.2nd pct, 0.08). The band was computed after the fact.
-
-**G18. How far are hydro offers from the price-taking water value, by firm?**  
-hydro offers: monthly median ocf/lambda*; Descriptive monthly ratio of offer at expected running share to price-taking water value. Sample: EDP and Iberdrola eligible units, 2022-03 to 2022-12; Naturgy March 2022 to May 2023.  
-Estimate: ratio EDP 0.77-1.04; Iberdrola 0.95-1.39; Naturgy 1.7-3.1. Interval: none. Benchmarks: ratio 1: offers at the price-taking water value; above 1: offers above it (withholding/markup or a water value beyond lambda*).  
-Nash rejected: not tested. Price-taking rejected: not tested. Status: current. Checks: Descriptive only; lambda* is a lower bound on water value; Endesa too thin to read.  
-Source: notes/rq-gas-cap-hydro-link.md, §2.3 What the days around the cap show.
-
-**G19. How much of gas plants' static price-cost gap is their declared start-up cost?**  
-declared cost: minimum-income fixed term F and variable term V vs static gap M = sum (p - c) q; Ratio of sums F/M (lower bound on declared-cost share) and (F + W)/M with W = (V - c)Q (upper bound), cap window out. Sample: 84 plants with plant-specific efficiency (44 ES, 10 PT gas; 28 coal), 2018-01-01 to 2025-03-18; 32,326 unit-days after amendment.  
-Estimate: gas F/M 5-13% in 2019-2024 (23% in 2018); ES gas 2-5%; (F + W)/M 28-70% (gas pooled); residual E EUR 14-18/MWh ES gas 2021-22. Interval: none. Benchmarks: Share of the static gap explained by the plant's own declared cost; residual E is margin above everything declared but includes inframarginal rent, so it is explicitly not a markup or market power.  
-Nash rejected: not tested. Price-taking rejected: not tested. Status: current. Checks: Join gate (E >= -100 on 95% of days) FAILED as written (79-94%); passes at 100% after a post-result amendment dropping 1-3-period shutdown-tail days. Cap-window variants move 2022/2023 by <=1.7 pp (main stands). Declaration strategic; declaring days selected.  
-Source: notes/rq-startup-cost-correction.md, §2 Results and §4 What this means for the paper.
-
-**G20. After the 2025 switch, how much of the gap does the declared SCO requirement explain?**  
-declared cost: SCO lump sum (sco_fixed_eur) plus cleared tranche prices beyond fuel, D/M; Upper bound D/M with D = Fijo + sum(b q) - cQ, tranche prices from the offered curve; compared with pre-switch (F + W)/M. Sample: 2025-03-19 to 2026-05-31; 294 accepted declaring ES gas unit-days, 9 PT.  
-Estimate: D/M ES gas 0.785; gas pooled 0.790 (vs 0.73-0.74 before the switch). Interval: none. Benchmarks: Upper bound on the share of the static gap explained by declared requirement; not a conduct benchmark (residual includes inframarginal rent).  
-Nash rejected: not tested. Price-taking rejected: not tested. Status: current. Checks: Gate passes 100%; rules written after scoping saw the headline (reproduction, not blind). Within +/-0.10 of pre-switch. No lower bound identifiable after the switch. Declaring days clear 4.5% vs 14.5%: heavy selection; median slack 8.6% of Fijo.  
-Source: notes/rq-startup-cost-correction.md, §5.3 Results.
-> Later figure: For Spanish gas only, the range is 'a range, **2–5% (F) to 39–81% (F + W)**' (§2.4). After 2025-03-19 only the upper bound exists, D/M 0.785 for Spanish gas (§5.3; see row 20).
-
-**G21. Did unhedged hydro plants raise offers more under the 2021 windfall levy?**  
-hydro offers under the 2021 levy (RDL 23/2021); Design 4: differential forward-contract exposure within Spain (exempt contracted energy), predetermined exposure. Sample: 23 Spanish hydro units.  
-Estimate: beta log(median offer) +0.0067 (t 3.76); levels +0.31 (t 0.43); marginal accepted offer -0.73 (t -1.96). Interval: none. Benchmarks: beta = 0: levy not passed into offers by more-exposed plants; per-MWh levy predicts an additive shift in levels.  
-Nash rejected: not tested. Price-taking rejected: not tested. Status: failed a check. Checks: Both placebos pass, but sign depends on outcome and levels range 0.13 to 1.82 across trimming; reservoir control moves beta only in third decimal. Note: cannot produce a reportable estimate.  
-Source: notes/rq-gas-cap-conduct.md, How it compares to the alternative — both are now live.
-
-**G22. Does drought steepen firms' residual demand (a market-power instrument)?**  
-firm residual-demand price impact (first stage for market power in the cap window); Fill anomaly on log firm price impact (band-density estimator, own offers removed), firm x hour + year-month FE. Sample: 10 firms, 350,995 firm-periods; cap window 19 month clusters.  
-Estimate: beta +1.14 (se 1.64) pooled; +10.1% price impact per 1-sd wetter move; firms +0.17 to +2.93. Interval: roughly [-18.3%, +38.5%] per 1-sd move (95%). Benchmarks: Channel needs beta < 0 (drought raises price impact, more scope for markup); not a conduct estimate itself.  
-Nash rejected: not tested. Price-taking rejected: not tested. Status: stopped before estimate. Checks: First stage absent: wrong sign in all ten firms, none significant (max t 1.49); no heterogeneity by rival hydro exposure. Drought kept as a control only.  
-Source: notes/rq-gas-cap-conduct.md, 2026-08-21: the 2022 drought — It is not an instrument for market power.
-> Verifier: The status 'failed a check' is inaccurate. Both placebos pass ('**both placebos pass** — the only design here that manages that'). The design stopped because 'It still cannot produce a reportable estimate, because the sign depends on which outcome variable is chosen'. The levels form is the correct one, and 'in levels nothing survives sample choice'. Use the status: stopped, not reportable (outcome-dependent sign; levels unstable across trimming). Add the 2026-08-18 update in the same section: the MITECO reservoir fill-anomaly control 'moves beta in the third decimal place on every specification'. Marginal accepted offer across trimming: −0.69 → +0.17.
-
-**Estimates the verifier found missing from this group (kept as reported, not re-verified):**
-
-The extraction missed these conduct estimates. In the listed notes:
-(1) rq-gas-cap-control.md 'LNG and storage: results'. Rho with physical gas-supply controls: Iberian LNG tank fill, storage anomaly and arrivals (P1–P3) give 0.762 [0.615, 0.916]; adding bid-time MIBGAS and PSV gives 0.914 [0.376, 1.318]; the Italian sets give 0.689–0.766, reported only. None is favoured. LNG gap world rejected: P1 slope per sd −0.004 [−0.038, 0.032], P3 interval [−0.054, 0.013], power 1.00. Storage P2 is uninformative (power 0.42).
-(2) rq-gas-cap-control.md (1) No-dose tests. The Iberian-minus-Italian gas response in weeks with no subsidy is not a pass-through rho, but it tests the confound in rho. Pooled slope −0.00057 per EUR/MWh, double bootstrap [−0.00232, +0.00028], power 22% at c* +0.00087. Uninformative by the rule.
-(3) rq-gas-cap-declared-cost.md §5. Capacity offered near cost (run20) in predicted in-money hours, pre-trend test: Iberia 0.64–0.72 / 0.60–0.67 / 0.63–0.73 (flat across the cap); Italy falls in March 2022. Main sample trend +0.038 (0.033), placebo 2021-10-01 +0.100 (0.059): 'fails'. This is a withholding-level descriptive and a design gate.
-(4) rq-gas-cap-hydro-link.md §2.2, secondary date. Clawback announcement 2021-06-01: J EDP −0.037 (band −0.30/+0.35), Iberdrola +0.007 (−0.11/+0.15), Endesa −0.035 (4 units, not a finding), pooled −0.026, EDP minus Iberdrola −0.043. 'All inside.' It is mentioned in row 15's checks only and could be its own row (levy conduct, hydro).
-(5) rq-startup-cost-correction.md §2.7. Unit-by-year fixed effects, gas: F per MWh '+€0.16 per 10 points of VRE share (t 4–5)'; static gap falls '€4.0–4.3 per 10 points (t −7)'. Descriptive; Jha & Leslie direction.
-(6) rq-gas-cap-conduct.md 2026-08-21. Market-level drought first stage β −0.645 (se 0.932) on residual-demand elasticity. Context only.
-
-Outside the six listed notes, these are superseded or stopped price-side conduct results in docs/specs/2026-10-28-gas-cap-conduct-design.md, which the table should cite:
-- Step 2, interactive fixed effects (IFE) vs Italy: 'NOT IDENTIFIED'. At r = 8, A −0.12 [−0.52, +0.65] and B −1.69 [−4.47, +0.68]. The post-cap gap is '+€168 [+25, +479]'.
-- Step 2b, sharp break: 'STOP on every variant'. J(p_mid) −190 [−422, −67] (rho 1.8).
-- Step 2c, monthly Design B within Iberia: p_mid with controls 'ρ = 1.06 [0.58, 1.90]' (linear 1.60 [0.48, 2.95]). The premise passes, but identification is before/after. p_band 1.04 [0.90, 1.16] is the clearing price by construction, not conduct.
-- Difference in discontinuities vs Italy 'FAILS at every k' (D(mmid) −197 [−430, −68], rho 1.85). Italian-looking subset FAILS.
-- Step 2d, Great Britain: the price outcome FAILS (trend +330/yr). The run outcome fails one placebo (−0.066). The pooled estimate is not run.
-The memory file also records non-gas-cap conduct legs (legs A–D, hydro at-cost IV, price-taking simulation, holiday quantity test, and others). They are outside these notes and should be gathered from their own rq-*.md notes.
-
-**Open conflicts flagged by the extractor:**
-
-1) Declared-cost rho: the firm-block bootstrap gives 0.91 [0.86, 0.96], which excludes 1, but §3 of rq-gas-cap-declared-cost.md calls ~0.9 a lower bound (rho ~1 with the post-cap reference ratio). No pre-fixed test of rho = 1 exists, so the full-pass-through verdict was left "not tested". 2) B3's quoted band changed over time: 0.55-0.75 (B3 checks, 2026-11-03) and 0.5-0.75 (H6) were corrected on 2026-11-05 to 0.5-0.85, and the union of the intervals widened to 0.10-1.21. The euro and welfare figures (C, D, F, J) still use 0.55-0.75 and were not recomputed. G1's spec-curve reading "honest range 0.4-0.75" predates that correction and used delivery-day MIBGAS controls only. 3) Pass-through rows are not Nash tests. rho = 1 (full pass-through) is treated as the price-taking benchmark, and rho = 0 (subsidy kept) as the strategic extreme. Rejection of rho = 0 (B3: yes at every r; B2 all hours: yes) is recorded in checks, not in nash_rejected. 4) The earlier gas-cap price designs ("steps 2 and 2c", p_mid rho 1.06, post-cap gap +EUR 168, and the 2b sharp-break stop) are only cited from rq-crisis-quantity.md I4. Their figures are not in my six files (they are in docs/specs/2026-10-28-gas-cap-conduct-design.md), so no row was made. 5) The no-control-group passthrough design in rq-gas-cap-conduct.md is marked "not identified (9481fc2)" in its header, with no estimate in the file. The HP2008 PctAchieved design there was never run. 6) The declared-cost note §5 run20 in-money pretrend is a check, not a conduct estimate: Iberia is flat at 0.63-0.73, and the step-1 rule fails on the 2021-10-01 placebo (+0.100). It is omitted as a row. 7) Hydro-link J and dose are placebo bands, not confidence intervals: about 20 independent placebo windows for J and about 8 for the dose. 8) The start-up-correction gate failed as written and passed only after a post-result amendment. 9) The levy Design 4 figures in rq-gas-cap-conduct.md (2026-08-14/18) predate the 2026-10-27/28 ownership rebuild. No rerun is recorded in these files.
+**G5b. What share of the subsidy reached offers near cost, from differences between plants within Iberia? (new headline, 2026-11-08)**  
+gas combined-cycle offers: run20 as G5; design K: plant × week regression y_iw = α_i + δ_w + b·g_iw, where g_iw is the plant's own dose (its pre-cap offer curve: share of capacity at markup between 20 − S and 20) and week fixed effects absorb the gas price and everything common to a week; rho = 1 + b. Sample: the 49 Iberian units of B3, 10 firms, 83 weeks (the 8 reference weeks before the cap out), 3,307 unit-weeks.  
+Estimate: rho = 0.87; with a gas × near-cost-mass term 0.84. Interval: [0.62, 1.03]; with the term [0.58, 0.99] (firm-block bootstrap, 199 draws). Benchmarks: rho = 1 full pass-through; rho = 0 subsidy kept as markup.  
+Nash rejected: not tested. Price-taking rejected: no (main interval includes 1). Status: current. Checks: Step 1 (fixed before): within-plant dose spread adequate (23% of its variance within week and plant); placebo slopes at 2022-01-01 and 2022-03-01 flat (MDE 0.15, 0.19). Step 2: unit-trend version 0.87 [0.59, 1.10] inside; timing permutation p 0.019 (53 shifts); reference weeks kept 0.87; gross-cost in-money sample 1.02. Step 3: gas term not detected in Iberia (c +0.09 [−0.21, +0.33]) but absorbs Italy's drift (Italian would-be slope −0.21 → −0.06); an Italian-sized gas response is not excluded in Iberia. Triple difference with Italy (check, MDE 0.70) 1.08 [0.71, 1.36]. A fifth design involving Italy, but a different identifying variation.  
+Source: notes/rq-crisis-quantity.md §K (steps 1–3, the Italian drift).
+> Later figure (2026-11-08, K step 4): interval quoted from the wild cluster restricted bootstrap, ρ 0.87 [0.48, 1.00], p(ρ = 1) 0.054; imputation 0.86; dose terciles 1.03 / 0.81 / 0.90 and efficiency terciles 0.86 / 0.89 / 0.83, no difference detected; Italy's gas response imposed 0.92–0.94; leave-one-firm-out 0.79–0.94; re-weighted triple difference STOPPED at its placebos (5.7 effective Italian plants of 54).

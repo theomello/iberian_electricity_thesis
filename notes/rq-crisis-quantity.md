@@ -1519,3 +1519,76 @@ stays the main estimate**, ρ_gas 0.84 [0.58, 0.99] beside it.
   0.84–0.87, near full, intervals reaching from about 0.6 to 1.
 - Arithmetic only, not estimated with its own bootstrap: a triple difference with the term in both countries would be
   1 + (−0.164 + 0.064) ≈ 0.90.
+
+### K step 4. Robustness of the headline, and a re-weighted triple difference — rules fixed before running (2026-11-08; user's go-ahead; literature in `notes/literature-triple-difference.md`)
+
+The main estimate stays K step 2's ρ 0.87 [0.62, 1.03] unless a rule below says otherwise. Same units, weeks, doses,
+bootstrap seed (20261108) and 199 firm-block draws unless stated.
+
+**4a. Bound with Italy's gas response imposed.** Subtract c·gas_w·z_i from y with c fixed at Italy's −0.17 (full window)
+and −0.23 (pre-cap), re-estimate b. Reported: answers "if Iberia reacted to gas as Italy did, where would ρ be?".
+
+**4b. Split-sample near-cost mass.** z_early from the reference curve before 2022-01-01 (8 weeks to 2021-12-31), used as
+an instrument for gas·z (2SLS, with g exogenous). Rule: if the IV c's interval excludes 0 and is negative, ρ from this
+regression becomes the main estimate; otherwise 0.87 stays.
+
+**4c. Imputation (Borusyak, Jaravel & Spiess; Strezhnev).** Plant effects estimated only from untreated weeks (pre-cap
+outside the reference window, and post-cap weeks with S = 0), then (y − α_i) on g with week effects over dosed weeks.
+Rule: reported; if b falls outside the main interval, say so and quote both.
+
+**4d. Heterogeneity (Caron; Callaway, Goodman-Bacon & Sant'Anna).** The slope across plants is causal only if plants with
+different doses would respond alike to the same dose (no selection on gains). Separate b for terciles of (i) the plant's
+mean post-cap dose, (ii) plant efficiency; and Spain vs Portugal; per firm, point estimates and each firm's share of the
+regression's weight (its share of Σ residualised g²). Rule: if the 95% interval of any tercile difference (top minus
+bottom) excludes 0, state that 0.87 is a weighted average, give the weights, and quote the tercile estimates beside it.
+
+**4e. Inference with 10 clusters (MacKinnon et al.).** Besides the firm-block bootstrap: CV3 (leave-one-firm-out
+jackknife) standard error with a t(G − 1) interval; wild cluster restricted bootstrap with Webb six-point weights, 9,999
+draws, interval by test inversion, and p-values for ρ = 1 and ρ = 0. Rule: quote the widest of the three intervals.
+
+**4f. Honest bound (Rambachan & Roth, relative magnitudes, conservative form).** Let V = the largest absolute Iberian
+placebo slope from step 1 (0.061). Allow a post-cap bias in b of up to M̄·V and widen the interval of 4e by that on each
+side, for M̄ = 0.5, 1, 2. Reported; it is the union-bound version, wider than their optimal interval.
+
+**4g. Re-weighted triple difference (Leventer; Ortiz-Villavicencio & Sant'Anna).** Italian units kept at the 50%
+missing-week rule (Iberia stays at 30%). Italian plants entropy-balanced (Hainmueller) to Iberia's means of: plant mean
+dose after the cap (would-be for Italy), near-cost mass z, efficiency. Gas·z term per country. b_IT on the weighted Italian
+regression; triple ρ = 1 + b_IB − b_IT, bootstrap within country.
+- Placebos first (2022-01-01, 2022-03-01), same weights, gas term in: the triple ρ is read only if its placebo MDE ≤ 0.5
+  at both dates and both placebo intervals include 0. Otherwise STOP at the placebos.
+- If read, it is a check on 0.87, never the main estimate (fixed now): say whether the intervals overlap.
+- Balance is reported (weighted Italian means against Iberian) and the effective number of Italian plants.
+
+### K step 4 results (2026-11-08; `gas_cap_quantity_unit_dose_robust.py`, 199 draws, 9,999 wild draws → `gas_cap_quantity_unit_dose_robust.csv`, `_triple_balance.csv`)
+
+| | ρ | 95% | rule |
+|---|---|---|---|
+| main (step 2, reproduced) | 0.87 | [0.62, 1.03] | |
+| 4a Italy's c imposed (−0.17 / −0.23) | 0.92 / 0.94 | [0.61, 1.09] / [0.65, 1.08] | reported |
+| 4b 2SLS, gas·z instrumented by the early near-cost mass | 0.72 | [0.23, 1.00]; c +0.47 [−0.33, +1.85]; z vs z_early corr 0.62 | c not negative-significant → 0.87 stays |
+| 4c imputation (plant effects from untreated weeks) | 0.86 | [0.49, 1.02] | inside the main interval |
+| 4d dose terciles low / mid / high | 1.03 / 0.81 / 0.90 | high − low in b −0.12 [−0.52, +0.23] | no difference detected |
+| 4d efficiency terciles low / mid / high | 0.86 / 0.89 / 0.83 | high − low −0.03 [−0.16, +0.20] | no difference detected |
+| 4d Spain (40 units) / Portugal (9) | 0.87 / 0.84 | [0.61, 1.08] / [0.49, 1.09] | |
+| 4e CV3 jackknife, t(9) | 0.87 | [0.62, 1.11] | |
+| 4e wild cluster restricted, Webb | 0.87 | **[0.48, 1.00]**; p(ρ = 1) 0.054, p(ρ = 0) 0.0004 | **widest → quoted** |
+| 4f honest bound, M̄ = 0.5 / 1 / 2 | 0.87 | [0.45, 1.03] / [0.42, 1.06] / [0.36, 1.12] | reported |
+| 4g re-weighted triple difference | — | placebos: 2022-01-01 b +0.66 [+0.11, +1.15], MDE 0.83; 2022-03-01 +0.70 [−0.21, +1.66], MDE 1.53 | **STOP at the placebos** |
+
+**Reading, by the rules:**
+- **The headline stays ρ 0.87, now quoted with the wild-bootstrap interval [0.48, 1.00]** (the widest of the three).
+  Full pass-through sits at the edge (p 0.054); ρ = 0 is firmly rejected. The CV3 interval reaches 1.11, so the upper end
+  depends on the method: say "about 0.5 to 1".
+- **No sign of selection on gains** (Callaway, Goodman-Bacon & Sant'Anna; Caron): plants with high and low doses, and
+  efficient and inefficient plants, give the same ρ within noise. The tercile intervals are wide (each about ±0.3), so
+  this is "not detected", not "ruled out".
+- **The gas channel cannot pull ρ down much.** Imposing Italy's response *raises* ρ (0.92–0.94). The split-sample IV
+  gives a positive, very imprecise c and ρ 0.72 [0.23, 1.00]: the early near-cost mass is only a moderate instrument
+  (correlation 0.62), and the estimate is too wide to inform.
+- **Firms:** Iberdrola carries 34% of the regression's weight and has the lowest firm ρ (0.51, own slope); Naturgy 17%,
+  TotalEnergies 15%. Leaving one firm out gives 0.79 (without Iberdrola) to 0.94 (without Endesa).
+- **The triple difference cannot be rescued.** Matching Italy to Iberia's doses needs extreme weights: Italian plants'
+  would-be dose averages 0.13 against Iberia's 0.25, so balancing leaves **5.7 effective plants of 54** (largest weight
+  18). Its placebos then fail on both counts (January excludes 0; both MDEs above 0.5). Italy has too few plants that
+  look like Iberia's, which is what the conduct comparison found too (`7611791`). It stays out of the paper except as
+  a reported failure.

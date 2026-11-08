@@ -31,8 +31,10 @@ The estimates behind each part of the claim, graded, are in
    costs fall by 0.9-1.0 of the subsidy, within Iberia (`rq-gas-cap-declared-cost.md`). 7.3 offers (revised 2026-11-08):
    headline is the within-Iberia plant-level dose (`rq-crisis-quantity.md` §K): plants differ in how much of their
    capacity the subsidy moves, and week fixed effects remove the gas price, so the estimate does not rest on Italy;
-   rho 0.87 [0.62, 1.03], 0.84 [0.58, 0.99] with a gas x near-cost-mass term (not detected in Iberia; it explains
-   Italy's drift). Beside it, against Italy (B3): 0.73 [0.51, 1.03], controlled 0.54-0.85; recovery simulations
+   rho 0.87, wild cluster bootstrap [0.48, 1.00] (10 firms), 0.84 with a gas x near-cost-mass term (not detected in
+   Iberia; it explains Italy's drift), 0.92-0.94 with Italy's gas response imposed; no heterogeneity by dose or
+   efficiency detected (the continuous-DiD 'strong parallel trends' concern); a re-weighted triple difference with
+   Italy fails its placebos (5.7 effective Italian plants). Beside it, against Italy (B3): 0.73 [0.51, 1.03], controlled 0.54-0.85; recovery simulations
    show why that band could not be narrowed, which is what motivated the within-Iberia design. Say that Italy was
    used in five designs. 7.4 welfare (still at the old grid; add rho 0.87): at rho 0.73 Spanish buyers lose EUR 3.2 bn, 74% transfer to
    sellers, 17% deadweight loss (dispatch), 9% leaked abroad; deadweight loss is half the loss at rho 1.

@@ -1,7 +1,10 @@
+"""Design K: why Italian plants with a high would-be dose drift down (notes/rq-crisis-quantity.md, K drift).
+Descriptive: dose terciles by window at each placebo, then the weekly high-minus-low gap against gas prices."""
 import sys
 from pathlib import Path
 import numpy as np, pandas as pd
-sys.path.insert(0, "/Users/theodor/projects/vre_spain_thesis/scripts/analysis")
+ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(ROOT / "scripts" / "analysis"))
 import gas_cap_quantity_unit_dose as k
 from gas_cap_quantity_b1 import panel, matrix, CAP0
 from gas_cap_offer_panel import iberia_steps, italy_steps
@@ -44,7 +47,22 @@ for P in k.PLACEBOS:
     print("Italy high − low by month (whole window):")
     print((m.loc["high"] - m.loc["low"]).round(2).to_string())
 
-# does Italy's high−low gap move with the gas price? (dose tercile from the real-cap curves, would-be S)
-print("\n===== gap vs gas price, monthly =====")
-psv = pd.read_parquet("/Users/theodor/projects/vre_spain_thesis/data/gme/gas/gme_mgp_gas_daily.parquet")
-print(psv.columns.tolist()[:12])
+# weekly high-minus-low gap (terciles of the real-cap dose) against the gas price
+from gas_cap_quantity_b1 import END
+psv = pd.read_parquet(ROOT / "data" / "gme" / "gas" / "gme_mgp_gas_daily.parquet")
+psv["date"] = pd.to_datetime(psv["product"].str[4:], errors="coerce")
+psv = psv.dropna(subset=["date"]).groupby("date").price_ref.last()
+mib = pd.read_parquet(ROOT / "data" / "mibgas" / "mibgas_price_index_daily.parquet"); mib["date"] = pd.to_datetime(mib.date)
+mib = mib.set_index("date").mibgas_es_eur_mwh
+for c, gas, name in ((False, psv, "Italy/PSV"), (True, mib, "Iberia/MIBGAS")):
+    G = k.dose(h[h.iberia == c], *src[c], CAP0, S, END).unstack(); gi = G.mean(axis=1)
+    Wc = W[ib == c]; Y = Wc - Wc.mean(axis=0)
+    t = pd.qcut(gi.reindex(Y.index), 3, labels=["low", "mid", "high"])
+    gap = Y.groupby(t, observed=True).mean().T
+    gw = (gap["high"] - gap["low"]).rename("gap")
+    gp = gas.groupby(gas.index.to_period("W").start_time).mean().reindex(gw.index)
+    d = pd.concat([gw, gp.rename("gas")], axis=1).dropna()
+    for lab, sel in (("pre-cap weeks", d.index < CAP0), ("post-cap weeks", d.index >= CAP0), ("all", slice(None))):
+        x = d[sel]
+        b = np.polyfit(x.gas, x.gap, 1)[0]
+        print(f"{name:14s} {lab:15s} n={len(x):3d}  corr(gap, gas) {x.gap.corr(x.gas):+.2f}  slope per €100 {100*b:+.3f}")

@@ -101,7 +101,7 @@ def long(W: pd.DataFrame, G: pd.DataFrame, keep_cols) -> pd.DataFrame:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--reps", type=int, default=199)
-    ap.add_argument("--stage", type=int, choices=(1, 2), default=1)
+    ap.add_argument("--stage", type=int, choices=(1, 2, 3), default=1)
     a = ap.parse_args()
     rng = np.random.default_rng(20261108)
 
@@ -115,6 +115,8 @@ def main() -> int:
     print(f"units: {int(ib.sum())} Iberian, {int((~ib).sum())} Italian (missing-week threshold {thr})")
     if a.stage == 2:
         return step2(h, W, ib, firm, a.reps, rng)
+    if a.stage == 3:
+        return step3(h, W, ib, firm, a.reps, rng)
 
     si, ci = iberia_steps()
     st, ct = italy_steps()
@@ -308,6 +310,105 @@ def step2(h, W, ib, firm, reps, rng) -> int:
           ("incomplete pass-through claimed and " + ("timing supports it" if p <= 0.05 else "timing FAILS: STOP"))
           if excl1 else f"interval includes rho = 1 (full pass-through not rejected); permutation p {p:.3f} reported")
     print("B3 for comparison: 0.73 [0.51, 1.03], width 0.52")
+    return 0
+
+
+def twfe_x(y, X, uid, wid) -> np.ndarray:
+    """OLS coefficients on the columns of X, with unit and week dummies."""
+    U = pd.get_dummies(uid).to_numpy(float)
+    Wd = pd.get_dummies(wid).to_numpy(float)[:, 1:]
+    return np.linalg.lstsq(np.column_stack([X, U, Wd]), y, rcond=None)[0][: X.shape[1]]
+
+
+def gas_weekly() -> dict:
+    """Weekly mean of the daily gas price lagged two days (final at bid time), EUR 100/MWh."""
+    mib = pd.read_parquet(ROOT / "data" / "mibgas" / "mibgas_price_index_daily.parquet", columns=["date", "mibgas_es_eur_mwh"])
+    mib = mib.assign(date=pd.to_datetime(mib.date)).set_index("date").mibgas_es_eur_mwh
+    psv = pd.read_parquet(ROOT / "data" / "gme" / "gas" / "gme_mgp_gas_daily.parquet", columns=["product", "price_ref"])
+    psv["date"] = pd.to_datetime(psv["product"].str[4:], errors="coerce")
+    psv = psv.dropna(subset=["date"]).groupby("date").price_ref.last()
+    out = {}
+    for c, s in ((True, mib), (False, psv)):
+        s = s.asfreq("D").ffill().shift(2)
+        out[c] = s.groupby(s.index.to_period("W").start_time).mean() / 100.0
+    return out
+
+
+def step3(h, W, ib, firm, reps, rng) -> int:
+    """Section K step 3: b with a gas x near-cost-mass term."""
+    si, ci = iberia_steps()
+    st, ct = italy_steps()
+    S = ci.groupby("date").subsidy.max()
+    src = {True: (si, ci), False: (st, ct)}
+    cols = [w for w in W.columns if not (w < CAP0 and w + pd.Timedelta(days=7) > CAP0 - REF)]
+    gas = gas_weekly()
+    L, rows = {}, []
+    for c in (True, False):
+        hc = h[h.iberia == c]
+        cur = curves(hc, *src[c], CAP0)
+        z = {u: float(F(cur[(u, None)], RUN) - F(cur[(u, None)], RUN - 100.0)) for (u, hod) in cur if hod is None}
+        G = dose(hc, *src[c], CAP0, S, END, cur).unstack()
+        d = long(W[ib == c], G, cols)
+        d["firm"] = d.unit.map(firm)
+        d["z"] = d.unit.map(z)
+        d["gz"] = d.w.map(gas[c]).to_numpy() * d.z
+        d = d.dropna(subset=["gz"])
+        L[c] = d
+    name = {True: "Iberia", False: "Italy (would-be)"}
+
+    def fit(d):
+        return twfe_x(d.y.to_numpy(), d[["g", "gz"]].to_numpy(), d.unit.to_numpy(), d.w.to_numpy())
+
+    def boot(d):
+        out = []
+        fs = d.firm.unique()
+        for _ in range(reps):
+            pick = rng.choice(fs, size=len(fs), replace=True)
+            dd = pd.concat([d[d.firm == f].assign(unit=lambda x, k=k: x.unit + f"#{k}") for k, f in enumerate(pick)])
+            out.append(fit(dd))
+        return np.array(out)
+
+    for c in (True, False):
+        d = L[c]
+        res = d[["g", "gz"]].copy()
+        for col in ("g", "gz"):  # two-way demeaning by alternating projections
+            v = d[col].astype(float).copy()
+            for _ in range(50):
+                v = v - v.groupby(d.unit).transform("mean")
+                v = v - v.groupby(d.w).transform("mean")
+            res[col] = v
+        rc = float(res.g.corr(res.gz))
+        bc = fit(d)
+        dr = boot(d)
+        (blo, bhi), (clo, chi) = np.nanpercentile(dr[:, 0], [2.5, 97.5]), np.nanpercentile(dr[:, 1], [2.5, 97.5])
+        pre = d[d.w < CAP0]
+        cpre = twfe_x(pre.y.to_numpy(), pre[["gz"]].to_numpy(), pre.unit.to_numpy(), pre.w.to_numpy())[0]
+        fs = pre.firm.unique()
+        cp = []
+        for _ in range(reps):
+            pick = rng.choice(fs, size=len(fs), replace=True)
+            dd = pd.concat([pre[pre.firm == f].assign(unit=lambda x, k=k: x.unit + f"#{k}") for k, f in enumerate(pick)])
+            cp.append(twfe_x(dd.y.to_numpy(), dd[["gz"]].to_numpy(), dd.unit.to_numpy(), dd.w.to_numpy())[0])
+        plo, phi = np.nanpercentile(cp, [2.5, 97.5])
+        rows.append({"country": name[c], "unit_weeks": len(d), "resid_corr_g_gz": rc,
+                     "b": bc[0], "b_lo": blo, "b_hi": bhi, "rho_gas": 1 + bc[0], "rho_lo": 1 + blo, "rho_hi": 1 + bhi,
+                     "c": bc[1], "c_lo": clo, "c_hi": chi, "c_pre": cpre, "c_pre_lo": plo, "c_pre_hi": phi,
+                     "z_mean": d.drop_duplicates("unit").z.mean(), "z_sd": d.drop_duplicates("unit").z.std()})
+        print(f"\n{name[c]}: {len(d)} unit-weeks; residual corr(g, gas*z) {rc:+.3f}; z mean {rows[-1]['z_mean']:.3f} "
+              f"sd {rows[-1]['z_sd']:.3f}")
+        print(f"  b {bc[0]:+.3f} [{blo:+.3f}, {bhi:+.3f}]  -> rho_gas {1 + bc[0]:.3f} [{1 + blo:.3f}, {1 + bhi:.3f}]")
+        print(f"  c per EUR100 gas x z {bc[1]:+.3f} [{clo:+.3f}, {chi:+.3f}];  pre-cap only {cpre:+.3f} [{plo:+.3f}, {phi:+.3f}]")
+    pd.DataFrame(rows).to_csv(T / "gas_cap_quantity_unit_dose_gas.csv", index=False)
+    r = rows[0]
+    if abs(r["resid_corr_g_gz"]) > 0.9:
+        v = "STOP: g and gas*z not separable; 0.87 stays, caveat unresolved"
+    elif r["c_hi"] < 0:
+        v = f"gas channel present: rho_gas {r['rho_gas']:.2f} becomes main, 0.87 the version without it"
+    elif r["c_lo"] > 0:
+        v = "c positive (against the drift hypothesis): reported, 0.87 stays main"
+    else:
+        v = f"gas channel not detected: 0.87 stays main, rho_gas {r['rho_gas']:.2f} beside"
+    print("\nRule:", v)
     return 0
 
 

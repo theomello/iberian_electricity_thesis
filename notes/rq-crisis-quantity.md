@@ -1468,5 +1468,54 @@ Why Italian plants with a high would-be dose drift down with no subsidy. Two thi
 (37 weeks, the reference weeks included, so mean reversion is mixed in). If it is real, it works in the same direction as
 the effect: part of the within-Iberia b (−0.13) would be gas, not subsidy, and ρ would sit closer to 1. Rough size: at
 S ≈ €100, b·g ≈ −0.13 × 0.25 = −0.034, and −0.04 per €100 of gas is the same order. So 0.87 is better read as a lower
-end than a centre; it cannot be pushed below by this channel. Not tested with a rule; a test would put weekly gas into
+end than a centre; it cannot be pushed below by this channel. **Corrected by step 3 (below): with the gas term ρ is 0.84, not
+higher; the 'lower end' reading does not hold.** Not tested with a rule; a test would put weekly gas into
 the within-Iberia regression interacted with each plant's dose curve.
+
+### K step 3. Does gas itself move high-dose plants? — rules fixed before running (2026-11-08; user's go-ahead)
+
+**The worry (from the drift):** plants that usually offer much capacity near cost may offer less of it near cost when gas
+is dear, subsidy or not. After the cap the dose rises with gas, so that would load onto b and pull ρ down.
+
+**Term added:** c · (gas_w × z_i), where z_i = F_i(20) − F_i(20 − 100) is the plant's dose at a fixed S = €100 from its
+own reference curve (unit-level, all hours: time-invariant "near-cost mass"), and gas_w is the weekly mean of the daily
+gas price lagged two days (prices final at bid time): MIBGAS for Iberia, PSV for Italy, in €100/MWh.
+y_iw = α_i + δ_w + b·g_iw + c·gas_w·z_i, same weeks (reference window out), same 199 draws, seed 20261108.
+c is identified mostly from weeks without a subsidy (38 pre-cap, ~17 after February 2023), where gas moves and g = 0.
+
+**Reported:** ρ_gas = 1 + b with the term and its interval; c with its interval; c estimated on pre-cap weeks only (no
+subsidy anywhere, the clean test); the correlation between g_iw and gas_w·z_i after removing unit and week means.
+Italy (would-be dose, PSV): b and c with the term — if the term captures Italy's drift, Italy's b moves toward 0.
+
+**Rules, fixed now:**
+1. **Separability:** if the residual correlation between g_iw and gas_w·z_i exceeds 0.9 in absolute value → STOP, the two
+   cannot be told apart; quote 0.87 with this as an unresolved caveat.
+2. **c's interval excludes 0, negative** → the gas channel is present in Iberia: ρ_gas becomes the main estimate, 0.87 the
+   version without it. **Includes 0** → not detected: 0.87 stays main, ρ_gas reported beside. **Excludes 0, positive** →
+   opposite to the drift hypothesis: reported, 0.87 stays main.
+3. The pre-cap-only c and the Italian rows are reported, not decisive.
+
+### K step 3 results (2026-11-08; `--stage 3`, 199 draws → `gas_cap_quantity_unit_dose_gas.csv`)
+
+z (near-cost mass at S = €100): Iberia mean 0.29, sd 0.21; Italy 0.18, sd 0.18. Residual correlation of g with gas·z:
+Iberia +0.42, Italy +0.69 — separable (rule 1 passes).
+
+| | b with the term → ρ_gas | c per €100 of gas × z | c, pre-cap weeks only |
+|---|---|---|---|
+| **Iberia** | −0.164 [−0.419, −0.011] → **0.84 [0.58, 0.99]** | **+0.09 [−0.21, +0.33]** | −0.01 [−0.17, +0.32] |
+| Italy (would-be) | −0.064 [−0.276, +0.068] → 0.94 [0.72, 1.07] | −0.17 [−0.33, +0.05] | **−0.23 [−0.51, −0.04]** |
+
+**Reading, by the rule:** c's interval includes 0 in Iberia → **the gas channel is not detected; ρ 0.87 [0.62, 1.03]
+stays the main estimate**, ρ_gas 0.84 [0.58, 0.99] beside it.
+- **The term does capture Italy's drift.** Italy's c is negative and, before the cap, excludes 0; with it in, Italy's
+  would-be slope goes from −0.21 [−0.47, −0.07] to −0.06 [−0.28, +0.07]. So the drift found above is a gas response
+  of near-cost plants, as described, and in Italy the term absorbs it.
+- **In Iberia the point estimate has the other sign** (+0.09; −0.01 before the cap), and adding the term moves ρ down
+  slightly (0.87 → 0.84), not up. The earlier guess that 0.87 is a lower end is wrong.
+- **Power is limited:** Italy's c (−0.17 to −0.23) lies inside Iberia's interval, so an Italian-sized gas channel in
+  Iberia is not excluded. What the data say is that Iberia shows no sign of it, and that controlling for it does not
+  move ρ much either way (0.84–0.87).
+- ρ_gas's interval just excludes 1 (upper end 0.99); the main interval includes it (1.03). The quote: pass-through
+  0.84–0.87, near full, intervals reaching from about 0.6 to 1.
+- Arithmetic only, not estimated with its own bootstrap: a triple difference with the term in both countries would be
+  1 + (−0.164 + 0.064) ≈ 0.90.

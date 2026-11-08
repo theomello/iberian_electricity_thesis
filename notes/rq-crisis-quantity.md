@@ -1307,3 +1307,21 @@ whole rent, of which the cap's own price fall accounts for about €126 m on the
 - **Leak abroad through France: €0.25 bn → ≈ €0.13 bn** at ρ 0.73. The Spanish half is already inside the observed ESIOS charge (it lowered it),
   so in J it sits in the "rest of the Spanish bill" residual. Totals and DWL unchanged (transfers).
 - Supersedes I1b's "French buyers gained €254 m". Morocco and Andorra rows of I1b stand (not coupled; no implicit rent).
+
+### I1d. Would exports have responded to the higher no-cap price? (2026-11-08; descriptive check, no rule fixed in advance)
+
+J holds export volumes at their observed level (J2). Check: in the valid hours, compare J's counterfactual (no-cap) Iberian price
+`p_c` (`gas_cap_dispatch_welfare_hourly.parquet`) with the observed French price (`france_link_hours.parquet`). In an export-full hour
+the flow stays at capacity as long as the Iberian price stays below the French one, so a fixed volume is then exact.
+
+| ρ | export-full hours | of which no-cap price ≥ French | export capacity in those hours | median French − no-cap price |
+|---|---|---|---|---|
+| 0.55 | 4,716 of 5,397 | 53 (1.1%) | 0.13 of 10.27 TWh | €157 |
+| 0.73 | 4,716 | 82 (1.7%) | 0.20 TWh | €150 |
+| 1.0 | 4,716 | 131 (2.8%) | 0.33 TWh | €139 |
+
+**Reading.** Without the cap the line would still have been export-full in 97–99% of the hours it was full: Iberia would still have
+been about €140–160 cheaper than France. So fixing exports misstates the volume in at most the 511 open hours (9.5%) and 1–3% of the
+full hours, about 2–3% of the export volume. The "exports held fixed" limit in J7 is therefore small, and the leak abroad is the
+congestion-rent split of I1c (French side ≈ €0.13 bn at ρ 0.73; French buyers ≈ €2 m). Ad hoc; French prices are held at their
+observed level (they would barely move in full hours, by coupling).

@@ -6,6 +6,8 @@ question yet" until that sign-off.
 
 **Claim.** Iberian generators mostly bid like price-takers in the day-ahead auction. Hydro departed from
 that in 2019 to mid-2021, and the gas cap's subsidy was passed through.
+The estimates behind each part of the claim, graded, are in
+[`2026-11-08-conduct-evidence-table.md`](2026-11-08-conduct-evidence-table.md).
 
 ## Sections
 

@@ -1325,3 +1325,77 @@ been about €140–160 cheaper than France. So fixing exports misstates the vol
 full hours, about 2–3% of the export volume. The "exports held fixed" limit in J7 is therefore small, and the leak abroad is the
 congestion-rent split of I1c (French side ≈ €0.13 bn at ρ 0.73; French buyers ≈ €2 m). Ad hoc; French prices are held at their
 observed level (they would barely move in full hours, by coupling).
+
+## K. Plant-level dose: within Iberia, Italy as a triple difference — rules fixed before running (2026-11-08; user chose it)
+
+**Why.** B3 compares one Iberian weekly average with a synthetic Italy, so its slope rests on 46 post-cap weeks and on
+Italy's level tracking Iberia's — which Italy's March 2022 break undermines, and which the gas-control question (E2, H6)
+could not settle. But the dose differs by plant within a week: the subsidy S is the same €/MWh for all, and what it does
+to a plant's run20 under no pass-through depends on how much of that plant's capacity it offered at a markup between
+20 − S and 20. With week fixed effects the gas price, the invasion and everything else common to a week drop out, and
+Italy is not needed for the level at all.
+
+**Objects (same units, weeks and outcome as B3):** 49 Iberian and 44 Italian gas units, weekly unit means of `run20` over
+predicted in-money hours (margin €50, essential units out), weeks 2021-10 → 2023-06 (`gas_cap_quantity_b1.panel`, `matrix`).
+
+**Dose g_iw.** For a date D (the cap, 2022-06-15, or a placebo): unit i's own offer curve over the 8 weeks before D
+(markups over gross cost, in-money hours, pooled by hour of day, all of the unit's hours if a cell has fewer than 5 days —
+exactly B1's `ends`), F_i(x) = mean share of K offered at markup ≤ x. In each in-money hour from D on,
+g = F_i(20) − F_i(20 − S_d); g_iw = its weekly mean; g = 0 before D.
+- Iberia, real: S_d = the bid-time subsidy. Italy: the same Iberian S_d by date applied to the Italian unit's own curve
+  (a would-be dose; Italian outcomes have no subsidy, so a slope on it is pure confound).
+- Placebo D = P: S on P + k is the real S on 2022-06-15 + k, for P + k ≤ 2022-06-14.
+
+**Estimator, per country:** y_iw = α_i + δ_w + b·g_iw, OLS on unit-weeks with an outcome, the 8 reference weeks before D
+excluded (they built F, so keeping them invites regression to the mean). Full pass-through b = 0, none b = −1, ρ = 1 + b.
+Triple difference: b_IB − b_IT. Inference: firm block bootstrap within country, 199 draws, seed 20261108, doses held fixed.
+
+**Step 1 (this run): no ρ, and no post-cap outcome is read.**
+(a) Spread, real dose, post-cap weeks with S > 0: mean g; median over weeks of the cross-unit sd of g_iw; share of the
+variance of g_iw left after removing unit and week means (the identifying variation). Iberia and Italy (would-be).
+(b) Placebos P = 2022-01-01 and 2022-03-01: b_IB, b_IT, b_IB − b_IT, each with 95% interval and MDE = 2.8 × bootstrap sd.
+
+**Rules, fixed now:**
+1. **Power.** STOP the design if the within-Iberia MDE exceeds 0.5 at either placebo (B1's "either" convention; 0.5 =
+   telling ρ = 1 from ρ = 0.5). If only the triple difference's MDE exceeds 0.5 at either date, it can be a check, not the
+   main estimate.
+2. **Flatness.** Iberian placebo interval includes 0 at both dates → the within-Iberia slope is the main estimate, the
+   triple difference a check. Iberian interval excludes 0 at either date but the triple difference includes 0 at both →
+   the triple difference is the main estimate. Both exclude 0 at some date → STOP.
+3. Step 2 (the real ρ) only after step 1 passes and its rule is written here.
+
+**Limits stated in advance.** Placebo windows are short (about 23 and 15 weeks against 54 post-cap), so the MDE is
+conservative. The 2022-01-01 placebo has about five Iberian weeks before its reference window (Iberia enters the money in
+October 2021). The Iberian in-money sample is defined on net cost, so it widens at the cap; unit effects do not remove that.
+About 10 Iberian firms bind the interval. This is a fifth design using Italy, though a different identifying variation
+from B1–B3: say so in any write-up.
+
+### K step 1 results (2026-11-08; `gas_cap_quantity_unit_dose.py`, 199 draws, seed 20261108; no ρ, no post-cap outcome read)
+
+Files: `outputs/tables/gas_cap_quantity_unit_dose_{spread,placebo}.csv`. Units as B3: 49 Iberian (10 firms), 44 Italian (12).
+
+**(a) The dose differs across plants.** Post-cap weeks with S > 0 (38):
+
+| | mean g | median within-week sd | unit mean g, 10% / 90% | variance left after unit and week means |
+|---|---|---|---|---|
+| Iberia | 0.25 | 0.187 | 0.078 / 0.357 | 22.7% |
+| Italy (would-be) | 0.14 | 0.180 | 0.002 / 0.301 | 20.6% |
+
+**(b) Placebos** (b, 95% firm-block interval, MDE; 28 weeks each after dropping the reference window):
+
+| placebo | Iberia | Italy (would-be) | triple (IB − IT) |
+|---|---|---|---|
+| 2022-01-01 | +0.061 [−0.014, +0.223], MDE 0.15 | −0.159 [−0.270, +0.015], MDE 0.20 | **+0.219 [+0.044, +0.386]**, MDE 0.25 |
+| 2022-03-01 | −0.049 [−0.155, +0.111], MDE 0.19 | −0.123 [−0.745, +0.207], MDE 0.68 | +0.073 [−0.266, +0.729], MDE 0.70 |
+
+**Reading, by the rules:**
+- Rule 1 (power): within-Iberia MDE 0.15 and 0.19, under 0.5 at both → **passes**. The triple difference's MDE is 0.70 at
+  2022-03-01 → **check only, not the main estimate**.
+- Rule 2 (flatness): the Iberian placebo includes 0 at both dates → **the within-Iberia slope is the main estimate**.
+- So step 1 passes; step 2 (the real ρ, within Iberia) needs its rule written here first.
+
+**Worth noting, not decisive:** the Italian would-be slope is negative at both dates (−0.16, −0.12): Italian plants that
+offered more capacity just around cost drift down relative to others over the following months, with no subsidy. Iberia
+shows no such drift, so the triple difference at 2022-01-01 *excludes* 0 (+0.22) only because Italy moves. That is the
+same lesson as before: Italy has its own dynamics, and here it would bias the triple difference, not the within-Iberia
+slope. A reason to keep the triple difference as a check only, which the power rule already says.

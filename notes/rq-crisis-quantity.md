@@ -1682,3 +1682,36 @@ dispatch effect cannot be measured with this dose: the subsidy hit every Iberian
 equally, so there is no cross-plant variation to use, and the hourly in-money flag barely predicts dispatch. The welfare
 section's dispatch shift stays an assumption of the re-clearing model, stated as such. Italian wind, solar and hydro
 data would not change this: neither failure involves the Italian controls.
+
+## M. Regulated cogeneration as an untreated group — feasibility count (2026-11-08; descriptive, user asked)
+
+The decree (RDL 10/2022 art. 2.1.c) subsidised gas cogeneration only **without** a regulated remuneration regime (RECORE);
+cogeneration inside RECORE burned the same gas, sold in the same auction and got nothing. Art. 2.2 also excludes
+bilateral-contract energy, but combined cycles schedule 0.0–0.2% of their output bilaterally in every month 2021-06 →
+2023-12 (0–2 units): that exclusion is empty.
+
+Cogeneration = OMIE listing technology "RE Mercado Térmica no renovable" (858 units listed 2022-02-08, 443 on 2023-05-16).
+
+| | count / volume |
+|---|---|
+| Units first seen 2022-05-13 → 2023-03 (new registrations, art. 3.1), or named "…MECANISMO" (4) | **81** |
+| Their output (PDBF, mean MW) | 5 (Jun 2022) → 124 (Nov 2022) → 218–277 (2023) |
+| All other cogeneration units: output | 3,419 MW (Jan 2022) → **1,387 (Sep 2022)** → 2,467–2,777 (2023) |
+| Offered at ≤ €1/MWh, April 2022 / Nov 2022 | others 80% / 80%; new eligible 93% |
+| JRC efficiency: units matched / plant-specific | 7 / **0** |
+| Declaring a minimum-income variable term (cab, April 2022) | 1 of 280 |
+
+**Reading:**
+1. **Eligibility is not observed for most cogeneration.** Only 81 units are visibly new; eligible plants that already bid
+   through single-plant units only had to be *identified* to OMIE and REE (art. 3.3), which leaves no trace in the
+   public files. So "the rest" mixes eligible and ineligible plants. OMIE holds the list (agents notified it).
+2. **Cogeneration offers as a price-taker** (80–93% of offered MW at ≤ €1): capacity near cost (run20) does not describe
+   it, so it cannot serve as a control for the combined cycles' ρ on that outcome.
+3. **No plant cost**: no plant-specific efficiency and almost no declared cost. A cost could be **constructed** from the
+   regulatory "instalaciones tipo" parameters of RD 413/2014 (efficiency by power range and fuel, published by ministerial
+   order), but only per type, not per plant.
+4. **Its own shock**: output of the non-new cogeneration fell 3.4 → 1.4 GW from January to September 2022 — the 2022
+   cogeneration shutdown as gas rose faster than the regulated operating payment — so it is not an untouched group either.
+
+Feasible use: an **output (participation) comparison** of eligible vs RECORE cogeneration, once OMIE supplies the list of
+units identified as beneficiaries with dates. That measures whether the subsidy kept plants running, not ρ.

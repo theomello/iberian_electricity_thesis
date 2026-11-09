@@ -614,6 +614,14 @@ at ≤ €180.30 (the old cap) in June 2019, with a quarter at ≤ €80; in Jun
 too: 16% of offered MW went uncleared in 2018, 11% in 2021, 0.1% in 2025. Hours where the old cap would bind are
 excluded from the 2018–2021 figures. Repsol's refineries (half the volume) bid everything at €500 throughout.
 
+**Repsol's refineries are already netted into its position** (checked 2026-11-09). Its direct-consumer units
+(`REPEC01`, `REPRC01`, `REPQC01`, `RLNRC01`, portfolio `VGERC01/02`) carry a REPSOL ownership spell, and `firm_x.py`
+counts every owned unit on both sides, so their 200–300 MW of cleared buys are in `net_mw`. They make Repsol a net
+buyer from 2024 (mean −263 MW in 2024, −291 in 2025; +59 and +26 without them). An audit of the 38 scripts that
+compute or use a firm position found no undocumented difference: the scripts that leave purchase units out do so on
+purpose (`residual_demand_firm.py`'s supply-only q and slope, the solar instruments, the market shares), and the rest
+compute n as `firm_x` does or read it. `firm_incentive_net` covers 100% of every firm's clean, non-zero-price periods.
+
 **Interruptibility demand by industrial sector, ESIOS 836–847 and 10059** (fetching 2026-11-09, `--geo 0 --start
 2015-01-01`): sub-hourly, by sector (wood, steel, paper, desalination, metallurgy, chemicals, machinery, glass,
 cement, other). **Peninsular sectors run 2015 → early 2020 only**, when the service was wound down; desalination

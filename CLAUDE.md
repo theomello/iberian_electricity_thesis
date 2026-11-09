@@ -622,10 +622,19 @@ compute or use a firm position found no undocumented difference: the scripts tha
 purpose (`residual_demand_firm.py`'s supply-only q and slope, the solar instruments, the market shares), and the rest
 compute n as `firm_x` does or read it. `firm_incentive_net` covers 100% of every firm's clean, non-zero-price periods.
 
-**Interruptibility demand by industrial sector, ESIOS 836–847 and 10059** (fetching 2026-11-09, `--geo 0 --start
-2015-01-01`): sub-hourly, by sector (wood, steel, paper, desalination, metallurgy, chemicals, machinery, glass,
-cement, other). **Peninsular sectors run 2015 → early 2020 only**, when the service was wound down; desalination
-continues, mostly in the Canaries. Units not yet checked.
+**Interruptibility demand by industrial sector, ESIOS 836–846** (fetched 2026-11-09, `--geo 0 --start 2015-01-01`):
+the consumption of the large industrial consumers in REE's interruptibility service, **every 10 minutes, mean MW**, by
+sector: wood 836, steel 837, paper 838, desalination 839, metallurgy 840, chemicals 841, machinery 842, glass 844,
+cement 845, other 846. **Peninsular sectors run 2015-01 → early 2020 only** (the service was wound down): yearly means
+in 2015 steel 1,336 MW, metallurgy 969, chemicals 484, paper 351, cement 237, all sectors ~3,570 MW; 2019 ~2,930 MW;
+2020 a quarter of that; zero from 2021. Desalination continues, mostly in the Canaries. 10059 "Sectores" is the same
+data with the Canaries (928,804 rows). **847, labelled the total, is published by autonomous community** (15 regions;
+Galicia, Asturias, Cataluña, País Vasco largest): its regional sum equals the sector sum exactly (ratio 1.0000 over
+39,169 ten-minute points). ESIOS answers HTTP 504 to most monthly requests for it, so only 18 months are cached
+(`data/esios/raw/847/`, 2015) and no parquet is written; fetching it needs shorter chunks.
+
+**Active demand response (SRAD), ESIOS 1929–1932**: activated MW, marginal price, energy allocated, payments;
+quarter-hourly, **only 15 activation days, 2023-09-04 → 2026-10-06** (121 rows). Too few for any estimate.
 
 ### OMIE's *Listado de Unidades Ofertantes* — the authoritative registry
 `data/omie/registry/omie_unit_lists.parquet`, built by

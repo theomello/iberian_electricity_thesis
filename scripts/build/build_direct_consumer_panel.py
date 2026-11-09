@@ -12,6 +12,12 @@ For each unit and delivery period, from curva_pbc_uof buy rows (side C):
     q_m50, q_m10,        offered MW at bid >= p* - 50, - 10, + 10, + 50: the curve around the price
     q_p10, q_p50
     bid_wavg             MW-weighted mean bid price of the offered rows
+    q_a20 ... q_a500     offered MW at a bid price >= EUR 20 / 50 / 80 / 120 / 180.30 / 500: the curve at fixed
+                         prices (q_a180 is "at or above the old cap", q_a500 "at any price" in the new era)
+    pdbf_buy_mw          PDBF schedule as purchases, all role codes (auction + bilateral), and
+    pdbf_bilateral_mw    its role-4 (bilateral) part
+    id_buy_mw, id_sell_mw  cleared intraday purchases and sales, all sessions
+    total_buy_mw         pdbf_buy_mw + id_buy_mw - id_sell_mw: what the unit finally bought
 
 then averaged over the periods of each hour (15-minute era: four quarters), so quantities stay MW. p* is price_es for
 Spanish units and price_pt for Portuguese ones (unit_registry country; ES when unknown).
@@ -34,6 +40,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent.parent
 OUT = ROOT / "outputs" / "tables" / "direct_consumer_panel"
 OFFSETS = {"q_m50": -50.0, "q_m10": -10.0, "q_p": 0.0, "q_p10": 10.0, "q_p50": 50.0}
+ABS = {"q_a20": 20.0, "q_a50": 50.0, "q_a80": 80.0, "q_a120": 120.0, "q_a180": 180.30, "q_a500": 500.0}
 
 
 def prices() -> pd.DataFrame:
@@ -62,9 +69,11 @@ def month(f: str, units: pd.Series, P: pd.DataFrame) -> pd.DataFrame | None:
     key = ["date", "period", "unit"]
     for col, off in OFFSETS.items():
         o[col] = o.power_mw.where(o.price_eur_mwh >= o.p + off, 0.0)
+    for col, lvl in ABS.items():
+        o[col] = o.power_mw.where(o.price_eur_mwh >= lvl - 1e-3, 0.0)
     o["pq"] = o.power_mw * o.price_eur_mwh
     g = o.groupby(key, observed=True).agg(q_offered=("power_mw", "sum"), pq=("pq", "sum"),
-                                          **{k: (k, "sum") for k in OFFSETS})
+                                          **{k: (k, "sum") for k in {**OFFSETS, **ABS}})
     g["bid_wavg"] = g.pq / g.q_offered.where(g.q_offered > 0)
     g = g.drop(columns="pq")
     g["q_cleared"] = c.groupby(key, observed=True).power_mw.sum()
@@ -75,8 +84,54 @@ def month(f: str, units: pd.Series, P: pd.DataFrame) -> pd.DataFrame | None:
     h = g.groupby(["date", "hour", "unit"], observed=True).agg(
         utc=("utc", "min"), resolution_min=("resolution_min", "first"), p=("p", "mean"),
         q_cleared=("q_cleared", "mean"), q_offered=("q_offered", "mean"), bid_wavg=("bid_wavg", "mean"),
-        **{k: (k, "mean") for k in OFFSETS}).reset_index()
+        **{k: (k, "mean") for k in {**OFFSETS, **ABS}}).reset_index()
+    ym = Path(f).stem[-6:]
+    h = h.merge(pdbf(ym, units), on=["date", "hour", "unit"], how="left")
+    h = h.merge(intraday(ym, units), on=["date", "hour", "unit"], how="left")
+    for c in ("pdbf_buy_mw", "pdbf_bilateral_mw", "id_buy_mw", "id_sell_mw"):
+        h[c] = h[c].fillna(0.0)
+    h["total_buy_mw"] = h.pdbf_buy_mw + h.id_buy_mw - h.id_sell_mw
     return h
+
+
+def _hour(period: pd.Series, res: pd.Series) -> pd.Series:
+    return np.where(res == 60, period, (period - 1) // 4 + 1)
+
+
+def pdbf(ym: str, units: pd.Series) -> pd.DataFrame:
+    """The operating schedule, all role codes (7 to 2019 and 6 from 2021: the consumer's auction purchase; 4:
+    bilateral contracts), as purchases in MW (PDBF signs buys negative), averaged to the hour."""
+    f = ROOT / f"data/omie/pdbf/parquet/pdbf_{ym}.parquet"
+    if not f.exists():
+        return pd.DataFrame(columns=["date", "hour", "unit", "pdbf_buy_mw", "pdbf_bilateral_mw"])
+    p = pd.read_parquet(f, columns=["date", "period", "resolution_min", "unit", "schedule_mw", "role_code"])
+    p = p[p.unit.isin(units.index)].copy()
+    p["date"] = pd.to_datetime(p.date).dt.date.astype(str)
+    p["hour"] = _hour(p.period, p.resolution_min)
+    p["buy"] = -p.schedule_mw
+    p["bil"] = p.buy.where(p.role_code.astype(str) == "4", 0.0)
+    per = p.groupby(["date", "hour", "period", "unit"]).agg(buy=("buy", "sum"), bil=("bil", "sum")).reset_index()
+    return per.groupby(["date", "hour", "unit"]).agg(pdbf_buy_mw=("buy", "mean"),
+                                                     pdbf_bilateral_mw=("bil", "mean")).reset_index()
+
+
+def intraday(ym: str, units: pd.Series) -> pd.DataFrame:
+    """Cleared intraday buys and sells (all sessions), MW, averaged over the hour's periods."""
+    f = ROOT / f"data/omie/intraday/parquet/intraday_{ym}.parquet"
+    if not f.exists():
+        return pd.DataFrame(columns=["date", "hour", "unit", "id_buy_mw", "id_sell_mw"])
+    i = pd.read_parquet(f, columns=["date", "period", "hour", "resolution_min", "unit", "side", "power_mw", "status"],
+                        filters=[("status", "==", "C")])
+    i = i[i.unit.isin(units.index)].copy()
+    i["unit"] = i.unit.astype(str)
+    i["date"] = i.date.astype(str)
+    i["buy"] = i.power_mw.where(i.side.astype(str) == "C", 0.0)
+    i["sell"] = i.power_mw.where(i.side.astype(str) == "V", 0.0)
+    per = i.groupby(["date", "hour", "period", "unit"]).agg(buy=("buy", "sum"), sell=("sell", "sum"),
+                                                           res=("resolution_min", "first")).reset_index()
+    n = per.res.map({60: 1, 15: 4}).fillna(1)
+    per["buy"], per["sell"] = per.buy / n, per.sell / n   # quarter-hours average to the hour
+    return per.groupby(["date", "hour", "unit"]).agg(id_buy_mw=("buy", "sum"), id_sell_mw=("sell", "sum")).reset_index()
 
 
 def main() -> int:

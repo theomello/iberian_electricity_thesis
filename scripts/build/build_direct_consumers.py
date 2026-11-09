@@ -17,6 +17,7 @@ types "Consum. directos a mercado". Writes data/omie/registry/direct_consumers.p
 - consumer: the consumer's name (owner for `own`, description for `represented`, blank otherwise).
 - group: the owner's evidence-based group, else the legal entity; consumer_generates: that firm owns >= 50 MW of\n  supply units (own and balance kinds).
 - sector: keyword rule on the consumer's name; blank when no rule fires.
+- sample: process, weather_exposed, refinery, unclassified (own + represented only), else out.
 - first_seen, last_seen, days_cab: from OMIE `cab` (days with an offer header); mwh_YYYY: PDBF scheduled energy.
 """
 from __future__ import annotations
@@ -190,6 +191,25 @@ def sector(name: str) -> str:
     return ""
 
 
+PROCESS = {"steel", "aluminium_metals", "chemicals", "cement_minerals", "glass", "paper_wood", "plastics_rubber",
+           "textiles", "food_agri", "automotive_machinery", "waste"}
+WEATHER = {"retail_services", "public_transport", "water_irrigation"}
+
+
+def sample_of(kind: str, sector: str) -> str:
+    """The design's samples (notes/rq-direct-consumers.md, step 0): process industry is the main sample; loads that
+    move with the weather (shops, councils, hospitals, irrigation, transport) are the comparison group."""
+    if kind not in ("own", "represented"):
+        return "out"
+    if sector == "refining_petrochem":
+        return "refinery"
+    if sector in PROCESS:
+        return "process"
+    if sector in WEATHER:
+        return "weather_exposed"
+    return "unclassified"
+
+
 def main() -> int:
     L, E = listings(), esios()
     reg = L.join(E, how="outer")
@@ -218,6 +238,7 @@ def main() -> int:
     if "hand_sector" in reg:
         reg["sector"] = reg.hand_sector.fillna(reg.sector)
         reg = reg.drop(columns="hand_sector")
+    reg["sample"] = [sample_of(k, sec) for k, sec in zip(reg.kind, reg.sector)]
     mcols = [c for c in reg.columns if c.startswith("mwh_")]
     reg[mcols] = reg[mcols].fillna(0.0)
     reg["mwh_total"] = reg[mcols].sum(axis=1)

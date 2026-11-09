@@ -1055,6 +1055,23 @@ Three format changes, all silent:
   participant from 2024-12-15** (`END` Endesa, `GN` Naturgy, `HC` Hidrocantábrico, …): per-unit
   reserve ends there.
 
+**Demand by segment — voltage level, access tariff, retailer type (fetched 2026-11-08/09)** by `--ids … --geo 0 --start
+2018-01-01`, all `Península`, hourly to 2025-09-30 and quarter-hourly after for the PBF series, MWh per period (sum,
+do not average).
+- **Measured demand by voltage level, 1201–1207 (E0 low voltage < 1 kV … E6 ≥ 220 kV) and total 10269**: 2018-01-01 →
+  2026-04-30 (published with a ~6-month lag). **E0–E6 sum to 10269 to the MWh in every hour.** 10269 is 207–229 TWh a
+  year and equals 1193 *Demanda en consumo* (within 1.5%). E0 is ~100 TWh a year (households, small business), E1–E6
+  110–125 TWh (industry, services, large consumers). **This is the household/industrial proxy**: it splits by
+  connection voltage, not by consumer type, and E0 includes shops and small offices.
+- **By access tariff, 1209 (2.0TD), 1216–1218 (6.2–6.4), 1369 (6.1), 2531–2534 (3.0TD(VE), 6.1/6.2 TDVE) and
+  "total" 10268: do not use as a split before 2024.** 10268 is not total demand: it is exactly the sum of the tariff
+  series ESIOS publishes, 100–114 TWh in 2018–2023, because the low-voltage tariffs (2.0, 3.0) are empty until 2024
+  (1209 from 2024, 2532 from mid-2024 and **not** included in 10268). 1200 and 1208 return no data at all.
+- **Scheduled demand (PBF) by retailer type, 351 free-market retailers, 352 reference (regulated, PVPC) retailers,
+  353 direct market consumers**: 2018-01-01 → present, no lag. 2018: 213 / 28 / 3 TWh; 2025: 208 / 19 / 7. **352 matches
+  the PDBF schedules of our regulated-supplier purchase units** (`is_pass_through`, Spanish, purchase roles) at
+  0.97–1.00 of volume in Jan 2020, Jun 2022, Jan 2024, Mar 2025.
+
 **France-line congestion rents — `data/esios/esios_{1117,1118}.parquet`**, fetched 2026-11-05 by `--ids 1117 1118 --geo 0
 --start 2021-06-01 --end 2023-12-31`: day-ahead implicit (SDAC) rent, import and export direction, € per hour, `Península`. **Gross for
 both systems** (split 50/50 under Reg. 1222/2015), and below (French − Spanish price) × PBF scheduled export (€1.11 bn against €1.97 bn,

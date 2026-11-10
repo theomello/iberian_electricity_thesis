@@ -81,3 +81,24 @@ an interval.
 **Step 3, only if step 2 passes:** 2021H2–22. For 2023–26 a bound only: the curves are vertical, yet offered quantity
 moves with the wind forecast (t 5.5) for reasons G2 must attribute first. No 2018 (ESIOS forecasts start 2019) unless
 the ENTSO-E forecast arrives and matches 1777.
+
+## Step 1 result: E2, the stated elasticity (2026-11-10)
+
+`analysis/direct_consumer_stated_elasticity.py` → `outputs/tables/direct_consumer_stated_elasticity.csv`. Each unit-hour's
+offered curve held fixed and read at p* ± dp, dp = the price move from one sd of the D-1 wind forecast (first stage on
+daily prices, year-month and weekday FE, demand-forecast control): **€5.7 in 2019–21H1 (β −1.96/GW, F 501), €19.4 in
+2021H2–22 (−6.51, F 177), €18.1 in 2023–26 (−5.37, F 1,471)**. Own + represented units, weighted by demand at the price.
+
+| regime | all | process | weather-exposed | without top 5 | process, balanced (12 units) |
+|---|---|---|---|---|---|
+| 2019–21H1 | 0.14 | 0.36 | 0.18 | 0.19 | 0.42 |
+| 2021H2–22 | 0.35 | 0.34 | 0.74 | 0.38 | 0.43 |
+| 2023–26 | 0.03 | 0.06 | 0.16 | 0.02 | 0.02 |
+
+Arc elasticity of the stated curve (absolute value). Refineries are 0 throughout (they bid at the ceiling). The top 5
+units carry 67–80% of the weight. Share of units with any stated response (> 0.5% of demand per dp): 61% → 96% → 15%.
+Between the offsets at ±10 and ±50 the curve is interpolated linearly, so the €18–19 figures are approximate.
+
+Reading: in 2019–2022 a process-industry buyer's stated curve gives up about 0.35–0.43% of its demand per 1% rise in
+the price; from 2023 almost none, because the curves went vertical. This is movement along a fixed curve only; how
+much the curves themselves shift with the expected price (E3) is step 2.

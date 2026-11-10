@@ -83,3 +83,26 @@ abstract supports, to be confirmed on a real read. The two papers below marked
 
 `main.pdf` (Sánchez Canales et al. 2026) was also re-downloaded in this batch;
 it is the same paper (same DOI 10.1016/j.eneco.2026.109523), so no new file.
+
+## Fourth pass (2026-11-10) — 12 papers on demand elasticities and cogeneration
+
+Added for the demand-side chapter (`docs/specs/2026-11-10-cogeneration-design.md`).
+Read from the Markdown at the sections cited, **not in full**.
+
+| file | what it is | why it matters |
+|---|---|---|
+| `Survey_AR_Energy_Transition.pdf` | Fabra & Reguant (2027, *Annual Review of Economics*, submitted draft of 26 Aug 2026), *Powering the Energy Transition* | §4.3 (p. 22) is the current statement on demand response: household short-run elasticity ≈ 0 in Spain, and footnote 6 reports it is **again ≈ 0 in 2021–2023** (Fabra et al. 2026c), which closes the regulated-tariff household idea. §5.3 (p. 29) cites the plant-level industrial evidence (von Graevenitz & Rottner 2022, German manufacturing; not held) |
+| `4-Time_of_Use_Impacts_Enrich_Li_Mizrahi_Reguant.pdf` | Enrich, Li, Mizrahi & Reguant (2024, *JEEM* 123, postprint), Spain's June 2021 time-of-use reform | households cut peak use 9–10%; elasticity −0.08 to −0.135. Method to reuse: a LASSO model of consumption fitted on the pre-period only, then difference-in-differences on its prediction errors, Portugal as the untreated unit |
+| `The_real_time_price_elasticity_of_electr.pdf` | Lijesen (2007, *Energy Economics* 29), real-time elasticity, Netherlands | aggregate peak demand against spot prices; a low elasticity benchmark |
+| `eprg-wp0623.pdf` | Bonilla (2006, Cambridge EPRG WP 0623), cogeneration adoption in UK and Dutch manufacturing | adoption, not the run decision; its footnote 13 points to Fox-Penner (1990b), who derives the price effects on cogeneration's two operating modes, selling to the grid and displacing purchases — the theory behind the cost in the design spec §2 (not held) |
+| `w13507.pdf` | Bushnell, Mansur & Saravia (2007, NBER WP 13507; *AER* 2008), vertical arrangements in US markets | retail obligations as the reason integrated firms price near cost: the supply-side counterpart of this repo's net-position results |
+| `w18533.pdf` | Ito (NBER WP 18533; *AER* 2014) | households respond to average, not marginal, price |
+| `w18344.pdf` | Jessoe & Rapson (NBER WP 18344; *AER* 2014) | information raises households' price response |
+| `hourly_pricing_aer_paper.pdf` | Wolak (2011, *AER P&P* 101(3)) | residential response to hourly prices in an experiment |
+| `Berndt-TechnologyPricesDerived-1975.pdf`, `Pindyck-InterfuelSubstitutionIndustrial-1979.pdf` | Berndt & Wood (1975); Pindyck (1979) | the translog cost-share framework for substitution between energy and other inputs, and between fuels. **Scanned: the Markdown is page images, no text** |
+| `w8213.pdf` | Patrick & Wolak (2001, NBER WP 8213), industrial customers on half-hourly prices, England and Wales | the framework for substitution across hours within the day. **The Markdown is garbled** (font encoding); read the PDF |
+| `w8248.pdf` | NBER WP 8248, not identified | **the Markdown is garbled**; title to be read from the PDF |
+
+Not yet held and worth getting: Hirth, Khanna & Ruhnau (2024, *Energy Economics*), wind
+as an instrument for the German wholesale price, elasticity ≈ −0.05 attributed to
+industry; Fox-Penner (1990b); von Graevenitz & Rottner (2022).

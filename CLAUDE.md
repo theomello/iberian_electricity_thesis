@@ -71,6 +71,8 @@ scripts/
 | `fetch/fetch_esios_units.py` | ESIOS archive 82 | **no** | `data/esios/esios_programming_units.parquet` |
 | `build/build_unit_agents.py` | ESIOS + `cab` + prefixes | no | `data/omie/registry/unit_agents.parquet` |
 | `build/build_omie_unit_lists.py` | OMIE *Listado de Unidades* PDFs (emailed, **not re-fetchable**) | no | `data/omie/registry/omie_unit_lists.parquet` |
+| `build/build_direct_consumers.py` | unit lists + ESIOS + `cab` + PDBF + ownership | no | `data/omie/registry/direct_consumers.parquet` |
+| `build/build_direct_consumer_panel.py` | bids + prices + `direct_consumers` | no | `outputs/tables/direct_consumer_panel/panel_YYYYMM.parquet` |
 | `build/build_owner_groups.py` | `omie_unit_lists` + ESIOS chain | no | `data/omie/registry/owner_groups.parquet` |
 | `fetch/fetch_ree_daily.py` | REE `apidatos` | no | `data/ree/ree_{generation,demand,balance}_daily.parquet` |
 | `fetch/fetch_ree_realtime.py` | REE `demanda.ree.es` | no | `data/ree/ree_realtime_5min.parquet` |
@@ -572,6 +574,75 @@ price/quantity steps keyed by the same 7-digit unit id as `cab`.
 
 Full documentation of the mapping — layers, fields, coverage, glossary and the
 five ways it can mislead — is in [`docs/unit-agent-mapping.md`](docs/unit-agent-mapping.md).
+
+### Direct market consumers — 322 buyers' own demand curves (2026-11-09)
+Large consumers can buy in the day-ahead auction themselves instead of through a retailer (ESIOS 353 is their total,
+~6 TWh a year). Their units are in the bid archive like any other, so **each has a stated buy curve every hour**.
+
+`build/build_direct_consumers.py` → `data/omie/registry/direct_consumers.parquet`: **473 units** typed CONSUMIDOR
+DIRECTO in any OMIE listing or "Consum. directos a mercado" in ESIOS, **338 with an offer header in `cab`**. OMIE's
+listing labels each (`omie_kind`: Cliente cualificado, Compras Consumo Directo, Consumo de productores, Consumos
+Auxiliares, Compras Cons. Directo Balance), and often names the end consumer when a representative bids for it
+("PLASTICOS BIOSCA" bid by Gaia Global Energy). `kind`, by rule plus a hand table for the largest units (`HAND`):
+
+| kind | units bidding | TWh 2018–2026 | what the bids are |
+|---|---|---|---|
+| own | 133 | 24.7 | a consumer bidding its own load |
+| represented | 94 | 7.2 | a representative bidding for one named consumer |
+| portfolio | 73 | 11.9 | a representative or aggregator for several consumers, or an unnamed code |
+| balance | 10 | 4.2 | demand response / balance units (SRAD, from 2022) |
+| auxiliary | 28 | 1.9 | generating plants' own consumption: supply side, not demand |
+
+`sector` (keyword rule on the consumer's name, hand-set for the largest) covers 91% of own + represented volume;
+refining dominates it (Repsol Petróleo, 16.7 TWh). `group` is the evidence-based owner group, else the legal entity;
+`consumer_generates` flags consumers whose firm owns ≥ 50 MW of supply units (Repsol, Bon Preu).
+
+**The 'self' groups in `owner_groups.parquet` merge unrelated small owners** by first word: five companies become
+`COMPANIA` (Compañía Española de Laminación — Celsa — among them), every town council `AYUNTAMIENTO`. Harmless for
+the large generators (grouped on evidence), wrong for any small-owner grouping; `firm_of` here avoids it.
+
+`build/build_direct_consumer_panel.py` → `outputs/tables/direct_consumer_panel/`: **8.8 M unit-hours, 322 units,
+2018-01-01 → 2026-05-31** (bids past the price frontier are skipped), 1.5 s a month. Per unit-hour: cleared MW, offered
+MW, the offered curve at the clearing price and at ±€10 and ±€50 around it (`q_m50 … q_p50`), MW-weighted bid
+price; 15-minute periods averaged to the hour. Checks: cleared ≤ demand at the price, and the curve is monotone, in
+every unit-hour of the test months.
+
+**Own generation (2026-11-09).** `own_gen_group` marks 8 consumers whose own legal entity also sells generation in
+OMIE (`OWN_GEN` in `build_direct_consumers.py`; pairs matched on owner, ESIOS physical unit and name, each checked by a
+second pass). The panel builder writes `own_gen/own_gen_YYYYMM.parquet`: the group's own sales per hour (PDBF, all
+roles, plus net intraday sales). Net purchases = the consumer units' `total_buy_mw` minus it. GWh a year: Ence sells
+700–830 (2018–22) and is a net seller throughout; Repsol Petróleo's refinery cogeneration sells 1,100–2,100, net
+seller in 2018 and net buyer 600–1,000 from 2022; Sniace (to 2020) and Repsol Química (to 2019) net sellers; Guissona,
+Tradebe, Rivas small. Name matches on place or fuel words ("PETRÓLEO" aggregates, San Pedro, La Plata) were rejected.
+
+**Their stated price sensitivity collapsed in 2022** (`analysis/direct_consumer_describe.py`). Own + represented
+units would give up 27–37% of their demand at the price for €50 more in 2018–2021, 4.5% in 2022 and 1–2% from 2023;
+the share of units with any such sensitivity went 93–99% → 5–25%. The bids moved, not the limits: half the MW was bid
+at ≤ €180.30 (the old cap) in June 2019, with a quarter at ≤ €80; in June 2023 the 10th percentile was €250. Realised
+too: 16% of offered MW went uncleared in 2018, 11% in 2021, 0.1% in 2025. Hours where the old cap would bind are
+excluded from the 2018–2021 figures. Repsol's refineries (half the volume) bid everything at €500 throughout.
+
+**Repsol's refineries are already netted into its position** (checked 2026-11-09). Its direct-consumer units
+(`REPEC01`, `REPRC01`, `REPQC01`, `RLNRC01`, portfolio `VGERC01/02`) carry a REPSOL ownership spell, and `firm_x.py`
+counts every owned unit on both sides, so their 200–300 MW of cleared buys are in `net_mw`. They make Repsol a net
+buyer from 2024 (mean −263 MW in 2024, −291 in 2025; +59 and +26 without them). An audit of the 38 scripts that
+compute or use a firm position found no undocumented difference: the scripts that leave purchase units out do so on
+purpose (`residual_demand_firm.py`'s supply-only q and slope, the solar instruments, the market shares), and the rest
+compute n as `firm_x` does or read it. `firm_incentive_net` covers 100% of every firm's clean, non-zero-price periods.
+
+**Interruptibility demand by industrial sector, ESIOS 836–846** (fetched 2026-11-09, `--geo 0 --start 2015-01-01`):
+the consumption of the large industrial consumers in REE's interruptibility service, **every 10 minutes, mean MW**, by
+sector: wood 836, steel 837, paper 838, desalination 839, metallurgy 840, chemicals 841, machinery 842, glass 844,
+cement 845, other 846. **Peninsular sectors run 2015-01 → early 2020 only** (the service was wound down): yearly means
+in 2015 steel 1,336 MW, metallurgy 969, chemicals 484, paper 351, cement 237, all sectors ~3,570 MW; 2019 ~2,930 MW;
+2020 a quarter of that; zero from 2021. Desalination continues, mostly in the Canaries. 10059 "Sectores" is the same
+data with the Canaries (928,804 rows). **847, labelled the total, is published by autonomous community** (15 regions;
+Galicia, Asturias, Cataluña, País Vasco largest): its regional sum equals the sector sum exactly (ratio 1.0000 over
+39,169 ten-minute points). ESIOS answers HTTP 504 to most monthly requests for it, so only 18 months are cached
+(`data/esios/raw/847/`, 2015) and no parquet is written; fetching it needs shorter chunks.
+
+**Active demand response (SRAD), ESIOS 1929–1932**: activated MW, marginal price, energy allocated, payments;
+quarter-hourly, **only 15 activation days, 2023-09-04 → 2026-10-06** (121 rows). Too few for any estimate.
 
 ### OMIE's *Listado de Unidades Ofertantes* — the authoritative registry
 `data/omie/registry/omie_unit_lists.parquet`, built by

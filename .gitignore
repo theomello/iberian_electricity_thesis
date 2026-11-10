@@ -16,6 +16,7 @@ papers/**
 
 # Large derived analysis tables (re-derivable from scripts/analysis/)
 outputs/tables/*.parquet
+outputs/tables/*/*.parquet
 
 # macOS
 .DS_Store
@@ -33,3 +34,4 @@ outputs/tables/*.parquet
 *.out
 slides/*.log
 outputs/cache/
+outputs/tables/*/*/*.parquet

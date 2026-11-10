@@ -102,3 +102,29 @@ Between the offsets at ±10 and ±50 the curve is interpolated linearly, so the 
 Reading: in 2019–2022 a process-industry buyer's stated curve gives up about 0.35–0.43% of its demand per 1% rise in
 the price; from 2023 almost none, because the curves went vertical. This is movement along a fixed curve only; how
 much the curves themselves shift with the expected price (E3) is step 2.
+
+## Step 2 result: E3, the curve shift — STOP at G2 (2026-11-10)
+
+`analysis/direct_consumer_curve_shift.py` → `outputs/tables/direct_consumer_curve_shift.csv`. Unit-day panel,
+2019-01 → 2021-06, process sample (43 units), unit × year-month and weekday FE, demand forecast, temperature, HDH/CDH,
+holiday share; SE clustered by week. Regressor: D-1 wind forecast (GW).
+
+Main outcome q_a50 (MW bid at ≥ €50): b = −0.017 MW per GW (t −2.6), an elasticity of **+0.10 (se 0.04): the wrong
+sign for a demand response** — buyers bid for *less* when wind is forecast to lower the price.
+
+| gate | result | |
+|---|---|---|
+| G1 first stage | F 501 | pass |
+| G2a weather-exposed vs process | 0.108 vs 0.101 (unclassified 0.095) | **fail**: every group moves alike |
+| G2b D+7 forecast placebo | t −0.44 | pass |
+| G2b D−7 realised wind placebo | t +2.84 | **fail** |
+| G2c provincial wind | not run: the registry holds no consumer locations | — |
+| G3 power | 2.8 se = 0.11 < 0.36 | pass |
+| G4 drop each top-5 unit | sign holds; dropping all five: b −0.0007 (t −0.3) | pass, but it is Ence's ENERC03 |
+| G5 channels | auction purchases +0.030 MW/GW (t 3.2, the E2 movement), total purchases +0.003 | **fail**: 91% offset |
+
+Reading: the curve's position co-moves with wind for weather/seasonal reasons common to all buyers (last week's wind
+predicts it as well), not with the expected price, and it rests on five units. The extra day-ahead purchases on windy
+days are bought back elsewhere (intraday, bilateral), so they are re-routing, not extra consumption.
+
+**Stop rule applies: no E3.** The result of this design is E2 (step 1) plus the descriptives. Step 3 is not run.

@@ -607,6 +607,14 @@ MW, the offered curve at the clearing price and at ±€10 and ±€50 around it
 price; 15-minute periods averaged to the hour. Checks: cleared ≤ demand at the price, and the curve is monotone, in
 every unit-hour of the test months.
 
+**Own generation (2026-11-09).** `own_gen_group` marks 8 consumers whose own legal entity also sells generation in
+OMIE (`OWN_GEN` in `build_direct_consumers.py`; pairs matched on owner, ESIOS physical unit and name, each checked by a
+second pass). The panel builder writes `own_gen/own_gen_YYYYMM.parquet`: the group's own sales per hour (PDBF, all
+roles, plus net intraday sales). Net purchases = the consumer units' `total_buy_mw` minus it. GWh a year: Ence sells
+700–830 (2018–22) and is a net seller throughout; Repsol Petróleo's refinery cogeneration sells 1,100–2,100, net
+seller in 2018 and net buyer 600–1,000 from 2022; Sniace (to 2020) and Repsol Química (to 2019) net sellers; Guissona,
+Tradebe, Rivas small. Name matches on place or fuel words ("PETRÓLEO" aggregates, San Pedro, La Plata) were rejected.
+
 **Their stated price sensitivity collapsed in 2022** (`analysis/direct_consumer_describe.py`). Own + represented
 units would give up 27–37% of their demand at the price for €50 more in 2018–2021, 4.5% in 2022 and 1–2% from 2023;
 the share of units with any such sensitivity went 93–99% → 5–25%. The bids moved, not the limits: half the MW was bid

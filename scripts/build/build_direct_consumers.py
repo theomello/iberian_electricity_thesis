@@ -16,6 +16,9 @@ types "Consum. directos a mercado". Writes data/omie/registry/direct_consumers.p
     auxiliary    generators' own consumption (auxiliary services); belongs with the supply side
 - consumer: the consumer's name (owner for `own`, description for `represented`, blank otherwise).
 - group: the owner's evidence-based group, else the legal entity; consumer_generates: that firm owns >= 50 MW of\n  supply units (own and balance kinds).
+- own_gen_group: consumers whose own legal entity also sells generation in OMIE (on-site cogeneration, biomass, solar),
+  matched by name, owner and ESIOS physical unit and checked pair by pair (2026-11-09); OWN_GEN lists the sell units.
+  Net purchases of a group = its consumer units' purchases minus its own-generation units' sales.
 - sector: keyword rule on the consumer's name; blank when no rule fires.
 - sample: process, weather_exposed, refinery, unclassified (own + represented only), else out.
 - first_seen, last_seen, days_cab: from OMIE `cab` (days with an offer header); mwh_YYYY: PDBF scheduled energy.
@@ -96,6 +99,23 @@ HAND = {
     "SPBBC01": ("own", "THE SPB GLOBAL CORPORATION", "chemicals"),
     "REPQC01": ("own", "REPSOL QUIMICA", "refining_petrochem"),
     "LLARC01": ("own", "CASTELLAR VIDRIO", "glass"),
+}
+
+# own generation: group -> (consumer units, OMIE sell units). Same legal owner in OMIE's listings, and the ESIOS
+# physical unit or the name ties the plant to the consumer's site. Repsol Química's cogenerations stay apart from
+# Repsol Petróleo (different legal entity). Matched but with no OMIE volume, so left out: GUISGN (Guissona, an
+# ESIOS-only programming unit), SNICRE1, REPRE01, EYPPV6 (Mafriges), EMBUPAL (Palacios, another legal entity).
+OWN_GEN = {
+    "ENCE": (["ENERC03", "EENRC02", "PONXC01"],
+             ["ENEVD02", "ENEVD04", "ENEVD07", "ENRVD02", "ENRVD04", "ENRVD07"]),  # Navia biomass + cogen, Pontevedra
+    "REPSOL PETROLEO": (["REPEC01", "REPRC01"],
+                        ["CILCOR", "RPTRTAR", "REPPLL", "REPVD01", "REPVD02", "REPVD03", "REPVD04"]),
+    "REPSOL QUIMICA": (["REPQC01"], ["COG75RQ", "EMORELL", "EMORPER"]),
+    "SNIACE": (["SNIAC01"], ["SNICOG"]),
+    "GUISSONA": (["GUISC02", "GUISR01", "COGRC01"], ["GUIRE01"]),
+    "TRADEBE": (["TRARC01"], ["TRARE01"]),
+    "RIVAS": (["RIVAC01"], ["RIVRE01"]),
+    "SLY MURCIA": (["SLYRC01"], ["SLYRE01"]),
 }
 
 
@@ -233,6 +253,9 @@ def main() -> int:
                 reg.loc[u, "hand_sector"] = sec
     gen = generating_groups(groups)
     reg["consumer_generates"] = reg.kind.isin(["own", "balance"]) & reg.group.isin(gen)
+    reg["own_gen_group"] = None
+    for g, (cons, _) in OWN_GEN.items():
+        reg.loc[reg.index.intersection(cons), "own_gen_group"] = g
     reg["sector"] = [sector(f"{c} {d}") if k in ("own", "represented", "balance") else ""
                      for c, d, k in zip(reg.consumer, reg.descr, reg.kind)]
     if "hand_sector" in reg:

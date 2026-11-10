@@ -53,6 +53,9 @@ A 2SLS of cleared quantity on price (E1 = E2 + E3) adds nothing beyond the two a
    weather-exposed loads (retail, councils, health, irrigation, transport) as a comparison group; refineries and
    ceiling bidders reported apart.
 
+Step 0 done 2026-11-09: items 1, 2 and 4 in the panel; item 3 as `own_gen_group` and `own_gen/` (CLAUDE.md,
+"Own generation"). Own generation matters for Ence, Repsol and Sniace only.
+
 **Step 1, E2, the stated elasticity (descriptive, the core deliverable).** Per regime (2019–21H1, 2021H2–22,
 2023–26), evaluate each unit's stated curve at p\* ± the first-stage price change (wind-forecast sd × first-stage
 coefficient), weighted by quantity. Report with the top-5 share and a balanced panel.

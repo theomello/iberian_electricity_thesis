@@ -27,6 +27,10 @@ Offer limits: bids were bounded to [0, 180.30] EUR/MWh until 2021-07-06 and to [
 within an era.
 
 Writes outputs/tables/direct_consumer_panel/panel_YYYYMM.parquet (gitignored), one per month, skipped if present.
+
+Own generation (build_direct_consumers.OWN_GEN): own_gen/own_gen_YYYYMM.parquet, per own_gen_group and hour,
+    own_sell_mw = PDBF schedule of the group's sell units (all role codes) + their intraday sales - intraday purchases.
+A group's net purchases = sum of its consumer units' total_buy_mw - own_sell_mw.
 """
 from __future__ import annotations
 
@@ -34,10 +38,14 @@ import argparse
 import glob
 from pathlib import Path
 
+import sys
+
 import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from build_direct_consumers import OWN_GEN  # noqa: E402
 OUT = ROOT / "outputs" / "tables" / "direct_consumer_panel"
 OFFSETS = {"q_m50": -50.0, "q_m10": -10.0, "q_p": 0.0, "q_p10": 10.0, "q_p50": 50.0}
 ABS = {"q_a20": 20.0, "q_a50": 50.0, "q_a80": 80.0, "q_a120": 120.0, "q_a180": 180.30, "q_a500": 500.0}
@@ -134,6 +142,18 @@ def intraday(ym: str, units: pd.Series) -> pd.DataFrame:
     return per.groupby(["date", "hour", "unit"]).agg(id_buy_mw=("buy", "sum"), id_sell_mw=("sell", "sum")).reset_index()
 
 
+def own_gen(ym: str) -> pd.DataFrame:
+    """Own-generation sales per group and hour, MW."""
+    gen = {u: g for g, (_, units) in OWN_GEN.items() for u in units}
+    idx = pd.Series(["ES"] * len(gen), index=list(gen))
+    p = pdbf(ym, idx).assign(sell=lambda d: -d.pdbf_buy_mw)[["date", "hour", "unit", "sell"]]
+    i = intraday(ym, idx)
+    h = p.merge(i, on=["date", "hour", "unit"], how="outer").fillna({"sell": 0.0, "id_buy_mw": 0.0, "id_sell_mw": 0.0})
+    h["own_sell_mw"] = h.sell + h.id_sell_mw - h.id_buy_mw
+    h["own_gen_group"] = h.unit.map(gen)
+    return h.groupby(["date", "hour", "own_gen_group"], as_index=False).own_sell_mw.sum()
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--months", nargs="*")
@@ -163,6 +183,14 @@ def main() -> int:
         print(f"{ym}: {len(h):,} unit-hours, {h.unit.nunique()} units, "
               f"cleared {h.q_cleared.sum() / 1e3:,.0f} GWh", flush=True)
     print(f"done: {tot:,} unit-hours written to {OUT.relative_to(ROOT)}")
+    (OUT / "own_gen").mkdir(exist_ok=True)
+    for f in files:
+        ym = Path(f).stem[-6:]
+        out = OUT / "own_gen" / f"own_gen_{ym}.parquet"
+        if (out.exists() and not a.force) or not (OUT / f"panel_{ym}.parquet").exists():
+            continue
+        own_gen(ym).to_parquet(out, index=False)
+    print("own generation written to", (OUT / "own_gen").relative_to(ROOT))
     return 0
 
 

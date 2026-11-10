@@ -73,6 +73,8 @@ scripts/
 | `build/build_omie_unit_lists.py` | OMIE *Listado de Unidades* PDFs (emailed, **not re-fetchable**) | no | `data/omie/registry/omie_unit_lists.parquet` |
 | `build/build_direct_consumers.py` | unit lists + ESIOS + `cab` + PDBF + ownership | no | `data/omie/registry/direct_consumers.parquet` |
 | `build/build_direct_consumer_panel.py` | bids + prices + `direct_consumers` | no | `outputs/tables/direct_consumer_panel/panel_YYYYMM.parquet` |
+| `build/build_cogeneration_units.py` | unit lists + `cab` + PDBF + ESIOS physical units | no | `data/omie/registry/cogeneration_units.parquet` |
+| `build/build_cogeneration_panel.py` | PDBF + `cab` + bids + prices + `cogeneration_units` | no | `outputs/tables/cogeneration_panel/panel_YYYYMM.parquet` |
 | `build/build_owner_groups.py` | `omie_unit_lists` + ESIOS chain | no | `data/omie/registry/owner_groups.parquet` |
 | `fetch/fetch_ree_daily.py` | REE `apidatos` | no | `data/ree/ree_{generation,demand,balance}_daily.parquet` |
 | `fetch/fetch_ree_realtime.py` | REE `demanda.ree.es` | no | `data/ree/ree_realtime_5min.parquet` |
@@ -643,6 +645,30 @@ Galicia, Asturias, Cataluña, País Vasco largest): its regional sum equals the 
 
 **Active demand response (SRAD), ESIOS 1929–1932**: activated MW, marginal price, energy allocated, payments;
 quarter-hourly, **only 15 activation days, 2023-09-04 → 2026-10-06** (121 rows). Too few for any estimate.
+
+### Cogeneration offer units — 1,313 units, fuel known for 13% (2026-11-10)
+`build/build_cogeneration_units.py` → `data/omie/registry/cogeneration_units.parquet`: every unit OMIE's listing labels
+"RE Mercado Térmica no renovable" (1,008, `nonren`) or "RE Mercado Térmica Renovable" (`renew`) in any snapshot; the
+label exists from 2022-02-08 only. 289 non-renewable units offer in January 2022, 7,236 MW (267 units, 6,319 MW on the
+2022-02-08 label alone), median 14 MW. `build/build_cogeneration_panel.py` → `outputs/tables/cogeneration_panel/`:
+569,425 unit-days 2019-01 → 2023-12 (PDBF energy, load factor, sell offers, share offered at ≤ €1); 6 minutes.
+Design and results: `docs/specs/2026-11-10-cogeneration-design.md`, `notes/rq-cogeneration.md`.
+
+- **Non-renewable thermal output fell from 3,554 MW (March 2022) to 1,386 MW (September 2022)** and was back near
+  2,800 MW in February 2023; renewable thermal stayed at 560–610 MW. Gas cogeneration inside the regulated payment
+  scheme was outside the gas-cap subsidy from 15 June 2022 and could opt in from 1 October (RDL 17/2022). The decree
+  requires a separate offer unit for a subsidised plant: 28 new non-renewable units appear in October 2022, 15 in
+  November, against 1–6 a month before.
+- **OMIE's cogeneration units mostly cannot be tied to a plant.** They are representatives' numbered units ("AXPO
+  VENTA R. ESPECIAL 369"). Matching to REE's physical units (ESIOS archive 81) reaches 90 units, 12.9% of
+  non-renewable capacity; some descriptions do name REE's programming unit ("UOF PARA UP TTECQU"). Units new after
+  the cap have code-like names, so only 7 of 104 can be linked to the unit their plant left.
+- **REE's programming units for cogeneration are plants, with fuel** (324 units for 357 gas plants; 7 are OMIE codes).
+  In the I90 sample, gas cogeneration's final schedule is 2,100–2,250 MW in 2021, 640 MW on 2022-09-15, 2,161 MW on
+  2023-02-15; 20 new gas programming units in October 2022. For plant-level cogeneration use I90, not OMIE units.
+- **Most cogeneration offers at zero**: 8–21% of non-renewable units offer most of their MW above €1/MWh.
+- `cab` capacity of a represented unit changes as plants join and leave: the registry's `max_power_mw` is the median
+  day, `cap_max_mw` the largest (8,831 MW summed against 7,236 MW in January 2022).
 
 ### OMIE's *Listado de Unidades Ofertantes* — the authoritative registry
 `data/omie/registry/omie_unit_lists.parquet`, built by

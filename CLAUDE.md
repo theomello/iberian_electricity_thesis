@@ -648,7 +648,7 @@ quarter-hourly, **only 15 activation days, 2023-09-04 → 2026-10-06** (121 rows
 
 ### Cogeneration offer units — 1,313 units, fuel known for 13% (2026-11-10)
 `build/build_cogeneration_units.py` → `data/omie/registry/cogeneration_units.parquet`: every unit OMIE's listing labels
-"RE Mercado Térmica no renovable" (1,008, `nonren`) or "RE Mercado Térmica Renovable" (`renew`) in any snapshot; the
+"RE Mercado Térmica no renovable" (1,041, `nonren`) or "RE Mercado Térmica Renovable" (`renew`) in any snapshot; the
 label exists from 2022-02-08 only. 289 non-renewable units offer in January 2022, 7,236 MW (267 units, 6,319 MW on the
 2022-02-08 label alone), median 14 MW. `build/build_cogeneration_panel.py` → `outputs/tables/cogeneration_panel/`:
 569,425 unit-days 2019-01 → 2023-12 (PDBF energy, load factor, sell offers, share offered at ≤ €1); 6 minutes.

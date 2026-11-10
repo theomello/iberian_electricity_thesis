@@ -34,3 +34,4 @@ outputs/tables/*/*.parquet
 *.out
 slides/*.log
 outputs/cache/
+outputs/tables/*/*/*.parquet

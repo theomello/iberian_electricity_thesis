@@ -106,3 +106,24 @@ Read from the Markdown at the sections cited, **not in full**.
 Not yet held and worth getting: Hirth, Khanna & Ruhnau (2024, *Energy Economics*), wind
 as an instrument for the German wholesale price, elasticity ≈ −0.05 attributed to
 industry; Fox-Penner (1990b); von Graevenitz & Rottner (2022).
+
+### Added later the same day (2026-11-10) — 19 more files
+
+Abstracts only, except where a section is cited.
+
+| file | what it is | why it matters |
+|---|---|---|
+| `ssrn-4251564.pdf` | von Graevenitz & Rottner (ZEW DP 22-038, version Feb 2024), German manufacturing plants | **the closest precedent for the cogeneration design**: plant-level own-price elasticity of electricity *procurement* −0.4 to −0.6, and plants replace procurement with electricity generated on site. Annual census data and network-charge variation; no run decision, no hourly prices |
+| `cesifo1_wp12093.pdf` | Fabra, Leblanc & Souza (CESifo WP 12093), distributional effects of the crisis and the Iberian mechanism | Spanish firms and consumer groups, machine-learning counterfactuals. A text search finds no treatment of cogeneration, so the design's event is not covered there (search only, not a full read) |
+| `1-s2.0-S0928765501000495-main copy.pdf` | Bjørner & Jensen (2002, *Resource and Energy Economics* 24), Danish industrial micro-panel | energy price elasticity −0.44, lower for energy-intensive companies |
+| `1-s2.0-0140988389900017-main copy.pdf` | Considine (1989, *Energy Economics*), functional form in interfuel substitution | the linear logit model of cost shares keeps own-price elasticities negative where the translog does not: the functional form to use if input substitution is ever estimated |
+| `cwpe1032 copy.pdf` | Steinbuks (Cambridge WP 1032 / EPRG 1015), interfuel substitution in UK manufacturing | sector-level fuel substitution |
+| `0945&EPRG0925.pdf` | Kelly (EPRG 0925), combined heat and power with district heating in the UK | viability and policy; background only |
+| `MIT-EL-77-026WP-03830744 copy.pdf` | Pindyck (1977 MIT working paper), the working-paper version of Pindyck (1979) | **readable text**, unlike the journal scan |
+| `C_WPTEXT_tppap.PDF.pdf`, `w82482.pdf` | second copies of `w8213.pdf` and `w8248.pdf` | **still garbled** (the PDFs' fonts carry no character map); they need OCR or another source |
+| `Halvorsen-EnergySubstitutionUS-1977 copy.pdf`, `Interfuel Substitution and the Industrial Demand for Energy_ An International Comparison.pdf`, `Dynamic Factor Demands and the Effects of Energy Price Shocks.pdf`, `Varian, Hal - Economic models - 1978 Nov copy.pdf` | Halvorsen (1977); Pindyck (1979); Pindyck & Rotemberg (1983); a Varian text | **scans, no text layer** |
+| `1391971 copy.pdf`, `1392391 copy.pdf`, `1924999 copy.pdf`, `2525642 copy.pdf` | JSTOR scans, **not identified** (no text layer) | — |
+| `CostMin copy.pdf` | lecture notes on cost minimisation (V. Lima) | converted empty |
+
+No OCR tool is installed here (`tesseract`, `pdftoppm` absent); the scans and the two
+garbled NBER papers cannot be read until one is.

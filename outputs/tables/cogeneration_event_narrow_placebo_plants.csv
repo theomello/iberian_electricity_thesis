@@ -1,0 +1,581 @@
+window,treated,weights,placebo_break,beta,se,over_real,holiday,real
+cap,gas,weighted,2021-01-20,-0.1164,0.0339,0.487,True,-0.239
+cap,gas,weighted,2021-01-27,-0.0931,0.0302,0.3894,False,-0.239
+cap,gas,weighted,2021-02-03,-0.0309,0.0343,0.1293,False,-0.239
+cap,gas,weighted,2021-02-10,-0.0038,0.0466,0.016,False,-0.239
+cap,gas,weighted,2021-02-17,0.0245,0.0323,0.1026,False,-0.239
+cap,gas,weighted,2021-02-24,0.1044,0.0348,0.437,False,-0.239
+cap,gas,weighted,2021-03-03,0.1511,0.0482,0.6325,False,-0.239
+cap,gas,weighted,2021-03-10,0.0457,0.0442,0.1913,False,-0.239
+cap,gas,weighted,2021-03-17,-0.0358,0.0471,0.15,True,-0.239
+cap,gas,weighted,2021-03-24,-0.036,0.0395,0.1506,True,-0.239
+cap,gas,weighted,2021-03-31,-0.0441,0.0478,0.1846,True,-0.239
+cap,gas,weighted,2021-04-07,-0.0203,0.0383,0.0849,True,-0.239
+cap,gas,weighted,2021-04-14,0.0034,0.0291,0.0142,True,-0.239
+cap,gas,weighted,2021-04-21,-0.0202,0.0229,0.0846,False,-0.239
+cap,gas,weighted,2021-04-28,-0.0276,0.0263,0.1154,False,-0.239
+cap,gas,weighted,2021-05-05,-0.0063,0.032,0.0265,False,-0.239
+cap,gas,weighted,2021-05-12,0.0435,0.0372,0.182,False,-0.239
+cap,gas,weighted,2021-05-19,0.0293,0.0381,0.1227,False,-0.239
+cap,gas,weighted,2021-05-26,-0.0106,0.0343,0.0443,False,-0.239
+cap,gas,weighted,2021-06-02,-0.0275,0.027,0.1149,False,-0.239
+cap,gas,weighted,2021-06-09,-0.0567,0.0392,0.2372,False,-0.239
+cap,gas,weighted,2021-06-16,-0.0312,0.0338,0.1305,False,-0.239
+cap,gas,weighted,2021-06-23,0.0404,0.0345,0.1689,False,-0.239
+cap,gas,weighted,2021-06-30,0.0231,0.037,0.0965,False,-0.239
+cap,gas,weighted,2021-07-07,-0.0627,0.044,0.2622,False,-0.239
+cap,gas,weighted,2021-07-14,-0.0017,0.0129,0.0072,False,-0.239
+cap,gas,weighted,2021-07-21,0.0198,0.0198,0.0829,True,-0.239
+cap,gas,weighted,2021-07-28,-0.083,0.0422,0.3473,True,-0.239
+cap,gas,weighted,2021-08-04,-0.0723,0.0264,0.3024,True,-0.239
+cap,gas,weighted,2021-08-11,0.0114,0.0163,0.0479,True,-0.239
+cap,gas,weighted,2021-08-18,0.0174,0.0226,0.0729,True,-0.239
+cap,gas,weighted,2021-08-25,0.0223,0.0182,0.0934,True,-0.239
+cap,gas,weighted,2021-09-01,0.0337,0.022,0.1411,True,-0.239
+cap,gas,weighted,2021-09-08,0.0308,0.0288,0.129,True,-0.239
+cap,gas,weighted,2021-09-15,0.0481,0.0534,0.2015,False,-0.239
+cap,gas,weighted,2021-09-22,0.0,0.0493,0.0002,False,-0.239
+cap,gas,weighted,2021-09-29,-0.0641,0.0373,0.268,False,-0.239
+cap,gas,weighted,2021-10-06,-0.0475,0.0481,0.1989,False,-0.239
+cap,gas,weighted,2021-10-13,-0.0209,0.0433,0.0873,False,-0.239
+cap,gas,weighted,2021-10-20,-0.019,0.0316,0.0795,False,-0.239
+cap,gas,weighted,2021-10-27,-0.0262,0.0281,0.1096,False,-0.239
+cap,gas,weighted,2021-11-03,0.0431,0.0261,0.1803,False,-0.239
+cap,gas,weighted,2021-11-10,0.0328,0.0216,0.1371,False,-0.239
+cap,gas,weighted,2021-11-17,-0.0267,0.0232,0.1119,False,-0.239
+cap,gas,weighted,2021-11-24,0.0,0.0343,0.0001,False,-0.239
+cap,gas,weighted,2021-12-01,0.0191,0.0366,0.08,False,-0.239
+cap,gas,weighted,2021-12-08,0.0081,0.0176,0.0339,False,-0.239
+cap,gas,weighted,2021-12-15,-0.0584,0.0228,0.2444,True,-0.239
+cap,gas,unweighted,2021-01-20,-0.0667,0.0165,0.2705,True,-0.2467
+cap,gas,unweighted,2021-01-27,-0.0474,0.0233,0.1923,False,-0.2467
+cap,gas,unweighted,2021-02-03,-0.0058,0.0197,0.0237,False,-0.2467
+cap,gas,unweighted,2021-02-10,-0.0279,0.0221,0.1132,False,-0.2467
+cap,gas,unweighted,2021-02-17,-0.0001,0.0212,0.0002,False,-0.2467
+cap,gas,unweighted,2021-02-24,0.0734,0.0208,0.2975,False,-0.2467
+cap,gas,unweighted,2021-03-03,0.0886,0.0216,0.3593,False,-0.2467
+cap,gas,unweighted,2021-03-10,0.0116,0.0206,0.0469,False,-0.2467
+cap,gas,unweighted,2021-03-17,-0.0272,0.0207,0.1102,True,-0.2467
+cap,gas,unweighted,2021-03-24,-0.027,0.0187,0.1093,True,-0.2467
+cap,gas,unweighted,2021-03-31,-0.0277,0.0221,0.1122,True,-0.2467
+cap,gas,unweighted,2021-04-07,0.0076,0.0218,0.031,True,-0.2467
+cap,gas,unweighted,2021-04-14,0.0229,0.0183,0.0928,True,-0.2467
+cap,gas,unweighted,2021-04-21,0.0058,0.0174,0.0234,False,-0.2467
+cap,gas,unweighted,2021-04-28,0.0015,0.0239,0.0061,False,-0.2467
+cap,gas,unweighted,2021-05-05,-0.0131,0.0231,0.0529,False,-0.2467
+cap,gas,unweighted,2021-05-12,0.0029,0.0214,0.0116,False,-0.2467
+cap,gas,unweighted,2021-05-19,0.0151,0.0185,0.0611,False,-0.2467
+cap,gas,unweighted,2021-05-26,0.0148,0.0178,0.0598,False,-0.2467
+cap,gas,unweighted,2021-06-02,0.0106,0.0171,0.0431,False,-0.2467
+cap,gas,unweighted,2021-06-09,-0.0099,0.0185,0.0402,False,-0.2467
+cap,gas,unweighted,2021-06-16,-0.0214,0.0171,0.0867,False,-0.2467
+cap,gas,unweighted,2021-06-23,0.0048,0.0155,0.0193,False,-0.2467
+cap,gas,unweighted,2021-06-30,0.0042,0.0196,0.0168,False,-0.2467
+cap,gas,unweighted,2021-07-07,-0.0239,0.0176,0.0967,False,-0.2467
+cap,gas,unweighted,2021-07-14,0.0055,0.0171,0.0222,False,-0.2467
+cap,gas,unweighted,2021-07-21,0.011,0.0174,0.0447,True,-0.2467
+cap,gas,unweighted,2021-07-28,-0.0652,0.0197,0.2642,True,-0.2467
+cap,gas,unweighted,2021-08-04,-0.071,0.0194,0.2878,True,-0.2467
+cap,gas,unweighted,2021-08-11,-0.0176,0.0164,0.0714,True,-0.2467
+cap,gas,unweighted,2021-08-18,0.0051,0.0165,0.0206,True,-0.2467
+cap,gas,unweighted,2021-08-25,0.047,0.0169,0.1905,True,-0.2467
+cap,gas,unweighted,2021-09-01,0.0586,0.0203,0.2374,True,-0.2467
+cap,gas,unweighted,2021-09-08,0.0144,0.016,0.0582,True,-0.2467
+cap,gas,unweighted,2021-09-15,-0.0144,0.0178,0.0584,False,-0.2467
+cap,gas,unweighted,2021-09-22,-0.0251,0.0162,0.1018,False,-0.2467
+cap,gas,unweighted,2021-09-29,-0.0341,0.0202,0.1382,False,-0.2467
+cap,gas,unweighted,2021-10-06,0.0009,0.0182,0.0037,False,-0.2467
+cap,gas,unweighted,2021-10-13,0.0146,0.0203,0.0592,False,-0.2467
+cap,gas,unweighted,2021-10-20,-0.0022,0.0182,0.0089,False,-0.2467
+cap,gas,unweighted,2021-10-27,-0.0169,0.0204,0.0686,False,-0.2467
+cap,gas,unweighted,2021-11-03,0.0308,0.0193,0.125,False,-0.2467
+cap,gas,unweighted,2021-11-10,0.0205,0.0204,0.0831,False,-0.2467
+cap,gas,unweighted,2021-11-17,-0.0135,0.0177,0.0548,False,-0.2467
+cap,gas,unweighted,2021-11-24,-0.0172,0.0195,0.0696,False,-0.2467
+cap,gas,unweighted,2021-12-01,-0.0274,0.0199,0.111,False,-0.2467
+cap,gas,unweighted,2021-12-08,-0.0072,0.0135,0.029,False,-0.2467
+cap,gas,unweighted,2021-12-15,-0.0491,0.0152,0.1989,True,-0.2467
+cap,other_fossil,weighted,2021-01-20,-0.1745,0.0515,1.1297,True,-0.1545
+cap,other_fossil,weighted,2021-01-27,-0.0812,0.0521,0.5256,False,-0.1545
+cap,other_fossil,weighted,2021-02-03,-0.0194,0.0515,0.1253,False,-0.1545
+cap,other_fossil,weighted,2021-02-10,-0.0238,0.0531,0.1539,False,-0.1545
+cap,other_fossil,weighted,2021-02-17,-0.0218,0.0328,0.1411,False,-0.1545
+cap,other_fossil,weighted,2021-02-24,-0.0252,0.0417,0.1631,False,-0.1545
+cap,other_fossil,weighted,2021-03-03,0.0069,0.0592,0.0447,False,-0.1545
+cap,other_fossil,weighted,2021-03-10,-0.0207,0.0463,0.1343,False,-0.1545
+cap,other_fossil,weighted,2021-03-17,-0.0499,0.0514,0.3228,True,-0.1545
+cap,other_fossil,weighted,2021-03-24,-0.0223,0.0508,0.1442,True,-0.1545
+cap,other_fossil,weighted,2021-03-31,0.0085,0.0462,0.0554,True,-0.1545
+cap,other_fossil,weighted,2021-04-07,0.0894,0.0466,0.5786,True,-0.1545
+cap,other_fossil,weighted,2021-04-14,0.0781,0.0372,0.5057,True,-0.1545
+cap,other_fossil,weighted,2021-04-21,0.0076,0.0269,0.0492,False,-0.1545
+cap,other_fossil,weighted,2021-04-28,-0.0422,0.0264,0.2734,False,-0.1545
+cap,other_fossil,weighted,2021-05-05,-0.0332,0.0422,0.2147,False,-0.1545
+cap,other_fossil,weighted,2021-05-12,0.0357,0.0389,0.2312,False,-0.1545
+cap,other_fossil,weighted,2021-05-19,0.0488,0.0424,0.3161,False,-0.1545
+cap,other_fossil,weighted,2021-05-26,0.0179,0.041,0.1159,False,-0.1545
+cap,other_fossil,weighted,2021-06-02,-0.0003,0.0399,0.0021,False,-0.1545
+cap,other_fossil,weighted,2021-06-09,-0.0718,0.0404,0.465,False,-0.1545
+cap,other_fossil,weighted,2021-06-16,-0.083,0.0486,0.5371,False,-0.1545
+cap,other_fossil,weighted,2021-06-23,0.0028,0.0515,0.0179,False,-0.1545
+cap,other_fossil,weighted,2021-06-30,0.0588,0.0539,0.3807,False,-0.1545
+cap,other_fossil,weighted,2021-07-07,0.0009,0.0598,0.0055,False,-0.1545
+cap,other_fossil,weighted,2021-07-14,0.0352,0.0284,0.228,False,-0.1545
+cap,other_fossil,weighted,2021-07-21,-0.0058,0.0477,0.0375,True,-0.1545
+cap,other_fossil,weighted,2021-07-28,-0.1209,0.0541,0.7825,True,-0.1545
+cap,other_fossil,weighted,2021-08-04,-0.0649,0.0353,0.4204,True,-0.1545
+cap,other_fossil,weighted,2021-08-11,-0.0017,0.0387,0.011,True,-0.1545
+cap,other_fossil,weighted,2021-08-18,0.0106,0.0352,0.0687,True,-0.1545
+cap,other_fossil,weighted,2021-08-25,0.0703,0.036,0.4552,True,-0.1545
+cap,other_fossil,weighted,2021-09-01,0.0445,0.0287,0.2878,True,-0.1545
+cap,other_fossil,weighted,2021-09-08,0.0521,0.0331,0.3373,True,-0.1545
+cap,other_fossil,weighted,2021-09-15,0.0409,0.0542,0.2645,False,-0.1545
+cap,other_fossil,weighted,2021-09-22,0.0202,0.0501,0.1309,False,-0.1545
+cap,other_fossil,weighted,2021-09-29,-0.0012,0.0335,0.0075,False,-0.1545
+cap,other_fossil,weighted,2021-10-06,-0.0246,0.0481,0.1596,False,-0.1545
+cap,other_fossil,weighted,2021-10-13,-0.0708,0.0463,0.4581,False,-0.1545
+cap,other_fossil,weighted,2021-10-20,-0.0473,0.0286,0.3065,False,-0.1545
+cap,other_fossil,weighted,2021-10-27,0.0154,0.0308,0.0999,False,-0.1545
+cap,other_fossil,weighted,2021-11-03,0.0783,0.0296,0.5068,False,-0.1545
+cap,other_fossil,weighted,2021-11-10,0.049,0.0233,0.3171,False,-0.1545
+cap,other_fossil,weighted,2021-11-17,-0.025,0.0211,0.1621,False,-0.1545
+cap,other_fossil,weighted,2021-11-24,-0.0165,0.0339,0.1066,False,-0.1545
+cap,other_fossil,weighted,2021-12-01,0.0157,0.0391,0.1016,False,-0.1545
+cap,other_fossil,weighted,2021-12-08,0.0071,0.0197,0.0459,False,-0.1545
+cap,other_fossil,weighted,2021-12-15,-0.032,0.0258,0.2072,True,-0.1545
+cap,other_fossil,unweighted,2021-01-20,-0.1189,0.0399,0.8141,True,-0.1461
+cap,other_fossil,unweighted,2021-01-27,-0.0946,0.0378,0.6474,False,-0.1461
+cap,other_fossil,unweighted,2021-02-03,-0.0398,0.0341,0.2723,False,-0.1461
+cap,other_fossil,unweighted,2021-02-10,-0.0552,0.034,0.3778,False,-0.1461
+cap,other_fossil,unweighted,2021-02-17,-0.047,0.0277,0.3217,False,-0.1461
+cap,other_fossil,unweighted,2021-02-24,-0.0237,0.0263,0.1625,False,-0.1461
+cap,other_fossil,unweighted,2021-03-03,0.0105,0.0299,0.0718,False,-0.1461
+cap,other_fossil,unweighted,2021-03-10,-0.0351,0.032,0.24,False,-0.1461
+cap,other_fossil,unweighted,2021-03-17,-0.0741,0.0426,0.5075,True,-0.1461
+cap,other_fossil,unweighted,2021-03-24,-0.0198,0.0362,0.1355,True,-0.1461
+cap,other_fossil,unweighted,2021-03-31,0.0367,0.0384,0.251,True,-0.1461
+cap,other_fossil,unweighted,2021-04-07,0.1324,0.0384,0.9066,True,-0.1461
+cap,other_fossil,unweighted,2021-04-14,0.1011,0.0249,0.6922,True,-0.1461
+cap,other_fossil,unweighted,2021-04-21,0.0162,0.0224,0.1109,False,-0.1461
+cap,other_fossil,unweighted,2021-04-28,-0.0203,0.0277,0.1387,False,-0.1461
+cap,other_fossil,unweighted,2021-05-05,-0.0442,0.0317,0.3024,False,-0.1461
+cap,other_fossil,unweighted,2021-05-12,0.0063,0.0241,0.0432,False,-0.1461
+cap,other_fossil,unweighted,2021-05-19,0.0539,0.0283,0.3692,False,-0.1461
+cap,other_fossil,unweighted,2021-05-26,0.0122,0.0391,0.0833,False,-0.1461
+cap,other_fossil,unweighted,2021-06-02,-0.038,0.0336,0.2603,False,-0.1461
+cap,other_fossil,unweighted,2021-06-09,-0.036,0.0297,0.2464,False,-0.1461
+cap,other_fossil,unweighted,2021-06-16,-0.0441,0.0228,0.3021,False,-0.1461
+cap,other_fossil,unweighted,2021-06-23,-0.0038,0.0249,0.0258,False,-0.1461
+cap,other_fossil,unweighted,2021-06-30,0.0582,0.0355,0.3985,False,-0.1461
+cap,other_fossil,unweighted,2021-07-07,0.0578,0.0361,0.3957,False,-0.1461
+cap,other_fossil,unweighted,2021-07-14,0.0457,0.0277,0.3126,False,-0.1461
+cap,other_fossil,unweighted,2021-07-21,-0.0102,0.0381,0.0699,True,-0.1461
+cap,other_fossil,unweighted,2021-07-28,-0.0943,0.0386,0.6459,True,-0.1461
+cap,other_fossil,unweighted,2021-08-04,-0.0719,0.0358,0.4925,True,-0.1461
+cap,other_fossil,unweighted,2021-08-11,-0.0211,0.0385,0.1446,True,-0.1461
+cap,other_fossil,unweighted,2021-08-18,0.0011,0.0446,0.0074,True,-0.1461
+cap,other_fossil,unweighted,2021-08-25,0.0878,0.0332,0.6008,True,-0.1461
+cap,other_fossil,unweighted,2021-09-01,0.0421,0.0248,0.2885,True,-0.1461
+cap,other_fossil,unweighted,2021-09-08,0.039,0.0319,0.2671,True,-0.1461
+cap,other_fossil,unweighted,2021-09-15,0.003,0.0245,0.0208,False,-0.1461
+cap,other_fossil,unweighted,2021-09-22,0.0034,0.0254,0.0232,False,-0.1461
+cap,other_fossil,unweighted,2021-09-29,0.0092,0.0251,0.0629,False,-0.1461
+cap,other_fossil,unweighted,2021-10-06,0.0168,0.0307,0.1154,False,-0.1461
+cap,other_fossil,unweighted,2021-10-13,-0.0288,0.0273,0.1969,False,-0.1461
+cap,other_fossil,unweighted,2021-10-20,-0.0237,0.021,0.1621,False,-0.1461
+cap,other_fossil,unweighted,2021-10-27,0.0219,0.0276,0.1501,False,-0.1461
+cap,other_fossil,unweighted,2021-11-03,0.0924,0.0302,0.6323,False,-0.1461
+cap,other_fossil,unweighted,2021-11-10,0.0553,0.023,0.3783,False,-0.1461
+cap,other_fossil,unweighted,2021-11-17,-0.0037,0.0172,0.0255,False,-0.1461
+cap,other_fossil,unweighted,2021-11-24,-0.0281,0.0216,0.1921,False,-0.1461
+cap,other_fossil,unweighted,2021-12-01,-0.0302,0.0243,0.2069,False,-0.1461
+cap,other_fossil,unweighted,2021-12-08,-0.0012,0.0164,0.0084,False,-0.1461
+cap,other_fossil,unweighted,2021-12-15,-0.025,0.0233,0.1713,True,-0.1461
+opt-in,gas,weighted,2021-01-16,-0.0668,0.0319,1.636,True,-0.0408
+opt-in,gas,weighted,2021-01-23,-0.1006,0.0322,2.4642,False,-0.0408
+opt-in,gas,weighted,2021-01-30,-0.1069,0.0356,2.6199,False,-0.0408
+opt-in,gas,weighted,2021-02-06,-0.0369,0.0399,0.9053,False,-0.0408
+opt-in,gas,weighted,2021-02-13,0.0296,0.0394,0.7245,False,-0.0408
+opt-in,gas,weighted,2021-02-20,0.054,0.0287,1.3243,False,-0.0408
+opt-in,gas,weighted,2021-02-27,0.1201,0.0461,2.9429,False,-0.0408
+opt-in,gas,weighted,2021-03-06,0.117,0.0426,2.8667,False,-0.0408
+opt-in,gas,weighted,2021-03-13,0.0194,0.0511,0.4754,False,-0.0408
+opt-in,gas,weighted,2021-03-20,-0.0294,0.0397,0.7213,True,-0.0408
+opt-in,gas,weighted,2021-03-27,-0.0528,0.0498,1.2939,True,-0.0408
+opt-in,gas,weighted,2021-04-03,-0.0596,0.0459,1.4605,True,-0.0408
+opt-in,gas,weighted,2021-04-10,-0.0137,0.034,0.3351,True,-0.0408
+opt-in,gas,weighted,2021-04-17,0.0008,0.0259,0.0205,True,-0.0408
+opt-in,gas,weighted,2021-04-24,-0.0108,0.0294,0.265,False,-0.0408
+opt-in,gas,weighted,2021-05-01,-0.0175,0.028,0.4282,False,-0.0408
+opt-in,gas,weighted,2021-05-08,0.0126,0.0418,0.3081,False,-0.0408
+opt-in,gas,weighted,2021-05-15,0.0433,0.0394,1.0601,False,-0.0408
+opt-in,gas,weighted,2021-05-22,0.0256,0.0416,0.6279,False,-0.0408
+opt-in,gas,weighted,2021-05-29,-0.0186,0.0396,0.4555,False,-0.0408
+opt-in,gas,weighted,2021-06-05,-0.0242,0.0183,0.592,False,-0.0408
+opt-in,gas,weighted,2021-06-12,-0.0492,0.0431,1.205,False,-0.0408
+opt-in,gas,weighted,2021-06-19,0.0051,0.0335,0.1239,False,-0.0408
+opt-in,gas,weighted,2021-06-26,0.0556,0.0392,1.3628,False,-0.0408
+opt-in,gas,weighted,2021-07-03,-0.0514,0.0664,1.2588,False,-0.0408
+opt-in,gas,weighted,2021-07-10,-0.0477,0.0279,1.1695,False,-0.0408
+opt-in,gas,weighted,2021-07-17,0.016,0.0161,0.3914,False,-0.0408
+opt-in,gas,weighted,2021-07-24,0.0023,0.0194,0.0566,True,-0.0408
+opt-in,gas,weighted,2021-07-31,-0.0887,0.0348,2.1722,True,-0.0408
+opt-in,gas,weighted,2021-08-07,-0.0348,0.0196,0.8521,True,-0.0408
+opt-in,gas,weighted,2021-08-14,0.0167,0.0201,0.408,True,-0.0408
+opt-in,gas,weighted,2021-08-21,0.007,0.0206,0.1723,True,-0.0408
+opt-in,gas,weighted,2021-08-28,0.0411,0.02,1.0063,True,-0.0408
+opt-in,gas,weighted,2021-09-04,0.039,0.0239,0.956,True,-0.0408
+opt-in,gas,weighted,2021-09-11,0.0287,0.0394,0.7021,True,-0.0408
+opt-in,gas,weighted,2021-09-18,0.029,0.0498,0.7115,False,-0.0408
+opt-in,gas,weighted,2021-09-25,-0.0125,0.0445,0.3068,False,-0.0408
+opt-in,gas,weighted,2021-10-02,-0.0553,0.0379,1.3543,False,-0.0408
+opt-in,gas,weighted,2021-10-09,-0.0418,0.0497,1.0248,False,-0.0408
+opt-in,gas,weighted,2021-10-16,-0.0141,0.0354,0.3446,False,-0.0408
+opt-in,gas,weighted,2021-10-23,-0.0144,0.0331,0.3535,False,-0.0408
+opt-in,gas,weighted,2021-10-30,0.0044,0.0343,0.1075,False,-0.0408
+opt-in,gas,weighted,2021-11-06,0.0424,0.0229,1.0378,False,-0.0408
+opt-in,gas,weighted,2021-11-13,0.0035,0.0228,0.0863,False,-0.0408
+opt-in,gas,weighted,2021-11-20,-0.0203,0.0259,0.4985,False,-0.0408
+opt-in,gas,weighted,2021-11-27,0.0174,0.0409,0.4272,False,-0.0408
+opt-in,gas,weighted,2021-12-04,0.0118,0.0296,0.2887,False,-0.0408
+opt-in,gas,weighted,2021-12-11,-0.0127,0.0152,0.3115,True,-0.0408
+opt-in,gas,weighted,2021-12-18,-0.1009,0.0407,2.4716,True,-0.0408
+opt-in,gas,unweighted,2021-01-16,-0.0115,0.0163,0.274,True,0.0418
+opt-in,gas,unweighted,2021-01-23,-0.0571,0.0202,1.3649,False,0.0418
+opt-in,gas,unweighted,2021-01-30,-0.056,0.0252,1.3399,False,0.0418
+opt-in,gas,unweighted,2021-02-06,-0.032,0.0188,0.765,False,0.0418
+opt-in,gas,unweighted,2021-02-13,-0.0123,0.0232,0.295,False,0.0418
+opt-in,gas,unweighted,2021-02-20,0.0258,0.0213,0.6175,False,0.0418
+opt-in,gas,unweighted,2021-02-27,0.0786,0.0225,1.8791,False,0.0418
+opt-in,gas,unweighted,2021-03-06,0.0573,0.0191,1.3693,False,0.0418
+opt-in,gas,unweighted,2021-03-13,0.0012,0.0237,0.0297,False,0.0418
+opt-in,gas,unweighted,2021-03-20,-0.0143,0.0181,0.342,True,0.0418
+opt-in,gas,unweighted,2021-03-27,-0.0368,0.023,0.8796,True,0.0418
+opt-in,gas,unweighted,2021-04-03,-0.0298,0.0221,0.7127,True,0.0418
+opt-in,gas,unweighted,2021-04-10,0.0138,0.0209,0.3295,True,0.0418
+opt-in,gas,unweighted,2021-04-17,0.0215,0.0167,0.5143,True,0.0418
+opt-in,gas,unweighted,2021-04-24,0.0139,0.0223,0.3323,False,0.0418
+opt-in,gas,unweighted,2021-05-01,-0.0006,0.0254,0.0151,False,0.0418
+opt-in,gas,unweighted,2021-05-08,-0.0126,0.0244,0.3019,False,0.0418
+opt-in,gas,unweighted,2021-05-15,0.0068,0.0203,0.1628,False,0.0418
+opt-in,gas,unweighted,2021-05-22,0.0265,0.0176,0.6331,False,0.0418
+opt-in,gas,unweighted,2021-05-29,0.0145,0.0195,0.3463,False,0.0418
+opt-in,gas,unweighted,2021-06-05,0.0134,0.0161,0.3212,False,0.0418
+opt-in,gas,unweighted,2021-06-12,-0.0121,0.0191,0.29,False,0.0418
+opt-in,gas,unweighted,2021-06-19,-0.0122,0.0166,0.2919,False,0.0418
+opt-in,gas,unweighted,2021-06-26,0.0191,0.0163,0.4561,False,0.0418
+opt-in,gas,unweighted,2021-07-03,-0.0129,0.0207,0.3093,False,0.0418
+opt-in,gas,unweighted,2021-07-10,-0.0161,0.0161,0.384,False,0.0418
+opt-in,gas,unweighted,2021-07-17,0.024,0.0175,0.5731,False,0.0418
+opt-in,gas,unweighted,2021-07-24,-0.0079,0.0167,0.1896,True,0.0418
+opt-in,gas,unweighted,2021-07-31,-0.087,0.0192,2.0801,True,0.0418
+opt-in,gas,unweighted,2021-08-07,-0.0561,0.0191,1.3425,True,0.0418
+opt-in,gas,unweighted,2021-08-14,0.0005,0.0167,0.0113,True,0.0418
+opt-in,gas,unweighted,2021-08-21,0.0214,0.0167,0.5108,True,0.0418
+opt-in,gas,unweighted,2021-08-28,0.0574,0.0209,1.3721,True,0.0418
+opt-in,gas,unweighted,2021-09-04,0.0442,0.0184,1.0579,True,0.0418
+opt-in,gas,unweighted,2021-09-11,-0.0068,0.0163,0.162,True,0.0418
+opt-in,gas,unweighted,2021-09-18,-0.0215,0.0172,0.5145,False,0.0418
+opt-in,gas,unweighted,2021-09-25,-0.0127,0.0182,0.3034,False,0.0418
+opt-in,gas,unweighted,2021-10-02,-0.02,0.0209,0.4788,False,0.0418
+opt-in,gas,unweighted,2021-10-09,0.0022,0.0169,0.0537,False,0.0418
+opt-in,gas,unweighted,2021-10-16,0.0147,0.0199,0.3515,False,0.0418
+opt-in,gas,unweighted,2021-10-23,0.0018,0.0195,0.0433,False,0.0418
+opt-in,gas,unweighted,2021-10-30,-0.0087,0.022,0.2078,False,0.0418
+opt-in,gas,unweighted,2021-11-06,0.0137,0.0212,0.328,False,0.0418
+opt-in,gas,unweighted,2021-11-13,0.0067,0.0198,0.1591,False,0.0418
+opt-in,gas,unweighted,2021-11-20,-0.0078,0.018,0.1859,False,0.0418
+opt-in,gas,unweighted,2021-11-27,-0.0252,0.0235,0.6015,False,0.0418
+opt-in,gas,unweighted,2021-12-04,-0.0318,0.0183,0.7614,False,0.0418
+opt-in,gas,unweighted,2021-12-11,-0.0054,0.0135,0.1294,True,0.0418
+opt-in,gas,unweighted,2021-12-18,-0.0814,0.0193,1.9451,True,0.0418
+opt-in,other_fossil,weighted,2021-01-16,-0.1322,0.0441,3.2427,True,0.0408
+opt-in,other_fossil,weighted,2021-01-23,-0.123,0.0479,3.0174,False,0.0408
+opt-in,other_fossil,weighted,2021-01-30,-0.0559,0.0553,1.3723,False,0.0408
+opt-in,other_fossil,weighted,2021-02-06,-0.0576,0.0588,1.4133,False,0.0408
+opt-in,other_fossil,weighted,2021-02-13,-0.0242,0.0456,0.5945,False,0.0408
+opt-in,other_fossil,weighted,2021-02-20,-0.0098,0.0317,0.2395,False,0.0408
+opt-in,other_fossil,weighted,2021-02-27,-0.0115,0.0591,0.2821,False,0.0408
+opt-in,other_fossil,weighted,2021-03-06,-0.0116,0.0506,0.2858,False,0.0408
+opt-in,other_fossil,weighted,2021-03-13,-0.0159,0.0525,0.3908,False,0.0408
+opt-in,other_fossil,weighted,2021-03-20,-0.0435,0.0484,1.0673,True,0.0408
+opt-in,other_fossil,weighted,2021-03-27,-0.0259,0.0511,0.6347,True,0.0408
+opt-in,other_fossil,weighted,2021-04-03,0.0378,0.0469,0.9272,True,0.0408
+opt-in,other_fossil,weighted,2021-04-10,0.0947,0.0423,2.3223,True,0.0408
+opt-in,other_fossil,weighted,2021-04-17,0.0395,0.0335,0.9698,True,0.0408
+opt-in,other_fossil,weighted,2021-04-24,-0.0138,0.0267,0.3392,False,0.0408
+opt-in,other_fossil,weighted,2021-05-01,-0.0457,0.0365,1.1204,False,0.0408
+opt-in,other_fossil,weighted,2021-05-08,-0.0139,0.051,0.341,False,0.0408
+opt-in,other_fossil,weighted,2021-05-15,0.0812,0.0417,1.9924,False,0.0408
+opt-in,other_fossil,weighted,2021-05-22,0.0361,0.049,0.8866,False,0.0408
+opt-in,other_fossil,weighted,2021-05-29,-0.0012,0.0455,0.0292,False,0.0408
+opt-in,other_fossil,weighted,2021-06-05,-0.0135,0.0284,0.3317,False,0.0408
+opt-in,other_fossil,weighted,2021-06-12,-0.0877,0.0456,2.1522,False,0.0408
+opt-in,other_fossil,weighted,2021-06-19,-0.0478,0.0456,1.1739,False,0.0408
+opt-in,other_fossil,weighted,2021-06-26,0.0443,0.0589,1.0876,False,0.0408
+opt-in,other_fossil,weighted,2021-07-03,0.0109,0.0786,0.2663,False,0.0408
+opt-in,other_fossil,weighted,2021-07-10,0.0083,0.0401,0.2036,False,0.0408
+opt-in,other_fossil,weighted,2021-07-17,0.0274,0.0355,0.6724,False,0.0408
+opt-in,other_fossil,weighted,2021-07-24,-0.0346,0.0471,0.8477,True,0.0408
+opt-in,other_fossil,weighted,2021-07-31,-0.112,0.0425,2.7479,True,0.0408
+opt-in,other_fossil,weighted,2021-08-07,-0.0503,0.0292,1.2338,True,0.0408
+opt-in,other_fossil,weighted,2021-08-14,0.0013,0.043,0.0324,True,0.0408
+opt-in,other_fossil,weighted,2021-08-21,0.0533,0.0333,1.3085,True,0.0408
+opt-in,other_fossil,weighted,2021-08-28,0.0805,0.0344,1.9749,True,0.0408
+opt-in,other_fossil,weighted,2021-09-04,0.0623,0.035,1.5285,True,0.0408
+opt-in,other_fossil,weighted,2021-09-11,0.0416,0.0405,1.0214,True,0.0408
+opt-in,other_fossil,weighted,2021-09-18,0.0286,0.0509,0.7015,False,0.0408
+opt-in,other_fossil,weighted,2021-09-25,0.0189,0.0437,0.4642,False,0.0408
+opt-in,other_fossil,weighted,2021-10-02,0.0125,0.0353,0.3068,False,0.0408
+opt-in,other_fossil,weighted,2021-10-09,-0.0586,0.0523,1.4368,False,0.0408
+opt-in,other_fossil,weighted,2021-10-16,-0.0833,0.0383,2.0435,False,0.0408
+opt-in,other_fossil,weighted,2021-10-23,-0.0129,0.034,0.3153,False,0.0408
+opt-in,other_fossil,weighted,2021-10-30,0.0359,0.0312,0.8817,False,0.0408
+opt-in,other_fossil,weighted,2021-11-06,0.0687,0.024,1.6857,False,0.0408
+opt-in,other_fossil,weighted,2021-11-13,0.0146,0.024,0.3593,False,0.0408
+opt-in,other_fossil,weighted,2021-11-20,-0.0248,0.0253,0.6076,False,0.0408
+opt-in,other_fossil,weighted,2021-11-27,0.005,0.0401,0.1226,False,0.0408
+opt-in,other_fossil,weighted,2021-12-04,0.0074,0.0321,0.182,False,0.0408
+opt-in,other_fossil,weighted,2021-12-11,-0.004,0.0179,0.0973,True,0.0408
+opt-in,other_fossil,weighted,2021-12-18,-0.0681,0.0433,1.6695,True,0.0408
+opt-in,other_fossil,unweighted,2021-01-16,-0.0396,0.0316,0.3971,True,0.0998
+opt-in,other_fossil,unweighted,2021-01-23,-0.094,0.0388,0.9414,False,0.0998
+opt-in,other_fossil,unweighted,2021-01-30,-0.0744,0.0417,0.7455,False,0.0998
+opt-in,other_fossil,unweighted,2021-02-06,-0.0885,0.0365,0.8867,False,0.0998
+opt-in,other_fossil,unweighted,2021-02-13,-0.0669,0.0333,0.6701,False,0.0998
+opt-in,other_fossil,unweighted,2021-02-20,-0.0205,0.0275,0.2058,False,0.0998
+opt-in,other_fossil,unweighted,2021-02-27,0.0025,0.0311,0.0253,False,0.0998
+opt-in,other_fossil,unweighted,2021-03-06,-0.0177,0.03,0.1773,False,0.0998
+opt-in,other_fossil,unweighted,2021-03-13,-0.0442,0.037,0.4425,False,0.0998
+opt-in,other_fossil,unweighted,2021-03-20,-0.042,0.0411,0.4205,True,0.0998
+opt-in,other_fossil,unweighted,2021-03-27,-0.0041,0.0313,0.0407,True,0.0998
+opt-in,other_fossil,unweighted,2021-04-03,0.0757,0.0406,0.7579,True,0.0998
+opt-in,other_fossil,unweighted,2021-04-10,0.1221,0.032,1.2232,True,0.0998
+opt-in,other_fossil,unweighted,2021-04-17,0.0573,0.0228,0.5742,True,0.0998
+opt-in,other_fossil,unweighted,2021-04-24,0.0098,0.0254,0.0985,False,0.0998
+opt-in,other_fossil,unweighted,2021-05-01,-0.035,0.0324,0.3506,False,0.0998
+opt-in,other_fossil,unweighted,2021-05-08,-0.0398,0.0337,0.3983,False,0.0998
+opt-in,other_fossil,unweighted,2021-05-15,0.0494,0.0227,0.4949,False,0.0998
+opt-in,other_fossil,unweighted,2021-05-22,0.0479,0.0337,0.4796,False,0.0998
+opt-in,other_fossil,unweighted,2021-05-29,-0.0299,0.04,0.2996,False,0.0998
+opt-in,other_fossil,unweighted,2021-06-05,-0.0277,0.0311,0.277,False,0.0998
+opt-in,other_fossil,unweighted,2021-06-12,-0.0355,0.0249,0.3552,False,0.0998
+opt-in,other_fossil,unweighted,2021-06-19,-0.0339,0.0209,0.3391,False,0.0998
+opt-in,other_fossil,unweighted,2021-06-26,0.0371,0.0278,0.3717,False,0.0998
+opt-in,other_fossil,unweighted,2021-07-03,0.0649,0.0393,0.6504,False,0.0998
+opt-in,other_fossil,unweighted,2021-07-10,0.0548,0.0295,0.549,False,0.0998
+opt-in,other_fossil,unweighted,2021-07-17,0.0411,0.0338,0.4119,False,0.0998
+opt-in,other_fossil,unweighted,2021-07-24,-0.0455,0.0402,0.456,True,0.0998
+opt-in,other_fossil,unweighted,2021-07-31,-0.1062,0.0375,1.0639,True,0.0998
+opt-in,other_fossil,unweighted,2021-08-07,-0.07,0.0314,0.7014,True,0.0998
+opt-in,other_fossil,unweighted,2021-08-14,-0.001,0.0468,0.0098,True,0.0998
+opt-in,other_fossil,unweighted,2021-08-21,0.063,0.043,0.6306,True,0.0998
+opt-in,other_fossil,unweighted,2021-08-28,0.0834,0.0311,0.8356,True,0.0998
+opt-in,other_fossil,unweighted,2021-09-04,0.0574,0.0421,0.5752,True,0.0998
+opt-in,other_fossil,unweighted,2021-09-11,0.0279,0.0279,0.2799,True,0.0998
+opt-in,other_fossil,unweighted,2021-09-18,-0.0015,0.0237,0.0152,False,0.0998
+opt-in,other_fossil,unweighted,2021-09-25,0.011,0.0291,0.1102,False,0.0998
+opt-in,other_fossil,unweighted,2021-10-02,0.0422,0.0389,0.4225,False,0.0998
+opt-in,other_fossil,unweighted,2021-10-09,-0.0128,0.0287,0.1287,False,0.0998
+opt-in,other_fossil,unweighted,2021-10-16,-0.0411,0.0272,0.4115,False,0.0998
+opt-in,other_fossil,unweighted,2021-10-23,0.0023,0.0273,0.0235,False,0.0998
+opt-in,other_fossil,unweighted,2021-10-30,0.0286,0.0274,0.2865,False,0.0998
+opt-in,other_fossil,unweighted,2021-11-06,0.0616,0.0262,0.6169,False,0.0998
+opt-in,other_fossil,unweighted,2021-11-13,0.0418,0.0216,0.4184,False,0.0998
+opt-in,other_fossil,unweighted,2021-11-20,-0.0064,0.0189,0.064,False,0.0998
+opt-in,other_fossil,unweighted,2021-11-27,-0.0437,0.0249,0.4378,False,0.0998
+opt-in,other_fossil,unweighted,2021-12-04,-0.0363,0.023,0.3633,False,0.0998
+opt-in,other_fossil,unweighted,2021-12-11,0.0174,0.017,0.1742,True,0.0998
+opt-in,other_fossil,unweighted,2021-12-18,-0.0554,0.0298,0.5553,True,0.0998
+"opt-in, first working day",gas,weighted,2021-01-18,-0.1019,0.0331,9.039,True,-0.0113
+"opt-in, first working day",gas,weighted,2021-01-25,-0.081,0.0292,7.1875,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-02-01,-0.0618,0.0355,5.482,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-02-08,-0.0518,0.0434,4.5907,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-02-15,0.0165,0.0365,1.4618,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-02-22,0.1137,0.0311,10.0884,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-03-01,0.1507,0.0496,13.3682,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-03-08,0.0612,0.0415,5.4322,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-03-15,-0.0027,0.0523,0.2384,True,-0.0113
+"opt-in, first working day",gas,weighted,2021-03-22,-0.0227,0.0387,2.0171,True,-0.0113
+"opt-in, first working day",gas,weighted,2021-03-29,-0.0551,0.0509,4.8861,True,-0.0113
+"opt-in, first working day",gas,weighted,2021-04-05,-0.0368,0.0426,3.2636,True,-0.0113
+"opt-in, first working day",gas,weighted,2021-04-12,-0.0121,0.0321,1.0724,True,-0.0113
+"opt-in, first working day",gas,weighted,2021-04-19,-0.0147,0.0253,1.3061,True,-0.0113
+"opt-in, first working day",gas,weighted,2021-04-26,-0.0254,0.0292,2.2519,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-05-03,-0.0167,0.0289,1.4812,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-05-10,0.0392,0.0419,3.4787,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-05-17,0.0434,0.0374,3.8477,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-05-24,-0.0068,0.0384,0.6063,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-05-31,-0.0293,0.0369,2.6015,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-06-07,-0.0171,0.019,1.5187,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-06-14,-0.0331,0.0409,2.9321,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-06-21,0.0187,0.0333,1.6575,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-06-28,0.048,0.0407,4.2535,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-07-05,-0.0531,0.0561,4.7063,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-07-12,-0.0313,0.0189,2.7736,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-07-19,0.0186,0.0197,1.6469,True,-0.0113
+"opt-in, first working day",gas,weighted,2021-07-26,-0.0194,0.0196,1.7191,True,-0.0113
+"opt-in, first working day",gas,weighted,2021-08-02,-0.0815,0.0302,7.2292,True,-0.0113
+"opt-in, first working day",gas,weighted,2021-08-09,-0.008,0.0166,0.71,True,-0.0113
+"opt-in, first working day",gas,weighted,2021-08-16,0.0162,0.022,1.4337,True,-0.0113
+"opt-in, first working day",gas,weighted,2021-08-23,0.0046,0.0188,0.4103,True,-0.0113
+"opt-in, first working day",gas,weighted,2021-08-30,0.0377,0.0209,3.3428,True,-0.0113
+"opt-in, first working day",gas,weighted,2021-09-06,0.0397,0.0268,3.5183,True,-0.0113
+"opt-in, first working day",gas,weighted,2021-09-13,0.0415,0.0483,3.6844,True,-0.0113
+"opt-in, first working day",gas,weighted,2021-09-20,0.0079,0.0491,0.7016,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-09-27,-0.0433,0.0389,3.8402,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-10-04,-0.0436,0.0424,3.8657,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-10-11,-0.0409,0.0476,3.6316,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-10-18,-0.0252,0.0323,2.2322,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-10-25,-0.0174,0.0304,1.5424,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-11-01,0.0293,0.0307,2.5985,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-11-08,0.0394,0.022,3.4986,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-11-15,-0.0197,0.023,1.7459,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-11-22,-0.0164,0.0294,1.4555,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-11-29,0.0198,0.0412,1.7596,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-12-06,0.0151,0.0251,1.3434,False,-0.0113
+"opt-in, first working day",gas,weighted,2021-12-13,-0.0316,0.0168,2.7992,True,-0.0113
+"opt-in, first working day",gas,unweighted,2021-01-18,-0.0521,0.0153,0.4529,True,0.1151
+"opt-in, first working day",gas,unweighted,2021-01-25,-0.0355,0.021,0.3082,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-02-01,-0.0174,0.0231,0.1508,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-02-08,-0.0625,0.0201,0.5429,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-02-15,-0.0204,0.0222,0.177,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-02-22,0.0838,0.0221,0.7284,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-03-01,0.0987,0.0233,0.8573,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-03-08,0.0148,0.0195,0.1286,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-03-15,-0.0133,0.0235,0.1152,True,0.1151
+"opt-in, first working day",gas,unweighted,2021-03-22,-0.0113,0.0179,0.0978,True,0.1151
+"opt-in, first working day",gas,unweighted,2021-03-29,-0.0336,0.023,0.2922,True,0.1151
+"opt-in, first working day",gas,unweighted,2021-04-05,-0.0082,0.0217,0.0713,True,0.1151
+"opt-in, first working day",gas,unweighted,2021-04-12,0.0099,0.0191,0.0857,True,0.1151
+"opt-in, first working day",gas,unweighted,2021-04-19,0.0061,0.0167,0.0528,True,0.1151
+"opt-in, first working day",gas,unweighted,2021-04-26,0.0058,0.0234,0.05,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-05-03,-0.0121,0.024,0.1053,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-05-10,0.0022,0.023,0.0192,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-05-17,0.0224,0.0194,0.1945,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-05-24,0.0123,0.0188,0.107,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-05-31,0.0002,0.0184,0.0014,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-06-07,0.0086,0.0162,0.0747,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-06-14,-0.0125,0.018,0.1082,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-06-21,-0.0019,0.0167,0.0164,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-06-28,0.0199,0.0166,0.1733,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-07-05,-0.0209,0.0193,0.1813,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-07-12,-0.0072,0.0167,0.0625,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-07-19,0.0236,0.0178,0.2053,True,0.1151
+"opt-in, first working day",gas,unweighted,2021-07-26,-0.0318,0.0163,0.2766,True,0.1151
+"opt-in, first working day",gas,unweighted,2021-08-02,-0.0704,0.0191,0.612,True,0.1151
+"opt-in, first working day",gas,unweighted,2021-08-09,-0.0359,0.0177,0.3121,True,0.1151
+"opt-in, first working day",gas,unweighted,2021-08-16,-0.0117,0.0163,0.1013,True,0.1151
+"opt-in, first working day",gas,unweighted,2021-08-23,0.0181,0.0155,0.1572,True,0.1151
+"opt-in, first working day",gas,unweighted,2021-08-30,0.0604,0.0203,0.5251,True,0.1151
+"opt-in, first working day",gas,unweighted,2021-09-06,0.032,0.0173,0.2779,True,0.1151
+"opt-in, first working day",gas,unweighted,2021-09-13,-0.0105,0.0173,0.0915,True,0.1151
+"opt-in, first working day",gas,unweighted,2021-09-20,-0.0304,0.0166,0.2642,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-09-27,-0.0169,0.0183,0.1471,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-10-04,-0.0049,0.0203,0.0428,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-10-11,0.0068,0.0178,0.0593,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-10-18,0.0007,0.0186,0.0063,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-10-25,-0.0053,0.0195,0.0457,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-11-01,0.0102,0.0199,0.0882,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-11-08,0.0186,0.0207,0.1616,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-11-15,-0.0054,0.0181,0.047,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-11-22,-0.01,0.018,0.0868,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-11-29,-0.0245,0.0219,0.2126,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-12-06,-0.0223,0.0161,0.194,False,0.1151
+"opt-in, first working day",gas,unweighted,2021-12-13,-0.0268,0.0135,0.2326,True,0.1151
+"opt-in, first working day",other_fossil,weighted,2021-01-18,-0.1604,0.047,10.2885,True,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-01-25,-0.0756,0.0422,4.8518,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-02-01,-0.0282,0.0524,1.8084,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-02-08,-0.0636,0.0568,4.0782,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-02-15,-0.0331,0.0418,2.1222,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-02-22,-0.0005,0.0349,0.0319,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-03-01,0.0047,0.0662,0.3033,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-03-08,-0.025,0.0473,1.602,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-03-15,-0.0283,0.0557,1.8159,True,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-03-22,-0.0488,0.0484,3.1289,True,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-03-29,-0.0266,0.0491,1.7074,True,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-04-05,0.0692,0.0469,4.4376,True,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-04-12,0.0947,0.0406,6.0715,True,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-04-19,0.0175,0.0305,1.1254,True,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-04-26,-0.0224,0.0277,1.4372,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-05-03,-0.0384,0.0384,2.4613,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-05-10,0.0083,0.0485,0.5303,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-05-17,0.064,0.0398,4.1048,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-05-24,0.0174,0.0448,1.1189,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-05-31,0.0009,0.0451,0.057,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-06-07,-0.0236,0.0212,1.5138,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-06-14,-0.09,0.047,5.7701,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-06-21,-0.0202,0.0438,1.2986,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-06-28,0.0684,0.059,4.3871,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-07-05,0.0139,0.0717,0.8944,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-07-12,0.0068,0.0288,0.4387,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-07-19,0.0033,0.0433,0.2085,True,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-07-26,-0.0635,0.0453,4.0759,True,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-08-02,-0.0792,0.0385,5.0815,True,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-08-09,-0.0134,0.0343,0.8617,True,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-08-16,0.0139,0.0414,0.8944,True,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-08-23,0.0575,0.0337,3.6866,True,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-08-30,0.0751,0.0349,4.8162,True,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-09-06,0.0577,0.0337,3.6983,True,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-09-13,0.0428,0.0481,2.7471,True,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-09-20,0.0222,0.0502,1.4269,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-09-27,0.0071,0.0346,0.4547,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-10-04,-0.005,0.0405,0.3178,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-10-11,-0.076,0.0501,4.8759,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-10-18,-0.0655,0.0311,4.1989,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-10-25,-0.002,0.0317,0.1277,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-11-01,0.054,0.0295,3.4614,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-11-08,0.0577,0.0236,3.6998,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-11-15,-0.0102,0.022,0.6518,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-11-22,-0.0213,0.0301,1.368,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-11-29,0.0115,0.042,0.7378,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-12-06,0.0117,0.0269,0.7486,False,0.0156
+"opt-in, first working day",other_fossil,weighted,2021-12-13,-0.0106,0.0203,0.6795,True,0.0156
+"opt-in, first working day",other_fossil,unweighted,2021-01-18,-0.0879,0.0347,1.065,True,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-01-25,-0.0694,0.0347,0.8416,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-02-01,-0.0431,0.0367,0.5226,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-02-08,-0.0975,0.0364,1.1823,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-02-15,-0.0716,0.0309,0.8674,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-02-22,-0.0082,0.0274,0.0989,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-03-01,0.0194,0.032,0.2347,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-03-08,-0.0286,0.0323,0.3469,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-03-15,-0.0641,0.0415,0.7768,True,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-03-22,-0.0464,0.0366,0.563,True,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-03-29,0.0044,0.0325,0.0536,True,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-04-05,0.1076,0.0387,1.3045,True,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-04-12,0.1201,0.0282,1.4553,True,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-04-19,0.03,0.0218,0.3634,True,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-04-26,-0.0003,0.027,0.004,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-05-03,-0.0412,0.0314,0.4995,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-05-10,-0.0206,0.0307,0.2492,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-05-17,0.0585,0.0257,0.7086,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-05-24,0.0245,0.0371,0.2968,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-05-31,-0.036,0.0352,0.4368,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-06-07,-0.0256,0.0285,0.3109,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-06-14,-0.046,0.0243,0.5577,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-06-21,-0.0155,0.0211,0.1876,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-06-28,0.0661,0.0315,0.8007,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-07-05,0.0601,0.0413,0.7289,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-07-12,0.0435,0.0263,0.5274,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-07-19,0.0174,0.0377,0.2111,True,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-07-26,-0.0718,0.0404,0.87,True,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-08-02,-0.0756,0.038,0.9159,True,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-08-09,-0.04,0.0367,0.4849,True,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-08-16,-0.0016,0.0501,0.0193,True,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-08-23,0.0733,0.0373,0.889,True,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-08-30,0.0875,0.0349,1.0601,True,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-09-06,0.0417,0.0364,0.5056,True,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-09-13,0.0161,0.0261,0.1948,True,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-09-20,0.0016,0.0242,0.0193,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-09-27,0.0165,0.0241,0.2002,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-10-04,0.0245,0.0352,0.2976,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-10-11,-0.0239,0.0264,0.2901,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-10-18,-0.0282,0.0225,0.3424,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-10-25,0.011,0.0275,0.1328,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-11-01,0.0492,0.0246,0.5964,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-11-08,0.0561,0.0253,0.6804,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-11-15,0.0171,0.0182,0.2076,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-11-22,-0.0148,0.0207,0.1797,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-11-29,-0.0326,0.0243,0.3955,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-12-06,-0.0204,0.0203,0.2468,False,0.0825
+"opt-in, first working day",other_fossil,unweighted,2021-12-13,-0.0022,0.0202,0.0262,True,0.0825

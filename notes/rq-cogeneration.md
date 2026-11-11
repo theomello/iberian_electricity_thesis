@@ -179,14 +179,52 @@ break). **E1 stays description.**
   in most placebo weeks; not known until run.
 - **October: nothing at the break.** Gas and biomass rise together; the capacity-weighted gap does not move.
 
-**Next step, not yet run (2026-11-11).** REE's workbooks for every day of 2021 are fetched (365 files, no bad
-answer). To finish: (1) repair `.venv` (see CLAUDE.md, cogeneration section); (2) rerun
-`build/build_cogeneration_ree_panel.py` (adds the 2021 days; about 5 minutes); (3) run
-`analysis/cogeneration_event_narrow.py`, whose `plant_placebos` puts the 28-day window on every Wednesday of 2021 on
-REE's plants (about 48 placebos) and writes `cogeneration_event_narrow_placebo_plants.csv`. Gate unchanged: each
-placebo below one third of the real break (−0.239, so 0.080). The routine is written and syntax-checked, never
-executed. After step 2 also rerun `analysis/cogeneration_ree_describe.py`: its entrant count uses the days before
-April 2022 and will change with 2021 daily.
+**Plant placebos run (2026-11-11, user's go-ahead).** `.venv` was already repaired; panel rebuilt with 2021 daily;
+`analysis/cogeneration_event_narrow.py` → `cogeneration_event_narrow_placebo_plants.csv`. 28-day window on every
+Wednesday of 2021 (48 placebos), REE's plants, gas against biomass and waste, 15 June 2022 break:
+
+| weights | real | placebo sd | range | above one third of real | as large as real |
+|---|---|---|---|---|---|
+| unweighted | −0.247 | 0.032 | −0.071 to +0.089 | **1** (2021-03-03, +0.089) | 0 |
+| capacity-weighted | −0.239 | 0.049 | −0.116 to +0.151 | **5** (3 outside holiday windows) | 0 |
+
+The real break is 2.3–2.9 times the largest placebo in size, and placebo sd is 0.03–0.05 against a break of 0.24
+(5–8 sd). The one-third gate, as set, still fails by a few placebos (1 unweighted, 5 weighted), so by the spec's
+letter E1 stays description. The failures are small in number and not a pattern: placebo signs are mixed and the
+worst weighted one (+0.151, 2021-03-03) is positive, the opposite sign to the cap effect. Gate restated for the
+user's decision: a sign-aware version (placebo of the same sign as the real break and above one third) leaves 3
+weighted placebos (2021-01-20 and 2021-07-28, both holiday windows, and 2021-01-27), none unweighted. Opt-in (October) fails every
+version, as before. Not yet decided.
+
+## E2 first cut: output against the wind-moved price (2026-11-11, user's go-ahead for each step)
+
+Scripts `analysis/cogeneration_price_response{,_checks,_postcap}.py`, `cogeneration_cap_decomposition.py`,
+`gas_price_at_cap.py` → `outputs/tables/cogeneration_price_response*.csv`, `cogeneration_cap_decomposition.csv`,
+`gas_price_at_cap.csv`. Daily capacity-weighted load factor per group (REE's units, P48), on the day-ahead price moved by
+the day's wind forecast (ESIOS 1777; first stage F 96 pre-cap), controls gas price (MIBGAS), degree hours, weekday, month;
+HAC 7 lags. Days on disk only: 443 pre-cap (2021-01-01 → 2022-06-14, a gap Jan–Mar 2022), 290 post-cap.
+
+- **Pre-cap, gas +0.012 per €10/MWh (t 4.6), elasticity 0.27; biomass and waste placebo −0.001 (t −0.8).** About 43 MW
+  per €10 on 3,577 MW. Lead and lag placebo passes: own day +0.011 (t 4.8–5.5), lead +0.001 (t 0.6), lag +0.001–0.002
+  (t 0.9). By switching in 2022-06-15 → 2023-03-31: frequent switchers (146 plants, 2,060 MW) +0.018 (t 4.9), stable (66,
+  1,351 MW) +0.003 (t 2.0: misses the two-se rule by 0.003 se); biomass flat in both.
+- **Post-cap, no window passes the placebo rule.** Biomass responds in the cap period (+0.012, t 2.8, first stage F 19),
+  the opt-in period (+0.011, t 5.1) and Jan–Mar 2023 (+0.013, t 6.4); gas switchers +0.008 (cap, t 1.4), +0.023 (Jan–Mar
+  2023, t 7.4). The cap-period gas slope is not significantly below the pre-cap one. Hypothesis, untested: plants that are
+  off do not respond to a modest price rise.
+- **Most of the June fall is plants switching off**: units running (above 10% of their peak) 131 → 87 of 237 in the 14
+  days around 15 June, 64 on average to 30 September; running units' load factor 0.73 → 0.67.
+- **The pre-cap model reproduces the June fall.** 14 days before → after: power price 197 → 147, MIBGAS 77 → 113; gas load
+  factor −0.172 actual, −0.185 predicted (power price −0.06, gas price −0.13); biomass +0.037 actual, +0.056 predicted. The
+  gas coefficient (−0.0035 per €/MWh) is extrapolated beyond the 2021 range and the model misses badly further out
+  (post-cap monthly residuals −0.12 to −0.26 for gas and biomass), so it is only read in this window.
+- **The gas price rise at 15 June was European, not Iberian.** MIBGAS +€36 (log +0.384), Italy's PSV +€41.5 (+0.413); the
+  Iberian spread −0.029, rank 48 of 77 placebos (placebo sd 0.16, so a cap effect on the Iberian gas price up to about
+  ±0.3 in logs cannot be excluded). Spanish LNG send-out +75 GWh/d, Italian +23; the Spain-minus-Italy log difference
+  +0.023, rank 64 of 77. So the gas-price channel is common to Iberia and Italy, and **E1's June fall (−0.24 against
+  biomass) mixes the cap with a European gas shock the same week** (PSV jumps 67 → 91 on 15 June). The power-price channel
+  (−0.06 of −0.17) is what the cap can have moved through the market. Italian gas plants are a candidate control for the
+  gas-cost shock; no Italian cogeneration data are on disk.
 
 ## Where the design stands
 

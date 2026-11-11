@@ -83,3 +83,47 @@ abstract supports, to be confirmed on a real read. The two papers below marked
 
 `main.pdf` (Sánchez Canales et al. 2026) was also re-downloaded in this batch;
 it is the same paper (same DOI 10.1016/j.eneco.2026.109523), so no new file.
+
+## Fourth pass (2026-11-10) — 12 papers on demand elasticities and cogeneration
+
+Added for the demand-side chapter (`docs/specs/2026-11-10-cogeneration-design.md`).
+Read from the Markdown at the sections cited, **not in full**.
+
+| file | what it is | why it matters |
+|---|---|---|
+| `Survey_AR_Energy_Transition.pdf` | Fabra & Reguant (2027, *Annual Review of Economics*, submitted draft of 26 Aug 2026), *Powering the Energy Transition* | §4.3 (p. 22) is the current statement on demand response: household short-run elasticity ≈ 0 in Spain, and footnote 6 reports it is **again ≈ 0 in 2021–2023** (Fabra et al. 2026c), which closes the regulated-tariff household idea. §5.3 (p. 29) cites the plant-level industrial evidence (von Graevenitz & Rottner 2022, German manufacturing; not held) |
+| `4-Time_of_Use_Impacts_Enrich_Li_Mizrahi_Reguant.pdf` | Enrich, Li, Mizrahi & Reguant (2024, *JEEM* 123, postprint), Spain's June 2021 time-of-use reform | households cut peak use 9–10%; elasticity −0.08 to −0.135. Method to reuse: a LASSO model of consumption fitted on the pre-period only, then difference-in-differences on its prediction errors, Portugal as the untreated unit |
+| `The_real_time_price_elasticity_of_electr.pdf` | Lijesen (2007, *Energy Economics* 29), real-time elasticity, Netherlands | aggregate peak demand against spot prices; a low elasticity benchmark |
+| `eprg-wp0623.pdf` | Bonilla (2006, Cambridge EPRG WP 0623), cogeneration adoption in UK and Dutch manufacturing | adoption, not the run decision; its footnote 13 points to Fox-Penner (1990b), who derives the price effects on cogeneration's two operating modes, selling to the grid and displacing purchases — the theory behind the cost in the design spec §2 (not held) |
+| `w13507.pdf` | Bushnell, Mansur & Saravia (2007, NBER WP 13507; *AER* 2008), vertical arrangements in US markets | retail obligations as the reason integrated firms price near cost: the supply-side counterpart of this repo's net-position results |
+| `w18533.pdf` | Ito (NBER WP 18533; *AER* 2014) | households respond to average, not marginal, price |
+| `w18344.pdf` | Jessoe & Rapson (NBER WP 18344; *AER* 2014) | information raises households' price response |
+| `hourly_pricing_aer_paper.pdf` | Wolak (2011, *AER P&P* 101(3)) | residential response to hourly prices in an experiment |
+| `Berndt-TechnologyPricesDerived-1975.pdf`, `Pindyck-InterfuelSubstitutionIndustrial-1979.pdf` | Berndt & Wood (1975); Pindyck (1979) | the translog cost-share framework for substitution between energy and other inputs, and between fuels. **Scanned: the Markdown is page images, no text** |
+| `w8213.pdf` | Patrick & Wolak (2001, NBER WP 8213), industrial customers on half-hourly prices, England and Wales | the framework for substitution across hours within the day. **The Markdown is garbled** (font encoding); read the PDF |
+| `w8248.pdf` | NBER WP 8248, not identified | **the Markdown is garbled**; title to be read from the PDF |
+
+Not yet held and worth getting: Hirth, Khanna & Ruhnau (2024, *Energy Economics*), wind
+as an instrument for the German wholesale price, elasticity ≈ −0.05 attributed to
+industry; Fox-Penner (1990b); von Graevenitz & Rottner (2022).
+
+### Added later the same day (2026-11-10) — 19 more files
+
+Abstracts only, except where a section is cited.
+
+| file | what it is | why it matters |
+|---|---|---|
+| `ssrn-4251564.pdf` | von Graevenitz & Rottner (ZEW DP 22-038, version Feb 2024), German manufacturing plants | **the closest precedent for the cogeneration design**: plant-level own-price elasticity of electricity *procurement* −0.4 to −0.6, and plants replace procurement with electricity generated on site. Annual census data and network-charge variation; no run decision, no hourly prices |
+| `cesifo1_wp12093.pdf` | Fabra, Leblanc & Souza (CESifo WP 12093), distributional effects of the crisis and the Iberian mechanism | Spanish firms and consumer groups, machine-learning counterfactuals. A text search finds no treatment of cogeneration, so the design's event is not covered there (search only, not a full read) |
+| `1-s2.0-S0928765501000495-main copy.pdf` | Bjørner & Jensen (2002, *Resource and Energy Economics* 24), Danish industrial micro-panel | energy price elasticity −0.44, lower for energy-intensive companies |
+| `1-s2.0-0140988389900017-main copy.pdf` | Considine (1989, *Energy Economics*), functional form in interfuel substitution | the linear logit model of cost shares keeps own-price elasticities negative where the translog does not: the functional form to use if input substitution is ever estimated |
+| `cwpe1032 copy.pdf` | Steinbuks (Cambridge WP 1032 / EPRG 1015), interfuel substitution in UK manufacturing | sector-level fuel substitution |
+| `0945&EPRG0925.pdf` | Kelly (EPRG 0925), combined heat and power with district heating in the UK | viability and policy; background only |
+| `MIT-EL-77-026WP-03830744 copy.pdf` | Pindyck (1977 MIT working paper), the working-paper version of Pindyck (1979) | **readable text**, unlike the journal scan |
+| `C_WPTEXT_tppap.PDF.pdf`, `w82482.pdf` | second copies of `w8213.pdf` and `w8248.pdf` | **still garbled** (the PDFs' fonts carry no character map); they need OCR or another source |
+| `Halvorsen-EnergySubstitutionUS-1977 copy.pdf`, `Interfuel Substitution and the Industrial Demand for Energy_ An International Comparison.pdf`, `Dynamic Factor Demands and the Effects of Energy Price Shocks.pdf`, `Varian, Hal - Economic models - 1978 Nov copy.pdf` | Halvorsen (1977); Pindyck (1979); Pindyck & Rotemberg (1983); a Varian text | **scans, no text layer** |
+| `1391971 copy.pdf`, `1392391 copy.pdf`, `1924999 copy.pdf`, `2525642 copy.pdf` | JSTOR scans, **not identified** (no text layer) | — |
+| `CostMin copy.pdf` | lecture notes on cost minimisation (V. Lima) | converted empty |
+
+No OCR tool is installed here (`tesseract`, `pdftoppm` absent); the scans and the two
+garbled NBER papers cannot be read until one is.

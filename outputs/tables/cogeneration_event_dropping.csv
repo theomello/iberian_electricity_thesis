@@ -1,0 +1,49 @@
+data,treated,window,dropped,mw,beta,se,all
+ree,gas,cap,unit RPTRTAR,85.1,-0.218,0.0388,-0.2185
+ree,gas,cap,unit EMORPER,86.7,-0.2179,0.0388,-0.2185
+ree,gas,cap,unit GEPLAS,97.9,-0.2249,0.0385,-0.2185
+ree,gas,cap,unit TYIBCUR,118.1,-0.2274,0.0382,-0.2185
+ree,gas,cap,unit TFIBGES,132.3,-0.2284,0.038,-0.2185
+ree,gas,cap,agent DETIC,266.0,-0.2246,0.0388,-0.2185
+ree,gas,cap,agent REPP,377.0,-0.2142,0.0409,-0.2185
+ree,gas,cap,agent EGLE,738.4,-0.2287,0.0421,-0.2185
+ree,gas,opt-in,unit RPTRTAR,85.1,0.0908,0.0443,0.0848
+ree,gas,opt-in,unit EMORPER,86.7,0.0839,0.0446,0.0848
+ree,gas,opt-in,unit GEPLAS,97.9,0.1104,0.0369,0.0848
+ree,gas,opt-in,unit TYIBCUR,118.1,0.0873,0.045,0.0848
+ree,gas,opt-in,unit TFIBGES,132.3,0.0915,0.0448,0.0848
+ree,gas,opt-in,agent DETIC,266.0,0.0844,0.0446,0.0848
+ree,gas,opt-in,agent REPP,377.0,0.0992,0.0472,0.0848
+ree,gas,opt-in,agent EGLE,738.4,0.0811,0.0487,0.0848
+ree,other_fossil,cap,unit TBOIRO,24.6,-0.1928,0.0597,-0.2004
+ree,other_fossil,cap,unit TTABLER,24.8,-0.2061,0.0612,-0.2004
+ree,other_fossil,cap,unit TSOLVAI,47.0,-0.2145,0.0626,-0.2004
+ree,other_fossil,cap,unit REPPLL,84.0,-0.2289,0.0619,-0.2004
+ree,other_fossil,cap,unit CILCOR,94.1,-0.2242,0.065,-0.2004
+ree,other_fossil,cap,agent DETIC,89.7,-0.1358,0.0489,-0.2004
+ree,other_fossil,cap,agent EGLE,161.9,-0.1715,0.0651,-0.2004
+ree,other_fossil,cap,agent REPP,178.1,-0.2636,0.0645,-0.2004
+ree,other_fossil,opt-in,unit TBOIRO,24.6,0.0989,0.0394,0.1003
+ree,other_fossil,opt-in,unit TTABLER,24.8,0.1015,0.0393,0.1003
+ree,other_fossil,opt-in,unit TSOLVAI,47.0,0.1053,0.0398,0.1003
+ree,other_fossil,opt-in,unit REPPLL,84.0,0.1136,0.0389,0.1003
+ree,other_fossil,opt-in,unit CILCOR,94.1,0.0823,0.0378,0.1003
+ree,other_fossil,opt-in,agent DETIC,89.7,0.0949,0.0399,0.1003
+ree,other_fossil,opt-in,agent EGLE,161.9,0.0973,0.042,0.1003
+ree,other_fossil,opt-in,agent REPP,178.1,0.095,0.0401,0.1003
+omie,nonren,cap,unit DETVD45,203.3,-0.1573,0.0264,-0.1602
+omie,nonren,cap,unit EBLCVD1,268.5,-0.1628,0.0269,-0.1602
+omie,nonren,cap,unit GNRAVD1,368.3,-0.1686,0.026,-0.1602
+omie,nonren,cap,unit GNSUVD2,500.0,-0.1709,0.0255,-0.1602
+omie,nonren,cap,unit DETIVD1,780.65,-0.1602,0.0263,-0.1602
+omie,nonren,cap,agent ENERGYA VM GENERACIÓN (ACT. COMER. RE),563.9,-0.1655,0.0269,-0.1602
+omie,nonren,cap,"agent AXPO IBERIA, S.L.",1562.4,-0.1643,0.0293,-0.1602
+omie,nonren,cap,agent CEPSA GAS Y ELECTRICIDAD SAU,1797.15,-0.1524,0.0269,-0.1602
+omie,nonren,opt-in,unit DETVD45,203.3,0.0854,0.0296,0.0798
+omie,nonren,opt-in,unit EBLCVD1,268.5,0.0796,0.0301,0.0798
+omie,nonren,opt-in,unit GNRAVD1,368.3,0.0873,0.0295,0.0798
+omie,nonren,opt-in,unit GNSUVD2,500.0,0.0824,0.0305,0.0798
+omie,nonren,opt-in,unit DETIVD1,780.65,0.0798,0.0296,0.0798
+omie,nonren,opt-in,agent ENERGYA VM GENERACIÓN (ACT. COMER. RE),563.9,0.0878,0.0298,0.0798
+omie,nonren,opt-in,"agent AXPO IBERIA, S.L.",1562.4,0.0732,0.0316,0.0798
+omie,nonren,opt-in,agent CEPSA GAS Y ELECTRICIDAD SAU,1797.15,0.0854,0.0302,0.0798

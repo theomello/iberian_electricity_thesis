@@ -1,0 +1,19 @@
+data,treated,control,window,weights,beta,se,treated_change,control_change,g3_ratio,treated_units,control_units,treated_mw,control_mw,treated_pre_lf
+ree,gas,biomass_waste,cap,weighted,-0.2185,0.038,-0.2219,-0.0034,0.0155,160,92,3010.8,1284.5,0.5842
+ree,gas,biomass_waste,cap,unweighted,-0.2221,0.0264,-0.2485,-0.0264,0.1062,160,92,3010.8,1284.5,0.53
+ree,gas,biomass_waste,"cap, short",weighted,-0.2428,0.0432,-0.2224,0.0204,0.0918,152,91,2880.4,1234.6,0.62
+ree,gas,biomass_waste,"cap, short",unweighted,-0.2557,0.0281,-0.2631,-0.0074,0.0281,152,91,2880.4,1234.6,0.573
+ree,gas,biomass_waste,opt-in,weighted,0.0848,0.0437,0.0687,-0.016,0.2334,138,92,2716.9,1277.9,0.3065
+ree,gas,biomass_waste,opt-in,unweighted,0.1224,0.0281,0.1103,-0.0121,0.1095,138,92,2716.9,1277.9,0.2462
+ree,other_fossil,biomass_waste,cap,weighted,-0.2004,0.0588,-0.2038,-0.0034,0.0168,35,92,613.2,1284.5,0.4519
+ree,other_fossil,biomass_waste,cap,unweighted,-0.17,0.0456,-0.1964,-0.0264,0.1344,35,92,613.2,1284.5,0.4653
+ree,other_fossil,biomass_waste,"cap, short",weighted,-0.1949,0.0547,-0.1744,0.0204,0.1171,34,91,611.8,1234.6,0.4189
+ree,other_fossil,biomass_waste,"cap, short",unweighted,-0.1598,0.0442,-0.1672,-0.0074,0.0442,34,91,611.8,1234.6,0.448
+ree,other_fossil,biomass_waste,opt-in,weighted,0.1003,0.0384,0.0842,-0.016,0.1905,30,92,562.2,1277.9,0.2624
+ree,other_fossil,biomass_waste,opt-in,unweighted,0.0521,0.0354,0.0401,-0.0121,0.3014,30,92,562.2,1277.9,0.326
+omie,nonren,renew,cap,weighted,-0.1602,0.0263,-0.148,0.0121,0.0819,283,82,7410.3,1182.5,0.4278
+omie,nonren,renew,cap,unweighted,-0.1609,0.0228,-0.1812,-0.0203,0.1121,283,82,7410.3,1182.5,0.4567
+omie,nonren,renew,"cap, short",weighted,-0.1689,0.0302,-0.1317,0.0372,0.2826,270,82,7185.0,1182.5,0.4327
+omie,nonren,renew,"cap, short",unweighted,-0.1691,0.0231,-0.1753,-0.0062,0.0355,270,82,7185.0,1182.5,0.4765
+omie,nonren,renew,opt-in,weighted,0.0798,0.0296,0.0336,-0.0462,1.3749,248,81,6879.3,1183.2,0.2373
+omie,nonren,renew,opt-in,unweighted,0.0906,0.0231,0.0581,-0.0325,0.5586,248,81,6879.3,1183.2,0.2555

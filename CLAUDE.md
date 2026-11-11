@@ -73,6 +73,9 @@ scripts/
 | `build/build_omie_unit_lists.py` | OMIE *Listado de Unidades* PDFs (emailed, **not re-fetchable**) | no | `data/omie/registry/omie_unit_lists.parquet` |
 | `build/build_direct_consumers.py` | unit lists + ESIOS + `cab` + PDBF + ownership | no | `data/omie/registry/direct_consumers.parquet` |
 | `build/build_direct_consumer_panel.py` | bids + prices + `direct_consumers` | no | `outputs/tables/direct_consumer_panel/panel_YYYYMM.parquet` |
+| `build/build_cogeneration_units.py` | unit lists + `cab` + PDBF + ESIOS physical units | no | `data/omie/registry/cogeneration_units.parquet` |
+| `build/build_cogeneration_panel.py` | PDBF + `cab` + bids + prices + `cogeneration_units` | no | `outputs/tables/cogeneration_panel/panel_YYYYMM.parquet` |
+| `build/build_cogeneration_ree_panel.py` | I90DIA workbooks + ESIOS programming and physical units | no | `outputs/tables/cogeneration_ree/days/ree_YYYYMMDD.parquet`, `ree_units.parquet` |
 | `build/build_owner_groups.py` | `omie_unit_lists` + ESIOS chain | no | `data/omie/registry/owner_groups.parquet` |
 | `fetch/fetch_ree_daily.py` | REE `apidatos` | no | `data/ree/ree_{generation,demand,balance}_daily.parquet` |
 | `fetch/fetch_ree_realtime.py` | REE `demanda.ree.es` | no | `data/ree/ree_realtime_5min.parquet` |
@@ -109,7 +112,7 @@ scripts/
 | `build/build_renewable_locations_v3.py` | v2 + MITECO Electra register | no | `data/osm/renewable_unit_locations_v3.parquet` |
 | `build/build_water_value_forward.py` | OMIP + day-ahead prices + PDBF + `cab` + MITECO + SNIRH | no | `outputs/tables/water_value_forward.parquet`, `forward_price_quantiles.parquet` |
 | `build/build_hydro_cost.py` | `water_value_forward` + step caches + `cab` | no | `outputs/tables/hydro_cost_daily.parquet` |
-| `fetch/fetch_esios_i90.py` | ESIOS archive 34 (I90DIA), 15th of each month | **yes** | `data/esios/raw/archives/34/`, `data/esios/i90/i90_sample_hourly.parquet` |
+| `fetch/fetch_esios_i90.py` | ESIOS archive 34 (I90DIA), 15th of each month, and every day of 2021 and 2022-04-01 → 2023-03-31 | **yes** | `data/esios/raw/archives/34/`, `data/esios/i90/i90_sample_hourly.parquet` |
 | `fetch/fetch_holidays.py` | BOE holiday resolutions (XML) + Portugal by law | no | `data/holidays/holidays_es_pt.parquet` |
 | `fetch/fetch_ree_regional_demand.py` | REE REData, demand by region, monthly | no | `data/ree/ree_demand_ccaa_monthly.parquet` |
 | `build/build_holiday_exposure.py` | PDBF retail schedules + holidays + REData | no | `outputs/tables/holiday_retail_days.parquet`, `holiday_exposure*.csv` |
@@ -643,6 +646,42 @@ Galicia, Asturias, Cataluña, País Vasco largest): its regional sum equals the 
 
 **Active demand response (SRAD), ESIOS 1929–1932**: activated MW, marginal price, energy allocated, payments;
 quarter-hourly, **only 15 activation days, 2023-09-04 → 2026-10-06** (121 rows). Too few for any estimate.
+
+### Cogeneration offer units — 1,313 units, fuel known for 13% (2026-11-10)
+`build/build_cogeneration_units.py` → `data/omie/registry/cogeneration_units.parquet`: every unit OMIE's listing labels
+"RE Mercado Térmica no renovable" (1,041, `nonren`) or "RE Mercado Térmica Renovable" (`renew`) in any snapshot; the
+label exists from 2022-02-08 only. 289 non-renewable units offer in January 2022, 7,236 MW (267 units, 6,319 MW on the
+2022-02-08 label alone), median 14 MW. `build/build_cogeneration_panel.py` → `outputs/tables/cogeneration_panel/`:
+569,425 unit-days 2019-01 → 2023-12 (PDBF energy, load factor, sell offers, share offered at ≤ €1); 6 minutes.
+Design and results: `docs/specs/2026-11-10-cogeneration-design.md`, `notes/rq-cogeneration.md`.
+
+- **Non-renewable thermal output fell from 3,554 MW (March 2022) to 1,386 MW (September 2022)** and was back near
+  2,800 MW in February 2023; renewable thermal stayed at 560–610 MW. Gas cogeneration inside the regulated payment
+  scheme was outside the gas-cap subsidy from 15 June 2022 and could opt in from 1 October (RDL 17/2022). The decree
+  requires a separate offer unit for a subsidised plant: 28 new non-renewable units appear in October 2022, 15 in
+  November, against 1–6 a month before.
+- **OMIE's cogeneration units mostly cannot be tied to a plant.** They are representatives' numbered units ("AXPO
+  VENTA R. ESPECIAL 369"). Matching to REE's physical units (ESIOS archive 81) reaches 90 units, 12.9% of
+  non-renewable capacity; some descriptions do name REE's programming unit ("UOF PARA UP TTECQU"). Units new after
+  the cap have code-like names, so only 7 of 104 can be linked to the unit their plant left.
+- **REE's programming units for cogeneration are plants, with fuel** (324 units for 357 gas plants; 7 are OMIE codes).
+  In the I90 sample, gas cogeneration's final schedule is 2,100–2,250 MW in 2021, 640 MW on 2022-09-15, 2,161 MW on
+  2023-02-15; 20 new gas programming units in October 2022. For plant-level cogeneration use I90, not OMIE units.
+- **Every day 2022-04-01 → 2023-03-31 is on disk** (fetched 2026-11-10/11; 365 workbooks, 2.0 GB; with the monthly
+  sample, 435 files, 2.3 GB). `build/build_cogeneration_ree_panel.py` (13 minutes) keeps every programming unit's
+  daily P48 and PDBF, 2021–2023. Gas cogeneration falls on the cap's first day: 1,960 MW on 14 June 2022, 1,579 on
+  the 15th, 1,119 on the 19th; it returns from Monday 3 October (921 → 1,305 MW in five days). Only 26 gas units
+  (159 MW) are new in October: the plants keep their REE unit through both dates. 165 of 231 gas units have at least
+  10 run/stop switches in the year. These units are 0.58–0.76 of OMIE's non-renewable thermal schedule.
+- **Every day of 2021 is on disk too** (fetched 2026-11-11, 365 workbooks, 1.5 GB), for placebo breaks on plants.
+  Not yet built into `outputs/tables/cogeneration_ree/days/` (rerun the builder) and the placebos not yet run.
+- **`.venv` broke on 2026-11-11**: Homebrew removed `python@3.14` as an unused dependency during an uninstall, and it
+  no longer compiles on macOS 13. `.venv/bin/python3.14` and `home` in `.venv/pyvenv.cfg` must point at another
+  CPython 3.14 (the packages in `.venv/lib/python3.14` are intact). Check `.venv/bin/python -c "import pandas"` first.
+- **A stopped unit can have no row in the workbook that day**: fill missing days as zero before counting stops.
+- **Most cogeneration offers at zero**: 8–21% of non-renewable units offer most of their MW above €1/MWh.
+- `cab` capacity of a represented unit changes as plants join and leave: the registry's `max_power_mw` is the median
+  day, `cap_max_mw` the largest (8,831 MW summed against 7,236 MW in January 2022).
 
 ### OMIE's *Listado de Unidades Ofertantes* — the authoritative registry
 `data/omie/registry/omie_unit_lists.parquet`, built by

@@ -451,3 +451,9 @@ The June 2021 reform effect itself (−4% in summer 2021 under the paper's LASSO
 
 **Cautions.** (a) The cross-fitted placebo windows show large swings of their own (DDD levels from −1.2 to +2.6 in the same summer windows; models trained on two years, not three), so the summer-2021 effect of −3.6 is 1.4 to 6 points below the placebos' summer levels, within about two of their spread; (b) power: E2's se of 1.1 points cannot rule out the −1.3 to −2.6 predicted at ε between −0.06 and −0.12 (t −0.5 here, the 2019 placebo of −0.46 is similar), so E2 alone is uninformative and the pooled band is what bounds ε; (c) only two readable events.
 (d) **The industry placebo of the extension is flawed by design:** the June 2021 access-tariff reform changed the period structure for all consumers (2.0TD low voltage, 3.0TD and 6.xTD above), so industry is also treated, not a control. This is to be confirmed against the CNMC circular before it is cited.
+
+## Data added for further events, and what they can add (2026-11-11)
+
+ESIOS 1876 (charges) and 1001 (PVPC energy term) fetched for 2024-01 → 2026-04 and merged (backups kept). The peninsular mean charge was 24–27 in 2024 (peak 77.0), 29–31 in 2025 (peak 92.5), 29–33 in 2026 (peak 97.6). The evening-minus-night charge gap (working days)
+moves 59.8 → 71.0 (Dec 2023 → Jan 2024), 67.5 → 81.8 (Dec 2024 → Jan 2025) and 81.8 → 85.7 (Dec 2025 → Jan 2026), about €4–14/MWh against evening prices around €200, so Δx_charge is about 0.02–0.07 per event. At ε between −0.06 and −0.12 that is a change of about −0.1 to −0.8 points against a standard error of
+about 1 point per event: **these events are too small to add power on their own**; pooled they could narrow the band only modestly. Not pre-registered; no run.

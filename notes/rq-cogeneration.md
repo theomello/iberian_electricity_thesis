@@ -226,6 +226,41 @@ HAC 7 lags. Days on disk only: 443 pre-cap (2021-01-01 → 2022-06-14, a gap Jan
   (−0.06 of −0.17) is what the cap can have moved through the market. Italian gas plants are a candidate control for the
   gas-cost shock; no Italian cogeneration data are on disk.
 
+## Italy as a control (2026-11-11, user's go-ahead)
+
+Italian hourly demand and the PUN from GME's accepted bids: `build/build_italy_demand.py` →
+`data/gme/italy_demand_hourly.parquet` (2021-06-01 → 2023-06-30, 777 GWh a day in 2022, about 90% of Terna's published
+consumption). No free unit or hourly Italian cogeneration data (Terna and ISPRA publish annual national CHP; ENTSO-E per-unit
+needs the pending token and covers units of 100 MW or more).
+
+- **Demand placebo FAILS** (`analysis/italy_demand_placebo.py`, 18,238 hours, controls both countries' degree hours, both gas
+  prices, hour × month, hour × weekday, year-month): Italian demand against the Spanish price moved by Spanish wind −0.059%
+  per €1 (t −4.3), Spanish measured demand −0.060 (t −5.3); reduced form +0.305 and +0.311% per GW of forecast wind. The
+  same size in both countries: the wind instrument carries a common demand pattern, so the aggregate Spanish demand
+  response (−0.06%/€) is not a price response. This closes the aggregate-demand wind design.
+- **Gas plants at the cap** (`analysis/gas_plants_at_cap_iberia_italy.py`, 55 Iberian and 96 Italian gas units of 100 MW or
+  more): day-ahead load factor +0.118 Iberia, +0.077 Italy in the 14 days after 15 June 2022; difference +0.041, rank 44
+  of 75 placebos (5–95%: −0.13 to +0.12). No Iberia-specific change detected, power low (placebo sd 0.08). Lead, not tested:
+  Iberian subsidised CCGT +0.12 in the same weeks that unsubsidised gas cogeneration fell −0.17.
+
+## Within Iberia: subsidised combined cycles against unsubsidised cogeneration (2026-11-11)
+
+`analysis/iberia_subsidy_contrast.py` → `outputs/tables/iberia_subsidy_contrast.csv`. 14 days after against 14 days before 15 June
+2022, daily load factor: Iberian gas combined cycles (55 units, PDBF) 0.297 → 0.415 (+0.118); gas cogeneration (REE units) 0.512 →
+0.341 (−0.172); difference **+0.289**, rank 1 of 46 placebos (placebo sd 0.104, 5–95%: −0.15 to +0.18); cogeneration alone −0.172
+against a placebo sd of 0.046 (rank 1). Same-calendar windows in June 2021: differences −0.03, +0.01, −0.08. **Passes the pre-set
+rule** (outside 5–95% and rank in the top 5%). Cautions: four placebos in Oct–Nov 2022 (the opt-in transition, not clean) reach
+0.20–0.25; the combined cycles' rise is mostly heat, since Italy's rose +0.077 and Iberia minus Italy is +0.041 (rank 44 of 75), so
+the contrast says cogeneration fell unusually, not that the subsidy raised the combined cycles' output.
+
+**Status of E2 (2026-11-11): the most promising result so far.** Pre-cap gas cogeneration output rises +0.012 per €10 with the
+wind-moved price (t 4.6) against a flat biomass placebo, passes the lead and lag placebo and a switchers-against-stable dose-response
+(stable plants t 2.0), and the pre-cap model reproduces the June fall (−0.185 predicted, −0.172 observed, mostly through the
+European gas price). Open before it is quoted: (1) the Italian demand placebo shows the wind instrument carries a common demand
+pattern (+0.3% per GW in Italy and Spain), so the cogeneration response needs a check that it does not run through hosts' weather
+(alternative instrument, richer weather, hourly data); (2) the post-cap windows fail the biomass placebo and are not read;
+(3) 443 pre-cap days, aggregated by group, a three-month gap in 2022.
+
 ## Where the design stands
 
 - E1 (the event by group) and E2 (the run decision and the cost) now have their data: REE's units by day,

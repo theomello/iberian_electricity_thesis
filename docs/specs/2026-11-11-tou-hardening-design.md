@@ -162,3 +162,51 @@ before it, and resting on a weekend benchmark that moved before the reform.
 **Status.** Step 1 (E0 DiD) passes and is specific to June 2021. Step 2 (DDD) passes on the point estimate and on the France control but
 **fails the pre-trend (P2)**; the explanation tested (daylight hours) points to the evening peak as the policy-specific part. The
 elasticity step ran on the whole-peak DDD (−0.04, −0.12) and should be read with the evening split (−0.08) in mind.
+
+## Pre-registration: the evening-peak design (2026-11-11, written before any run of it)
+
+**Status: pre-registered, not run.** Everything below was fixed before `analysis/tou_evening_ddd.py` was run; the evening-peak split itself was
+found after seeing the path (above), so what is registered is the confirmation test of a lead, on the same data. Anything not listed is
+exploratory and will be labelled so.
+
+**Hypothesis.** The policy-specific effect of the June 2021 reform on measured low-voltage demand is a fall in working-day evening-peak
+(18–21h) load relative to night (0–7h), over and above the same clock hours on weekends and holidays, relative to Portugal and France.
+
+**Design (primary: Portugal control, E0 = ESIOS 1201, break 2021-06-01, post window to 2021-09-30).**
+- **V1** DiD triple difference, evening-peak and night hours only (other hours dropped), hour, weekday and month effects, clustered by week;
+  pre-window every day from 2018-01-01 except March–June 2020.
+- **V2** as V1 with **January–May 2021 also dropped from the pre-window** (the months where the weekend arm moves; a pre-set exclusion, not
+  a choice from the result: it is the window in which the pandemic restrictions of Spain, Portugal and France differed most).
+- **V3** LASSO prediction errors (`tou_did.lasso_errors`: day-type × hour, month, trend, temperature), trained on 2018-01 → 2020-12 without
+  March–June 2020, evaluated June–September 2021; the DDD on the errors by the same cells, clustered by week.
+- **Controls:** Portugal (primary), France and the mean of the two logs (secondary), V2 and V3 for each.
+- **Dose-response blocks**, each against night hours with the other blocks dropped, V2, Portugal: evening peak 18–21h, late mid-peak 22–23h,
+  afternoon mid-peak 14–17h, morning mid-peak 8–9h, morning peak 10–13h. The change in ln relative price (block against night) is computed
+  day by day from ESIOS 1001 minus 1876 (energy), 1876 (new charges) and the old flat 44.0, as in `analysis/tou_elasticity_step.py` but for the
+  block's own hours; elasticity of substitution = DDD / that change.
+- **Placebo breaks:** the 1st of each month 2019-01 → 2020-12 whose 4-month window misses March–June 2020 (17), V1, evening peak.
+
+**Stop rules, in order.**
+1. **V2 on E0, Portugal:** DDD evening peak negative with t below −2. **France and the mean control:** same sign, t below −2. If either fails,
+   the evening-peak lead is dropped and the whole-peak result stays flagged as not separable from a level shift.
+2. **V3 (LASSO):** negative, t below −2, and within a factor of two of V2's size. If not, the effect is estimator-dependent and is not quoted
+   as the policy effect.
+3. **Placebo breaks:** the real V1 effect outside the placebos' 5th–95th percentile and in the top 2 of 18 by size.
+4. **Dose-response:** the elasticities of the four non-peak-morning blocks (evening peak, late mid, afternoon mid, morning mid) are each within a
+   factor of two of the evening peak's, with the same sign; blocks with DDD standard error larger than half the effect are listed and not counted.
+   **The morning peak (10–13h) is reported but is not part of this rule**: the policy gives it the same price rise as the evening peak, so a
+   zero there is heterogeneity by time of day (people at work, small businesses in E0) or a confounder I have not identified, and either
+   reading is stated, not resolved.
+5. **Sign and size:** the evening-peak elasticity between −0.5 and 0 (the paper: −0.08 to −0.135 own price).
+6. **Power:** the DDD standard error of the evening peak below 1 point; reported against the effect.
+
+**What each outcome means.** All six pass: the evening-peak effect is the quotable policy-specific result, with the morning-peak heterogeneity
+and the weekend-arm pre-movement as stated caveats. Rule 1 or 2 fails: no policy-specific effect is claimed. Rule 3 fails: the effect is in the
+range of the monthly noise of the weekday-weekend gap. Rule 4 fails: the pattern is not price-proportional, and the evening effect is read as
+a time-of-day change that the policy does not predict (for instance a change in evening routines).
+
+**Threats that remain even if all six pass.** (a) The June 2021 evening wholesale price spread rose as solar depressed midday prices and gas rose;
+PVPC households see it on the energy term. Weekends share it, so the DDD removes it if households respond to the energy price on weekends as on
+working days; if they do not (they use more evening load on weekends anyway), part of the effect is the energy price, not the charge.
+(b) E0 includes small businesses and free-market contracts. (c) One summer. (d) Spain and Portugal ended the pandemic restrictions on different
+dates, which moves working-day against weekend patterns; V2 drops the months in which it moves most but not the whole of 2020.

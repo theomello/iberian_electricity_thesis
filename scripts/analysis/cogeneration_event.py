@@ -141,6 +141,32 @@ def main() -> int:
             v = did(lf, u, "nonren", "renew", ps, pb, pe)["weighted"]
             plac.append({"window": win, "placebo_break": pb.date(), "beta": v["beta"], "se": v["se"],
                          "over_real": abs(v["beta"] / real)})
+    # G1 restated (user's decision, 2026-11-11): remove the calendar pattern before comparing. Each break, real or
+    # placebo, is taken net of the same break on the same calendar dates in other years: (a) the mean of the other
+    # years of 2019-2021 (leave the break's own year out), (b) the year before only.
+    def at(pb, s, b, e):
+        ps, pe = pb - (b - s), pb + (e - b)
+        if ps < lf.index.min() or (pb.year < 2022 and pe >= pd.Timestamp("2022-03-29")):
+            return None
+        return did(lf, u, "nonren", "renew", ps, pb, pe)["weighted"]["beta"]
+
+    seas = []
+    for win in ("cap", "opt-in"):
+        s, b, e = (pd.Timestamp(x) for x in WINDOWS[win])
+        cands = [(b, "real")] + [(pd.Timestamp(m.year, m.month, 15), "placebo")
+                                 for m in pd.period_range("2019-01", "2022-01", freq="M")]
+        for pb, kind in cands:
+            raw = at(pb, s, b, e)
+            if raw is None:
+                continue
+            others = {y: at(pb.replace(year=y), s, b, e) for y in (2019, 2020, 2021) if y != pb.year}
+            others = {y: v for y, v in others.items() if v is not None}
+            seas.append({"window": win, "kind": kind, "break": pb.date(), "raw": raw,
+                         "net_other_years": raw - np.mean(list(others.values())) if others else np.nan,
+                         "reference_years": len(others),
+                         "net_year_before": raw - others[pb.year - 1] if pb.year - 1 in others else np.nan})
+    seas = pd.DataFrame(seas)
+    seas.round(4).to_csv(OUT / "cogeneration_event_placebo_seasonal.csv", index=False)
     est, drops, plac = pd.DataFrame(est), pd.DataFrame(drops), pd.DataFrame(plac)
     wks = pd.concat(wks)
     est.round(4).to_csv(OUT / "cogeneration_event_estimates.csv", index=False)
@@ -159,6 +185,15 @@ def main() -> int:
                                      median=("over_real", "median"), above_third=("over_real", lambda s: (s > 1 / 3).sum())
                                      ).round(2).to_string())
     print(plac[plac.over_real > 1 / 3].round(3).to_string(index=False))
+    print("\nG1 restated: breaks net of the same calendar break in other years (OMIE's label)")
+    for win, g in seas.groupby("window"):
+        for col in ("raw", "net_other_years", "net_year_before"):
+            real = g.loc[g.kind == "real", col].iloc[0]
+            pl = g.loc[g.kind == "placebo", col].dropna()
+            r = (pl.abs() / abs(real))
+            print(f"  {win:7s} {col:16s} real {real:+.3f}; {len(pl)} placebos, sd {pl.std():.3f}, largest {r.max():.2f} of real, "
+                  f"median {r.median():.2f}, above one third: {(r > 1 / 3).sum()}, as large as real: {(r >= 1).sum()}")
+    print(seas[seas.window == "cap"].round(3).to_string(index=False))
     for (src, t, win), g in wks.groupby(["data", "treated", "window"]):
         print(f"\nweekly gap, {src}, {t}, {win} (week 0 starts on the break)\n" + g.drop(columns=["data", "treated", "window"]).set_index("week").T.to_string())
     return 0

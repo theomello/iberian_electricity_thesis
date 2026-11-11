@@ -138,6 +138,25 @@ standard errors clustered by unit. Run with the user's go-ahead.
   weeks 5–7 (November). G3 fails (0.23 on REE, 1.38 on OMIE) and G1 fails (22 of 33 placebos above one third).
   Something common to both groups changes on 1 October; not identified yet.
 
+**G1 restated with the calendar pattern removed (2026-11-11, user's go-ahead): it still fails, and by more.** Each
+break, real or placebo, net of the same break on the same calendar dates in other years
+(`cogeneration_event_placebo_seasonal.csv`):
+
+| cap window, OMIE's label | real break | placebos | placebo sd | above one third of real | as large as real |
+|---|---|---|---|---|---|
+| raw | −0.160 | 34 | 0.052 | 11 | 0 |
+| net of the other years of 2019–2021 | −0.168 | 34 | 0.077 | 19 | 2 |
+| net of the year before | −0.187 | 22 | 0.088 | 12 | 0 |
+
+The placebo breaks are not a repeating calendar pattern: the same date has opposite signs in different years
+(15 June: −0.05 in 2019, +0.05 in 2020, +0.03 in 2021; 15 January: −0.06 in 2020, +0.13 in 2021), so subtracting
+other years adds their noise. The gap between non-renewable and renewable thermal drifts by ±0.05–0.10 over a few
+months in ordinary times, which is what the cost framework predicts when gas and power prices move (2019 gas glut,
+2020 lockdown, 2021 gas rise). A four-month before/after comparison cannot separate the cap from that drift at the
+one-third standard. What separates it is the timing (the fall is on 15 June, within days) and a model that holds the
+power and gas prices fixed, which is E2. The opt-in window fails every version (3–7 placebos as large as the real
+break). **E1 stays description.**
+
 ## Where the design stands
 
 - E1 (the event by group) and E2 (the run decision and the cost) now have their data: REE's units by day,

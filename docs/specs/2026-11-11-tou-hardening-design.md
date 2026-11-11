@@ -335,3 +335,43 @@ imprecise (−0.115, se about 0.054) and the proportionality test has little pow
 fall is gradual, not a step at 16 September (Sep 16–30 is −3.8, above the −1.6 a proportional drop would give, and it keeps falling through December), which is also what a
 fading summer habit, autumn seasonality or the shifting seasonal shape (threat a) would produce; France's working-day and weekend arms are individually large (−16%, −12%) and only their
 difference is read. The extended two-channel regression (follow-up 1) is the test that separates these.
+
+## Pre-registration: the extended two-channel regression (written 2026-11-11 before any run; follow-up 1)
+
+**Status: proposed, not run.** The charge-cut test (above) showed the evening effect shrinks when the charge falls, but only two windows from one year, and the fall was gradual.
+After 2021 the charge schedule is fixed while the evening energy-price spread swings (2022 crisis, 2023 normalisation), so the two channels can be told apart on a longer panel.
+
+**In one example.** Suppose in July 2022 the evening energy price is three times the night price but the charge gap is the same as in November 2021. If the evening effect is bigger in
+July 2022 than in November 2021, households are responding to the energy price. If it stays at the November size, they respond to the charge. Doing this for every month and
+asking which of the two price gaps the monthly effects follow is the test.
+
+**Design.** Monthly DDD (evening 18–21h against night, working days against weekends and holidays, E0 against Portugal, V2 pre-window 2018-01-01 → 2020-12-31 without March–June
+2020), one estimate per month **2021-06 → 2023-12 (31 months)**, each month estimated against the pre-window alone, as in `analysis/tou_charge_dose.py` (`estimate`). 2024 is out
+(PVPC energy term partly forward-priced, price-triggered tax steps), and so are 2025–26 (blackout, quarter-hour prices). ESIOS 1876 (charges) must cover the window; if it does not, the window
+is cut at its last day and that is stated.
+Two regressors per month, from ESIOS 1001 and 1876 over the month's working days, evening against night, each a change in ln relative price against the old flat charge of €44/MWh:
+- **x_charge** moves with the charges only: the ln relative price with the day's actual charges and the energy terms held at their whole-window means, minus the same with the old flat charge.
+- **x_energy** moves with the energy term only: the ln relative price with the day's actual energy terms and the charges held at their October–December 2021 means, minus the same with the old flat charge.
+
+Regression: DDD_m = a + ε_c · x_charge,m + ε_e · x_energy,m + u_m, OLS with Newey–West standard errors (3 lags); the version weighted by 1/se_m² reported beside it. Same regression with France as the
+control. LASSO errors (Portugal) as a third version, same regressors. **Placebo outcome:** industry (E1–E6) − Portugal with the same design and regressors.
+
+**Stop rules, in order.**
+1. **Identification.** The correlation between x_charge and x_energy is below 0.7 in absolute value and each regressor's standard deviation over the 31 months is at least 0.05 (ln points). If not, that
+   channel is not identified and the extension stops with that statement.
+2. **Charge channel.** ε_c is negative with t ≤ −2 (Portugal, OLS, Newey–West) and lies within a factor of two of the charge-cut test's elasticity, between −0.18 and −0.045.
+3. **Energy channel does not carry it.** Not (ε_e negative with t ≤ −2 and |ε_e| ≥ |ε_c|). If it is, the response is to the energy price, and the charge-cut result was a correlation.
+4. **Controls agree.** The France version and the LASSO version have ε_c ≤ 0, and the weighted version has ε_c negative.
+5. **Placebo.** Industry's ε_c has |t| < 2. If not, ε_c is read as a shape change shared with industry, and rules 2 to 4 are not read.
+6. **Drift.** With a linear time trend (months since June 2021) added, ε_c keeps its sign and stays below −0.02. If it flips or vanishes, the charge channel cannot be separated from slow drift
+   (rooftop solar, migration, habit), and that is the stated conclusion.
+7. **High energy spread without a large effect.** No month in the top quartile of x_energy that is also past the charge cut (from 2021-10) has a DDD larger in absolute size than the
+   summer-2021 mean (5.46%, charge-cut test window A).
+
+**What each outcome means.** All seven pass: the evening response follows the charge, not the energy price, over three years, and the elasticity is about −0.1. Rule 3 fails: the energy price
+drives it. Rule 6 fails alone: the sign agrees but the extension cannot rule out drift. Rule 1 fails: not identified, and the charge-cut test stays the only evidence.
+
+**Threats that remain even if all pass.** (a) The 2022 energy crisis changes household behaviour through the bill in general (saving), not only through the evening gap; (b) E0's regulated share fell as customers
+migrated to the free market, and free-market contracts may carry their own time structure, so the exposed share is not constant over three years; (c) rooftop solar and self-consumption grow in the window;
+(d) the gas cap (June 2022) and the VAT and electricity-tax steps move price levels, not the relative price, but change the bill; (e) the pre-window is still 2018–2020, so a changing seasonal shape is not removed
+(follow-up 2 bounds it); (f) 31 monthly points with regressors that move in few episodes.

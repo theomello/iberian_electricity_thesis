@@ -1,0 +1,4 @@
+control,n,ddd_peak,se,t,ddd_mid,peak_off_work,peak_off_wknd,placebo_sd,placebo_p05,placebo_p95,rank,n_placebos
+Portugal,32847,-2.478,0.545,-4.548,-2.643,-6.994,-4.516,0.944,-2.472,0.231,2,17
+France,32847,-3.505,0.623,-5.625,-3.972,-15.905,-12.399,0.892,-2.286,0.391,1,17
+mean of Portugal and France,32847,-2.992,0.524,-5.706,-3.308,-11.449,-8.458,0.825,-2.257,0.179,1,17

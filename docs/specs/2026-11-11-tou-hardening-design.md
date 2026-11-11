@@ -121,3 +121,44 @@ of −2.48. A failure of P2 reads as a trend in the weekday-weekend gap, not a p
 logs as control. Rules: (F1) the France-controlled DDD peak is negative with t below −2; (F2) its size within a factor of two of the
 Portuguese-control −2.48; (F3) the same placebo breaks (17, COVID windows out) rank the real effect in the top 3 of 18. If F1 fails, the
 Portugal-controlled result rests on that control and is not reported as the policy effect.
+
+### Results of the path and the second control (2026-11-11)
+
+`analysis/tou_ddd_robust.py` → `outputs/tables/tou_ddd_{path,path_controls,control}.csv`; blocks in `outputs/tables/tou_ddd_peak_blocks.csv`.
+
+**France control (F1–F3 pass).** DDD peak, DiD V1, 17 placebo breaks (COVID windows out): Portugal **−2.48 (0.54), rank 2 of 18**; France **−3.51
+(0.62), t −5.6, rank 1 of 18**; the mean of the two logs **−2.99 (0.52), rank 1 of 18**. Negative with t below −2 (F1), within a factor of
+two of the Portuguese figure (F2: 1.4), top 3 (F3). The result does not depend on the Portuguese control.
+
+**Path (P2 fails, P1 fails by one month).** DDD peak by month, Portugal control: Jun 2021 −3.17 (t −3.8), Jul −3.18 (t −3.6), **Aug −0.96 (t −1.1)**,
+Sep −3.41 (t −5.3), mean −2.68 (P3 passes). But **before the reform the DDD is already negative: Feb 2021 −5.90, Mar −4.40, Apr −3.92, May −2.92**
+(mean −4.3; France −3.4; mean of the two −3.8), against 2019 to January 2021 months with mean −1.2 and sd 1.8. Six pre-June months sit below
+−2.5 points, with every control. **So the triple difference does not start in June 2021.** The monthly standard errors are too small
+(2019–2020 months reach t of −4 to −5 on noise), so the point is the path, not the t-values.
+
+**Where the pre-reform movement is.** The simple DiD placebo breaks of 2021-01 → 2021-04 on E0 show no peak fall (peak +0.1 to +2.0%;
+peak − off −1.3 to −2.8%, the off-peak rising +1.4 to +3.7%), against the real peak −5.7%: the **E0 DiD is specific to June 2021**. The
+working-day peak-minus-off series is flat before June (Feb–May 2021: +0.4, +2.4, +0.9, −1.3) and falls at the reform (Jun–Sep: −5.3, −6.7,
+−9.8, −5.3). The weekend arm moves before and after: +6.2, +6.8, +4.8, +1.6 in Feb–May 2021, then −2.1, −3.6, −8.8, −1.9. So the pre-trend
+in the DDD is in the weekend benchmark, not in the working days.
+
+**Split of the peak: morning (10–13h) against evening (18–21h)** (exploratory: a split I chose after seeing the path, to test one explanation, rooftop solar
+self-consumption lowering measured demand in daylight hours on every day; nothing was set in advance). E0, Portugal control, DiD V1, evening-peak or
+morning-peak hours against night, with the other block dropped:
+
+| block | working days | weekends | DDD (se) | placebo 5–95%, rank | Feb–May 2021 fake break: DDD (working / weekend) |
+|---|---|---|---|---|---|
+| morning peak 10–13h (solar hours) | −5.67 | −5.24 | **−0.43 (0.76), t −0.6** | −4.29 to +2.50, rank 16 of 18 | −5.86 (+1.86 / +7.72) |
+| evening peak 18–21h (no solar) | −8.42 | −3.48 | **−4.94 (0.71), t −6.9** | −2.42 to +1.15, **rank 1 of 18** | −2.66 (−0.48 / +2.17) |
+
+**Reading.** The morning-peak fall is the same on weekends (−5.7 against −5.2): not policy-specific, as a daylight effect (solar
+self-consumption, or any change in daytime load that is common to all days) would predict. The **evening peak carries the policy-specific
+effect: −4.9%** (LASSO not run on this split), outside the placebo range and rank 1; its fake break in Feb–May 2021 is −2.7, half the real
+size, from the weekend arm rising +2.2 (so about −2.3 net of that pre-movement, a lower bound). With the same price change as the whole
+peak (+0.613 in ln relative price), the evening-peak substitution elasticity is about **−0.08** (−4.94 / 61.3; not computed with a
+standard error here), at the lower end of the paper's −0.08 to −0.135 own-price range. Treat it as a lead: chosen after the path, not set
+before it, and resting on a weekend benchmark that moved before the reform.
+
+**Status.** Step 1 (E0 DiD) passes and is specific to June 2021. Step 2 (DDD) passes on the point estimate and on the France control but
+**fails the pre-trend (P2)**; the explanation tested (daylight hours) points to the evening peak as the policy-specific part. The
+elasticity step ran on the whole-peak DDD (−0.04, −0.12) and should be read with the evening split (−0.08) in mind.

@@ -135,8 +135,18 @@ Stop rules from section 3, in order:
    counts are right, fewer customers explains about a quarter of the 5% fall in regulated load, and the rest is lower load per
    customer, which weather did not explain (−3.2, se 1.7). The leavers could also be bigger consumers than the stayers. **Not
    found:** the energy supplied by reference retailers in 2018 and 2019 (the CNMC press notes do not carry it; the full
-   supervision reports `INF/DE/…` were not read). The drift therefore stays unexplained. Fallback: the CNMC's annual retail
-   supervision report for 2019 (energy by supply regime), or an email to the CNMC's electricity directorate.
+   supervision reports `INF/DE/…` were not read). The CNMC press notes did not carry it.
+
+   **Found in the CNMC's full report** (*Informe de supervisión del mercado minorista de electricidad, año 2019*, IS/DE/027/20,
+   p. 11, read from the PDF with pymupdf): at 31 December 2019, 39% of supply points and **36% of energy** were supplied by a
+   reference retailer, **a reduction of 1 point in both, against a year earlier**. A fall of 1 point from 37% to 36% is 2.7%
+   of the regulated energy relative to the total, which is the size of the ESIOS ratio 352 / 351 (−3.2 log points in 2019).
+   The drift decomposes as 352 / Portugal = 352 / 351 (−3.2) + 351 / Portugal (−0.8) = −3.9, so **most of the 2019 fall is
+   regulated customers moving to the free market**, as the CNMC counts it (leavers on average larger than the 1.3% in counts
+   suggests, since the energy share falls as fast as the supply-point share). This brings back my first explanation, withdrawn
+   earlier on the ESIOS share path (11.47, 11.16, 11.78, 10.97%): that path rises in 2020 while the CNMC reports continued net
+   switching out of PVPC in 2020 (575,000), which I have not reconciled. Open: the 2020 rebound of the ESIOS share. The drift
+   is therefore mostly explained for 2019; the placebo breaks inside 2019 are picking up a migration step, not noise.
 4. **Weekend placebo: not separable.** Fake peaks on weekends fall about as much as real ones on working days (−9.3 against
    −10.5; peak − off −7.8 against −5.8), as in the paper (−8.3 and −7.3 on weekends). So the all-hours fall is a level shift
    or habit, and the policy-specific part (the contrast between periods on working days) is not distinguishable

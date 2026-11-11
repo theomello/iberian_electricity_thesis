@@ -134,3 +134,37 @@ problem of the time-of-use design.
 - E0 includes consumers who are not exposed to the VAT change, so the effect is diluted by the exposed share.
 - Demand responds to the tax-inclusive price only if consumers see it on the bill, which takes a billing cycle: the first
   weeks after a step may show nothing.
+
+## 6. First run (2026-11-11, user's go-ahead): the tax steps fail the direction rule
+
+`analysis/tax_did.py` → `outputs/tables/tax_did_{estimates,placebo}.csv`. Measured low-voltage demand (E0, ESIOS 1201) against
+Portugal's consumption (REN), log difference at the same local hour, 2018-01-01 → 2024-12-31 (61,353 hours); DiD with a post
+dummy and hour, weekday and month effects (V1), with temperature and holiday differences (V3), clustered by week; LASSO
+prediction errors. Post window 4 months, cut at the next step (S1 82 days, S4 two months, to the price-triggered step of
+March 2024). Pre window A = the whole prior period (the spec), March–June 2020 excluded; B = the 12 months before. Placebos:
+19 fake steps, 1st of each month 2019-01 → 2021-02, none touching March–June 2020. Effects in % (log points), standard errors
+in brackets.
+
+| step | Δ ln tax factor | DiD V1 | DiD V3 | LASSO errors | Wald (V1, per unit Δ ln factor) |
+|---|---|---|---|---|---|
+| S1 VAT 21 → 10%, 2021-06-26 | −9.5 | −1.57 (0.94) | −1.91 (0.69) | −1.66 (0.78) | **+0.16** |
+| S2 electricity tax → 0.5%, 2021-09-16 | −4.5 | −2.67 (0.83) | −2.82 (0.75) | −2.60 (0.81) | **+0.59** |
+| S3 VAT 10 → 5%, 2022-07-01 | −4.7 | −2.34 (1.15) | −2.77 (0.95) | −0.79 (1.05) | **+0.50** |
+| S4 VAT → 10%, tax → 2.5%, 2024-01-01 | +6.6 | −6.58 (0.81) | −6.71 (0.77) | −1.71 (0.60) | −0.99 |
+
+Placebo sd 1.1 (DiD V1), 5–95% range −1.75 to +0.98; LASSO sd 1.6, range −2.0 to +3.1. Rank by absolute size among the 19
+placebos and the step itself (DiD V1): S1 4/20, S2 1/20, S3 2/20, S4 1/20; LASSO 7, 3, 14, 6 of 20. With the 12-month pre window
+the LASSO placebos have sd 7.4%: unusable, so variant B is reported for the DiD only (S1 −1.6, S2 −2.3, S3 −0.5, S4 −1.7).
+
+Stop rules from section 4, in order: (1) dates confirmed: **pass**. (2) placebos: the DiD effects of S2, S3 and S4 sit outside
+the placebo 5–95% range and rank in the top 2 to 3, but see 4; the LASSO version does not rank. (3) control noise: **not
+computed**. (4) **Direction: fails.** All three cuts *lower* Spanish low-voltage demand relative to Portugal (−1.6 to −2.7 %), the
+wrong sign; the one rise (S4) lowers it by 6.6% by DiD but 1.7% by LASSO and by the 12-month DiD, so its size depends on the
+estimator. (5) **Sign and size: fails.** The Wald ratios for the three cuts are +0.16 to +0.59, positive. (6) power: effects are
+1.5 to 2.5 placebo sd for the DiD, so small relative to noise. (7) exposed share: not computed.
+
+**Verdict: stop, as pre-set.** A tax cut that lowers demand is read as confounding (rule 4). The likeliest confounder is the one
+named in section 5, not tested here: in the same weeks Spanish regulated retail prices followed the wholesale price up (pre-tax
+PVPC energy term +46 % across the autumn 2021 steps) while Portugal's did not, so Spanish demand fell relative to Portugal's
+for a reason unrelated to the tax. That is itself a price response, to the wholesale-driven pre-tax price; it would be tested
+by putting the pre-tax price in beside the tax factor, which needs a Portuguese retail price series as control. Not run.

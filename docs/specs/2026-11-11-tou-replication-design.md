@@ -127,7 +127,16 @@ Stop rules from section 3, in order:
    suppliers' load and was not redefined**: no retailer entered or left the list, and the 2019 fall is in the customers
    (`EE21C01` −108 MW, −7.7%; `GNSUC01` −43 MW, −6.4%; `IBCUC01` −9 MW). With the Balearic unit (+55 MW in 2019) in the sum the
    fall is 3.2%, the source of an apparent gap of about 2 points. What remains open is why regulated customers' load fell 5% in
-   2019 while the regulated share of regulated plus free-market retail moved only 0.3 points; not examined.
+   2019 while the regulated share of regulated plus free-market retail moved only 0.3 points.
+
+   **Customer counts (search, 2026-11-11; press reports and CNMC press notes, not the reports themselves).** PVPC supply points:
+   11.26 million at the end of 2018 (a 304,000 fall during 2018), "almost 11 million" / 11.1 million at the end of 2019 (CNMC
+   press notes of 2020), so a fall of 1 to 1.5%; net switching out of PVPC was 660,000 in 2019 and 575,000 in 2020. If those
+   counts are right, fewer customers explains about a quarter of the 5% fall in regulated load, and the rest is lower load per
+   customer, which weather did not explain (−3.2, se 1.7). The leavers could also be bigger consumers than the stayers. **Not
+   found:** the energy supplied by reference retailers in 2018 and 2019 (the CNMC press notes do not carry it; the full
+   supervision reports `INF/DE/…` were not read). The drift therefore stays unexplained. Fallback: the CNMC's annual retail
+   supervision report for 2019 (energy by supply regime), or an email to the CNMC's electricity directorate.
 4. **Weekend placebo: not separable.** Fake peaks on weekends fall about as much as real ones on working days (−9.3 against
    −10.5; peak − off −7.8 against −5.8), as in the paper (−8.3 and −7.3 on weekends). So the all-hours fall is a level shift
    or habit, and the policy-specific part (the contrast between periods on working days) is not distinguishable

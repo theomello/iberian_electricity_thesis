@@ -63,7 +63,9 @@ published 26 June 2022): electricity tax 0.5% extended to 31 December 2022 (art.
 extended in the consolidated text to 31 December 2023); RDL 20/2022 (BOE-A-2022-22685) extends the 0.5% to 31 December 2023;
 RDL 8/2023 (BOE-A-2023-26452): VAT 10% from 1 January 2024 (to 31 December 2024, with the €45 condition), electricity tax 2.5% in
 the first quarter of 2024 and 3.8% from 1 April to 30 June. Not confirmed from the BOE: the 5.11% from 1 July 2024 (assumed:
-the normal rate) and anything for 2025. ESIOS 1001 now on disk 2021-06 → 2024-12 (`esios_1001.parquet`, merged with the old
+the normal rate). The return of VAT to 21% on 1 January 2025 is reported by several news and consumer-association sources as
+the rule lapsing with no extension (RDL 9/2024 of late December 2024 extended other measures, not this one), and the Tax Agency
+reports the revenue effect to April 2025; the BOE text of 28 December 2024 was not read. ESIOS 1001 now on disk 2021-06 → 2024-12 (`esios_1001.parquet`, merged with the old
 file after the fetcher overwrote it with the new range only).
 
 Tax factor and tax-inclusive pre-tax-weighted price (`analysis/tax_price_shape.py`, monthly means of the daily path):

@@ -112,7 +112,7 @@ scripts/
 | `build/build_renewable_locations_v3.py` | v2 + MITECO Electra register | no | `data/osm/renewable_unit_locations_v3.parquet` |
 | `build/build_water_value_forward.py` | OMIP + day-ahead prices + PDBF + `cab` + MITECO + SNIRH | no | `outputs/tables/water_value_forward.parquet`, `forward_price_quantiles.parquet` |
 | `build/build_hydro_cost.py` | `water_value_forward` + step caches + `cab` | no | `outputs/tables/hydro_cost_daily.parquet` |
-| `fetch/fetch_esios_i90.py` | ESIOS archive 34 (I90DIA), 15th of each month, and every day 2022-04-01 → 2023-03-31 | **yes** | `data/esios/raw/archives/34/`, `data/esios/i90/i90_sample_hourly.parquet` |
+| `fetch/fetch_esios_i90.py` | ESIOS archive 34 (I90DIA), 15th of each month, and every day of 2021 and 2022-04-01 → 2023-03-31 | **yes** | `data/esios/raw/archives/34/`, `data/esios/i90/i90_sample_hourly.parquet` |
 | `fetch/fetch_holidays.py` | BOE holiday resolutions (XML) + Portugal by law | no | `data/holidays/holidays_es_pt.parquet` |
 | `fetch/fetch_ree_regional_demand.py` | REE REData, demand by region, monthly | no | `data/ree/ree_demand_ccaa_monthly.parquet` |
 | `build/build_holiday_exposure.py` | PDBF retail schedules + holidays + REData | no | `outputs/tables/holiday_retail_days.parquet`, `holiday_exposure*.csv` |
@@ -673,6 +673,11 @@ Design and results: `docs/specs/2026-11-10-cogeneration-design.md`, `notes/rq-co
   the 15th, 1,119 on the 19th; it returns from Monday 3 October (921 → 1,305 MW in five days). Only 26 gas units
   (159 MW) are new in October: the plants keep their REE unit through both dates. 165 of 231 gas units have at least
   10 run/stop switches in the year. These units are 0.58–0.76 of OMIE's non-renewable thermal schedule.
+- **Every day of 2021 is on disk too** (fetched 2026-11-11, 365 workbooks, 1.5 GB), for placebo breaks on plants.
+  Not yet built into `outputs/tables/cogeneration_ree/days/` (rerun the builder) and the placebos not yet run.
+- **`.venv` broke on 2026-11-11**: Homebrew removed `python@3.14` as an unused dependency during an uninstall, and it
+  no longer compiles on macOS 13. `.venv/bin/python3.14` and `home` in `.venv/pyvenv.cfg` must point at another
+  CPython 3.14 (the packages in `.venv/lib/python3.14` are intact). Check `.venv/bin/python -c "import pandas"` first.
 - **A stopped unit can have no row in the workbook that day**: fill missing days as zero before counting stops.
 - **Most cogeneration offers at zero**: 8–21% of non-renewable units offer most of their MW above €1/MWh.
 - `cab` capacity of a represented unit changes as plants join and leave: the registry's `max_power_mw` is the median

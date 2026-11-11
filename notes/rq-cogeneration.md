@@ -179,6 +179,15 @@ break). **E1 stays description.**
   in most placebo weeks; not known until run.
 - **October: nothing at the break.** Gas and biomass rise together; the capacity-weighted gap does not move.
 
+**Next step, not yet run (2026-11-11).** REE's workbooks for every day of 2021 are fetched (365 files, no bad
+answer). To finish: (1) repair `.venv` (see CLAUDE.md, cogeneration section); (2) rerun
+`build/build_cogeneration_ree_panel.py` (adds the 2021 days; about 5 minutes); (3) run
+`analysis/cogeneration_event_narrow.py`, whose `plant_placebos` puts the 28-day window on every Wednesday of 2021 on
+REE's plants (about 48 placebos) and writes `cogeneration_event_narrow_placebo_plants.csv`. Gate unchanged: each
+placebo below one third of the real break (−0.239, so 0.080). The routine is written and syntax-checked, never
+executed. After step 2 also rerun `analysis/cogeneration_ree_describe.py`: its entrant count uses the days before
+April 2022 and will change with 2021 daily.
+
 ## Where the design stands
 
 - E1 (the event by group) and E2 (the run decision and the cost) now have their data: REE's units by day,

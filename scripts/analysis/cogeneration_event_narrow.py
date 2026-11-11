@@ -34,6 +34,50 @@ def holiday(s: pd.Timestamp, e: pd.Timestamp) -> bool:
                for x in EASTER)
 
 
+def ree_2021() -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Load factor of REE's cogeneration units for every day of 2021 (fetched 2026-11-11 for the placebos)."""
+    u = pd.read_parquet(OUT / "cogeneration_ree" / "ree_units.parquet")
+    u = u[u.fuel.notna()].copy()
+    u["cap"] = u.max_power_mw.where(u.max_power_mw > 0, u.peak_mw)
+    u = u[u.cap > 0].set_index("unit")
+    d = pd.concat(pd.read_parquet(f, columns=["date", "unit", "p48_mwh"])
+                  for f in sorted((OUT / "cogeneration_ree" / "days").glob("ree_2021*.parquet")))
+    w = d[d.unit.isin(u.index)].pivot_table(index="date", columns="unit", values="p48_mwh", aggfunc="sum").fillna(0.0)
+    lf = (w / 24 / u.cap.reindex(w.columns)).clip(0, 1)
+    lf.index = pd.to_datetime(lf.index)
+    assert len(lf) == 365, f"2021 has {len(lf)} days on disk"
+    return lf, u.rename(columns={"fuel": "group"})[["group", "cap", "agent"]]
+
+
+def plant_placebos(est: pd.DataFrame) -> pd.DataFrame:
+    """The 28-day window on every date of 2021 with the real break's weekday, on REE's plants."""
+    lf, u = ree_2021()
+    rows = []
+    for name, b in BREAKS.items():
+        b = pd.Timestamp(b)
+        for t in ("gas", "other_fossil"):
+            for wname in ("weighted", "unweighted"):
+                real = est[(est.data == "ree") & (est.treated == t) & (est.window == name) & (est.weights == wname)].beta.iloc[0]
+                for pb in pd.date_range("2021-01-15", "2021-12-18"):
+                    s, e = pb - HALF, pb + HALF - pd.Timedelta(days=1)
+                    if pb.dayofweek != b.dayofweek:
+                        continue
+                    v = did(lf, u, t, "biomass_waste", s, pb, e)[wname]
+                    rows.append({"window": name, "treated": t, "weights": wname, "placebo_break": pb.date(),
+                                 "beta": v["beta"], "se": v["se"], "over_real": abs(v["beta"] / real),
+                                 "holiday": holiday(s, e), "real": real})
+    p = pd.DataFrame(rows)
+    p.round(4).to_csv(OUT / "cogeneration_event_narrow_placebo_plants.csv", index=False)
+    print("\nplacebos on REE's plants, 2021, same weekday as the real break")
+    for (name, t, wname), g in p.groupby(["window", "treated", "weights"]):
+        print(f"  {name:25s} {t:12s} {wname:10s}: real {g.real.iloc[0]:+.3f}; {len(g)} placebos, sd {g.beta.std():.3f}, "
+              f"range {g.beta.min():+.3f} to {g.beta.max():+.3f}, largest {g.over_real.max():.2f} of real, "
+              f"above one third: {(g.over_real > 1 / 3).sum()}, as large as real: {(g.over_real >= 1).sum()}")
+    g = p[(p.window == "cap") & (p.treated == "gas") & (p.weights == "weighted")]
+    print("\ncap, gas, weighted: every placebo\n" + g[["placebo_break", "beta", "se", "over_real", "holiday"]].round(3).to_string(index=False))
+    return p
+
+
 def main() -> int:
     sets = {"ree": (ree(), [("gas", "biomass_waste"), ("other_fossil", "biomass_waste")]),
             "omie": (omie(), [("nonren", "renew")])}
@@ -69,6 +113,8 @@ def main() -> int:
               f"above one third: {(g.over_real > 1 / 3).sum()}, as large as real: {(g.over_real >= 1).sum()}")
     big = plac[(plac.window == "cap") & (plac.over_real > 1 / 3)]
     print("\ncap: placebos above one third\n" + big.round(3).to_string(index=False))
+    if len(list((OUT / "cogeneration_ree" / "days").glob("ree_2021*.parquet"))) >= 365:
+        plant_placebos(est)
     return 0
 
 

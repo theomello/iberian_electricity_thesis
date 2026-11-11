@@ -31,7 +31,7 @@ def fit_one_se(X, y):
     return Lasso(alpha=alpha, max_iter=5000).fit(X, y)
 
 
-def area_errors(x, load, temp, hol):
+def area_errors(x, load, temp, hol, exclude_years=()):
     """Log-load prediction errors for every row of x, one LASSO per hour."""
     tmin = x.groupby("date")[temp].transform("min")
     tmax = x.groupby("date")[temp].transform("max")
@@ -41,7 +41,7 @@ def area_errors(x, load, temp, hol):
         B = pd.concat([pd.get_dummies(s.month.astype(str), prefix="m", dtype=float), (s.dow >= 5).astype(float).rename("wk"), s[hol].rename("hol"),
                        s[temp].rename("t"), tmin[s.index].rename("tmin"), tmax[s.index].rename("tmax")], axis=1)
         P = pd.DataFrame(PolynomialFeatures(2, include_bias=False).fit_transform(B.to_numpy()), index=B.index)
-        tr = (s.date <= TRAIN_END) & ~s.date.between(*E.COVID)
+        tr = (s.date <= TRAIN_END) & ~s.date.between(*E.COVID) & ~s.date.dt.year.isin(exclude_years)  # exclude_years: leave-year-out for cross-fitting
         P = P.loc[:, ~P.T.duplicated().to_numpy()]
         mu, sd = P[tr].mean(), P[tr].std()
         keep = sd > 0
@@ -52,10 +52,10 @@ def area_errors(x, load, temp, hol):
     return err
 
 
-def errors(x_es, x_pt_src=None):
+def errors(x_es, exclude_years=()):
     """Spain-minus-Portugal error for rows of x_es (needs load_es, load_pt, temp_es, temp_pt, hol_es, hol_pt)."""
-    e_es = area_errors(x_es, "load_es", "temp_es", "hol_es")
-    e_pt = area_errors(x_es, "load_pt", "temp_pt", "hol_pt")
+    e_es = area_errors(x_es, "load_es", "temp_es", "hol_es", exclude_years)
+    e_pt = area_errors(x_es, "load_pt", "temp_pt", "hol_pt", exclude_years)
     return e_es, e_pt
 
 

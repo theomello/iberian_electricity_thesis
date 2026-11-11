@@ -25,7 +25,7 @@ FIRST, LAST = pd.Timestamp("2021-06-01"), pd.Timestamp("2023-12-31")
 SUMMER_A = 5.46  # charge-cut test window A, Portugal, percent
 
 
-def regressors():
+def daily_regressors():
     def hourly(i):
         d = pd.read_parquet(T.ROOT / f"data/esios/esios_{i}.parquet")
         d = d[d.geo_name.isin(["Península", "España"])].drop_duplicates("utc_timestamp")
@@ -43,8 +43,13 @@ def regressors():
     xc = np.log((Ebar_b + Cb) / (Ebar_n + Cn)) - old(Ebar_b, Ebar_n)
     xe = np.log((Eb + Cs_b) / (En + Cs_n)) - old(Eb, En)
     out = pd.DataFrame({"x_charge": xc, "x_energy": xe}).dropna()
-    out["ym"] = out.index.strftime("%Y-%m")
     print("reference charges Oct-Dec 2021: evening %.1f night %.1f; window mean energy: evening %.1f night %.1f" % (Cs_b, Cs_n, Ebar_b, Ebar_n), flush=True)
+    return out
+
+
+def regressors():
+    out = daily_regressors()
+    out["ym"] = out.index.strftime("%Y-%m")
     return out.groupby("ym").mean()
 
 

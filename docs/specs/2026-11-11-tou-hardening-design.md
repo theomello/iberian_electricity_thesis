@@ -431,3 +431,23 @@ the charge. Rule 1 fails for E2: not testable. E1 passes and E2 fails: the respo
 
 **Power and threats.** E2's predicted change (−1.3 to −2.6%) is near what three-month windows can detect (standard error of the change about 0.7); a non-rejection may be low power, which the pooled value (rule 6) reports. Only two readable events. E2 falls in winter, with Q1-specific weather and the 2022 energy-price and tax measures; the placebo calendars share the season but not 2022's circumstances; the cross-fitted models are trained on two years, not three; autumn 2021 is also the return of
 evening activity after the restrictions, which the placebo years do not have. The conclusion is about direction and rough size, not a precise elasticity.
+
+## Results of the charge-change events test (2026-11-11, run after the user's go-ahead; `analysis/tou_events.py`, `outputs/tables/tou_events.csv`)
+
+Paper-style LASSO errors, E0 minus Portugal, DDD of the errors (evening 18–21h against night, working days against weekends and holidays). Change = DDD after minus DDD before, percentage points; placebo years cross-fitted (leave-year-out).
+
+| event | DDD before | DDD after | change (se), t | Δx_charge | Δx_energy | placebo changes 2018, 2019 |
+|---|---|---|---|---|---|---|
+| E1 cut, 2021-09-16 | −3.56 | −2.44 | **+1.12 (0.58), t 1.9** | −0.32 | −0.06 | +0.92, **+2.75** |
+| E2 rise, 2022-01-01 | −2.43 | −2.98 | **−0.55 (1.09), t −0.5** | +0.23 | −0.02 | −1.28, −0.46 |
+| E3 partial cut, 2022-04-01 | −2.98 | −1.79 | +1.19 (1.07), t 1.1 | −0.07 | −0.00 | not run (reported only) |
+
+Stop rules. (1) Eligibility: |Δx_charge| ≥ 3 × |Δx_energy| holds for E1 and E2 (E2: 0.23 against 0.02): **pass**. (2) E2 negative with t ≤ −2: **fail** (−0.55, t −0.5). (3) E2 below both placebo years: **fail** (placebos −1.28 and −0.46). (4) E1 positive, t ≥ 2, above both
+placebos: **fail** (+1.12, t 1.9; the 2019 placebo is +2.75). (5) Both implied elasticities negative within a factor of two: **fail** (placebo-adjusted +0.022 (se 0.027) and +0.014 (se 0.057)). (6) Pooled elasticity negative with t ≤ −2: **fail** (+0.021, se 0.024, t 0.9). **Rules 2 to 6 fail.**
+
+**Reading.** The autumn fade of the evening effect is what the season does anyway: the same calendar windows in 2019 move by +2.75 points with no reform (2018: +0.92), more than the real +1.12. And when the charge rose by 0.23 in January 2022 with the energy gap flat (the cleanest event), the evening effect
+did not deepen by more than the seasonal change in earlier years does (−0.55 against placebos −1.28 and −0.46). Placebo-adjusted, the charge elasticity is statistically zero (+0.02, se 0.02) with a one-standard-error band of about −0.03 to +0.05 under this design. **The dose-response of the charge-cut test (A against B) is a seasonal pattern, not evidence for the charge channel.**
+The June 2021 reform effect itself (−4% in summer 2021 under the paper's LASSO) is not tested by this and stays, but it cannot be attributed to the charge price.
+
+**Cautions.** (a) The cross-fitted placebo windows show large swings of their own (DDD levels from −1.2 to +2.6 in the same summer windows; models trained on two years, not three), so the summer-2021 effect of −3.6 is 1.4 to 6 points below the placebos' summer levels, within about two of their spread; (b) power: E2's se of 1.1 points cannot rule out the −1.3 to −2.6 predicted at ε between −0.06 and −0.12 (t −0.5 here, the 2019 placebo of −0.46 is similar), so E2 alone is uninformative and the pooled band is what bounds ε; (c) only two readable events.
+(d) **The industry placebo of the extension is flawed by design:** the June 2021 access-tariff reform changed the period structure for all consumers (2.0TD low voltage, 3.0TD and 6.xTD above), so industry is also treated, not a control. This is to be confirmed against the CNMC circular before it is cited.

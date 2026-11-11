@@ -107,3 +107,17 @@ so weekend load could rise, which would make the DDD too large); E0 includes con
 free-market contracts whose energy price is flat; the post window (June–September) is one summer and the price rise of autumn 2021 is
 outside it; the DDD placebo is borderline; Portugal's load includes industry. Not done: the month-by-month path of the DDD (does it start
 in June 2021?), a second control (France), a falsification on a group with no time-of-use charge.
+
+## Month-by-month path and a second control (2026-11-11, user's go-ahead: "Yes, run both"; rules set before the run)
+
+**Path.** The measured-demand triple difference (E0, DiD V1, working-day peak minus off, less the same hours on weekends) for each calendar
+month from 2019-01 to 2021-09, each month a one-month post window against everything before it from 2018-01 (March–June 2020, the
+COVID months, out of the pre-window and not estimated). Rules: (P1) the DDD in each of June, July and August 2021 is negative with t below
+−2; (P2) before June 2021 it is flat: of the monthly DDDs 2019-01 → 2021-05 (COVID months out), no more than two outside ±2 standard
+errors and none below −2.5 points; (P3) the average of the 2021-06 → 2021-09 months is within 1 standard error of the quarter-sample DDD
+of −2.48. A failure of P2 reads as a trend in the weekday-weekend gap, not a policy effect.
+
+**France.** The same DDD with France's consumption (RTE éCO2mix, hourly, French clock) in place of Portugal's, and with the mean of the two
+logs as control. Rules: (F1) the France-controlled DDD peak is negative with t below −2; (F2) its size within a factor of two of the
+Portuguese-control −2.48; (F3) the same placebo breaks (17, COVID windows out) rank the real effect in the top 3 of 18. If F1 fails, the
+Portugal-controlled result rests on that control and is not reported as the policy effect.

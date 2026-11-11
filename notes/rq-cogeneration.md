@@ -318,3 +318,27 @@ dispatch moves with the same wind-driven price shape.
 (3) hourly within-day: gas response confirmed and day-robust, but the placebo fails. So the gas-specific part is **about 70% of the
 hourly gas coefficient** (0.0051 of 0.0074), still positive and significant as a difference, but the pre-set rule is not met and
 I am not restating it. Item (2), the post-cap windows failing the biomass placebo, is unchanged.
+
+**Probe of the biomass response (2026-11-11, user's go-ahead: "Yes, probe").** `analysis/cogeneration_hourly_units.py` →
+`outputs/tables/cogeneration_hourly_{units,groups}.csv`. A unit's coefficient is the change in its output (MW) per €10 of the
+hourly price moved by the wind forecast, within the day (final schedule, P48; units running above 0.05 MW on average).
+
+| group | units | capacity MW | response per MW of capacity, per €10 | units with a positive coefficient | median unit | five biggest contributors' share of the absolute response |
+|---|---|---|---|---|---|---|
+| gas | 171 | 3,171 | 0.0085 | 73% | 0.0033 | 28% |
+| other fossil | 32 | 615 | 0.0090 | 81% | 0.0054 | 62% |
+| biomass and waste | 91 | 1,285 | 0.0025 | 59% | 0.0003 | **58%** |
+| of which Biogás | 44 | 201 | 0.0013 | 52% | 0.0002 | 60% |
+| Biomasa | 27 | 551 | 0.0030 | 63% | 0.0016 | 67% |
+| Residuos varios | 12 | 273 | 0.0038 | 67% | 0.0001 | 98% |
+| Residuos domésticos | 8 | 261 | 0.0011 | 75% | 0.0008 | 97% |
+
+**The gas response is broad; the biomass response is five plants.** Gas: three quarters of the units respond, the median plant by about
+a third of the group's per-MW rate, the five biggest contributors 28% of the total. Biomass and waste: the median plant does nothing
+(0.0003), and five plants give 2.65 of the group's 3.24 MW per €10 (82% of the net response): Saica's waste plant `RSAICA` (50 MW,
++1.01 MW per €10), Cubillos `RCUBILL` (50 MW, +0.56), Ence Huelva `EEHU2` (46 MW, +0.45), Ence `REEM20` (20 MW, +0.32), Zabalgarbi
+`RZABAL` (94 MW, +0.31). The other 86 units, 1,026 MW, respond at 0.0006 per MW, about a fifteenth of gas. So the placebo
+fails because of a few large plants that respond to the price within the day (probably those selling at the market price, not
+verified), not because biomass as a group is price-responsive. Picking the five by their response is selection on the outcome:
+a placebo restricted to the remaining 86 units would be the right test, but the choice of the five has to be made on something
+other than the result (payment scheme, owner, capacity), which I have not found; exploratory.

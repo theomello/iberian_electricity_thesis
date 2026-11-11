@@ -36,8 +36,11 @@ def hourly(s, tz):
 
 def build(src="352", end=None) -> pd.DataFrame:
     last = END if end is None else pd.Timestamp(end)
-    es = pd.read_parquet(ROOT / f"data/esios/esios_{'1201' if src == 'e0' else '352'}.parquet")[["utc_timestamp", "value"]].drop_duplicates("utc_timestamp")
-    es = es.set_index("utc_timestamp").value
+    if src == "ind":  # industry placebo: E1-E6 (ESIOS 1202-1207) summed
+        es = sum(pd.read_parquet(ROOT / f"data/esios/esios_{i}.parquet")[["utc_timestamp", "value"]].drop_duplicates("utc_timestamp").set_index("utc_timestamp").value for i in range(1202, 1208))
+    else:
+        es = pd.read_parquet(ROOT / f"data/esios/esios_{'1201' if src == 'e0' else '352'}.parquet")[["utc_timestamp", "value"]].drop_duplicates("utc_timestamp")
+        es = es.set_index("utc_timestamp").value
     pt = pd.read_parquet(ROOT / "data/ren/ren_production_15min.parquet")
     pt = pt[pt.series == "Consumption"].drop_duplicates("utc_timestamp").set_index("utc_timestamp").value_mw
     pt = pt.resample("1h").mean()

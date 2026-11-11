@@ -375,3 +375,28 @@ drives it. Rule 6 fails alone: the sign agrees but the extension cannot rule out
 migrated to the free market, and free-market contracts may carry their own time structure, so the exposed share is not constant over three years; (c) rooftop solar and self-consumption grow in the window;
 (d) the gas cap (June 2022) and the VAT and electricity-tax steps move price levels, not the relative price, but change the bill; (e) the pre-window is still 2018–2020, so a changing seasonal shape is not removed
 (follow-up 2 bounds it); (f) 31 monthly points with regressors that move in few episodes.
+
+## Results of the extended two-channel regression (2026-11-11, run after the user's go-ahead; `analysis/tou_extended.py`, `analysis/tou_lasso_paper.py`, `outputs/tables/tou_extended_{months,coef}.csv`)
+
+**Data fix first.** ESIOS 1876 (charges) stopped at 2021-12-31 on disk; fetched 2022-01 → 2023-12 and merged (backup kept; the fetcher overwrites the parquet with the requested range, as before). **The pre-registration's premise
+that the charge schedule is fixed after 2021 was wrong:** the peninsular evening-peak charge was 31.5 in Oct–Dec 2021, **100.8 in Jan–Mar 2022, 74.4 in Apr–Dec 2022 and 73.0 in 2023**. So x_charge moves after 2021 as well, but by little: the
+monthly x_charge is 0.46 (summer 2021), 0.31 (Sep), 0.14 (Oct–Dec 2021), 0.36–0.38 (Q1 2022), 0.28–0.30 (rest of 2022–23); its standard deviation over 31 months is 0.077, and **0.030 from 2022 onward**. Industry's 2021-06 estimate is missing; that month drops out of
+the industry regressions.
+
+**Pre-registered rules, as written (OLS on the monthly DDD, Portugal):** correlation of the regressors 0.08, sd 0.077 and 0.074: rule 1 pass. ε_charge −0.119 (t −2.94), within −0.18 to −0.045: rule 2 pass. ε_energy −0.010 (t −0.44): rule 3 pass.
+France ε_c −0.148 (t −4.0), pooled-LASSO ε_c −0.126 (t −3.4), weighted −0.092 (t −2.3): rule 4 pass. Industry ε_c −0.137 (t −1.31): rule 5 pass by the letter. Trend added: ε_c −0.097 (t −4.4): rule 6 pass. High-energy-spread months after the cut have |DDD| of
+1.2–3.3% against 5.46%: rule 7 pass. **All seven pass as written.**
+
+**But three things weaken it, found after the run:**
+1. **The paper's LASSO.** The user set the paper's first step as the guiding method after the registration. `tou_lasso_paper.py` follows it: one model per area and hour, month/weekend/holiday dummies, the hour's, daily-minimum and daily-maximum temperature and all
+   their interactions, 10-fold cross-validation with the one-standard-error rule, no trend, trained 2018–2020 without March–June 2020. The earlier "LASSO" was one pooled model with a trend and 4-fold time-series cross-validation. Pre-reform in-sample DDD of the errors is
+   0.14% (se 0.19), so the first step is clean. Evening-peak DDD of the errors: Jun–Sep 2021 **−3.79%** (se 0.39; pooled version −4.96, DDD −5.25); window A **−3.94%**, window B **−2.46%** (se 0.60). So B/A is 0.62 against a price-change ratio of 0.20, and the elasticity is
+   −0.06 in A and −0.18 in B: **the charge-cut test's proportionality and stable-elasticity rules (3 and 4) would fail under the paper's LASSO** (a factor of three). In the extension, ε_charge is **−0.052 (t −1.44)** (weighted −0.063, t −1.69; with trend
+   −0.020, t −1.67) and **ε_energy −0.053 (t −2.23)**, −0.103 (t −5.1) with the trend. Under the paper's LASSO rule 2 fails on t, rule 3 fails by a hair (ε_energy negative, t ≤ −2, |ε_e| ≥ |ε_c|), and rule 6 is borderline. The industry placebo's paper-LASSO
+   coefficients are not significant (−0.046, −0.061).
+2. **The charge channel rests on summer-to-autumn 2021.** Exploratory, not pre-registered (months from 2022-01 only, 24 points, DDD version): ε_charge **+0.015 (t 0.26)**; from 2021-10: −0.035 (t −2.0). Where the charge moved after 2021 (Jan 2022 up, Apr 2022 down) the evening
+   effect did not follow. The extension is therefore not independent of the charge-cut test: it re-uses the same seasonal transition.
+3. **The industry placebo is weak.** Its ε_charge (−0.137) is as large as E0's (−0.119) and insignificant only because it is noisy; its energy coefficient is +0.196 (t 3.1) on the DDD, so the evening/night shape of other demand does move with these prices.
+
+**Verdict.** The reform lowered evening relative demand in summer 2021: −4% (paper's LASSO) to −5.5% (DDD), t above 6 under every estimator and control. That the response is to the **charge** price (an elasticity near −0.09) is not established: the dose-response rests on one
+seasonal transition, the longer panel gives no independent support, and the paper's LASSO halves the charge coefficient and brings in the energy channel. Read the elasticity as an upper bound of about −0.1 pending better separation of the autumn habit and season effects.

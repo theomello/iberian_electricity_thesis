@@ -448,3 +448,30 @@ Pass rules, per window: (1) first-stage F ≥ 10, else the window is not read; (
 the pre-cap +0.0074 and its standard error (windows pooled with window interactions, clustered by week); (3) the gradient: gas over
 large biomass over small biomass, same order as before the cap; (4) the shifted-price placebo for gas: outside the shifts' 5–95%
 and rank in the top 2 of 21. A window that fails (1) or (4) is not read.
+
+**Post-cap result (2026-11-11).** `analysis/cogeneration_postcap_hourly.py` → `outputs/tables/cogeneration_postcap_hourly.csv`
+(`build/build_cogeneration_ree_hourly_postcap.py`: 288 days, P48 quarter-hours summed). Hourly final-schedule load factor per €10, price moved by
+the hourly wind forecast; standard errors clustered by week; the difference from pre-cap uses independent standard errors.
+
+| group | pre-cap (421 days) | cap, outside the subsidy (108 days) | opt-in (180 days) |
+|---|---|---|---|
+| gas | +0.0074 (t 7.3) | **+0.0031 (t 5.4)**, difference −0.0043 (se 0.0012) | +0.0084 (t 6.5), difference +0.0010 (se 0.0016) |
+| large biomass and waste | +0.0029 (t 4.9) | +0.0009 (t 1.7) | +0.0062 (t 5.2) |
+| small biomass and waste (placebo) | +0.0010 (t 2.7) | **+0.0002 (t 0.3)** | +0.0053 (t 8.9) |
+| first-stage F | 65 | 194 | 103 |
+| shifted-price rank of the gas estimate | 1 of 21 | 1 of 21 | 1 of 21 |
+
+Rules: (1) first stage passes in all three windows. (4) the gas shifted-price placebo passes in all three. (3) the gradient gas > large
+> small holds in every window, **but in the opt-in window it nearly closes** (gas +0.0084, large +0.0062, small +0.0053, t 8.9). (2) The gas
+response **falls by 58% in the cap window** (−0.0043, 3.6 standard errors) and is back at the pre-cap level in the opt-in window
+(+0.0010, not significant).
+
+**The cap window is the cleanest the design has produced.** Gas +0.0031 (t 5.4) with a placebo of +0.0002 (t 0.3, rank 15 of 21 among its
+shifts, so indistinguishable from zero): all four rules pass, and the gas-specific response (gas minus small biomass) is 0.0029, 45% of
+the pre-cap 0.0064. The pre-cap window has no zero placebo (small biomass t 2.7) and the opt-in window has none either (small biomass
+0.0053), so the cap window is the only one where the placebo group is flat. Why the response is lower in the cap window is not
+tested; candidates: (a) the extensive margin (131 → 87 of 237 gas units running in the weeks around 15 June, so fewer plants can
+move), (b) the price's within-day shape, flatter under the cap, (c) the gas price at the time. Why every group responds in the opt-in
+window is not tested either (winter, new units joining the subsidy, a different price shape). **A concrete next step if the user wants
+to keep going: condition on the plants that were running (the intensive margin) in the cap window, and test whether the fall is the
+extensive margin.** Read, as written before the run, as a description of how the response changes, not as the effect of the cap.

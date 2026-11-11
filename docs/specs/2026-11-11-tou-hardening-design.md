@@ -255,3 +255,42 @@ control moves a lot in 2021; only the contrast between the arms is stable; (iv) 
 businesses, one summer, restriction dates) are untested. **Next test, not run: the charge fell in September and October 2021 (peak 133 → 82 → 32 EUR/MWh), so the
 same hours should show a smaller effect then, in proportion to the smaller price change; extending the post window to December would test the
 charge, separately from the energy price, and needs registering first.**
+
+## Pre-registration: the charge-cut dose-response (2026-11-11, written before any run of it)
+
+**Status: pre-registered, not run.** The question the evening-peak result leaves: is the response to the *charge* the reform introduced, or to the
+evening *energy* price, which also rose in 2021? The system charges changed inside the post period, which separates them.
+
+**The natural experiment.** ESIOS 1876 (charges component, EUR/MWh) for working-day peak hours: **133.1 from June to 15 September 2021, 31.5 from 16
+September to 31 December** (off-peak 6.0 → 0.9, mid-peak 41.8 → 21.4), the government's cut of the system charges (RDL 17/2021, in force 16 September, the same date
+as the electricity-tax cut, which scales every price alike and moves no relative price). The old flat charge was 44.0, so the evening peak's price relative to night
+rose by about +0.61 in ln points before 16 September and by about +0.2 after. The wholesale evening price spread was larger in the autumn, not smaller.
+**If households respond to the charge, the effect should be about a third as large in the second window. If they respond to the evening energy price
+(or anything else that grew in the autumn), it should not shrink, and may grow.**
+
+**Design.** E0 (ESIOS 1201), evening peak 18–21h against night 0–7h, working days against weekends and holidays, hour, weekday and month effects, clustered by
+week, **V2 pre-window** (2018-01-01 → 2020-12-31 without March–June 2020; January–May 2021 out). Two post windows, each estimated against that same pre-window with
+the other window's days removed: **A = 2021-06-01 → 2021-09-15** (high charge), **B = 2021-09-16 → 2021-12-31** (low charge). Controls: Portugal (primary) and France. Also the LASSO
+prediction errors (V3 of the evening-peak design, Portugal), trained on the same pre-window. The change in ln relative price in each window is computed day by day from
+ESIOS 1001 and 1876 for the evening-peak hours against night, as in `analysis/tou_evening_ddd.py`, over the window's working days; elasticity = DDD / that change. Monthly
+DDDs inside the windows (Jun, Jul, Aug, 1–15 Sep, 16–30 Sep, Oct, Nov, Dec) reported for the path.
+
+**Stop rules, in order.**
+1. **Sign.** The DDD is negative in A and in B under Portugal and under France (a positive or zero B means the effect is not there in the autumn, and the evening-peak
+   result is read as summer-specific).
+2. **Smaller in B.** |DDD_B| is smaller than |DDD_A| by at least two standard errors of the difference (independent windows). If not, the effect does not scale down
+   with the charge.
+3. **Proportional to the price change.** DDD_B / DDD_A lies within a factor of two of the ratio of the two windows' price changes (Δ_B / Δ_A, expected about 0.3).
+4. **Elasticity stable.** The elasticity in B is negative and within a factor of two of the elasticity in A.
+5. **LASSO agrees.** The LASSO version has the same sign in both windows and the same ordering |B| < |A|.
+6. **No month in B above A's mean.** No monthly DDD in B exceeds in absolute size the mean of A's monthly DDDs.
+
+**What each outcome means.** All six pass: the evening-peak response tracks the charge, not the energy price, and the elasticity of about −0.09 is a response to the
+policy's price. Rule 2 fails with B as large as A or larger: the response is not to the charge (the evening energy price, or something that grew in the autumn of 2021
+such as the pandemic recovery of evening activity, explains it). Rule 1 fails: summer-specific. Rules 3 or 4 fail with 2 passing: the effect shrinks but not in proportion
+(partly habit, partly price).
+
+**Threats that remain even if all pass.** (a) Autumn is not summer: the month effects come from 2018–2020, so a change in the seasonal shape of Spain relative to the control in
+2021 is not removed; (b) the autumn 2021 price crisis changes behaviour through the energy bill generally; (c) the December holidays are only partly in the holiday indicator
+(national holidays only); (d) two windows, one year; (e) the 16 September cut also reduced the system charges for every other period, so the whole structure shifts, not only
+the peak.

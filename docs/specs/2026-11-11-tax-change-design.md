@@ -70,12 +70,12 @@ file after the fetcher overwrote it with the new range only).
 
 Tax factor and tax-inclusive pre-tax-weighted price (`analysis/tax_price_shape.py`, monthly means of the daily path):
 
-| step | date | tax factor | log points | pre-tax energy term, month before → month of | exogenous? |
+| step | date | tax factor | log points | pre-tax energy term, month before → month of | timing not set by the price? |
 |---|---|---|---|---|---|
-| VAT 21 → 10% | 2021-06-26 | 1.272 → 1.156 | −9.5 | €149 → €158 (July) | yes (law; condition held) |
-| electricity tax 5.11 → 0.5% | 2021-09-16 | 1.156 → 1.106 | −4.5 | €218 (Sep) → €258 (Oct) | yes |
-| VAT 10 → 5% | 2022-07-01 | 1.106 → 1.055 | −4.7 | €291 (June) → €331 (July) | yes |
-| VAT 5 → 10% and electricity tax 0.5 → 2.5% | 2024-01-01 | 1.055 → 1.128 | +6.7 | €128 (Dec) → €140 (Jan) | yes (fixed by RDL 8/2023 on 27 December 2023) |
+| VAT 21 → 10% | 2021-06-26 | 1.272 → 1.156 | −9.5 | €149 → €158 (July) | size fixed by law, but a **response to the price rise** (RDL 12/2021); condition held |
+| electricity tax 5.11 → 0.5% | 2021-09-16 | 1.156 → 1.106 | −4.5 | €218 (Sep) → €258 (Oct) | size fixed by law, but a **response to the gas-price escalation** (RDL 17/2021's own title) |
+| VAT 10 → 5% | 2022-07-01 | 1.106 → 1.055 | −4.7 | €291 (June) → €331 (July) | size fixed by law, a **crisis-package extension** (RDL 11/2022) |
+| VAT 5 → 10% and electricity tax 0.5 → 2.5% | 2024-01-01 | 1.055 → 1.128 | +6.7 | €128 (Dec) → €140 (Jan) | closest to yes: a scheduled phase-out fixed on 27 December 2023 (RDL 8/2023), though it too was legislated in response to the price path |
 | VAT → 21% | 2024-03-01 | 1.128 → 1.240 | +9.5 | €107 (Feb) → €90 (Mar) | **no**: triggered by the February price (€40) |
 | VAT → 10%, electricity tax → 5.11% | 2024-07-01 | 1.256 → 1.156 | −8.3 | €117 → €133 | **no**: triggered by the June price |
 
@@ -168,3 +168,50 @@ named in section 5, not tested here: in the same weeks Spanish regulated retail 
 PVPC energy term +46 % across the autumn 2021 steps) while Portugal's did not, so Spanish demand fell relative to Portugal's
 for a reason unrelated to the tax. That is itself a price response, to the wholesale-driven pre-tax price; it would be tested
 by putting the pre-tax price in beside the tax factor, which needs a Portuguese retail price series as control. Not run.
+
+**Correction (2026-11-11, user's question).** I called the 2021–22 steps "exogenous". The size of each cut was set by law and did
+not respond to Spanish low-voltage demand, but the timing was a policy response to the rise in wholesale prices, so the steps
+are endogenous to the price path, the confounder named in section 5. Controlling for the pre-tax price handles the price
+itself; it does not rule out other reasons for the dates, so only a design that predicts the same sign from the tax alone
+(section 7 below) can carry a causal claim.
+
+## 7. Does the pre-tax price explain the fall? (2026-11-11, user's go-ahead; no rules set in advance, so the readings are post hoc)
+
+`analysis/tax_pretax_price.py` → `outputs/tables/tax_pretax_price.csv`. Daily mean of ln E0 − ln Portuguese load on ln pre-tax
+PVPC energy term (ESIOS 1001) and ln tax factor, with month, weekday, holiday and temperature-difference effects, Newey–West
+14 lags, 2021-06-01 → 2024-12-31 (1,310 days) and → 2023-12-31 (944). Placebo outcome: industry (E1–E6, ESIOS 1202–1207), not
+on the regulated tariff. Placebo period: 2018-01 → 2021-05 with the tax constant, March–June 2020 out. Coefficients are the
+change in ln(E0 / Portugal) per unit of the log regressor (an elasticity-like number; a negative price response would be negative).
+
+| outcome | window | spec | ln pre-tax price | ln tax factor |
+|---|---|---|---|---|
+| E0 | 2021-06 → 2024-12 | price only / tax only | +0.025 (0.005) | +0.063 (0.051) |
+| E0 | same | both | +0.030 (0.005) | +0.143 (0.049) |
+| E0 | same | both + trend | +0.027 (0.006) | +0.148 (0.048) |
+| E0 | 2021-06 → 2023-12 | both | +0.023 (0.006) | +0.239 (0.069) |
+| industry (placebo) | 2021-06 → 2024-12 | both | +0.049 (0.009) | +0.263 (0.094) |
+| industry (placebo) | 2021-06 → 2023-12 | both | +0.017 (0.009) | +1.047 (0.125) |
+| industry, both + trend | 2021-06 → 2024-12 | | +0.006 (0.011) | +0.361 (0.082) |
+| E0, 2018-01 → 2021-05, tax constant | | PVPC 2.0A | +0.038 (0.017) | |
+| industry, same | | PVPC 2.0A | +0.088 (0.033) | |
+
+**Both coefficients are positive, and the placebo shows the same sign and a similar or larger size.** The pre-tax price coefficient
+for E0 (+0.03) is positive, not the negative of a demand response; it is positive in 2018–21 before any tax step (+0.04), and for
+industry, which is not on the regulated tariff, as large or larger (+0.05, +0.09). The tax factor coefficient is positive too
+(a higher tax factor goes with higher relative Spanish demand: the wrong sign), larger for industry (+0.26 to +1.05) than for
+E0 (+0.14 to +0.24). Reading: the positive price coefficients are the old simultaneity (Spanish demand high relative to
+Portugal's raises the Spanish price), and the tax-factor coefficients are a staircase that falls through 2021–23 while Spanish
+load, E0 and industry alike, drifts down against Portugal's. Neither says anything about a retail price response.
+
+**Step DiD with industry as the outcome** (`outputs/tables/tax_did_industry_placebo.csv`, DiD V1, same windows): S1 +0.1%
+(0.75), S2 −5.7% (1.6), S3 −7.2% (0.8), S4 −7.6% (2.5); LASSO +3.3, −3.0, −2.5, +0.6. Industry falls against Portugal at
+the 2021-09, 2022-07 and 2024-01 steps by more than E0 does (−2.7, −2.3, −6.6). So **the fall in E0 at the tax steps is not
+specific to the customers whose price the tax changed.** E0 minus industry rises at S2 (+3.0) and S3 (+4.9), the sign a tax cut
+predicts, but industry has its own price response in 2022 (its price rose with the wholesale price and demand fell), so the
+difference is confounded the other way; not estimated, no standard errors.
+
+**Conclusion.** The tax-step design does not identify a price elasticity on this data: the E0 fall relative to Portugal is shared
+by industry, the pre-tax price coefficient has the wrong sign and shows up in a pre-period with no tax change, and the dates
+of the cuts were set in response to the price path. Nothing is left that the tax alone moves and the price path does not. What
+would help: a Portuguese retail price series (to difference out the pass-through), an E0-minus-industry design with an
+industry price control, or hourly variation within the day (the real-time pricing design of Fabra et al.). None is run.

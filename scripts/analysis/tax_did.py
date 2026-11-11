@@ -38,8 +38,9 @@ STEPS = [
 ]
 
 
-def build() -> pd.DataFrame:
-    es = pd.read_parquet(ROOT / "data/esios/esios_1201.parquet").drop_duplicates("utc_timestamp").set_index("utc_timestamp").value
+def build(es=None) -> pd.DataFrame:
+    if es is None:
+        es = pd.read_parquet(ROOT / "data/esios/esios_1201.parquet").drop_duplicates("utc_timestamp").set_index("utc_timestamp").value
     pt = pd.read_parquet(ROOT / "data/ren/ren_production_15min.parquet")
     pt = pt[pt.series == "Consumption"].drop_duplicates("utc_timestamp").set_index("utc_timestamp").value_mw.resample("1h").mean()
     t = pd.read_parquet(ROOT / "data/weather/temperature_population_hourly.parquet", columns=["country", "utc_timestamp", "temperature_2m"])

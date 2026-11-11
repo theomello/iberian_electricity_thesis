@@ -294,3 +294,19 @@ such as the pandemic recovery of evening activity, explains it). Rule 1 fails: s
 2021 is not removed; (b) the autumn 2021 price crisis changes behaviour through the energy bill generally; (c) the December holidays are only partly in the holiday indicator
 (national holidays only); (d) two windows, one year; (e) the 16 September cut also reduced the system charges for every other period, so the whole structure shifts, not only
 the peak.
+
+## Planned follow-ups, written down 2026-11-11 before the charge-cut run (not run, not pre-registered in detail)
+
+Order agreed with the user: charge-cut test first (registered above), then these. One thread at a time.
+
+1. **Extended window, two channels at once (answers the energy-price-versus-charge question).** After 16 September 2021 the system charges stay fixed while the evening
+   energy-price spread varies widely (2022 crisis, 2023–24 normalisation). Regress the monthly evening DDD on (a) the evening-versus-night charge gap and (b) the
+   evening-versus-night energy-price gap (ESIOS 1001), both in ln of the relative price. Window capped at 2024 (the 2025 blackout and price changes are out); same V2
+   pre-window; Portugal and France controls and LASSO. New confounds to state in the rules: the gas cap (June 2022), tax cuts, drift from rooftop solar and migration.
+   Detailed stop rules to be written before the run.
+2. **Seasonal-shape threat, bounded not removed.** (a) Industry E1–E6 evening-versus-night with the same design as a placebo (not on the new tariff); (b) the same
+   calendar dates in 2018, 2019 and 2020 as fake reforms (partly in the placebo ranking already); (c) 2021 restriction and curfew dates as indicators. A new Spain-only
+   change in evening habits cannot be fully removed; this triangulates it.
+3. **Afternoon and morning blocks.** Afternoon: the weekend arm moves before the reform, so detrend it on its own pre-period, or drop it and use Portugal and France
+   only for that block, and see whether the effect survives. Morning peak: near zero is read as a finding (people at work, little room to shift), reported with the
+   evening block as a "who can shift" result, not as a defect.

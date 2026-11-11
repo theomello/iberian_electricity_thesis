@@ -96,9 +96,15 @@ Stop rules from section 3, in order:
    down differently) give +12.7 and +13.1. Dropping the seven breaks whose window touches March–June 2020, the real effect
    is larger than all 17 others (largest −6.1): rank 1 of 18. LASSO: 5–95% −0.3 to +17.5, rank 4 of 25. The exclusion
    is a choice made after seeing the placebos.
-3. **Control tracks the treated: weak.** Pre-break placebos run mostly negative in 2019 (−1 to −6%): Spain's regulated
-   load falls relative to Portugal's as customers leave the regulated tariff (ESIOS 352 shrinks), so a drift is in
-   the difference. The trend variants raise the peak effect (−13%).
+3. **Control tracks the treated: a step in 2019, not a drift (corrected 2026-11-11).** Pre-break placebos run mostly negative
+   in 2019 (−1 to −6%). I first put this down to customers leaving the regulated tariff; the data do not support it (ESIOS 352's
+   share of 351 + 352 is 13% in Q1 of 2018, 2019, 2020 and 2021, and 351 falls as much as 352). Monthly ln(352 / Portugal), each
+   month against the same month of 2018: **2019 is about 3.5 points lower in every month** (−1.6, −7.9, −4.6, −1.4, −7.0,
+   −3.0, +0.9, −3.6, −3.8, −5.3, −3.1, −6.8), and January–May 2021 sits about 2 points above 2019, so the difference
+   is flat from 2019 to the break. It is a one-time step between 2018 and 2019, cause not found (candidates: a change in
+   what ESIOS counts as reference retailers' demand, or 2018 weather; neither checked). The 2019 placebo breaks have
+   only 2018 in their pre-window, so they pick the step up as an effect. June–September 2021 are 4 to 6 points below the same
+   months of 2019, which is the size of the all-hours effect (−4.7% off-peak). The trend variants raise the peak effect (−13%).
 4. **Weekend placebo: not separable.** Fake peaks on weekends fall about as much as real ones on working days (−9.3 against
    −10.5; peak − off −7.8 against −5.8), as in the paper (−8.3 and −7.3 on weekends). So the all-hours fall is a level shift
    or habit, and the policy-specific part (the contrast between periods on working days) is not distinguishable

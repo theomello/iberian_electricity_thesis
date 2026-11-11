@@ -119,6 +119,15 @@ Stop rules from section 3, in order:
    points a year (2020: +1.5, 2021: −0.8), so a 2019 difference of −3 is of the size of its ordinary variation; the 2019
    placebo breaks, with only 2018 in their pre-window, pick it up as an effect. Not found: whether ESIOS changed what counts as
    a reference retailer. The trend variants raise the peak effect (−13%).
+
+   **Unit-sum check (2026-11-11, `analysis/esios352_unit_sum.py`).** ESIOS 352 against the PDBF purchases of the Spanish
+   regulated suppliers' own units (owners matched by `is_pass_through`; seven units, three that matter: Endesa Energía XXI
+   `EE21C01`, Curenergía `IBCUC01`, Gas Natural SUR `GNSUC01`). Without the Balearic-link units (not peninsular), the unit sum
+   falls 5.1% from 2018 to 2019 and 352 falls 5.0%; 2020 +0.4% and +0.3%; 2021 −3.3% and −3.1%. So **352 is the regulated
+   suppliers' load and was not redefined**: no retailer entered or left the list, and the 2019 fall is in the customers
+   (`EE21C01` −108 MW, −7.7%; `GNSUC01` −43 MW, −6.4%; `IBCUC01` −9 MW). With the Balearic unit (+55 MW in 2019) in the sum the
+   fall is 3.2%, the source of an apparent gap of about 2 points. What remains open is why regulated customers' load fell 5% in
+   2019 while the regulated share of regulated plus free-market retail moved only 0.3 points; not examined.
 4. **Weekend placebo: not separable.** Fake peaks on weekends fall about as much as real ones on working days (−9.3 against
    −10.5; peak − off −7.8 against −5.8), as in the paper (−8.3 and −7.3 on weekends). So the all-hours fall is a level shift
    or habit, and the policy-specific part (the contrast between periods on working days) is not distinguishable

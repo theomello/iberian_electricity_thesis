@@ -40,6 +40,27 @@ From a search 2026-11-11 (Endesa, Moncloa, Hacienda, Eurofound; the sources disa
 The 2024 steps are triggered by the wholesale price, so they are not exogenous and would be used only after
 the date, trigger and direction are confirmed, and flagged as such.
 
+### 1b. Check 1 result (2026-11-11): dates and rates against the BOE and the price shape
+
+Confirmed in the BOE (searched 2026-11-11): **VAT 21% → 10% from 26 June 2021** (RDL 12/2021, contracts up to 10 kW, only when
+the previous month's mean wholesale price is above €45/MWh); **electricity tax 5.11269632% → 0.5% from 16 September 2021**
+(RDL 17/2021, to 31 December 2021, extended by RDL 29/2021 to 30 April 2022 and on through 2022 by RDL 11/2022); VAT 10%
+extended to 30 April 2022 (RDL 29/2021). Not confirmed in the BOE: VAT 10% → 5% on 1 July 2022 (RDL 11/2022: a secondary
+source only), the electricity tax steps of 2023–24 (a commercial site gives 0.5% to 2023, 2.5% in Q1 2024, 3.8% in Q2, then
+5.11%), and the 2025 return to 21%. The 2022–25 rows stay unconfirmed and are not used until they are.
+
+The VAT condition (previous month above €45) held in every month June 2021 → January 2024 (OMIE monthly means, all above €63
+from 2021-05 to 2023-12). It first fails for February 2024 (€40), when VAT went back to 21% in March, and again April–June, back
+to 10% in July. So **the 2021–22 steps are not triggered by the price and the 2024 ones are**, as flagged.
+
+Tax factor (1 + electricity tax)(1 + VAT), `analysis/tax_price_shape.py` → `outputs/tables/tax_price_shape.csv`: 1.2719 before
+26 June, 1.1562 after the VAT cut (−9.5 log points), 1.1055 after 16 September (a further −4.5), −14.0 in all. The pre-tax PVPC
+energy term (ESIOS 1001) averaged €150 in June, €175 in July–mid-September, €266 from 16 September to December (+57 log points
+from June). So **the tax-inclusive price rose 6% across the VAT step and 46% across the electricity-tax step**: both tax
+cuts were smaller than the wholesale-driven rise in the same weeks. This is the price-crisis problem in numbers (section 5).
+ESIOS 1001 is on disk to 2021-12-31 only; the 2022 price path needs a fetch. **Check 1 passes on dates and tax factors for
+2021; not run for 2022–25.**
+
 ## 2. Data
 
 | need | on disk |

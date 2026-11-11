@@ -5,7 +5,7 @@ from 2021-06). Date effects (within-day demeaning) and hour x month effects and 
 out; OLS and 2SLS with the day-ahead wind (1777) and solar (1779) forecasts as instruments; clustered by week. Periods:
 2019-01 -> 2021-05 (no Mar-Jun 2020) and 2021-06 -> 2023-12. Placebo outcome: industry E1-E6. Shift placebo: price and
 instruments taken from k days away, k = -10..10 except 0. Elasticity scaled by the exposed share 0.36 (CNMC, energy, end 2019).
-Writes outputs/tables/hourly_price_response*.csv.
+With --tight, adds hour x day-type effects (weekday, national holiday). Writes outputs/tables/hourly_price_response*.csv.
 """
 import sys
 from pathlib import Path
@@ -89,14 +89,18 @@ def fit(M, ycol, pcol, zcols, W, wk):
     return dict(n=len(y), ols=b_ols, se_ols=se_ols, iv=b_iv, se_iv=se_iv, F=F)
 
 
-def main():
+def main(tight=False):
     ind = sum(pd.read_parquet(ROOT / f"data/esios/esios_{i}.parquet").drop_duplicates("utc_timestamp").set_index("utc_timestamp").value for i in range(1202, 1208))
     outcomes = {"E0": prepare(), "industry E1-E6 (placebo)": prepare(ind)}
     rows = []
     for oname, x in outcomes.items():
         wk = x.date.dt.to_period("W").astype(str).factorize()[0]
         wk = pd.Series(wk, index=x.index)
-        W = pd.concat([pd.get_dummies((x.hour.astype(str) + "_" + x.month.astype(str)), dtype=float), x[["hdh_d", "cdh_d"]]], axis=1)
+        parts = [pd.get_dummies((x.hour.astype(str) + "_" + x.month.astype(str)), dtype=float), x[["hdh_d", "cdh_d"]]]
+        if tight:  # hour x day type (weekday 0-6, national holiday = 7)
+            dt = np.where(x.hol_es == 1, 7, x.dow)
+            parts.append(pd.get_dummies(x.hour.astype(str) + "_" + pd.Series(dt, index=x.index).astype(str), dtype=float))
+        W = pd.concat(parts, axis=1)
         for plab, lo, hi, pid in PERIODS:
             sel = (x.date >= lo) & (x.date <= hi) & ~x.date.between(*tax_did.COVID)
             base = x[sel].copy()
@@ -119,7 +123,7 @@ def main():
     r = pd.DataFrame(rows)
     r["iv_scaled"] = r.iv / SHARE
     r["se_iv_scaled"] = r.se_iv / SHARE
-    r.round(4).to_csv(OUT / "hourly_price_response.csv", index=False)
+    r.round(4).to_csv(OUT / ("hourly_price_response_tight.csv" if tight else "hourly_price_response.csv"), index=False)
     pd.set_option("display.width", 200)
     print(r[r.k == 0].round(3).to_string(index=False))
     for plab, *_ in PERIODS:
@@ -129,4 +133,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(tight="--tight" in sys.argv)

@@ -86,3 +86,27 @@ load shape on any day, not a response to that day's price. Net of the shift medi
 elasticity. **Verdict:** the design passes its pre-set rules in the 2.0A period by the letter, but the shift placebo shows the
 size is mostly baseline; the credible reading is a small response (0 to −0.1 scaled) not distinguishable from zero in the
 2.0TD period. Not done: hour × month × weekday effects (the shape differs by weekday), which would tighten the shift baseline.
+
+### Tightened: hour × day-type effects added (2026-11-11)
+
+`hourly_price_response.py --tight` → `outputs/tables/hourly_price_response_tight.csv`. Adds hour × day-type effects (each weekday,
+national holiday) to the hour × month effects. Same sample, instruments and rules.
+
+| period | IV | scaled | industry IV | shifted IV: median, 5–95%, range | rank of real | F |
+|---|---|---|---|---|---|---|
+| 2019-01 → 2021-05 | −0.075 (0.019) | −0.21 | +0.038 (0.021) | −0.058, [−0.081, −0.043], −0.085 to −0.039 | 4 of 21 | 155 |
+| 2021-06 → 2023-12 | −0.036 (0.007) | −0.10 | −0.026 (0.008) | −0.029, [−0.034, −0.024], −0.037 to −0.022 | 2 of 21 | 211 |
+
+Stop rules: (2) industry placebo: period 1 passes (−0.075 against +0.038), period 2 fails (−0.036 against −0.026, a difference
+of −0.010 with se about 0.011). (3) Shifted price: **period 1 now fails** (real −0.075 inside the shifts' range, rank 4: the
+shifts reach −0.085), period 2 passes by a hair (just below the 5th percentile −0.034, rank 2). **No period passes both rules 2
+and 3.** The tight specification leaves the shift baseline where it was (median −0.058 and −0.029), so the real coefficients
+net of the baseline are about −0.017 (period 1) and −0.007 (period 2), both within one standard error of zero at the
+estimates' own precision (0.019, 0.007).
+
+**Verdict: stop on the pre-set rules.** The hourly design shows no within-day price response of regulated households that is
+distinguishable from the pattern any other day's price produces. The point estimate is zero to −0.02 net of baseline (scaled,
+zero to −0.05), consistent with Fabra et al. (2021). Read as a null with a ceiling: scaled elasticity within about −0.1 (the
+period-1 interval after the baseline correction, −0.017 ± 0.038 in E0 terms, is [−0.055, +0.021], scaled [−0.15, +0.06]).
+Not examined: whether the shift baseline itself (negative for every shift) reflects the wind–solar forecast shapes entering
+E0 through rooftop solar and hydro-pumping loads.

@@ -28,7 +28,7 @@ deliberately, restated in Spanish-market terms.
 Python lives in `.venv` (Python 3.14, pandas 3.0, pyarrow 25). Always use
 `.venv/bin/python`, never bare `python3`. Added 2026-10-02 for the rainfall data:
 xarray 2026.9.0 and netCDF4 1.7.4 (E-OBS), shapely 2.1.2 and pyshp 3.1.6
-(HydroBASINS). Added 2026-10-08: xlrd 2.0.2, to read REE's I90DIA workbooks (.xls).
+(HydroBASINS). Added 2026-10-08: xlrd 2.0.2, to read REE's I90DIA workbooks (.xls). Added 2026-11-11: scikit-learn 1.9.1 (LASSO, time-of-use design).
 There is no requirements file.
 
 ```bash

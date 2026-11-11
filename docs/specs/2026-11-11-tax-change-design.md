@@ -1,7 +1,7 @@
 # A retail price elasticity from Spain's electricity tax changes, 2021–2025
 
-**Status: proposed 2026-11-11. Nothing here is built or estimated; the tax dates below come from a web search and
-are not yet confirmed in the BOE.** Branch `tou-policy-prices`. Method: the prediction-error difference-in-differences of
+**Status: proposed 2026-11-11. Nothing is estimated. The 2021, 2022 and 1 January 2024 steps are confirmed in the BOE
+(section 1b); the 2025 return to 21% is not.** Branch `tou-policy-prices`. Method: the prediction-error difference-in-differences of
 Enrich, Li, Mizrahi and Reguant (JEEM 2024), replicated in `2026-11-11-tou-replication-design.md`, applied to a setting the
 paper does not cover.
 
@@ -37,8 +37,8 @@ From a search 2026-11-11 (Endesa, Moncloa, Hacienda, Eurofound; the sources disa
 | 2024-01-01 | VAT 5% → 10% | later 2024 movement conditional on the wholesale price (sources differ: 21% in March, 10% from July) |
 | 2025-01-01 | VAT back to 21% | |
 
-The 2024 steps are triggered by the wholesale price, so they are not exogenous and would be used only after
-the date, trigger and direction are confirmed, and flagged as such.
+The 1 January 2024 step is fixed by law (RDL 8/2023); the later 2024 steps (March, July) are triggered by the
+wholesale price, so they are not exogenous and are flagged as such (see 1b).
 
 ### 1b. Check 1 result (2026-11-11): dates and rates against the BOE and the price shape
 
@@ -58,8 +58,31 @@ Tax factor (1 + electricity tax)(1 + VAT), `analysis/tax_price_shape.py` → `ou
 energy term (ESIOS 1001) averaged €150 in June, €175 in July–mid-September, €266 from 16 September to December (+57 log points
 from June). So **the tax-inclusive price rose 6% across the VAT step and 46% across the electricity-tax step**: both tax
 cuts were smaller than the wholesale-driven rise in the same weeks. This is the price-crisis problem in numbers (section 5).
-ESIOS 1001 is on disk to 2021-12-31 only; the 2022 price path needs a fetch. **Check 1 passes on dates and tax factors for
-2021; not run for 2022–25.**
+**Follow-up, same day: the 2022–24 steps confirmed in the BOE, and the price path fetched.** BOE-A-2022-10557 (RDL 11/2022,
+published 26 June 2022): electricity tax 0.5% extended to 31 December 2022 (art. 17), **VAT 5% from 1 July 2022** (art. 18,
+extended in the consolidated text to 31 December 2023); RDL 20/2022 (BOE-A-2022-22685) extends the 0.5% to 31 December 2023;
+RDL 8/2023 (BOE-A-2023-26452): VAT 10% from 1 January 2024 (to 31 December 2024, with the €45 condition), electricity tax 2.5% in
+the first quarter of 2024 and 3.8% from 1 April to 30 June. Not confirmed from the BOE: the 5.11% from 1 July 2024 (assumed:
+the normal rate) and anything for 2025. ESIOS 1001 now on disk 2021-06 → 2024-12 (`esios_1001.parquet`, merged with the old
+file after the fetcher overwrote it with the new range only).
+
+Tax factor and tax-inclusive pre-tax-weighted price (`analysis/tax_price_shape.py`, monthly means of the daily path):
+
+| step | date | tax factor | log points | pre-tax energy term, month before → month of | exogenous? |
+|---|---|---|---|---|---|
+| VAT 21 → 10% | 2021-06-26 | 1.272 → 1.156 | −9.5 | €149 → €158 (July) | yes (law; condition held) |
+| electricity tax 5.11 → 0.5% | 2021-09-16 | 1.156 → 1.106 | −4.5 | €218 (Sep) → €258 (Oct) | yes |
+| VAT 10 → 5% | 2022-07-01 | 1.106 → 1.055 | −4.7 | €291 (June) → €331 (July) | yes |
+| VAT 5 → 10% and electricity tax 0.5 → 2.5% | 2024-01-01 | 1.055 → 1.128 | +6.7 | €128 (Dec) → €140 (Jan) | yes (fixed by RDL 8/2023 on 27 December 2023) |
+| VAT → 21% | 2024-03-01 | 1.128 → 1.240 | +9.5 | €107 (Feb) → €90 (Mar) | **no**: triggered by the February price (€40) |
+| VAT → 10%, electricity tax → 5.11% | 2024-07-01 | 1.256 → 1.156 | −8.3 | €117 → €133 | **no**: triggered by the June price |
+
+The previous-month price was above €45 in every month from June 2021 to December 2023 (so the 2021–22 cuts were never
+withdrawn by the rule). Reading: **the 2024-01-01 step is the best test**: a reversal of +6.7 log points with the wholesale price
+roughly steady and in the same direction, against the cuts of 2021–22, when the wholesale price rose 10 to 20 log points in
+the same month. In 2021–22 every tax cut coincided with a rise in the pre-tax price; the tax-inclusive price rose after every
+cut. The 2022-07-01 step falls in a month of rising prices (€291 → €331 → €395). **Check 1 now passes on dates and tax
+factors for the steps of 2021, 2022 and 1 January 2024.**
 
 ## 2. Data
 

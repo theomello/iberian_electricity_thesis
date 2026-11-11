@@ -290,3 +290,31 @@ biomass −0.001 (t −0.9). The wind forecast's correlation with the demand for
 barely moves anything, and "wind purged of demand" is identical to the demand-controlled specification by construction (not an
 independent check). Solar alone has no first stage (F 0.4): uninformative. Wind and solar together, demand control: +0.013 (t 5.7,
 F 62), biomass −0.001. **C1 passes; C2 as far as it can be run passes (wind variants) or is uninformative (solar).**
+
+**C3 result (hourly, within the day; 421 pre-cap days, 10,104 hours; 2022-06 days in quarter-hours skipped).**
+`analysis/cogeneration_hourly.py` → `outputs/tables/cogeneration_hourly.csv`. Hourly load factor on the hourly day-ahead price, wind
+forecast as the instrument, date and hour × month and hour × weekday effects, clustered by week. First stage F 65.
+
+| outcome | per €10 | se | t | elasticity at the mean |
+|---|---|---|---|---|
+| gas | **+0.0074** | 0.0010 | 7.3 | 0.165 |
+| biomass and waste (placebo) | **+0.0023** | 0.0004 | 5.2 | 0.056 |
+| gas minus biomass | +0.0051 | 0.0010 | 5.0 | |
+
+By time of day (gas / biomass, t): night 0–5h +0.0040 (4.3) / +0.0017 (2.6); day 6–17h +0.0071 (6.5) / +0.0020 (3.9); evening 18–23h
++0.0079 (7.7) / +0.0012 (1.9). Shifted-price placebo (20 shifts, ±10 days): median −0.0001, 5–95% −0.0011 to +0.0013, the real
++0.0074 ranks 1 of 21.
+
+Rules, in order: first stage **passes** (F 65); gas positive, t above 2: **passes** (t 7.3); **biomass placebo: FAILS** (+0.0023, t 5.2,
+against the pre-set |t| < 2); shifted-price placebo: **passes** (rank 1 of 21, the shifts sit within ±0.0013). **By the rule that all
+three checks pass, the pre-cap result cannot be quoted as it stands.** What the hourly result does say: within the day, gas
+cogeneration follows the price about three times as strongly as biomass and waste (elasticity 0.17 against 0.06; difference t 5.0),
+the response is not a pattern any other day's price produces (the shifts are zero), and it is present in every part of the day.
+What stops it: the placebo group responds too, which the daily design had flat (−0.001, t −0.8). Candidate reasons, not tested:
+biomass and waste plants also shift output toward dear hours (many are paid partly by market price), or REE's technical-constraint
+dispatch moves with the same wind-driven price shape.
+
+**Status after the checks.** The daily design's three open items: (1) demand: C1 passes, C2 uninformative or by construction;
+(3) hourly within-day: gas response confirmed and day-robust, but the placebo fails. So the gas-specific part is **about 70% of the
+hourly gas coefficient** (0.0051 of 0.0074), still positive and significant as a difference, but the pre-set rule is not met and
+I am not restating it. Item (2), the post-cap windows failing the biomass placebo, is unchanged.

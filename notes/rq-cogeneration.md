@@ -342,3 +342,23 @@ fails because of a few large plants that respond to the price within the day (pr
 verified), not because biomass as a group is price-responsive. Picking the five by their response is selection on the outcome:
 a placebo restricted to the remaining 86 units would be the right test, but the choice of the five has to be made on something
 other than the result (payment scheme, owner, capacity), which I have not found; exploratory.
+
+**Day-ahead schedule against the final schedule (2026-11-11).** The same probe on REE's day-ahead base schedule (PDBF, hourly, same 421
+days; `build/build_cogeneration_ree_hourly_pdbf.py`, `analysis/cogeneration_hourly_units.py --pdbf` →
+`outputs/tables/cogeneration_hourly_{units,groups}_pdbf.csv`). Response per MW of capacity per €10, day-ahead (PDBF) against final (P48):
+
+| group | PDBF | P48 | PDBF as a share of P48 | units positive, PDBF / P48 | median unit, PDBF / P48 |
+|---|---|---|---|---|---|
+| gas | 0.0038 | 0.0085 | 45% | 56% / 73% | 0.0002 / 0.0033 |
+| other fossil | 0.0037 | 0.0090 | 41% | 58% / 81% | 0.0001 / 0.0054 |
+| biomass and waste | 0.0013 | 0.0025 | 52% | 50% / 59% | 0.0000 / 0.0003 |
+
+**More than half the within-day response of gas and of other fossil plants arises after the day-ahead schedule** (the intraday
+sessions and REE's technical-constraint changes, which together turn PDBF into P48), and the breadth of the gas response is mostly
+there too: the median gas plant does nothing in the day-ahead schedule (0.0002) and responds in the final one (0.0033). Biomass
+and waste: half in each, with the five-plant concentration weaker in PDBF (43% against 58%). I cannot split the later part
+into intraday trading and redispatch from these files. What follows for the design: the pre-cap price response is measured on the
+schedule the plants end up running, so it reflects the whole sequence of markets, not only their day-ahead decisions; the
+day-ahead part alone is about 0.004 per MW per €10 for gas (elasticity roughly 0.07 at the means), about half the hourly gas
+figure above. Not run: the placebo and the shifted-price rules on PDBF, and a split of the later part using the intraday
+sessions' schedules (PHF sheets, on disk).

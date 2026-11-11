@@ -104,6 +104,40 @@ and day: final schedule P48, day-ahead schedule PDBF, of which bilateral; and a 
 Still open: offers are not in these workbooks; the regulated payment per plant; which plants were inside the
 regulated scheme (excluded from the cap until October) and which outside it (eligible from 15 June).
 
+## E1, the event by group (2026-11-11): the June fall is large and on the day; gate G1 fails as written
+
+`analysis/cogeneration_event.py` → `outputs/tables/cogeneration_event_{estimates,weekly,placebo,dropping}.csv`.
+Load factor (0–1) on unit and date effects and treated × after, balanced unit × day grid, capacity-weighted,
+standard errors clustered by unit. Run with the user's go-ahead.
+
+| data | treated against comparison | window | estimate (se) | comparison's change ÷ treated's (G3 < 0.20) |
+|---|---|---|---|---|
+| REE plants | gas against biomass and waste | cap, 1 Apr–31 Jul, break 15 Jun | **−0.219 (0.038)** | 0.02 |
+| REE plants | same | cap, short: 15 May–15 Jul | −0.243 (0.043) | 0.09 |
+| REE plants | other fossil against biomass and waste | cap | −0.200 (0.059) | 0.02 |
+| OMIE units | non-renewable against renewable thermal | cap | −0.160 (0.026) | 0.08 |
+| REE plants | gas against biomass and waste | opt-in, 1 Jul–31 Dec, break 1 Oct | +0.085 (0.044) | 0.23 |
+| OMIE units | non-renewable against renewable thermal | opt-in | +0.080 (0.030) | 1.38 |
+
+- **June.** Gas cogeneration's load factor was 0.58 before; it falls 0.22, or 38%, against a comparison group that
+  does not move (−0.003). 160 gas plants (3,011 MW), 92 biomass and waste (1,285 MW). By week the gap is flat for the
+  seven weeks before (within 0.05 of the last week) and −0.20, −0.31, −0.30 in the three weeks from 15 June. Weeks −9
+  and −8 (Easter and the April fall) sit 0.14–0.21 lower, which is why the short window is reported.
+- **G3 passes in June** (0.02) and **G4 passes** (dropping each of the five largest plants and three largest agents:
+  −0.229 to −0.214).
+- **G1 fails as written.** On OMIE's label, the same window shape placed on the 15th of each month 2019-04 → 2022-01
+  gives 34 placebo breaks; 11 exceed one third of the real one, the largest 0.78 of it (January 2021). They are
+  seasonal: industrial cogeneration stops at Christmas, Easter and in August and biomass does not. The three June
+  placebos are 0.17, 0.31 and 0.33 of the real break. The real break (−0.160) is larger in size than every one of
+  the 34 placebos (largest 0.125), so it is not ordinary variation, but the gate set in advance was one third and
+  the spec's stop rule applies: E1 stands as description, not as a clean causal estimate, unless the gate is
+  restated (for example against same-season placebos or after removing each unit's calendar pattern from 2019–2021),
+  which is the user's decision.
+- **October is not identified by this comparison.** Biomass and waste jumps on 1 October too (load factor 0.44 →
+  0.55 in a week, gas 0.30 → 0.37), so the gap does not move at the break (−0.03 in week 0) and only widens in
+  weeks 5–7 (November). G3 fails (0.23 on REE, 1.38 on OMIE) and G1 fails (22 of 33 placebos above one third).
+  Something common to both groups changes on 1 October; not identified yet.
+
 ## Where the design stands
 
 - E1 (the event by group) and E2 (the run decision and the cost) now have their data: REE's units by day,

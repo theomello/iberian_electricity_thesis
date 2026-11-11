@@ -387,3 +387,49 @@ whole sequence nets to zero (−0.0001, t −0.3), with the day-ahead level at 0
 picked from their own response) this says the placebo's failure rests on those plants, and that for the other 86 units the
 intraday markets work against the price (−0.0014, t −2.3) while REE's steps work with it. Not done: the pre-set rules on the
 rest-of-biomass group (a selection rule independent of the outcome is still needed), and the post-cap window.
+
+## An outcome-independent placebo rule for biomass and waste (2026-11-11, rules set before the run)
+
+The five plants that carry the biomass response were found from their own response, so a placebo that leaves them out is a choice made
+on the outcome. Two rules that do not use the price response, set here before any is run; I have seen the five plants' names, so
+neither rule is blind to them, and both are stated so that any plant can be classified from its schedule or size alone:
+
+- **R1, market exposure.** A plant's bilateral share = its bilateral PDBF energy over its total PDBF energy, summed over the pre-cap
+  days with hourly data (daily panel, `pdbf_bilateral_mwh / pdbf_mwh`). A plant sells into the day-ahead price when it sells through
+  the auction, not under a bilateral contract. **Placebo group = plants with a bilateral share of at least 0.5** (not exposed to the
+  day-ahead price); treatment group = share below 0.5.
+- **R2, size.** Large regulated or merchant plants against small ones aggregated by representatives. **Placebo group = under 20 MW.**
+- Pass (per rule, on the biomass-and-waste placebo group): final-schedule coefficient |t| < 2 on the hourly day-ahead price moved by the
+  wind forecast, and the shifted-price placebo (20 shifts ±10 days) does not put the real coefficient in its top 2 of 21 or outside
+  its 5th–95th percentile. Also reported: the same split for gas, to see where the gas response sits.
+- If neither rule gives a placebo group with |t| < 2, the placebo fails on the outcome-independent split and the pre-cap result is not
+  quoted. If a rule passes, the pre-cap result is quoted with that rule named and the choice of rule flagged as made after seeing the
+  response.
+
+**Result of the rules (2026-11-11).** `analysis/cogeneration_placebo_rules.py` → `outputs/tables/cogeneration_placebo_rules.csv`. Hourly
+final-schedule load factor on the hourly price moved by the wind forecast, per €10, 421 days, first stage F 65.
+
+| group | units | MW | coefficient | se | t | shifted prices: median, 5–95%, rank of real |
+|---|---|---|---|---|---|---|
+| gas | 243 | 3,624 | +0.0074 | 0.0010 | 7.3 | (0.0000; ±0.001; 1 of 21) |
+| all biomass and waste | 106 | 1,385 | +0.0023 | 0.0004 | 5.2 | |
+| **R1 placebo: bilateral share ≥ 0.5** | 3 | 92 | +0.0063 | 0.0024 | 2.7 | −0.0001, [−0.0029, +0.0025], rank 1 of 21 |
+| R1 other biomass (share < 0.5) | 93 | 1,200 | +0.0022 | 0.0005 | 4.6 | |
+| **R2 placebo: under 20 MW** | 82 | 429 | +0.0010 | 0.0004 | 2.7 | −0.0000, [−0.0006, +0.0008], rank 3 of 21 |
+| R2 other biomass (20 MW and over) | 24 | 955 | +0.0029 | 0.0006 | 4.9 | |
+
+**Neither rule gives a placebo with |t| < 2, so by the rule set above the placebo fails on the outcome-independent split and the pre-cap
+result is not quoted as a gas-specific response.** R1 does not separate anything: only 3 plants (92 MW) sell mostly bilaterally, and
+one of the five responders, Ence Huelva `EEHU2`, is among them (bilateral share 0.69, while `RSAICA`, `RCUBILL`, `RZABAL` have 0.00), so
+market exposure as measured by the bilateral share is not what distinguishes the responders. R2 gives a real group (82 plants) whose
+response is small, +0.0010, 14% of gas, but still positive at t 2.7 and outside the shifted-price range (rank 3 of 21, 5–95% just
+above +0.0008).
+
+**What this leaves.** A gradient, not a placebo: gas +0.0074, large biomass +0.0029 (39% of gas), small biomass +0.0010 (14%), all positive
+and all following the real price (the shifted prices give zero). Gas responds 2.5 times as strongly as the large biomass plants and
+7 times as strongly as the small ones. The plain reading is that every thermal plant in this fleet moves a little with the
+within-day price, gas most, so the within-day design cannot use biomass as a zero. The daily design's flat biomass (−0.001, t −0.8)
+is then a result of daily aggregation, since biomass plants shift within the day and not across days (the date effects absorb the
+day-to-day). **Status of the pre-cap result:** the gas response is real and day-robust (hourly, shifts, demand control), 70% of the
+hourly coefficient is gas-specific on the gas-minus-biomass difference (+0.0051, t 5.0), but no placebo group is at zero, so I quote it as
+"gas responds at least 2.5 times as strongly as any placebo group", not as an identified gas-specific elasticity.

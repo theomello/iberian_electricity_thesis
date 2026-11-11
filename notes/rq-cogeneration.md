@@ -157,6 +157,28 @@ one-third standard. What separates it is the timing (the fall is on 15 June, wit
 power and gas prices fixed, which is E2. The opt-in window fails every version (3–7 placebos as large as the real
 break). **E1 stays description.**
 
+**Narrow window, 14 days either side (2026-11-11, user's go-ahead)**: `analysis/cogeneration_event_narrow.py` →
+`cogeneration_event_narrow_{estimates,placebo}.csv`. Capacity-weighted.
+
+| data | break | estimate (se) | comparison's change ÷ treated's |
+|---|---|---|---|
+| REE plants, gas against biomass and waste | 15 June 2022 | **−0.239 (0.045)**, from 0.64 | 0.11 |
+| OMIE units, non-renewable against renewable | 15 June 2022 | −0.100 (0.034), from 0.43 | 0.02 |
+| REE plants | 1 October 2022 | −0.041 (0.052) | 1.85 |
+| REE plants | 3 October 2022 | −0.011 (0.051) | 1.17 |
+
+- **June against 165 placebos** (OMIE's label, every Wednesday 2019-01 → 2022-03, same 28-day window): placebo sd
+  0.038, 5th–95th percentile −0.057 to +0.068. The real break (−0.100) is more negative than all but 2 of them (rank
+  3 of 166, 1.8%). **The one-third gate still fails** (63 of 165 above it): one third of −0.100 is 0.033, less than
+  one placebo standard deviation, so on OMIE's units the gate cannot be met by an effect of this size. Leaving out
+  placebo windows that touch Christmas, Holy Week or August changes little (34 of 107 above one third).
+- **The plant-level estimate is 2.4 times OMIE's** and has no placebos: REE's units are daily only from 2022-04-01.
+  OMIE's units are representatives' portfolios whose membership and capacity change, which dilutes the effect and
+  adds noise. Placebos on plants need REE's daily workbooks for an earlier year (2021: 365 files, about 1.6 GB,
+  token). If placebo noise on plants is like OMIE's (0.04), a break of −0.24 would clear the one-third gate (0.08)
+  in most placebo weeks; not known until run.
+- **October: nothing at the break.** Gas and biomass rise together; the capacity-weighted gap does not move.
+
 ## Where the design stands
 
 - E1 (the event by group) and E2 (the run decision and the cost) now have their data: REE's units by day,

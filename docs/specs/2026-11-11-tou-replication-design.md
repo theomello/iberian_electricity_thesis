@@ -96,6 +96,68 @@ Stop rules from section 3, in order:
    down differently) give +12.7 and +13.1. Dropping the seven breaks whose window touches March–June 2020, the real effect
    is larger than all 17 others (largest −6.1): rank 1 of 18. LASSO: 5–95% −0.3 to +17.5, rank 4 of 25. The exclusion
    is a choice made after seeing the placebos.
+3. **Control tracks the treated: a level difference in 2019 specific to ESIOS 352, size within its year-to-year noise
+   (second correction, 2026-11-11).** Pre-break placebos run mostly negative in 2019 (−1 to −6%). Monthly ln of each
+   pair, each month against the same month of 2018 (mean over months, log points):
+
+   | pair | 2019 vs 2018 | Jan–May 2021 vs 2019 | Jun–Sep 2021 vs 2019 |
+   |---|---|---|---|
+   | 352 / Portugal | **−3.9** | +2.2 | −4.8 |
+   | 352 / low-voltage demand (E0) | **−3.5** | +1.2 | −2.2 |
+   | 352 / free-market retail (351) | **−3.2** | +0.1 | −3.2 |
+   | 351 / Portugal | −0.8 | +2.1 | −1.6 |
+   | low voltage (E0) / Portugal | −0.4 | +1.0 | −2.6 |
+   | Spanish total / Portugal | −0.5 | −1.1 | −1.9 |
+   | Portugal / France | −0.2 | −1.2 | +0.7 |
+
+   So the 2019 fall is specific to ESIOS 352: not Portugal (Portugal / France is flat) and not Spanish demand in general.
+   Weather explains little: a regression of the monthly ratio on month and year effects and Spanish heating and cooling degree
+   hours (41 months) leaves a 2019 effect of −3.2 (se 1.7) for 352 / Portugal and −2.3 (se 2.1) for 352 / 351, from −3.9 and −3.2
+   without weather. The share of 352 in 351 + 352 (as a percentage, annual mean) is 11.47 (2018), 11.16 (2019), 11.78 (2020),
+   10.97 (2021): not a one-way migration out of the regulated tariff (my first explanation, and my first correction of it,
+   which used a share rounded to whole percentage points, were both too strong). The year effects of this ratio move by 1 to 3
+   points a year (2020: +1.5, 2021: −0.8), so a 2019 difference of −3 is of the size of its ordinary variation; the 2019
+   placebo breaks, with only 2018 in their pre-window, pick it up as an effect. Not found: whether ESIOS changed what counts as
+   a reference retailer. The trend variants raise the peak effect (−13%).
+4. **Weekend placebo.** Fake peaks on weekends reproduce the paper's pattern (an effect there too); reported, not a stop.
+5. **Sign and size.** Peak effect negative, in the paper's range (1–9%). A positive or implausibly large effect
+   (> 20%) is read as confounding, not a result.
+6. **Power.** The peak effect in MW (about 6–9% of 352's peak load) against the placebos' standard deviation, before
+   the elasticity step.
+
+## 3b. Check 1 result (2026-11-11)
+
+Fetched ESIOS 1013, 1001–1005, 1018 and 1876 (2018-01-01 → 2021-12-31, peninsular; `data/esios/esios_<id>.parquet`;
+`analysis/tou_price_shape.py` → `outputs/tables/tou_price_shape.csv`). The access charge of the old 2.0A tariff is a flat
+€44.0/MWh; the new 2.0TD charges component is €83.7 (peak), €31.9 (mid-peak), €3.4 (off-peak), average €28.8. Against the old
+flat charge that is +90%, −28% and −92%; against the new tariff's own average +190%, +11% and −88%, which is the paper's
+"+200% and −86%". So the paper's percentages appear to be relative to the new average, not the old flat charge (my reading, not
+confirmed in the paper). The peak-to-off-peak ratio is 24.6. **Check 1 passes on shape.**
+
+## 3c. Replication results (2026-11-11, user's go-ahead)
+
+`analysis/tou_did.py` → `outputs/tables/tou_did_{estimates,placebo}.csv`. Spain's regulated-retail schedule (ESIOS 352) against
+Portugal (REN `Consumption`), 32,847 hours 2018-01-01 → 2021-09-30, break 2021-06-01, each country on its own clock, difference of
+logs at the same local hour; clustered by week. scikit-learn 1.9.1 installed for LASSO.
+
+| log-point effect, % | peak | mid-peak | off-peak | peak − off |
+|---|---|---|---|---|
+| DiD V1 (hour, weekday, month effects) | −10.5 (se 1.1) | −6.4 (1.2) | −4.7 (1.1) | −5.8 (0.9) |
+| V2 (+ linear trend) | −13.0 | −6.8 | −2.4 | −10.7 |
+| V3 (+ temperature, holidays) | −13.8 | −7.2 | −1.6 | −12.2 |
+| V4 (year-month effects, contrasts only) | | | | −5.8 (0.9), mid − off −1.7 |
+| LASSO prediction errors (Burlig et al.) | −11.6 | −6.9 | −3.2 | |
+| Paper, standard / ML | −8.9 / −9.5 | −5.7 / −6.4 | n.s. | |
+
+Weekend and holiday days with fake peaks (same hours): DiD −9.3 / −5.7 / −1.5 (peak − off −7.8); LASSO −10.9 / −6.8 / +0.1.
+
+Stop rules from section 3, in order:
+2. **Placebo dates: fails by the letter, passes outside the COVID months.** 24 fake breaks at the 1st of each month 2019-01 →
+   2020-12 (4-month post window): DiD V1 peak placebo sd 5.4%, 5–95% range −5.2 to +12.1; the real −10.5 lies outside it
+   but ranks 3 of 25 by absolute size, because two COVID windows (breaks March and April 2020, Spain and Portugal locked
+   down differently) give +12.7 and +13.1. Dropping the seven breaks whose window touches March–June 2020, the real effect
+   is larger than all 17 others (largest −6.1): rank 1 of 18. LASSO: 5–95% −0.3 to +17.5, rank 4 of 25. The exclusion
+   is a choice made after seeing the placebos.
 3. **Control tracks the treated: a step in 2019, not a drift (corrected 2026-11-11).** Pre-break placebos run mostly negative
    in 2019 (−1 to −6%). I first put this down to customers leaving the regulated tariff; the data do not support it (ESIOS 352's
    share of 351 + 352 is 13% in Q1 of 2018, 2019, 2020 and 2021, and 351 falls as much as 352). Monthly ln(352 / Portugal), each

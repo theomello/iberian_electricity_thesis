@@ -1,0 +1,16 @@
+spec,outcome,n,d_lf_per_10eur,se,t,first_stage_F
+C0 baseline (wind),lf_gas,443,0.0119,0.0026,4.5917,96.0986
+C0 baseline (wind),lf_biomass_waste,443,-0.001,0.0012,-0.8164,96.0986
+C0 baseline (wind),diff_gas_minus_bio,443,0.0129,0.003,4.3458,96.0986
+C1 + demand control (wind),lf_gas,443,0.0125,0.0022,5.6817,100.766
+C1 + demand control (wind),lf_biomass_waste,443,-0.0011,0.0012,-0.8613,100.766
+C1 + demand control (wind),diff_gas_minus_bio,443,0.0136,0.0026,5.1838,100.766
+"C2a solar alone, demand control",lf_gas,443,-0.036,0.0747,-0.4826,0.3584
+"C2a solar alone, demand control",lf_biomass_waste,443,-0.0286,0.0473,-0.6045,0.3584
+"C2a solar alone, demand control",diff_gas_minus_bio,443,-0.0074,0.0439,-0.1694,0.3584
+C2b wind purged of demand,lf_gas,443,0.0125,0.0022,5.6817,100.766
+C2b wind purged of demand,lf_biomass_waste,443,-0.0011,0.0012,-0.8613,100.766
+C2b wind purged of demand,diff_gas_minus_bio,443,0.0136,0.0026,5.1838,100.766
+"C2c wind + solar, demand control",lf_gas,443,0.0126,0.0022,5.7077,62.2342
+"C2c wind + solar, demand control",lf_biomass_waste,443,-0.001,0.0012,-0.7978,62.2342
+"C2c wind + solar, demand control",diff_gas_minus_bio,443,0.0136,0.0026,5.161,62.2342

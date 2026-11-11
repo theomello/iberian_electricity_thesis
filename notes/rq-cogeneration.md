@@ -267,3 +267,26 @@ pattern (+0.3% per GW in Italy and Spain), so the cogeneration response needs a 
   2022-04-01 → 2023-03-31, fuel known, plants followed through both dates. Neither has been estimated.
 - E3 (pass-through into offers) rests on a few dozen units that state a price; a lead, not a chapter.
 - The regulated payment per plant is still the main unknown (spec §6).
+
+## Checks on the pre-cap result (2026-11-11, user's go-ahead: "Cogeneration checks")
+
+Open item (1) above: does the pre-cap gas response run through hosts' electricity demand, since the wind instrument carries a
+common demand pattern? Three checks, pre-cap window (443 days on disk), set before the hourly run:
+
+- **C1 demand control** (`analysis/cogeneration_demand_checks.py` → `outputs/tables/cogeneration_demand_checks.csv`): add REE's
+  day-ahead demand forecast (ESIOS 1775, daily mean) to the controls. Pass: the gas coefficient keeps its sign, at least half its
+  size, t above 2; the biomass placebo stays inside |t| < 2.
+- **C2 alternative instrument:** solar forecast alone; wind purged of demand; wind and solar together. Pass: same sign, within a
+  factor of two of the baseline, first-stage F above 10.
+- **C3 hourly, within the day** (`build/build_cogeneration_ree_hourly.py`, `analysis/cogeneration_hourly.py`): gas group hourly
+  load factor (REE's P48) on the hourly day-ahead price instrumented with the hourly wind forecast, date effects (these absorb
+  the gas price, the host's heat load, daily demand), hour × month and hour × weekday effects, clustered by week. Pass, all of:
+  first-stage F ≥ 10; gas coefficient positive with t > 2; biomass-and-waste placebo |t| < 2; and a shifted-price placebo
+  (price and instrument from each of the 20 days within ±10) in which the real coefficient lies outside the shifts' 5th–95th
+  percentile and ranks in the top 2 of 21. All three checks must pass before the pre-cap result is quoted.
+
+**C1 and C2 result (daily).** Baseline +0.012 per €10 (t 4.6, F 96). With the demand forecast as a control: **+0.012 (t 5.7, F 101)**,
+biomass −0.001 (t −0.9). The wind forecast's correlation with the demand forecast is only +0.07 in these days, so the demand control
+barely moves anything, and "wind purged of demand" is identical to the demand-controlled specification by construction (not an
+independent check). Solar alone has no first stage (F 0.4): uninformative. Wind and solar together, demand control: +0.013 (t 5.7,
+F 62), biomass −0.001. **C1 passes; C2 as far as it can be run passes (wind variants) or is uninformative (solar).**

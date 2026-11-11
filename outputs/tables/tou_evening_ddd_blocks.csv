@@ -1,0 +1,6 @@
+block,ddd_pct,se_pct,work_pct,weekend_pct,d_ln_relative_price,elasticity,se_elasticity
+evening peak 18-21h,-5.2481,0.7127,-8.5516,-3.3035,0.6075,-0.0864,0.0117
+late mid-peak 22-23h,-1.9434,0.7058,-3.5792,-1.6358,0.2303,-0.0844,0.0306
+afternoon mid-peak 14-17h,-3.8227,0.8377,-0.5628,3.2599,0.2284,-0.1674,0.0367
+morning mid-peak 8-9h,-3.7292,0.4704,-10.3168,-6.5876,0.2307,-0.1617,0.0204
+morning peak 10-13h,-1.1106,0.7618,-5.4761,-4.3655,0.6185,-0.018,0.0123

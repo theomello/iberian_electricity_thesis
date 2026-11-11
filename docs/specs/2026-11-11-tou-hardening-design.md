@@ -210,3 +210,48 @@ PVPC households see it on the energy term. Weekends share it, so the DDD removes
 working days; if they do not (they use more evening load on weekends anyway), part of the effect is the energy price, not the charge.
 (b) E0 includes small businesses and free-market contracts. (c) One summer. (d) Spain and Portugal ended the pandemic restrictions on different
 dates, which moves working-day against weekend patterns; V2 drops the months in which it moves most but not the whole of 2020.
+
+### Results of the pre-registered evening-peak design (2026-11-11)
+
+`analysis/tou_evening_ddd.py` → `outputs/tables/tou_evening_ddd_{main,blocks,placebo}.csv` (the helper `tou_ddd.contrasts` now returns NaN for an absent cell).
+E0, break 2021-06-01, post window to 2021-09-30; evening peak 18–21h against night 0–7h; DDD = (working-day contrast) − (weekend contrast), %.
+
+| control | spec | DDD (se), t | working days | weekends |
+|---|---|---|---|---|
+| Portugal | V1 | −4.94 (0.71), t −6.9 | −8.42 | −3.48 |
+| Portugal | **V2** (no Jan–May 2021) | **−5.25 (0.71), t −7.4** | −8.55 | −3.30 |
+| Portugal | V3 LASSO errors | −4.96 (0.67), t −7.4 | | |
+| France | V2 | −4.34 (0.70), t −6.2 | −15.84 | −11.50 |
+| mean of Portugal and France | V2 | −4.79 (0.65), t −7.4 | −12.19 | −7.40 |
+
+Placebo breaks (17, V1): real −4.94; placebo sd 1.16, 5–95% −2.43 to +1.15; **rank 1 of 18**.
+
+Dose-response blocks (V2, Portugal, each against night, price change from ESIOS 1001 / 1876 and the old flat 44.0):
+
+| block | DDD (se) | working days | weekends | Δ ln relative price | elasticity (se) |
+|---|---|---|---|---|---|
+| evening peak 18–21h | −5.25 (0.71) | −8.55 | −3.30 | +0.607 | **−0.086 (0.012)** |
+| late mid-peak 22–23h | −1.94 (0.71) | −3.58 | −1.64 | +0.230 | −0.084 (0.031) |
+| afternoon mid-peak 14–17h | −3.82 (0.84) | **−0.56** | **+3.26** | +0.228 | −0.167 (0.037) |
+| morning mid-peak 8–9h | −3.73 (0.47) | −10.32 | −6.59 | +0.231 | −0.162 (0.020) |
+| morning peak 10–13h (reported, not in rule 4) | −1.11 (0.76) | −5.48 | −4.37 | +0.619 | −0.018 (0.012) |
+
+**Stop rules, in order.** (1) V2, t below −2 under Portugal (−7.4), France (−6.2) and the mean (−7.4): **pass**. (2) LASSO V3 −4.96, t −7.4, within a
+factor of two of V2: **pass**. (3) placebo breaks outside the 5–95% range and rank 1 of 18: **pass**. (4) the four blocks' elasticities within a factor of
+two of the evening peak's (−0.086): late mid-peak 0.98×, morning mid-peak 1.88×, afternoon mid-peak 1.94×, same sign, none excluded by the standard-error
+clause: **pass, by the letter and barely for two blocks**. (5) evening-peak elasticity −0.086, inside −0.5 to 0: **pass**. (6) standard error 0.71 < 1: **pass**.
+**All six rules pass.**
+
+**Verdict: the evening-peak effect is the quotable policy-specific result.** On measured low-voltage demand the June 2021 reform lowered working-day
+evening-peak (18–21h) load by about 5% relative to night, over and above weekends, relative to Portugal, France and their mean, in three estimators, with the real
+effect ranked first among 18 breaks. The elasticity of substitution between the evening peak and night is **−0.086** (standard error 0.012 treating the price
+change as known), at the lower end of the paper's −0.08 to −0.135 own-price range (a different object).
+
+**Caveats the numbers themselves show (not new tests):** (i) the **afternoon mid-peak block's DDD is built from the weekend arm** (working days −0.56, weekends +3.26),
+so its pass on rule 4 does not say working-day load fell in proportion to the price; the dose-response is therefore weaker than the table's elasticities look;
+(ii) the **morning peak (10–13h)** has the same price rise as the evening peak and shows about none (−1.1, elasticity −0.018): the effect is concentrated in
+the evening (heterogeneity by time of day, not resolved); (iii) the working-day and weekend arms both fall under France (−15.8 / −11.5) because France's
+control moves a lot in 2021; only the contrast between the arms is stable; (iv) the threats listed in the pre-registration (the evening energy price, small
+businesses, one summer, restriction dates) are untested. **Next test, not run: the charge fell in September and October 2021 (peak 133 → 82 → 32 EUR/MWh), so the
+same hours should show a smaller effect then, in proportion to the smaller price change; extending the post window to December would test the
+charge, separately from the energy price, and needs registering first.**

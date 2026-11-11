@@ -1,0 +1,8 @@
+control,spec,ddd_pct,se_pct,t,work_pct,weekend_pct
+Portugal,V1,-4.943,0.713,-6.932,-8.423,-3.48
+Portugal,V2,-5.248,0.713,-7.364,-8.552,-3.303
+Portugal,V3 LASSO errors,-4.958,0.668,-7.422,,
+France,V1,-4.213,0.69,-6.103,-16.856,-12.643
+France,V2,-4.34,0.703,-6.173,-15.838,-11.498
+mean of Portugal and France,V1,-4.578,0.643,-7.114,-12.639,-8.061
+mean of Portugal and France,V2,-4.794,0.649,-7.388,-12.195,-7.401

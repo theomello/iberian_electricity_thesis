@@ -30,6 +30,8 @@ def prep(x):
 
 def contrasts(b, V, names):
     def c(pairs):
+        if any(n not in names for n, _ in pairs):
+            return float("nan"), float("nan")  # a cell is absent (e.g. no mid-peak hours in a two-block test)
         w = np.zeros(len(names))
         for n, s in pairs:
             w[names.index(n)] += s

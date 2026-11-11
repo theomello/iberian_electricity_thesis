@@ -362,3 +362,28 @@ schedule the plants end up running, so it reflects the whole sequence of markets
 day-ahead part alone is about 0.004 per MW per €10 for gas (elasticity roughly 0.07 at the means), about half the hourly gas
 figure above. Not run: the placebo and the shifted-price rules on PDBF, and a split of the later part using the intraday
 sessions' schedules (PHF sheets, on disk).
+
+**The later part, split by stage (2026-11-11, user's go-ahead: "Yes, split it").** `build/build_cogeneration_ree_hourly_stages.py`,
+`analysis/cogeneration_hourly_stages.py` → `outputs/tables/cogeneration_hourly_stages.csv`. I90DIA sheets 26 (PBF, day-ahead), 01
+(PVP, after the day-ahead technical constraints), 36 (PHFC, after the intraday auctions and the continuous market), 02 (P48, after
+real-time constraints, balancing energy, tertiary and transfers between balance-responsible parties). Same 421 days, same
+instrument and effects; per MW of capacity per €10, standard error in brackets. Sanity: the gas group's mean output is 2,157 MW (PBF),
+2,083 (PVP), 2,079 (PHFC), 2,077 (P48), so no stage is empty.
+
+| group (MW) | PBF level | day-ahead constraints (PVP − PBF) | intraday markets (PHFC − PVP) | real time and balancing (P48 − PHFC) | total after PBF |
+|---|---|---|---|---|---|
+| gas (3,172) | +0.0042 (0.0007) | +0.0014 (0.0006) | **+0.0033 (0.0009)** | +0.0001 (0.0001) | +0.0048 (0.0008) |
+| other fossil (617) | +0.0035 (0.0009) | +0.0002 (0.0003) | **+0.0051 (0.0012)** | +0.0001 (0.0001) | +0.0055 (0.0011) |
+| biomass and waste (1,293) | +0.0013 (0.0004) | +0.0008 (0.0004) | +0.0001 (0.0007) | +0.0004 (0.0001) | +0.0013 (0.0005) |
+| biomass and waste without five plants (1,035) | +0.0008 (0.0004) | +0.0008 (0.0004) | −0.0014 (0.0006) | +0.0005 (0.0002) | −0.0001 (0.0005) |
+
+**Reading.** For gas, of a final response of about 0.0090 per MW per €10, 47% is already in the day-ahead schedule, 16% comes from
+REE's day-ahead constraint changes, **37% from the plants' own trading in the intraday auctions and the continuous market**, and
+none from real-time balancing. So the part after the day-ahead schedule is mostly the plants' own decisions (69% of it), not REE's
+redispatch; other fossil plants are the same, more so (intraday 0.0051 of a total 0.0055). That makes the final-schedule response
+a response by the plants, spread over two market stages, which is what a cost-based run decision predicts. Biomass and waste:
+the total after PBF is small (0.0013, t 2.6), mostly constraints and real time (REE's side), and **without the five plants the
+whole sequence nets to zero (−0.0001, t −0.3), with the day-ahead level at 0.0008 (t 1.9)**: as an exploratory cut (the five were
+picked from their own response) this says the placebo's failure rests on those plants, and that for the other 86 units the
+intraday markets work against the price (−0.0014, t −2.3) while REE's steps work with it. Not done: the pre-set rules on the
+rest-of-biomass group (a selection rule independent of the outcome is still needed), and the post-cap window.

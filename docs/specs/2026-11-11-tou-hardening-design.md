@@ -400,3 +400,34 @@ France ε_c −0.148 (t −4.0), pooled-LASSO ε_c −0.126 (t −3.4), weighted
 
 **Verdict.** The reform lowered evening relative demand in summer 2021: −4% (paper's LASSO) to −5.5% (DDD), t above 6 under every estimator and control. That the response is to the **charge** price (an elasticity near −0.09) is not established: the dose-response rests on one
 seasonal transition, the longer panel gives no independent support, and the paper's LASSO halves the charge coefficient and brings in the energy channel. Read the elasticity as an upper bound of about −0.1 pending better separation of the autumn habit and season effects.
+
+## Pre-registration: charge-change events against the seasonal baseline (written 2026-11-11 before any run; the cleaner test promised after the extension)
+
+**Status: proposed, not run.** Aim: separate the response to the charge from the season and habit changes that move with it. The extension's charge coefficient rested on summer-to-autumn 2021, where season and charge move together.
+
+**In one example.** On 1 January 2022 the evening-peak charge rose from €31.5 to €100.8/MWh, while the evening-versus-night energy-price gap stayed about where it was (monthly x_energy 0.12–0.14 in Q4 2021, 0.09–0.12 in Q1 2022; x_charge 0.14 → 0.36). If households respond to the charge, the evening
+effect should deepen at that date by about ε × 0.22 (about −1.3% to −2.6% for ε between −0.06 and −0.12). If the earlier fade in autumn 2021 was season or habit, nothing of the sort happens in January, and the autumn comparison in earlier years shows what the season alone does.
+
+**Estimator: the paper's LASSO** (`analysis/tou_lasso_paper.py`: one model per area and hour, month/weekend/holiday dummies, hourly, daily-minimum and daily-maximum temperature and all interactions, 10-fold cross-validation with the one-standard-error rule, no trend), Portugal as the control area, DDD of the prediction errors: evening peak 18–21h against night 0–7h, working days against weekends and holidays, standard errors clustered by week. Real events use the model trained on 2018-01-01 → 2020-12-31 without March–June 2020.
+
+**Events (each is a change in the DDD between two windows):**
+- **E1, the cut:** pre 2021-07-16 → 2021-09-15, post 2021-09-16 → 2021-11-15. Expected: the effect shrinks (change positive); expected Δx_charge about −0.3.
+- **E2, the rise (the clean one):** pre 2021-10-01 → 2021-12-31, post 2022-01-01 → 2022-03-31. Expected: the effect deepens (change negative); expected Δx_charge about +0.22.
+- **E3, the partial cut of 1 April 2022:** pre 2022-01-01 → 2022-03-31, post 2022-04-01 → 2022-06-30. Reported only (Δx_charge about −0.07, too small to read).
+Daily x_charge and x_energy are computed as in `tou_extended.regressors` (working days, evening against night), averaged over each window.
+
+**Seasonal baseline (placebo calendars).** The same calendar windows in 2018 and 2019 for E1 (pre 07-16 → 09-15, post 09-16 → 11-15), and for E2 Q4 2018 → Q1 2019 and Q4 2019 → Jan–Feb 2020 (March 2020 and later are COVID). Their prediction errors are **cross-fitted**: the errors of year Y come from the models trained on the other years of 2018–2020 (without March–June 2020), so each placebo year is out of sample; the placebo year's data enter no model that predicts it. This gives placebo models two years of training data against three for the real events (stated).
+
+**Stop rules, in order.**
+1. **Eligibility.** For each event, |Δx_charge| ≥ 3 × |Δx_energy| (window means). An event that fails it is not read (a charge event that moves the energy gap as much is not a charge-only event). E2 must pass; if it does not, the test stops with that statement.
+2. **Sign and size of E2.** The E2 change is negative with t ≤ −2 (se = the two windows' standard errors combined, independent windows).
+3. **Beyond the season, E2.** The real E2 change is more negative than both placebo E2 changes.
+4. **E1 in the opposite direction.** The E1 change is positive with t ≥ 2 and above both placebo E1 changes.
+5. **Same elasticity from both events.** Placebo-adjusted implied elasticity = (real change − mean placebo change) / Δx_charge. The E1 and E2 values both negative and within a factor of two of each other.
+6. **Pooled.** The inverse-variance pooled implied elasticity is negative with t ≤ −2.
+
+**What each outcome means.** All pass: two opposite charge moves, each against its own seasonal baseline, move the evening effect the way the charge channel predicts, and the elasticity is the pooled value. Rule 2 or 3 fails while E1 passes: the autumn fade was season or habit, and the elasticity is not identified from
+the charge. Rule 1 fails for E2: not testable. E1 passes and E2 fails: the response is asymmetric (habits formed in summer persist when the charge rises) or the January change is too small to see; stated, not resolved.
+
+**Power and threats.** E2's predicted change (−1.3 to −2.6%) is near what three-month windows can detect (standard error of the change about 0.7); a non-rejection may be low power, which the pooled value (rule 6) reports. Only two readable events. E2 falls in winter, with Q1-specific weather and the 2022 energy-price and tax measures; the placebo calendars share the season but not 2022's circumstances; the cross-fitted models are trained on two years, not three; autumn 2021 is also the return of
+evening activity after the restrictions, which the placebo years do not have. The conclusion is about direction and rough size, not a precise elasticity.

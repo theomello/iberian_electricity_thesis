@@ -10,9 +10,11 @@ Step 1 (DiD): the difference on post x period type, with period type, hour, week
 contrast between period types). Step 2 (prediction errors, Burlig et al. 2020): LASSO per country on the pre-period
 (2018-01 -> 2021-05) to predict the post-period, then the mean prediction-error difference by period type. Placebos: the
 same on fake breaks at the 1st of every month 2019-01 -> 2020-12 with a 4-month post-window, and fake peaks on weekends.
-Pre-set stop rules in docs/specs/2026-11-11-tou-replication-design.md section 3. Outputs outputs/tables/tou_did_*.csv.
+Pre-set stop rules in docs/specs/2026-11-11-tou-replication-design.md section 3. Outputs outputs/tables/tou_did_*.csv; with --e0 the outcome is measured low-voltage demand (ESIOS 1201) and the files carry _e0.
 """
 from pathlib import Path
+
+import sys
 
 import numpy as np
 import pandas as pd
@@ -32,8 +34,8 @@ def hourly(s, tz):
     return s
 
 
-def build() -> pd.DataFrame:
-    es = pd.read_parquet(ROOT / "data/esios/esios_352.parquet")[["utc_timestamp", "value"]].drop_duplicates("utc_timestamp")
+def build(src="352") -> pd.DataFrame:
+    es = pd.read_parquet(ROOT / f"data/esios/esios_{'1201' if src == 'e0' else '352'}.parquet")[["utc_timestamp", "value"]].drop_duplicates("utc_timestamp")
     es = es.set_index("utc_timestamp").value
     pt = pd.read_parquet(ROOT / "data/ren/ren_production_15min.parquet")
     pt = pt[pt.series == "Consumption"].drop_duplicates("utc_timestamp").set_index("utc_timestamp").value_mw
@@ -144,7 +146,9 @@ def err_by_type(p, types="type", subset=None):
 
 
 def main():
-    x = build()
+    e0 = "--e0" in sys.argv
+    tag = "_e0" if e0 else ""
+    x = build("e0" if e0 else "352")
     print(f"{len(x)} hours, {x.date.min().date()} -> {x.date.max().date()}")
     res = []
     for v in ["V1", "V2", "V3", "V4"]:
@@ -168,13 +172,15 @@ def main():
     for t, (b, se) in rw.items():
         res.append(dict(step="DiD weekend fake types", variant="V1", type=t, effect_pct=100 * b, se_pct=100 * se, t=b / se))
     r = pd.DataFrame(res)
-    r.round(3).to_csv(OUT / "tou_did_estimates.csv", index=False)
+    r.round(3).to_csv(OUT / f"tou_did{tag}_estimates.csv", index=False)
     pd.set_option("display.width", 200)
     print(r.round(2).to_string(index=False))
     # placebo breaks
     pl = []
     for b in pd.date_range("2019-01-01", "2020-12-01", freq="MS"):
         end = b + pd.DateOffset(months=4) - pd.Timedelta(days=1)
+        if e0 and end >= pd.Timestamp("2020-03-01") and b <= pd.Timestamp("2020-06-30"):
+            continue  # COVID windows set aside in advance (docs/specs/2026-11-11-tou-hardening-design.md, rule 2)
         sub = x[x.date <= end]
         rr = did(sub, b, variant="V1")
         pe = lasso_errors(x, b, end)
@@ -183,7 +189,7 @@ def main():
                        lasso_peak=100 * ee["peak"], lasso_mid=100 * ee["mid"], lasso_off=100 * ee["off"]))
         print(pl[-1], flush=True)
     pl = pd.DataFrame(pl)
-    pl.round(3).to_csv(OUT / "tou_did_placebo.csv", index=False)
+    pl.round(3).to_csv(OUT / f"tou_did{tag}_placebo.csv", index=False)
     real_did = r[(r.step == "DiD") & (r.variant == "V1") & (r.type == "peak")].effect_pct.iloc[0]
     real_ls = 100 * e["peak"]
     for nm, real, col in [("DiD V1 peak", real_did, "did_peak"), ("LASSO peak", real_ls, "lasso_peak")]:

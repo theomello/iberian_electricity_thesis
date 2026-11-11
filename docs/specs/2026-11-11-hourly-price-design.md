@@ -110,3 +110,30 @@ zero to −0.05), consistent with Fabra et al. (2021). Read as a null with a cei
 period-1 interval after the baseline correction, −0.017 ± 0.038 in E0 terms, is [−0.055, +0.021], scaled [−0.15, +0.06]).
 Not examined: whether the shift baseline itself (negative for every shift) reflects the wind–solar forecast shapes entering
 E0 through rooftop solar and hydro-pumping loads.
+
+## Data check for the other two designs (2026-11-11, user's go-ahead)
+
+**Portuguese retail price series.** Eurostat publishes semiannual retail electricity prices for Spain and Portugal, free and without a
+token (`nrg_pc_204` households, `nrg_pc_205` non-households), 2019-S1 → 2026-S1; no monthly or hourly Portuguese retail price was
+found (ERSE's tariffs are annual). `analysis/eurostat_price_probe.py` → `outputs/tables/eurostat_price_probe.csv`: year-on-year
+changes in the same half-year of ln(ES/PT) demand on ln(ES/PT) price, the 2019-S1 → 2024-S2 halves, **10 observations**:
+
+| outcome | price (ES/PT) | slope | se |
+|---|---|---|---|
+| E0 / Portugal | household, with taxes (2,500–4,999 kWh) | −0.053 | 0.031 |
+| E0 / Portugal | household, without taxes | +0.012 | 0.019 |
+| industry / Portugal | non-household, without VAT (2,000–19,999 MWh) | **+0.097** | 0.039 |
+| E0 / Portugal | non-household price (placebo) | −0.005 | 0.039 |
+
+Reading: ten points from one episode (the 2021–23 crisis) cannot carry a design, and the industry slope is positive and
+significant, the wrong sign, so the shared Spain-versus-Portugal divergence is still in the data. As a bound, the household slope
+with taxes, −0.05 (se 0.03), excludes elasticities below about −0.11 for E0 as a whole (about −0.3 among exposed households,
+by the 0.36 share), which agrees with the hourly design's ceiling. The "without taxes" household price for Portugal has an
+odd 2023-S1 value (ln ratio −0.32) that I have not checked against the source.
+
+**E0 minus industry with an industry price control.** The same Eurostat non-household price is the only industry price found; it
+has the same ten points, so the design has the same power problem and adds the industry demand's own price response (+0.097)
+as an unmodelled term. Not built.
+
+**Conclusion.** Neither design is worth building on these data. The semiannual Eurostat series bound the household elasticity from
+below at about −0.1 (E0) and add no identification.

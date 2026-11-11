@@ -433,3 +433,18 @@ is then a result of daily aggregation, since biomass plants shift within the day
 day-to-day). **Status of the pre-cap result:** the gas response is real and day-robust (hourly, shifts, demand control), 70% of the
 hourly coefficient is gas-specific on the gas-minus-biomass difference (+0.0051, t 5.0), but no placebo group is at zero, so I quote it as
 "gas responds at least 2.5 times as strongly as any placebo group", not as an identified gas-specific elasticity.
+
+## Post-cap window, hourly (2026-11-11, user's go-ahead: "Yes, post-cap"; rules set before the run)
+
+Question: does the within-day response of gas cogeneration to the hourly price differ after the cap, and does the gradient over the
+placebo groups survive? Windows (days on disk): pre-cap 2021-01-01 → 2022-06-14 (421 days, done); **cap, outside the subsidy**
+2022-06-15 → 2022-09-30; **opt-in**, 2022-10-01 → 2023-03-31 (plants could join the mechanism from 1 October, RDL 17/2022). Same
+specification as C3 (hourly price moved by the hourly wind forecast, date, hour × month and hour × weekday effects, clustered by week),
+final schedule P48 (quarter-hourly from June 2022: summed to hours; DST days out), groups: gas, large biomass and waste (20 MW and
+over), small biomass and waste (under 20 MW, the R2 placebo). Read as a description of how the response changes, not as the effect of
+the cap: the cap also moved the gas price level and the price's within-day shape, and cogeneration was outside the subsidy until October.
+
+Pass rules, per window: (1) first-stage F ≥ 10, else the window is not read; (2) the gas response reported with the difference from
+the pre-cap +0.0074 and its standard error (windows pooled with window interactions, clustered by week); (3) the gradient: gas over
+large biomass over small biomass, same order as before the cap; (4) the shifted-price placebo for gas: outside the shifts' 5–95%
+and rank in the top 2 of 21. A window that fails (1) or (4) is not read.

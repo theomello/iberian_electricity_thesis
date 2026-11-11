@@ -310,3 +310,28 @@ Order agreed with the user: charge-cut test first (registered above), then these
 3. **Afternoon and morning blocks.** Afternoon: the weekend arm moves before the reform, so detrend it on its own pre-period, or drop it and use Portugal and France
    only for that block, and see whether the effect survives. Morning peak: near zero is read as a finding (people at work, little room to shift), reported with the
    evening block as a "who can shift" result, not as a defect.
+
+## Results of the charge-cut dose-response (2026-11-11, run after the user's go-ahead; `analysis/tou_charge_dose.py`, `outputs/tables/tou_charge_dose_{main,path}.csv`)
+
+DDD of the evening peak (18–21h against night, working days against weekends), E0, V2 pre-window. A = 2021-06-01 → 09-15 (high charge), B = 2021-09-16 → 12-31 (low charge).
+
+| control | window | DDD % (se) | t | Δ ln relative price | elasticity | LASSO DDD % (se) |
+|---|---|---|---|---|---|---|
+| Portugal | A | −5.46 (0.77) | −7.1 | +0.673 | −0.081 | −5.22 (0.72) |
+| Portugal | B | −1.55 (0.73) | −2.1 | +0.135 | −0.115 | −1.07 (0.73) |
+| France | A | −4.78 (0.72) | −6.6 | +0.673 | −0.071 | not run |
+| France | B | −0.51 (1.13) | −0.5 | +0.135 | −0.038 | not run |
+
+Monthly path (Portugal, DDD %): Jun −4.3, Jul −7.3, Aug −5.0, Sep 1–15 −5.2, Sep 16–30 −3.8, Oct −2.2, Nov −1.7, Dec 0.0 (se 1.9).
+
+**Stop rules, in order.** (1) Sign: negative in A and B under both controls, **pass** by the letter (France B is −0.51, t −0.5, statistically zero). (2) Smaller in B: Portugal
+3.91 points smaller, se of the difference 1.06 (3.7 se), France 4.27 against 1.34 (3.2 se): **pass**. (3) Proportional: Portugal B/A 0.284 against Δ ratio 0.201 (ratio 1.4), France 0.106
+(ratio 0.53): **pass**, France at the edge of the factor-of-two band. (4) Elasticity stable: Portugal −0.115 against −0.081 (ratio 1.4), France −0.038 against −0.071 (0.53): **pass**, same edge for France.
+(5) LASSO: same sign, |B| 1.07 < |A| 5.22: **pass**. (6) No month in B above A's mean (5.46): largest B month is 3.83: **pass**. **All six pass.**
+
+**Reading.** The effect shrinks when the charge is cut, about in proportion (ratio 0.28 against 0.20 expected), so the evening response tracks the charge, not the autumn
+energy-price spread, which was larger. The elasticity is about −0.08 to −0.12 in both windows. **Caveats:** the B window's price change is small (0.135), so B's elasticity is
+imprecise (−0.115, se about 0.054) and the proportionality test has little power to reject other shrinkage; France's B effect is zero and its elasticity is at the edge of the band; the
+fall is gradual, not a step at 16 September (Sep 16–30 is −3.8, above the −1.6 a proportional drop would give, and it keeps falling through December), which is also what a
+fading summer habit, autumn seasonality or the shifting seasonal shape (threat a) would produce; France's working-day and weekend arms are individually large (−16%, −12%) and only their
+difference is read. The extended two-channel regression (follow-up 1) is the test that separates these.

@@ -75,6 +75,7 @@ scripts/
 | `build/build_direct_consumer_panel.py` | bids + prices + `direct_consumers` | no | `outputs/tables/direct_consumer_panel/panel_YYYYMM.parquet` |
 | `build/build_cogeneration_units.py` | unit lists + `cab` + PDBF + ESIOS physical units | no | `data/omie/registry/cogeneration_units.parquet` |
 | `build/build_cogeneration_panel.py` | PDBF + `cab` + bids + prices + `cogeneration_units` | no | `outputs/tables/cogeneration_panel/panel_YYYYMM.parquet` |
+| `build/build_cogeneration_ree_panel.py` | I90DIA workbooks + ESIOS programming and physical units | no | `outputs/tables/cogeneration_ree/days/ree_YYYYMMDD.parquet`, `ree_units.parquet` |
 | `build/build_owner_groups.py` | `omie_unit_lists` + ESIOS chain | no | `data/omie/registry/owner_groups.parquet` |
 | `fetch/fetch_ree_daily.py` | REE `apidatos` | no | `data/ree/ree_{generation,demand,balance}_daily.parquet` |
 | `fetch/fetch_ree_realtime.py` | REE `demanda.ree.es` | no | `data/ree/ree_realtime_5min.parquet` |
@@ -111,7 +112,7 @@ scripts/
 | `build/build_renewable_locations_v3.py` | v2 + MITECO Electra register | no | `data/osm/renewable_unit_locations_v3.parquet` |
 | `build/build_water_value_forward.py` | OMIP + day-ahead prices + PDBF + `cab` + MITECO + SNIRH | no | `outputs/tables/water_value_forward.parquet`, `forward_price_quantiles.parquet` |
 | `build/build_hydro_cost.py` | `water_value_forward` + step caches + `cab` | no | `outputs/tables/hydro_cost_daily.parquet` |
-| `fetch/fetch_esios_i90.py` | ESIOS archive 34 (I90DIA), 15th of each month | **yes** | `data/esios/raw/archives/34/`, `data/esios/i90/i90_sample_hourly.parquet` |
+| `fetch/fetch_esios_i90.py` | ESIOS archive 34 (I90DIA), 15th of each month, and every day 2022-04-01 → 2023-03-31 | **yes** | `data/esios/raw/archives/34/`, `data/esios/i90/i90_sample_hourly.parquet` |
 | `fetch/fetch_holidays.py` | BOE holiday resolutions (XML) + Portugal by law | no | `data/holidays/holidays_es_pt.parquet` |
 | `fetch/fetch_ree_regional_demand.py` | REE REData, demand by region, monthly | no | `data/ree/ree_demand_ccaa_monthly.parquet` |
 | `build/build_holiday_exposure.py` | PDBF retail schedules + holidays + REData | no | `outputs/tables/holiday_retail_days.parquet`, `holiday_exposure*.csv` |
@@ -666,6 +667,13 @@ Design and results: `docs/specs/2026-11-10-cogeneration-design.md`, `notes/rq-co
 - **REE's programming units for cogeneration are plants, with fuel** (324 units for 357 gas plants; 7 are OMIE codes).
   In the I90 sample, gas cogeneration's final schedule is 2,100–2,250 MW in 2021, 640 MW on 2022-09-15, 2,161 MW on
   2023-02-15; 20 new gas programming units in October 2022. For plant-level cogeneration use I90, not OMIE units.
+- **Every day 2022-04-01 → 2023-03-31 is on disk** (fetched 2026-11-10/11; 365 workbooks, 2.0 GB; with the monthly
+  sample, 435 files, 2.3 GB). `build/build_cogeneration_ree_panel.py` (13 minutes) keeps every programming unit's
+  daily P48 and PDBF, 2021–2023. Gas cogeneration falls on the cap's first day: 1,960 MW on 14 June 2022, 1,579 on
+  the 15th, 1,119 on the 19th; it returns from Monday 3 October (921 → 1,305 MW in five days). Only 26 gas units
+  (159 MW) are new in October: the plants keep their REE unit through both dates. 165 of 231 gas units have at least
+  10 run/stop switches in the year. These units are 0.58–0.76 of OMIE's non-renewable thermal schedule.
+- **A stopped unit can have no row in the workbook that day**: fill missing days as zero before counting stops.
 - **Most cogeneration offers at zero**: 8–21% of non-renewable units offer most of their MW above €1/MWh.
 - `cab` capacity of a represented unit changes as plants join and leave: the registry's `max_power_mw` is the median
   day, `cap_max_mw` the largest (8,831 MW summed against 7,236 MW in January 2022).

@@ -12,7 +12,8 @@ REE's UP codes for hydro are OMIE's (`DUER`, `EBRFEN`).
 
 A SAMPLE, NOT THE ARCHIVE. A day is about 6.7 MB zipped (2023), so 2019-01 → 2025-09 in
 full is about 16 GB. The default fetches the 15th of every month, 81 files, approved by the
-user on 2026-10-08.
+user on 2026-10-08. Every day 2022-04-01 → 2023-03-31 was added with ``--dates`` on
+2026-11-10 (365 files, 2.0 GB) for the cogeneration design.
 
 Needs ``ESIOS_TOKEN`` (`x-api-key`). REE issues the token on condition that data already
 downloaded is not requested again, so each day is requested once and kept as returned in

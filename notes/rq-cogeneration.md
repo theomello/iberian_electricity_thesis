@@ -75,12 +75,38 @@ appears under its new code and its earlier output sits under a code the snapshot
 the sample is 2,100–2,250 MW before the cap, against about 3,550 MW of non-renewable schedule in OMIE); one day a
 month is too thin for any estimate; offers are not in these workbooks, so E3 would stay with OMIE's units.
 
-**What it needs:** the workbooks for every day of the window (ESIOS archive 34, token, about 5–8 MB a day in 2022).
-Not fetched. A decision for the user.
+**Fetched 2026-11-10/11** (user's go-ahead): every day 2022-04-01 → 2023-03-31, 365 workbooks, 2.0 GB, no bad
+answer. `build/build_cogeneration_ree_panel.py` → `outputs/tables/cogeneration_ree/` (one row per programming unit
+and day: final schedule P48, day-ahead schedule PDBF, of which bilateral; and a unit table with fuel).
+`analysis/cogeneration_ree_describe.py` → `outputs/tables/cogeneration_ree_*.csv`. Counts only:
+
+- **The break is on the day.** Gas cogeneration's final schedule, average MW: 1,875 (Mon 13 June 2022), 1,960 (14),
+  **1,579 (15, the cap's first day)**, 1,485, 1,423, 1,182, 1,119 (Sun 19), then 1,050–1,250. Units running (above
+  10% of their largest day): 136 → 113 → 81. 14 days before against after: 1,838 → 1,219 MW. Biomass and waste:
+  721 → 771. Other fossil cogeneration falls with gas (241 → 162).
+- **The return starts on the first working day of October.** 921 MW (Fri 30 Sept), 834 and 902 over the weekend,
+  1,140 (Mon 3 Oct), 1,287, 1,305; units running 69 → 99 → 109. A second step on 30 January – 2 February 2023
+  (1,245 → 2,038 MW, 108 → 174 units), not yet explained (the 2023 operating-payment values are a candidate).
+- **Before the cap:** 2,101 MW on 15 March 2022, 2,017 on 1 April, 1,589 on 11 April; April averages 1,696. The
+  fall after RDL 6/2022 (29 March) is real and precedes the cap.
+- **The plants keep their unit.** Gas units first seen in the daily window: 26 in October 2022 (159 MW), 13 in
+  November (40 MW), 7 in January 2023 (54 MW). So the October return (about +400 MW in two weeks) is mostly the same
+  units restarting, and a plant can be followed through both dates. OMIE's new offer units are a market-side
+  re-registration that REE's units mostly do not share.
+- **Enough switching.** 231 gas units in the daily window; 165 (2,265 MW) have at least 10 run/stop switches, median
+  17, 4 never stop. Gate G5 (100 units) passes on REE's units; it failed on OMIE's (96, 11 with fuel).
+- **Coverage.** REE's gas plus other-fossil cogeneration units are 0.58–0.76 of OMIE's non-renewable thermal schedule
+  month by month (0.61–0.66 in June–October 2022), so the ratio is stable through the event. The rest is plants whose
+  2022 unit is not in the 2026 register (1,074 units in the window have no register entry, mostly purchase units)
+  or whose register technology is not a cogeneration fuel. Not yet traced.
+- Weekday pattern: 1,400–1,420 MW Tuesday–Thursday against 1,246 on Sundays; any daily comparison needs day of week.
+
+Still open: offers are not in these workbooks; the regulated payment per plant; which plants were inside the
+regulated scheme (excluded from the cap until October) and which outside it (eligible from 15 June).
 
 ## Where the design stands
 
-- E1 (the event by group) is feasible now on OMIE's label, and far better on REE's units with the daily workbooks.
-- E2 (the run decision and the cost) needs fuel and plant-level units: REE's units, or nothing.
+- E1 (the event by group) and E2 (the run decision and the cost) now have their data: REE's units by day,
+  2022-04-01 → 2023-03-31, fuel known, plants followed through both dates. Neither has been estimated.
 - E3 (pass-through into offers) rests on a few dozen units that state a price; a lead, not a chapter.
 - The regulated payment per plant is still the main unknown (spec §6).

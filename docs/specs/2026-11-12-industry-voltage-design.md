@@ -56,3 +56,30 @@ Found after the registration while answering whether the tariff mix inside E0, E
 3. **Rules 1 to 7 stand**, with "series" meaning these five (rule 6 needs at least five, so none can drop out of rule 6 except by failing rule 1).
 
 **What the weights do not fix.** They put a number on the mix, not on the customers' flexibility within it: a 3.0TD customer and a 2.0TD household differ in how they respond, and the weights are shares of energy, not of the price-responsive load. The 2.0TD/3.0TD weights are from 2024–26 and the 3.1A weights from the break in a series definition; both are approximations, so the bracket is the honest range and the weighted dose is the central case.
+
+## Results (2026-11-12, run as amended, `analysis/tou_cross_tariff.py`; `outputs/tables/tou_cross_tariff_{main,dose,reduced_form,pooled}.csv`)
+
+Eta = elasticity of the series' LASSO error to the reform-induced change in ln price (central dose: weighted mix, E = post-window mean OMIE €100.81). Cluster = area x month-of-sample (t_wk with weekly clusters beside). Portugal control unless stated.
+
+| series | dose (DDD, evening vs night) | within-day sd | eta (se) | t (area-month / week) | placebo 2019 eta (t) | France eta (t) | reduced form, evening vs night DDD |
+|---|---|---|---|---|---|---|---|
+| E0 | 0.64 | 0.188 | **-0.101 (0.004)** | -24.9 / -22.4 | -0.023 (-4.05) | -0.096 (-19.2) | -3.9% (se 0.4) |
+| E1+E2 | 0.16 | 0.050 | -0.168 (0.073) | -2.3 / -2.9 | -0.078 (-2.79) | -0.148 (-2.1) | -5.1% (0.7) |
+| 6.2 (1216) | 0.07 | 0.026 | -0.080 (0.077) | -1.0 / -0.6 | +0.117 (+3.2) | -0.042 (-0.6) | -0.1% (0.8) |
+| 6.3 (1217) | 0.06 | 0.023 | -0.321 (0.158) | -2.0 / -3.1 | +0.254 (+1.3) | -0.279 (-1.9) | -2.4% (1.6) |
+| 6.4 (1218) | 0.04 | 0.014 | -0.533 (0.252) | -2.1 / -3.2 | +0.988 (+2.5) | -0.461 (-2.0) | -1.9% (1.4) |
+
+E0 sensitivities: E=60 -0.074; hourly OMIE -0.084; weights +-10 pts -0.092 / -0.110; pure 2.0TD -0.078, pure 3.0TD -0.163; fixed effects incl. month-of-year and temperature, see csv. Pooled eta (weekly clusters, four readable series): E0 -0.089, E1+E2 -0.157, 6.2 -0.023, 6.3 -0.296; Wald equal eta chi2(3) = 7.52, p = 0.057. Series definitions: 6.3 and 6.4 tariff series equal E4 and E6 each month; 6.2 / E3 is stable at about 1.30 through August 2021 (September is a partial window), so no definition break at the reform.
+
+**Rules as registered.**
+1. Readability: **6.4 not readable** (within-day sd 0.014 < 0.02). Four readable series.
+2. E0 anchor: **pass** (central -0.101, pure 2.0TD -0.078, pure 3.0TD -0.163, all t < -6, inside -0.25 to -0.03).
+3. Placebo: **fail for E0 and E1+E2** (placebo eta -0.023, t -4.05; and -0.078, t -2.79: significantly negative on a 2019 calendar with no reform; real eta lies below both). Pass for 6.2 and 6.3 (placebo positive).
+4. Industry responds: **pass, marginally**: 6.3 eta -0.32, t -2.03 (weekly t -3.1); 6.2 fails (t -1.0).
+5. Common elasticity: **not rejected, narrowly** (p 0.057).
+6. Dose ordering: **not evaluable as registered** (needs five readable series, has four); Spearman of (minus reduced form) with dose = 0.60, below 0.7 in any case.
+7. France: **pass** (same sign in all four).
+
+**Reading, per the registered "what each outcome means":** rule 3 fails, so the design does not identify the industrial gradient cleanly; stop as a causal dose-response. What the run does show: (a) E0 reproduces the household anchor (-0.10) on a dose that is four to sixteen times larger than the high-voltage doses; (b) the effect does **not** scale with the dose across levels: E1+E2's evening-versus-night effect (-5.1%) is larger than E0's (-3.9%) on a quarter of the dose, 6.2 shows nothing, 6.3 and 6.4 about -2%; the implied eta rises as dose falls (-0.10, -0.17, -0.08, -0.32, -0.53), which is what a response that is not driven by the price change looks like (or very different flexibility); (c) the high-voltage series are noisy: their 2019 placebos are positive and as large as the real estimates (6.4 +0.99), so the single-tariff t of about -2 is not evidence; (d) the 2019 placebo for E0 is -0.023 (t -4), about a quarter of the real size: the cross-fitted calendar has residual shape in it, a floor under what can be claimed. What this does not support: an industrial elasticity, or a gradient of effect with dose.
+
+**Deviations and limits:** France's LASSO uses Spain's temperature and holidays as stand-ins; E1+E2 weights treat 6.1B as 6.1A; the cross-section of eta is the pre-registered quantity, the reduced-form ordering is descriptive; tariff mixes inside E0 and E1+E2 are proxies (2024-26 shares; series break). The E0 standard error (0.004) is narrower than the paper's 0.012 because the paper's column 4 is instrumented with the PVPC price; here the dose is the regulator's and is not instrumented.

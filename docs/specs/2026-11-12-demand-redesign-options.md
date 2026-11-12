@@ -102,3 +102,19 @@ about 380 MW). 26 placebo breaks, 28 days pre and 14 post, DST days dropped; nig
 over a six-week window, not in the control's composition. The sum of the four areas reproduces 352 (ratio 0.985), so the
 series choice does not matter either. Under P2 the real date could still be run as a bound (MDE 10%), which would say only that
 the elasticity is above about −0.35.
+
+## 7. PVPC forward phase-in: price gate, rules set before the run (2026-11-12, user's go-ahead)
+
+**In one example.** If the regulated price followed the day-ahead price fully, a €60 gap between the evening and midday day-ahead price would be
+a €60 gap in the PVPC energy term (slope 1.0). With a 25% forward weight the forward part is the same in every hour, so the PVPC gap is €45 (slope 0.75).
+The step is therefore a change in the **slope of the PVPC within-day gap on the day-ahead within-day gap**, which is also free of season.
+
+**Measure.** For each day, E − M = mean of the 19–22 local hours minus mean of the 11–14 local hours, for ESIOS 1001 and for the OMIE
+day-ahead price (hourly mean). Slope = regression of the 1001 gap on the OMIE gap, over the 60 days before (b0) and the 60 days after (b1) a
+break; step effect Δ = b1 − b0. Expected: 2024-01-01 −0.25 (1.00 → 0.75), 2025-01-01 −0.15, 2026-01-01 −0.15 (RD 446/2023, BOE-A-2023-14048;
+the 2025 value 40% is by the 15-point rule). Placebo breaks: the 1st and 15th of March to November in 2023, 2024 and 2025 (weights constant inside a year), same 60/60 windows.
+**Rules (price gate only; no demand series):**
+- **F1** pre-slope before the first step (2023-11-01 → 12-31) in 0.85–1.15; otherwise 1001 is not fully spot-indexed and the expected steps are wrong, stop.
+- **F2** each step's |Δ| ≥ 0.10 and above the 95th percentile of the placebo |Δ|.
+- **F3** each step's Δ within 0.5–1.5 times its expected value, with the expected sign.
+A step that fails F2 or F3 is dropped. If no step passes, kill; if some pass, the next step is a power gate on placebo breaks as in Step 2, run only on the passing steps.

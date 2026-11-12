@@ -29,3 +29,20 @@ Rules 2, 3, 4, 7 and 8 pass: the paper's design reproduces on its own unit of ob
 
 ## Threats
 The counts are domestic regulated points of each group, rounded to a whole percent in 2018-19 and to a decimal from Q4 2019 (rule 7 bounds this); the Q3 2019 figure may be carried forward; the CNMC counts supply points, the paper's counts consumers (the same unit here, one supply point per consumer for domestic customers); quarter-end counts interpolated to daily smooth the real path, which is faster in the second half of 2021 (Endesa regulated points fall 4% in Q3 and 4% in Q4 2021); the group's regulated points include its PYME and industrial points (under 1%); weather is national (as before); schedule data, not metered load.
+
+## Results (run 2026-11-12, `scripts/analysis/tou_area_panel_pc.py`)
+
+Outputs: `outputs/tables/tou_area_panel_pc_{effects,placebo,elasticity,ddd}.csv`. Version M (Portuguese regulated unit per consumer, ERSE counts) is the main one; F (REN national, no counts) beside it. Deviations from the registration: there are **18** placebo windows (starts 2018-04 to 2019-09), not 19; "rank 2 of 19" counts the real window among them. Portuguese gaps (Jul-Dec 2020, Mar-Apr 2021) are bridged by PCHIP interpolation.
+
+| rule | outcome |
+|---|---|
+| 1 counts valid | **pass** (largest quarterly change 5.0%; sums 99.1-99.9%) |
+| 2 period effects (M, weighted) | **pass**: weekday peak -7.76% (t -7.6), mid -5.59% (t -5.5), off-peak -0.86% (t -0.6) |
+| 3 placebo | **pass**: real peak effect ranks 2 of 19; elasticity placebo eta +0.022 (t 1.36) |
+| 4 areas | **pass**: 5 of 5 negative |
+| 5 elasticity, column 4 | **pass**: -0.086 (se 0.014, t -6.3, F 872). Columns 1-3: -0.013, -0.021, -0.018 (t > -1), as on the national series |
+| 6 consistency with 352 | **pass**: 0.32 points |
+| 7 robustness | **FAIL**: drop Endesa 0.55, unweighted 0.11, PDBF 0.49, share ±0.5: 0.90/0.92, drop Q3 2019: 0.06 all within bounds; **the control swap to REN moves the peak effect by 4.57 points** (-7.76 to -3.19) |
+| 8 counts fix the level drift | **FAIL**: placebo sd of weekday off-peak effect 4.68 pts without counts, 6.23 (M), 3.66 (F); needed at most 2.34 |
+
+Reading. The replication now reproduces in its own units: rules 1-6 pass, peak-minus-off-peak is -6.9 points under either control, and column 4 gives -0.086, the same as on the national series. What does not hold is the level: against REN the peak effect is -3.2% with off-peak +3.7%, against the Portuguese regulated unit -7.8% with off-peak -0.9%, so the *level* of the effect depends on the control while the contrast (peak minus off-peak, evening versus night) does not. Rule 8 fails: dividing by counts did not reduce the placebo spread of level effects for the Portuguese-unit version (it rose); the level drift is therefore not mainly migration. The F version's sd of 3.66 is smaller than without counts but not by half. Not rescued. Consequence: the elasticity from the contrast (evening versus night; column 4) is supported on three data sets; any statement about the level of the weekday peak effect is not. The headline stays the Wald range with column 4 beside it.

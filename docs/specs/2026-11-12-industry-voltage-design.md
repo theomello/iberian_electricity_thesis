@@ -39,3 +39,20 @@ All pass: demand at every readable level responds to the reform-induced price in
 
 ## Threats and limits
 (a) **Flexibility and dose both fall with voltage.** A response that falls with voltage is also what rigid large processes produce with no price response; the proportionality test (rule 5) and the placebo are the guard, not a proof. (b) The tariff mix inside E0, E1 and E2 is unobserved; the bracket is the honest answer. (c) Many industrial contracts are fixed-price per period, so the effective dose may be smaller than computed (energy-price base only), and contract exposure is not measured. (d) Portugal's total includes its industry, which has its own 2021 recovery; France is the second control; Spain's industrial recovery from COVID in 2021 differs by sector and the 2018–2020 LASSO cannot know it; the placebo year is the only guard. (e) The old-regime hours were read from the consolidated Orden ITC/2794/2007 and assumed unchanged to May 2021; the 2019 and 2020 toll orders were not read. (f) August 2021 is in the post window: it was off-peak all month in the old regime and a medium-season month in the new one, which the dose already encodes. (g) The measured demand series are by voltage of connection, so they include self-generation effects and non-industrial users (services, transport) at each level. (h) Seven series, one reform, one summer.
+
+## Amendment 2026-11-12, before any code or run: use tariff series and measured mix weights
+
+Found after the registration while answering whether the tariff mix inside E0, E1 and E2 can be separated. ESIOS publishes measured demand **by access tariff** as well as by voltage level, and the high-voltage tariff series run for the whole window: **1369 (6.1A, 1–30 kV), 1216 (6.2, 30–72.5 kV), 1217 (6.3, 72.5–145 kV), 1218 (6.4, ≥145 kV)**, 2017-12-31 → 2026-04. The low-voltage tariff series (1209 for 2.0TD, 2532 for 3.0TD, 2531 for the EV tariff) start only in mid-2024.
+
+**Checks (June–September 2021, TWh; computed from the files on disk):**
+- **E4 equals the 6.3 series (ratio 1.000) and E5 + E6 equals the 6.4 series (1.000)**: E5 (145–220 kV) is empty and E6 is the whole of 6.4. So E4 and E6 are clean single-tariff series.
+- **E3 is 0.78 of the 6.2 series** (6.2 starts at 30 kV, E3 at 36 kV); the 30–36 kV part sits in E2. The tariff series 1216 is the right outcome for 6.2.
+- **E1 + E2 over the 6.1A series is 1.39 in 2018–2020 and 1.08 from 2022.** Before June 2021 the 6.1A series excluded the old 3.1A tariff; the new 6.1TD includes it. That break identifies the mix inside E1 + E2 before the reform: **about 72% 6.1A, 20% 3.1A and 7% 6.1B** (solved from the 1.385 and 1.08 ratios; approximate).
+- **E0 mix (2.0TD against 3.0TD), from 2024-07 → 2026-03, the first months both series exist:** **69% 2.0TD, 31% 3.0TD, EV tariff 0.1%.** Taken as a proxy for 2021 (assumes the mix was stable).
+
+**Changes to the design (nothing was run):**
+1. **Outcomes (five series):** E0; E1 + E2 combined (voltage series, mixed); **tariff series 1216 (6.2), 1217 (6.3) and 1218 (6.4)** in place of E3, E4 and E5/E6. E6 is not a separate series (it is 6.4).
+2. **Dose for mixed series = the weighted average of the tariffs' hourly Δp** with the measured weights above: E0 = 0.69 × Δp(2.0TD) + 0.31 × Δp(3.0TD) (July evening-against-night dose about +0.55); E1 + E2 = 0.20 × Δp(3.1A→6.1TD) + 0.79 × Δp(6.1A/6.1B→6.1TD or 6.2TD) (about +0.24). The earlier bracket (each pure tariff in turn) is kept as a sensitivity, plus ±10 points on the weights.
+3. **Rules 1 to 7 stand**, with "series" meaning these five (rule 6 needs at least five, so none can drop out of rule 6 except by failing rule 1).
+
+**What the weights do not fix.** They put a number on the mix, not on the customers' flexibility within it: a 3.0TD customer and a 2.0TD household differ in how they respond, and the weights are shares of energy, not of the price-responsive load. The 2.0TD/3.0TD weights are from 2024–26 and the 3.1A weights from the break in a series definition; both are approximations, so the bracket is the honest range and the weighted dose is the central case.

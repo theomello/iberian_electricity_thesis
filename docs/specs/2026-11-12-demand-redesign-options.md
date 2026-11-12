@@ -132,3 +132,43 @@ F1 passes (pre-slope Nov–Dec 2023: 1.14). Placebo breaks: 54, sd of Δ 0.05, 9
 **Verdict under the rules: no step passes; kill.** The PVPC within-day gap does not flatten at any step; it steepens. Not diagnosed
 why (the energy term 1001 may carry other hour-varying parts, or the forward weights may enter differently from the preamble's
 description); an unexplained wrong-sign move is not a treatment to build a demand design on.
+
+## 8. Wider pass over `papers/md/` and a search for new events (2026-11-12, user's go-ahead; nothing run)
+
+**Papers not read closely before, and what each adds.**
+- **`240912353v2` (synthetic control + triple difference).** Collapse the triple difference into a DiD by taking, per unit and day, the
+  night − midday gap, then run synthetic control on that series with a **donor pool of many units**. Our R0 weighted three controls on
+  hourly levels fitted inside a six-week window (placebo sd 3.5%). This is a different object: a day-level within-day-gap series, weights
+  fitted on a long pre-period, many donors (Spanish E0, E1–E6, 351, 353, Portugal, France). **Candidate R2.** Honest expectation: the
+  same noise floor may remain, since the gap's day-to-day variation is what drives the placebo sd; but it is the first
+  specification in the folder aimed at exactly that.
+- **`2584200` (generalised synthetic control / fixed effects, Xu), `w25132` (matrix completion).** Same family; useful only with many donors.
+- **`t0312` (Conley & Taber, inference with few policy changes).** With one treated unit and one event, inference should use the
+  **distribution of effects in the untreated units at the same date**, not only the same unit at other dates. That handles
+  date-specific shocks (the June 2022 heatwave) that our time placebos cannot. It needs donor series (Portugal, France; Italy and
+  Germany need ENTSO-E, token pending).
+- **`w23908` (Burlig, Knittel, Rapson, Reguant, Wolfram; the LASSO prediction-error method).** Gains come from long, stable pre-periods
+  and many units. Ours is the opposite for 352: the June 2021 reform broke its shape, leaving about one training year.
+- **`qed-wp-1314` (MacKinnon & Webb, few treated clusters), `utac010` (Olden & Møen), `230702735v2`, `2502.*`, `2505.09942`.** Inference
+  and triple-difference estimators; no power gain.
+- **`ssrn-4251564` (von Graevenitz, German manufacturing).** Own-price elasticity −0.4 to −0.6 from exogenous variation in network
+  charges across grid areas with administrative plant data. Spain has no regional variation in tolls and no plant data; the
+  transferable idea is cross-sectional dose, which is the main thread's cross-tariff design.
+- **`the-real-time-price-elasticity-of-electr` (Lijesen), `cesifo1-wp12093` (distributional effects of the Iberian measures).** Context; Lijesen's
+  hourly design is the one already run.
+
+**New policy episode found by search: the 2026 energy-crisis decree.** Real Decreto-ley 7/2026 of 20 March (in force 22 March 2026), response
+to the Middle East war: VAT 21% → 10% for contracts up to 10 kW and electricity tax 5.11% → 0.5%
+([Selectra](https://selectra.es/energia/noticias/rebaja-impuestos-luz-real-decreto-7-2026),
+[Agencia Tributaria](https://sede.agenciatributaria.gob.es/Sede/impuestos-especiales-medioambientales/impuesto-especial-sobre-electricidad/medidas-tributarias-combatir-crisis-energetica-electricidad.html)).
+Sources disagree on the end of the electricity-tax cut (31 May or 30 June); the VAT cut ran to 30 June, with later decrees
+(RDL 18/2026 of 29 June, 25/2026 of 29 September) re-allowing reduced rates in August–September and November–December, conditionally.
+**All unverified in the BOE.** What it would add: another VAT-plus-tax step and, more usefully, **reversals on dates set at the decree's
+announcement**. What it does not fix: it is again a response to a price spike, E0 (ESIOS 1201) ends 2026-04-30 and Portugal's REN series
+2026-05, so only five weeks of post-step measured demand exist, and the electricity-tax part hits industry too. Revisit when E0 reaches June–July
+2026 (about January 2027). Separate fact: the PVPC became quarter-hourly in January 2026 (96 prices a day), a within-day change in how finely the
+price varies; not examined.
+
+**Recommendation.** One more cheap test is worth running: **R2**, synthetic control on the day-level night − midday series with the
+donor pool above, as a placebo power gate only (same 26 breaks, real date sealed, stop if the placebo sd stays at or above 3%).
+Otherwise follow the fallback in §5: state the elasticity as a bound and rest the demand side on the time-of-use replication.

@@ -198,3 +198,23 @@ Reading: the cap's net price jump is not unusual for a two-week window in this v
 component has no price variation (G2). What survives is the **night-versus-midday relative price** (+29 log points, outside the
 placebo range). G1's rule had no stated consequence; I treat the level component as not testable on price grounds, as with G2.
 The scaling for Step 2: implied effect on the night − midday contrast = −0.10 × 0.29 ≈ −2.9%. G1 is not blind (section 3.0).
+
+## 7. Step 2 results (2026-11-12, user's go-ahead; `scripts/analysis/gascap_demand_power.py` → `outputs/tables/gascap_demand_power*.csv`; real window not computed)
+
+DiD of ln(series) − ln(control) on post × block (night, midday, evening), hour and weekday effects, temperature and holiday
+differences, clustered by day, at 26 placebo breaks (Step 1 reported 24; two windows had too few days for its price filter but
+not for this one). MDE = 2.8 × placebo sd of the **night − midday** contrast. Implied effect of elasticity −0.10 on a +29 log-point
+relative price: −2.9%; of −0.5: −14.5%.
+
+| series | control | placebo sd | MDE | P1 (MDE ≤ 1.45%) | P2 (MDE ≤ 14.5%) |
+|---|---|---|---|---|---|
+| **352 (primary)** | Portugal | 4.1% | **11.4%** | fail | pass |
+| 352 | 351 | 4.1% | 11.5% | fail | pass |
+| E0 (measured) | Portugal | 2.5% | 7.1% | fail | pass |
+| 351, 353, industry (**added after the user's question, not in the spec**) | Portugal | 2.1%, 5.3%, 1.6% | 5.8%, 14.9%, 4.5% | fail | pass, fail (353), pass |
+
+**Verdict under the pre-set rules: P1 fails, P2 passes narrowly for 352 (MDE 11.4% against 14.5%), so the real date may be run
+only as a bound.** The bound would say "elasticity above about −0.4", which is no tighter than the literature's −0.1 to −0.4 and
+already implied by the hourly design's ceiling. The design cannot separate −0.1 from zero (needs an effect of 11%, against an
+implied 3%). **Recommendation: kill** as an estimate; running the real date adds only a weak bound. Level contrast placebo sds
+are larger (352: 7.9%), so the level component is hopeless too.

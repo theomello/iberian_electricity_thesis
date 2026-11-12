@@ -180,3 +180,21 @@ the statement that it is a short-run response of regulated households to a known
 Go-ahead for **Step 1 only** (price gates, descriptive, no demand series), then a second go-ahead for Step 2 after its result.
 New scripts would be `scripts/analysis/gascap_demand_price_gates.py` and `gascap_demand_power.py`, reusing `tou_did.build()`
 (`src='352'` and a new `'351'` source) and `tou_lasso_paper.py`.
+
+## 6. Step 1 results (2026-11-12, user's go-ahead; `scripts/analysis/gascap_demand_price_gates.py` → `outputs/tables/gascap_demand_gates*.csv`)
+
+Window 28 days before, 14 after 2022-06-15; 24 placebo windows. Δ ln PVPC energy term (ESIOS 1001), post minus pre.
+
+| gate | result | rule | verdict |
+|---|---|---|---|
+| G0 1001 contains 1909 | coefficient 0.86 (se 0.09) on hourly changes, 1.18 (0.03) in levels | 0.8–1.2 | **pass** |
+| G1 net level | +0.163 | ≥ 0.10 and above placebo 95th pct of \|Δ\| (0.458) | **fail**: the placebo windows (autumn 2021 to winter 2023) move as much or more |
+| G2 evening − midday | +0.006 | ≥ 0.10 and above p95 (0.230) | **fail, component dropped** |
+| G2 night − midday | +0.290 | same | **pass** (placebo sd 0.136) |
+| G3 first stage, post × Y | F 73 (243-day cap period plus pre-cap months, weekday effects, trend) | ≥ 10 | **pass** |
+| G4 switching | 352 share of 352 + 351: 7.92% → 8.08% (+2.1%) | no fall over 3% | **pass** |
+
+Reading: the cap's net price jump is not unusual for a two-week window in this volatile period (G1), and the evening-versus-midday
+component has no price variation (G2). What survives is the **night-versus-midday relative price** (+29 log points, outside the
+placebo range). G1's rule had no stated consequence; I treat the level component as not testable on price grounds, as with G2.
+The scaling for Step 2: implied effect on the night − midday contrast = −0.10 × 0.29 ≈ −2.9%. G1 is not blind (section 3.0).

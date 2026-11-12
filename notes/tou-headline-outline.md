@@ -4,7 +4,7 @@ Branch `tou-policy-prices`. Every number below is in `docs/specs/2026-11-11-tou-
 
 ## Headline
 
-**Spain's June 2021 time-of-use reform cut evening electricity demand by about 4–5% relative to night. On the method of Enrich, Li, Mizrahi and Reguant this is a within-day price elasticity of about −0.1 for aggregate low-voltage demand. It is a response to the reform as a whole, not a clean price slope: it does not scale with later charge changes.**
+**Spain's June 2021 time-of-use reform cut evening electricity demand by about 4–5% relative to night. On the method of Enrich, Li, Mizrahi and Reguant this is a within-day price elasticity of −0.10 (se 0.012) for aggregate low-voltage demand, the paper's column-4 specification (decision 2026-11-12), corroborated by evening-versus-night Wald ratios of −0.06 to −0.09. It is a response to the reform as a whole, not a clean price slope: it does not scale with later charge changes.**
 
 One-sentence claim: *the reform worked, the implied elasticity is in the paper's range, and what the reform changed is not only the price.*
 
@@ -48,5 +48,5 @@ One-sentence claim: *the reform worked, the implied elasticity is in the paper's
 ## Open items before writing
 
 1. Confirm the start date of the new tolls for the larger tariffs (CNMC resolution or BOE).
-2. Decide whether column 4 is the headline elasticity or the pooled Wald range −0.06 to −0.10.
+2. ~~Decide whether column 4 or the Wald range leads~~ Decided 2026-11-12: **column 4 leads** (−0.100, se 0.012, F 80), the Wald range −0.06 to −0.09 corroborates. Keep stating that columns 1–3 fail the registered rules and that the reading of column 4 was made after the run.
 3. Optional designs: industry as a treated group (needs a hand-built 3.0TD/6.xTD charge table); a regulated-only version of column 4 on ESIOS 352; a longer placebo window.

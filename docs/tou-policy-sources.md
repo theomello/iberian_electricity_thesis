@@ -69,8 +69,36 @@ Tariff segments in the charges orders are numbered 1–6 and are **not named** i
 
 The price spread across periods falls by a factor of six from 3.0TD to 6.4TD, so the treatment dose varies strongly by voltage level. Power-term tolls (EUR/kW-year, 3.0TD–6.4TD) were also read and are in the resolution's Annex I 1.a (not tabulated here).
 
-**Period calendar (Circular 3/2020, art. 7, BOE-A-2020-1066), peninsula.** 2.0TD, all year, working days: P1 10–14 and 18–22h, P2 8–10, 14–18, 22–24h, P3 0–8h; weekends, 6 January and national holidays all P3. Six periods (3.0TD and 6.x), working days: **high season (Jan, Feb, Jul, Dec): P1 9–14 and 18–22h, P2 8–9, 14–18, 22–24h, P6 0–8h; medium-high (Mar, Nov): P2 / P3 / P6; medium (Jun, Aug, Sep): P3 / P4 / P6; low (Apr, May, Oct): P4 / P5 / P6**; weekends, 6 January and national holidays: P6 all day. The flattened table was read by the agent as above and is internally consistent (every day type covers 24 hours) but **must be checked against the PDF before it is used in code**; island and Ceuta calendars are not needed (peninsular series).
+**Period calendar (Circular 3/2020, art. 7, BOE-A-2020-1066), peninsula — verified against the BOE PDF on 2026-11-12 (all five day types, every hour).** 2.0TD, all year, working days: P1 10–14 and 18–22h, P2 8–10, 14–18, 22–24h, P3 0–8h; weekends, 6 January and national holidays all P3. Six periods (3.0TD and 6.x), working days: **high season (Jan, Feb, Jul, Dec): P1 9–14 and 18–22h, P2 8–9, 14–18, 22–24h, P6 0–8h; medium-high (Mar, Nov): P2 / P3 / P6; medium (Jun, Aug, Sep): P3 / P4 / P6; low (Apr, May, Oct): P4 / P5 / P6**; weekends, 6 January and national holidays: P6 all day. Checked cell by cell against the consolidated PDF (extracted with PyMuPDF): the peninsular table above is exactly as printed. Island and Ceuta calendars are not needed (peninsular series).
 
 **Voltage levels of the ESIOS demand series:** E0 below 1 kV (this includes **3.0TD customers**, above 15 kW, six periods, as well as 2.0TD); E1 ≥ 1 and < 14 kV; E2 ≥ 14 and < 36 kV; E3 ≥ 36 and < 72.5 kV; E4 ≥ 72.5 and < 145 kV; E5 ≥ 145 and < 220 kV; E6 ≥ 220 kV. The tariff boundaries (6.1TD below 30 kV confirmed by the CNMC; 6.2TD 30–72.5, 6.3TD 72.5–145, 6.4TD ≥ 145 kV from memory) are **to be verified**, and E2 straddles the 30 kV boundary between 6.1TD and 6.2TD.
 
 **Caution on the dose.** Industrial customers already had time-of-use tariffs before June 2021 (the old 3.1A and 6.xA tariffs had three to six periods), so the reform changes their *shape*, not a flat structure; the price change per period needs the old tariff values (not read) and is smaller than for households. This lowers the expected effect and the power of an industry design.
+
+## Pre-reform tolls for the industrial tariffs (read 2026-11-12)
+
+Until 31 May 2021 the access tolls (which then included the system costs) were those of Orden IET/107/2014 (BOE-A-2014-1052, Annex I: all tolls except 6.1) and Orden IET/2444/2014 (BOE-A-2014-13475, Annex I: 6.1A), carried forward by each year's order; Orden ETU/1282/2017 (BOE-A-2017-15521, 2018) sets no prices itself and its preamble says the tolls "se mantienen constantes desde el 1 de enero de 2014 (salvo los de los peajes 6.1A y 6.1B)". **The 2019 and 2020 orders were not read**: constancy to May 2021 is taken from that statement and the 2.0A check (44.027 €/MWh, the flat €44.0 used throughout). 6.1A's Annex I values come from a model-extracted summary of the page, not the verbatim text; 6.1A in IET/107/2014 (the "6.1" row) is identical, which is a cross-check.
+
+Old energy term, €/MWh (P1…P6; 3.0A and 3.1A have three periods):
+
+| old toll | P1 | P2 | P3 | P4 | P5 | P6 |
+|---|---|---|---|---|---|---|
+| 2.0A (flat) | 44.027 | | | | | |
+| 3.0A | 18.762 | 12.575 | 4.670 | | | |
+| 3.1A | 14.335 | 12.754 | 7.805 | | | |
+| 6.1A | 26.674 | 19.921 | 10.615 | 5.283 | 3.411 | 2.137 |
+| 6.2 | 15.587 | 11.641 | 6.204 | 3.087 | 1.993 | 1.247 |
+| 6.3 | 15.048 | 11.237 | 5.987 | 2.979 | 1.924 | 1.206 |
+| 6.4 (= 6.5) | 8.465 | 7.022 | 4.025 | 2.285 | 1.475 | 1.018 |
+
+**Old against new, by period shape** (`outputs/tables/tou_tariff_old_vs_new_2021.csv`; highest over lowest energy price, then change in the log of that ratio; hours of the old periods not yet matched, so this is the price shape only):
+
+| tariff | old ratio | new P1/P6 | change in ln ratio | simple mean energy price, old → new (€/MWh) |
+|---|---|---|---|---|
+| 3.0 | 4.0 | 15.3 | **+1.34** | 12.0 → 33.2 |
+| 6.1 | 12.5 | 17.6 | +0.34 | 11.3 → 21.9 |
+| 6.2 | 12.5 | 18.4 | +0.38 | 6.6 → 10.9 |
+| 6.3 | 12.5 | 17.6 | +0.34 | 6.4 → 9.5 |
+| 6.4 | 8.3 | 24.5 | **+1.08** | 4.0 → 5.8 |
+
+**What this changes in the design.** (1) Industry did not have flat prices, but the reform still moved the price shape a lot for two groups: **3.0 (low voltage, above 15 kW) and 6.4 (145 kV and above)**; the middle tariffs (6.1 to 6.3) moved about a third as much in log terms. The dose is not monotone in voltage, which is useful: a response that follows the dose should be largest for 3.0 and 6.4 and smaller in between, not simply falling with voltage. (2) The 3.0 customers sit in **E0** (below 1 kV) with the households, so E0 mixes a 2.0TD group (dose: flat 44 → 133/42/6) with a 3.0TD group (dose: +1.34 in the log ratio). (3) Average energy prices rose for every tariff (the reform moved cost from power terms to energy terms), so a level effect comes with the shape effect; the power terms changed too and are not in this table. (4) **Still needed:** the hours of the old periods (the orders point to Orden ITC/1659/2009 chapter VI and RD 1164/2001, not read), without which the old price cannot be assigned to an hour; and the old toll for 6.1B (30–36 kV) and the E2/E3 boundary.

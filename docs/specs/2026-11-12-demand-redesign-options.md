@@ -172,3 +172,23 @@ price varies; not examined.
 **Recommendation.** One more cheap test is worth running: **R2**, synthetic control on the day-level night − midday series with the
 donor pool above, as a placebo power gate only (same 26 breaks, real date sealed, stop if the placebo sd stays at or above 3%).
 Otherwise follow the fallback in §5: state the elasticity as a bound and rest the demand side on the time-of-use replication.
+
+## 9. R2 results (2026-11-12, user's go-ahead; `scripts/analysis/gascap_demand_r2.py` → `outputs/tables/gascap_demand_r2*.csv`; real window sealed)
+
+Day-level night − midday log gap of 352; donors E0, E1–E6, 351, 353, Portugal, France; weights fitted outside each placebo window; 23 placebo breaks
+(3 of the 26 lack the donor series for the whole window). Placebo sd of the effect:
+
+| donor pool | sd | MDE | rule (sd below 3%) |
+|---|---|---|---|
+| all donors (the plan) | **2.6%** | 7.2% | passes by the letter |
+| all but E0 | 3.15% | 8.8% | **stops** |
+| all but E0, 351 | 3.15% | 8.8% | stops |
+| all but E0, 351, 353 | 3.14% | 8.8% | stops |
+| Portugal only (baseline) | 3.2% | 9.0% | stops |
+
+**The 2.6% is mechanical.** The fit put weight 0.79 on E0 (measured low-voltage demand), which **contains the PVPC customers whose
+price the event changes**. A donor that contains the treated customers tracks the treated series for the wrong reason and would absorb
+part of any true effect (up to the PVPC share of E0, about a quarter). Without it the weights go to Portugal (0.38) and the pool barely
+beats Portugal alone: 3.15% against 3.2%. **Verdict: R2 stops under the corrected pool; the gas-cap demand design stays at "bound only"
+(MDE 8.8–10% against 2.9% implied).** The pre-set rule did not anticipate the contaminated donor; I record the clean pool as the
+reading, a post-hoc correction made after seeing the first result.

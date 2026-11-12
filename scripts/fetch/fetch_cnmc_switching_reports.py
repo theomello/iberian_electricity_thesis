@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fetch the CNMC's reports on retailer switching (Informes de supervision de los cambios de comercializador), expedientes IS/DE/014/18 .. 014/25 (2018-2025), public PDFs.
+"""Fetch the CNMC's reports on retailer switching (Informes de supervision de los cambios de comercializador), expedientes IS/DE/014/18 .. 014/26 (2018-2026), public PDFs.
 
 Each quarterly report holds, as images inside the PDF, the supply points by market type and by retailer group (Tabla 2 free versus regulated, Tabla 6 by segment, Tabla 7 by group and market type),
 the counts that Enrich, Li, Mizrahi and Reguant divide by (their section 3). Raw PDFs go to data/cnmc/raw_reports/ named <expediente>_<n>.pdf in the order the CNMC page lists them (newest first); the
@@ -15,7 +15,7 @@ import requests
 ROOT = Path(__file__).resolve().parent.parent.parent
 OUT = ROOT / "data" / "cnmc" / "raw_reports"
 H = {"User-Agent": "Mozilla/5.0 (academic thesis research)"}
-EXPEDIENTES = ["isde01418", "isde01419", "isde01420", "isde01421", "isde01422", "isde01423", "isde01424", "isde01425"]
+EXPEDIENTES = ["isde01418", "isde01419", "isde01420", "isde01421", "isde01422", "isde01423", "isde01424", "isde01425", "isde01426"]
 
 
 def main():

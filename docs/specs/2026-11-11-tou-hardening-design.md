@@ -481,3 +481,46 @@ Equation: e(i,h,t) = η · ln p(i,h,t) + FE + u. **Price.** Spain after the refo
 elasticity is not constant. Rules 2 or 3 fail: no reform elasticity under the paper's own method, stated as such.
 
 **Threats and limits.** (a) The elasticity is identified from the reform as a whole, which bundles awareness and the new tariff structure with the price; the charge-change events test (above) did not find the response scaling with later charge moves. Reported as the paper does, as the response to the policy-induced price, not as a clean price slope. (b) E0 is aggregate low-voltage demand, households and small businesses together, regulated and free-market; free-market customers may not have faced the PVPC price pattern, in which case the price change used is too large and the elasticity is understated in absolute value (not measured). (c) Portugal is the only untreated area (no French weather series). (d) One year of post data; the energy crisis starts in the autumn. (e) The paper clusters at the distribution-area-month level with many areas; we have two areas.
+
+## Checks and results of 2026-11-12 (user's go-ahead after the break): CNMC scope, exposed share, regulated-only design, industry data, paper-style elasticity
+
+**1. Who the reform covered (CNMC, Circular 3/2020, via web search).** The CNMC describes the new tolls as applying to all consumers, free-market and regulated alike; 2.0TD (below 1 kV, up to 15 kW) has three energy periods, and 3.0TD and 6.xTD (above 15 kW and above 1 kV) have **six**. So industry is not
+an untreated group: the structural claim in the earlier caution (d) holds. **The start date for the larger tariffs was not confirmed** in the sources found (a secondary page gives 1 June 2021 for the under-15 kW tariff); confirm against the CNMC resolution or the BOE before citing a date.
+
+**2. Exposed share, measured (`analysis/tou_pvpc_only.py` → `outputs/tables/tou_pvpc_only_share.csv`).** ESIOS 352 (regulated retailers' scheduled demand) over E0 (measured low-voltage demand), monthly: **0.23–0.30** (about 0.23–0.25 in summer, 0.28–0.30 in winter, no clear trend 2018–2021; schedule over
+measurement, so approximate). About a quarter of E0 is on the regulated tariff; the other three quarters are free-market customers and small businesses. ESIOS 351 (free-market retailers) is 1.8–2.2 times E0 because it covers all voltages.
+
+**3. The same evening-peak design on the regulated retailers' schedule (352).** DDD and paper-LASSO errors, Portugal control, V2 pre-window; elasticity = effect / Δ ln relative price (0.607 Jun–Sep, 0.673 window A, 0.135 window B). In-sample pre-period check 0.16% (E0: 0.14%).
+
+| window | series | DDD % (se) | paper LASSO % (se) | elasticity DDD | elasticity paper LASSO |
+|---|---|---|---|---|---|
+| Jun–Sep 2021 | E0 | −5.25 (0.71) | −3.79 (0.39) | −0.086 | −0.062 |
+| Jun–Sep 2021 | 352 (regulated) | −3.91 (0.74) | −2.56 (0.60) | −0.064 | −0.042 |
+| A, to 09-15 | E0 | −5.46 (0.77) | −3.94 (0.42) | −0.081 | −0.059 |
+| A, to 09-15 | 352 | −4.21 (0.81) | −2.66 (0.69) | −0.063 | −0.040 |
+| B, from 09-16 | E0 | −1.55 (0.73) | −2.46 (0.60) | −0.115 | −0.182 |
+| B, from 09-16 | 352 | −2.17 (1.12) | −3.81 (0.85) | −0.160 | −0.282 |
+
+**Reading.** The regulated customers' response is **smaller, not larger,** than E0's (−3.9% against −5.2% DDD; −2.6% against −3.8% paper LASSO). With the regulated share at 0.23 the rest of E0 (free-market customers and small businesses) responded about −5.7% (DDD) or −4.2% (paper LASSO): at least as much as the regulated.
+So the free-market part is not unexposed in the sense of the earlier worry; if its price change were much smaller than the PVPC one, its response would be much smaller too. The unmeasured alternative is that the response is not about the PVPC hourly price at all (it comes through the tolls and awareness). **Cautions:** 352 is retailers' scheduled
+purchases (a forecast by profile, not measured consumption), so it can lag behaviour; the 2019 migration drift moves its level (the cell contrasts difference it out); windows B are noisy and their elasticity near the small price change is unstable (−0.16 to −0.28 for the regulated).
+
+**4. Industry (E1–E6) as a treated group.** Not run. ESIOS has the default-tariff breakdown for 2.0TD only (indicators 1871–1879); there is **no charge series for 3.0TD or 6.xTD**, and their periods are six and seasonal, so an industry price change would have to be built by hand from the BOE and the CNMC resolution. Possible as a separate design (own pre-registration), not as a placebo.
+
+**5. The paper-style elasticity regression (`analysis/tou_elasticity_paper.py` → `outputs/tables/tou_elasticity_paper.csv`).** As pre-registered, with one correction made before running: the paper's Table 6 lists weekend × area × month-of-sample as an **added** fixed effect in column 4 (the registration said "in place of"), so column 4 = column 2 plus it. Average pre-policy energy cost €61.4/MWh; 57,026 hourly observations, 78 area × month clusters.
+
+| column | fixed effects | η (se) | t | first-stage F | OLS | reduced form |
+|---|---|---|---|---|---|---|
+| (1) | hour × weekend × month-of-sample, hour × weekend × area | −0.006 (0.021) | −0.3 | 3.9 | −0.012 | +0.003 |
+| (2) | + hour × weekend × area × month-of-year | −0.008 (0.016) | −0.5 | 6.0 | −0.010 | +0.004 |
+| (3) | + temperature × hour × weekend | −0.008 (0.016) | −0.5 | 6.1 | −0.012 | +0.004 |
+| (4) | + weekend × area × month-of-sample | **−0.100 (0.012)** | **−8.6** | **79.7** | +0.024 | −0.054 |
+
+Column (5), the price interacted with energy-cost percentiles: base −0.066 (t −3.2), interactions +0.001 (25–75th, t 0.4), **+0.008 (75–90th, t 2.9), +0.012 (above 90th, t 3.3)**. Placebo 2019 with cross-fitted errors and the real charge pattern: η +0.005 (se 0.006, t 0.8).
+
+**Stop rules as registered: rules 1 to 6 fail, rule 7 passes.** (1) First stage F ≥ 10 in every column: fails (3.9, 6.0, 6.1, 79.7). (2) Negative with t ≤ −2 in columns 1–4: fails (columns 1–3 are zero). (3) Between −0.25 and −0.03: fails for 1–3. (4) Columns within a factor of two: fails (ratio 18). (5) Percentile interactions |t| < 2: fails (the response weakens at high energy prices, from −0.066 to about −0.054 above the 90th percentile).
+(6) The evening Wald ratio (−0.059) within a factor of two of the median η: fails (the median of the four is −0.008). (7) Placebo: passes (t 0.8, real below).
+
+**Reading, after the fact (not pre-registered).** Columns 1–3 have weak instruments and near-zero reduced forms: without Spain's own month-by-weekend effects, the instrument's variation is mostly the **level** shift of Spain's price and demand between pre and post, which is contaminated (different recovery in 2021, a higher PVPC energy level); the reduced form there is the net of that level shift and the within-day pattern. Column 4 removes Spain's month-specific levels and keeps the within-day hourly pattern, which is the variation the policy created; there the instrument is strong
+(F 80) and η = **−0.100**, inside the paper's −0.082 to −0.135 and near the evening-versus-night Wald ratios (−0.06 to −0.09); its OLS is positive (+0.024), the simultaneity bias the paper argues for. So the registered rule set, which demanded all four columns, fails because three of the four columns do not identify the within-day response; the one column designed to isolate it does. **A defensible statement is column 4 only,
+labelled as a within-day (hour-by-weekend pattern) elasticity and as not meeting the registered rules; the stability across columns that the registration asked for is not there.** The energy-price interaction result also differs from the paper's.

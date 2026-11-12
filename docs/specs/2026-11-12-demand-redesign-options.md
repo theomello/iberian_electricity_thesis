@@ -118,3 +118,17 @@ the 2025 value 40% is by the 15-point rule). Placebo breaks: the 1st and 15th of
 - **F2** each step's |Δ| ≥ 0.10 and above the 95th percentile of the placebo |Δ|.
 - **F3** each step's Δ within 0.5–1.5 times its expected value, with the expected sign.
 A step that fails F2 or F3 is dropped. If no step passes, kill; if some pass, the next step is a power gate on placebo breaks as in Step 2, run only on the passing steps.
+
+### 7.1 Results (2026-11-12; `scripts/analysis/pvpc_phasein_price_gate.py` → `outputs/tables/pvpc_phasein_{gate,placebo}.csv`)
+
+F1 passes (pre-slope Nov–Dec 2023: 1.14). Placebo breaks: 54, sd of Δ 0.05, 95th percentile of |Δ| 0.104.
+
+| step | slope before → after | Δ | expected | F2 | F3 |
+|---|---|---|---|---|---|
+| 2024-01-01 | 1.14 → 1.20 | +0.06 | −0.25 | fail | fail (wrong sign) |
+| 2025-01-01 | 1.11 → 1.18 | +0.07 | −0.15 | fail | fail (wrong sign) |
+| 2026-01-01 | 0.99 → 1.22 | +0.23 | −0.15 | pass | fail (wrong sign) |
+
+**Verdict under the rules: no step passes; kill.** The PVPC within-day gap does not flatten at any step; it steepens. Not diagnosed
+why (the energy term 1001 may carry other hour-varying parts, or the forward weights may enter differently from the preamble's
+description); an unexplained wrong-sign move is not a treatment to build a demand design on.

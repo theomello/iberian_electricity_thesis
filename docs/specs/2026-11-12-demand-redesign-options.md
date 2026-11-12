@@ -82,3 +82,23 @@ Sensitivity analysis (Rambachan–Roth) is the right way to report what the data
 - **Policy change:** the gas cap stays alive only through R1; the PVPC forward phase-in is the one new event worth a price gate.
 - **Fallback, if R0 stops:** state the elasticity as a bound (Fabra's near-zero prior plus our hourly-design ceiling of −0.1 to
   −0.15) and rest the demand side of the thesis on the time-of-use replication.
+
+## 6. R0 results (2026-11-12, user's go-ahead; `scripts/analysis/gascap_demand_r0.py` → `outputs/tables/gascap_demand_r0*.csv`; real window not computed)
+
+Four reference-supplier areas (Endesa XXI `EE21C01`, Iberdrola Curenergía `IBCUC01`, Naturgy `GNSUC01`, EDP `HCURC01`; two units under 1.5% of volume left out)
+from OMIE PDBF, summed over roles; their sum is 0.98–0.99 of ESIOS 352. Control: SU Eletricidade's purchases (`EDPUC2`, mean
+about 380 MW). 26 placebo breaks, 28 days pre and 14 post, DST days dropped; night − midday contrast.
+
+| variant | placebo sd | MDE (2.8 sd) | P1 (≤ 1.45%) | P2 (≤ 14.5%) |
+|---|---|---|---|---|
+| four areas summed vs SU Eletricidade | 3.6% | 10.0% | fail | pass |
+| ESIOS 352 vs SU Eletricidade | 3.6% | 10.0% | fail | pass |
+| four areas pooled, area-by-area contrasts averaged | 4.0% | 11.1% | fail | pass |
+| synthetic weights (SU 0.42, Portuguese total 0.01, 351 0.04) | 3.5% | 9.7% | fail | pass |
+| reference: four areas vs Portuguese total (Step 2's control) | 3.9% | 10.8% | fail | pass |
+
+**Stop rule (placebo sd below 3%): not met, R1 stops.** The regulated-to-regulated control cuts the noise only from 4.1% to
+3.6%, and weights fitted on the window's own pre-period do not help further. The noise is in Spanish regulated load's within-day shape
+over a six-week window, not in the control's composition. The sum of the four areas reproduces 352 (ratio 0.985), so the
+series choice does not matter either. Under P2 the real date could still be run as a bound (MDE 10%), which would say only that
+the elasticity is above about −0.35.

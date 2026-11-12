@@ -51,3 +51,26 @@ Tariff segments in the charges orders are numbered 1–6 and are **not named** i
 - The 2022 charges plus the summer-2021 tolls give 100.3 at peak against 100.8 in 1876, so the tolls probably changed slightly on 1 January 2022; the 2022–2026 toll resolutions were not read.
 - The calendar of the six periods (Circular 3/2020, art. 7) is not reproduced in the resolution; needed for any 3.0TD/6.xTD design.
 - Segment-to-tariff mapping for segments 2 and 3 is by period count only.
+
+## Six-period tariffs, read 2026-11-12 (for the industry design)
+
+**Segment mapping, confirmed:** RD 148/2021, art. 3.2 (BOE-A-2021-4239): charge segment 1 = 2.0TD, 2 = 3.0TD, 3 = 6.1TD, 4 = 6.2TD, 5 = 6.3TD, 6 = 6.4TD; EV segments 2 VE = 3.0TDVE, 3 VE = 6.1TDVE. Art. 4: each segment uses the periods of its toll (Circular 3/2020, art. 7). Segment 1's three charge values were assigned to P1–P3 by left-alignment of the flattened HTML (monotone, matches the ESIOS 1876 sum to the cent).
+
+**Energy-term prices 2021, tolls plus charges, €/MWh** (`outputs/tables/tou_tariff_prices_2021.csv`; tolls from BOE-A-2021-4565 Annex I 1.b, charges from Orden TED/371/2021 art. 2.b; all rows read from the BOE's HTML):
+
+| tariff | P1 | P2 | P3 | P4 | P5 | P6 | P1 − P6 |
+|---|---|---|---|---|---|---|---|
+| 2.0TD | 133.1 | 41.8 | 6.0 | | | | |
+| 3.0TD | 77.4 | 59.3 | 32.1 | 17.4 | 7.9 | 5.1 | 72.4 |
+| 6.1TD | 50.9 | 39.2 | 21.9 | 12.2 | 4.4 | 2.9 | 48.0 |
+| 6.2TD | 25.4 | 19.6 | 10.9 | 6.2 | 2.1 | 1.4 | 24.0 |
+| 6.3TD | 22.0 | 17.2 | 9.9 | 4.8 | 1.8 | 1.3 | 20.7 |
+| 6.4TD | 13.5 | 10.5 | 5.9 | 3.9 | 0.8 | 0.6 | 12.9 |
+
+The price spread across periods falls by a factor of six from 3.0TD to 6.4TD, so the treatment dose varies strongly by voltage level. Power-term tolls (EUR/kW-year, 3.0TD–6.4TD) were also read and are in the resolution's Annex I 1.a (not tabulated here).
+
+**Period calendar (Circular 3/2020, art. 7, BOE-A-2020-1066), peninsula.** 2.0TD, all year, working days: P1 10–14 and 18–22h, P2 8–10, 14–18, 22–24h, P3 0–8h; weekends, 6 January and national holidays all P3. Six periods (3.0TD and 6.x), working days: **high season (Jan, Feb, Jul, Dec): P1 9–14 and 18–22h, P2 8–9, 14–18, 22–24h, P6 0–8h; medium-high (Mar, Nov): P2 / P3 / P6; medium (Jun, Aug, Sep): P3 / P4 / P6; low (Apr, May, Oct): P4 / P5 / P6**; weekends, 6 January and national holidays: P6 all day. The flattened table was read by the agent as above and is internally consistent (every day type covers 24 hours) but **must be checked against the PDF before it is used in code**; island and Ceuta calendars are not needed (peninsular series).
+
+**Voltage levels of the ESIOS demand series:** E0 below 1 kV (this includes **3.0TD customers**, above 15 kW, six periods, as well as 2.0TD); E1 ≥ 1 and < 14 kV; E2 ≥ 14 and < 36 kV; E3 ≥ 36 and < 72.5 kV; E4 ≥ 72.5 and < 145 kV; E5 ≥ 145 and < 220 kV; E6 ≥ 220 kV. The tariff boundaries (6.1TD below 30 kV confirmed by the CNMC; 6.2TD 30–72.5, 6.3TD 72.5–145, 6.4TD ≥ 145 kV from memory) are **to be verified**, and E2 straddles the 30 kV boundary between 6.1TD and 6.2TD.
+
+**Caution on the dose.** Industrial customers already had time-of-use tariffs before June 2021 (the old 3.1A and 6.xA tariffs had three to six periods), so the reform changes their *shape*, not a flat structure; the price change per period needs the old tariff values (not read) and is smaller than for households. This lowers the expected effect and the power of an industry design.

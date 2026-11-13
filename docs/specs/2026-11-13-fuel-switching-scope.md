@@ -65,3 +65,23 @@ Residual demand and the clearing price are jointly determined with dispatch (con
 - **Spline.** Cubic spline with interior knots at the terciles of `r`, in the truncated-power form `[z, z², z³, (z − k1)³₊, (z − k2)³₊]`, `z` the standardised ratio (5 degrees of freedom; the draft said 4, the knots at the terciles fix it at 5). The linear restriction is the four non-linear coefficients equal to zero.
 - **F5's "lowest availability"** is implemented as the 10% of days with the lowest total offered thermal capacity (unit-hours have no availability measure beyond being offered).
 - **F3b's statistic** is |t| of `σ̂ = −f'(median)` from the spline model.
+
+## Results (run 2026-11-13, `scripts/analysis/fuel_switching.py`, outputs `outputs/tables/fuel_switching_{summary,placebo,unit_logit}.csv`)
+**F1, F2, F5 pass; F3 and F6 fail; F4 rejects constant σ.** Window A: 423 days, 25 coal units, 8.3 GW of coal available on average, daily ln cost-ratio sd 0.151, coal output zero on 79 days (handled by the PPML estimator, as registered).
+
+| Rule | Result | Verdict |
+|---|---|---|
+| F1 feasibility | 25 coal units, 8,269 MW, ratio sd 0.151 | pass |
+| F2 sign and size | **σ̂ = 6.48** (se 1.37, t 4.75) at the median ratio (ln coal/gas cost = 0.26) | pass |
+| F3 placebo | lead of the next 30 days' ratio: t −1.97 (needs |t| < 2: passes by 0.03); circular shifts: real |t| 4.75 ranks **17 of 201** (top 10 needed; shifted |t| median 2.24, 95th percentile 5.45, p about 0.08) | **fail** |
+| F4 constant σ | spline against linear: Wald 21.2, p 0.0003; VES quadratic term t 0.35 | **rejected: a curve** |
+| F5 robustness | MW instead of utilisation 6.24 (t 4.8); no residual-demand control 5.86 (t 4.2); without the 10% lowest-capacity days 6.51 (t 4.8); positive-coal days only (log-linear OLS) 6.61 (t 2.6); window 2020-H2 2.45 (t 1.3, sign only) | pass |
+| F6 merit-order consistency | logit slope on ln p* − ln c: gas 5.40, coal 4.01, equal (p 0.28); dispatched when cost + €5 < p*: **gas 84.7%**, coal 91.1% | **fail** (gas below 90%) |
+
+**The curve** (spline σ at the 10th, 30th, 50th, 70th and 90th percentile of the log cost ratio 0.02, 0.12, 0.23, 0.33, 0.43): **4.4, 6.7, 7.1, 3.8, −0.3.** The elasticity of substitution is large when the two fuels are close (coal at most 25% costlier than gas) and falls to zero when coal is about 50% costlier: the discrete-dispatch hump the theory predicted. The VES quadratic does not capture it (the hump is not monotone, so `σ(r) = σ0 + σ1 r` has σ1 = −1.7, t 0.35): the spline is the result, not the VES line.
+
+**What it says.** Near cost parity a 1% rise in coal's cost relative to gas lowers the coal-to-gas utilisation ratio by about 6.5%; at coal 40-50% dearer there is nothing left to switch. This is the kind of curve a merit-order model implies, and it is the opposite of a constant σ.
+
+**What it does not establish (F3).** The 30-day lead passes by a hair and the circular-shift placebo fails narrowly (p about 0.08): the daily cost ratio and the coal utilisation are both slow-moving (coal fell from 2.8 GW in 2019Q1 to 0.35 GW in 2019Q4 as gas fell and carbon rose), and a random persistent alignment of the ratio reproduces a |t| as large as the real one in about 8% of draws. The weekly-clustered standard error (1.37) is too small for series this persistent; the shifted-|t| median of 2.24 is the honest scale. **The point estimate is not distinguished from a persistence artefact at the registered 5% level.** No other specification is tried.
+**What it says about costs (F6).** Gas combined cycles priced below the clearing price by more than €5 are dispatched only 85% of the time: the implied cost is a lower bound (start-up costs, minimum-income conditions, minimum run), as the repo's notes say, so a unit-level cost ranking is not exact. The slopes of the two fuels are statistically equal (5.4 against 4.0, p 0.28), which supports one common cost-ranking logic.
+**What follows.** The unit-level logit is the more credible route to the elasticity: 219,872 unit-hours with variation across units within an hour (so not exposed to the persistence of the daily fleet series), a slope of about 4-5 per log of distance to the margin, and fleets that can be aggregated by integrating the choice probabilities. That route also reaches the 2021-22 window (thin coal fleet, but many unit-hours), and the dirty-and-clean nest (thermal against hydro) needs it. It needs its own pre-registration.

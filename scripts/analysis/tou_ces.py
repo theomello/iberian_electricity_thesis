@@ -107,13 +107,19 @@ def crossfit(d, name, k):
 def design(d, rows, control="ren", ex=None, fake=None):
     """Arrays for the rows: shares, taste-path log ratios incl. the control residual, log relative prices rho, policy log prices z, instrument matrix, clusters."""
     s = d[rows]
-    if control == "ptu":
+    if control == "ptu" or (isinstance(control, dict) and "ptu" in control):
         s = s[s[[f"q_ptu_{k}" for k in K]].notna().all(axis=1)]
     idx = s.index
     yh = {k: (s[f"yhat_es_{k}_full"] if ex is None else crossfit(d, "es", k).loc[idx]) for k in ("P", "M")}
     ctl = {}
+
+    def resid(nm, k):
+        yhp = s[f"yhat_{nm}_{k}_full"] if ex is None else crossfit(d, nm, k).loc[idx]
+        return (s[f"y_{nm}_{k}"] - yhp).to_numpy()
     for k in ("P", "M"):
-        if control == "none":
+        if isinstance(control, dict):      # {"pt": (loading_P, loading_M), "ptu": (...)}: estimated loadings on the control residuals
+            ctl[k] = sum(w[0 if k == "P" else 1] * resid(nm, k) for nm, w in control.items())
+        elif control == "none":
             ctl[k] = np.zeros(len(s))
         else:
             nm = "pt" if control == "ren" else "ptu"

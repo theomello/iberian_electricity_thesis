@@ -54,3 +54,27 @@ No other specification is tried after a failure.
 **Where it enters.** Not the mechanical price effect (the day's actual curves already contain whatever hydro and nuclear did). It enters the markup test through the residual demand facing a gas owner: if the levy changed hydro and nuclear offers in some hours, the marginal gas unit's markup changes without any reform response.
 **Control, by owner exposure.** Unit-step panel of every plant-specific gas unit's offered steps in the competitive range, markup `m = offer − cost (_bid)`; regress the evening-minus-night markup change (post against pre) on the owner's levy exposure `E_f` (non-emitting MW above 10 MW over total MW, from `unit_ownership`):
 `Δ(m_eve − m_night) = β0 + β1 E_f + u`. The reform acts on all gas owners alike; the levy acts through `E_f`. **`β0`, the effect for an owner with no exposure, is the reform's behavioural effect with the levy channel removed.** Limit: about a dozen owning firms, so inference by wild-bootstrap or randomisation over owners; the hour-shaping of hydro (evening dispatch) is a second-order concern absorbed by `E_f` only if exposure is proportional to shaping. Also report the version with hydro offered MW and `hydro_cost_daily` as covariates by hour.
+
+## Results (run 2026-11-13, `scripts/analysis/tou_ces.py`, outputs `outputs/tables/tou_ces_{summary,placebo}.csv`)
+**Rules: S1, S2, S4, S6 pass; S3 and S5 fail.** Pooled household E0 against Portugal's consumption (REN), weekdays, 744 days (74 in the post window), nonlinear 2SLS, standard errors clustered by week.
+
+**σ̂ = 0.0654 (se 0.0029, 95% [0.060, 0.071]).** The elasticity of substitution between peak and valley use is about 0.07: a 10% rise in the peak-to-valley price ratio lowers the peak-to-valley quantity ratio by about 0.7%. Periods are close to complements: the shape of the day is hard to move. Stable across the instrument sets (0.0654 with all, 0.0656 with the policy ratio alone) and the controls (REN 0.0654; none 0.0581; regulated unit 0.0587; excluding July 0.0668).
+
+| Rule | Result | Verdict |
+|---|---|---|
+| S1 identification | first-stage F 1,486 (peak/valley price ratio) and 453 (mid/valley) | pass |
+| S2 sign and size | σ̂ > 0, interval excludes zero, within [0.02, 3] | pass |
+| S3 consistency | implied own-hour elasticity with η = 0: **−0.039** (se 0.0017), against E0 column 4 **−0.0999** (se 0.0116); the spec text said −0.086, also missed | **fail** |
+| S4 placebo | real σ̂ ranks 1 of 10; the nine placebo σ̂ run −0.010 to +0.0045 (sd 0.0045) | pass |
+| S5 CES restriction | period-specific σ (peak/mid/valley) 0.074 / 0.096 / 0.008, equality rejected (Wald 22.3, p < 0.001) | **fail** |
+| S6 control | σ̂ positive in every variant (0.058 to 0.067) | pass |
+
+**What the failures say.**
+- **S3:** the shape response explains about 40% of column 4. If the whole gap were the upper tier, `η ≈ (−0.0999 + 0.0388)/0.407 ≈ −0.15`; this is illustrative, not an estimate: the level is the unidentified part (control dependence), and column 4 inherits it. The paper-style own-hour elasticity is therefore not the structural substitution parameter, and the headline should not be read as one.
+- **S5:** the single-σ CES is strained: the peak share responds (σ from the peak share alone 0.074) and the mid share does not (σ from the mid share alone −0.005). By the registration the nested CES (peak against the rest, then mid against valley) is the result to estimate next; it needs its own pre-registration.
+
+**Limits, stated.**
+- **Process:** the first run used collinear instruments (the policy price of each period is constant within the reform window, so the two policy ratios are proportional to a post indicator); its output (σ 0.059, a negative F) was invalid and was discarded. The code now drops dependent instrument columns. No rule or specification was chosen on those numbers.
+- **One regime:** identification comes from one policy regime (74 days) for the household E0 series. The first-stage F is large because the policy ratio is a regime indicator; the error scale to believe is the placebo spread (0.0045), not the standard error (0.0029). S5's three-parameter version is weakly identified (excluded-instrument rank 1; smallest/largest singular value of the Jacobian 0.026; se of σ_V 0.034): the rejection is a reading, not a sharp test.
+- **Price variation:** the model's reference prices are pre-reform means; the taste LASSO also absorbs pre-reform price variation, which the registered form does not net out. The diagnostics above (σ from the post-window share conditions only: 0.074 from the peak share) bound this.
+- **Level:** none of it identifies η.

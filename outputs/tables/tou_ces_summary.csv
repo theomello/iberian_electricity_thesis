@@ -1,0 +1,10 @@
+sample,sigma,se,J,e_P,eps_own,eps_se,col4,col4_se,F_PV,F_MV
+post window REN control,0.06543,0.00293,37.08433,0.40742,-0.03877,0.00174,-0.09987,0.01163,1486.24561,453.46267
+REN control (main),0.06543,0.00293,,,,,,,,
+no control,0.05812,0.00267,,,,,,,,
+regulated-unit control,0.05872,0.0068,,,,,,,,
+excl. July,0.06681,0.00347,,,,,,,,
+S5 sigma_P/M/V,0.07408,0.00757,,,,,,,,
+S5 sigma_M,0.09638,0.01678,,,,,,,,
+S5 sigma_V,0.008,0.03362,,,,,,,,
+S5 Wald p,1e-05,,,,,,,,,

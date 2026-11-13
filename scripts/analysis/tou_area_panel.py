@@ -110,7 +110,7 @@ def cluster_ols(y, X, g):
     return b, Ai @ (sums.T @ sums) @ Ai * G / (G - 1)
 
 
-def did_types(s, p0, p1, weighted=True):
+def did_types(s, p0, p1, weighted=True, full=False):
     sw = np.sqrt(s.w.to_numpy()) if weighted else np.ones(len(s))
     F = sp.hstack([onehot(s.area, s.hour, s.wk), onehot(s.ym, s.wk)]).tocsr()
     Fw = sp.diags(sw) @ F
@@ -124,6 +124,8 @@ def did_types(s, p0, p1, weighted=True):
     X = np.column_stack([EL.resid(Fw, c * sw) for c in cols])
     g = pd.factorize(s.area.astype(str) + "_" + s.ym)[0]
     b, V = cluster_ols(y, X, g)
+    if full:  # names, coefficients and their covariance (for draws of the effects)
+        return names, b, V
     return {n: (b[i], np.sqrt(V[i, i])) for i, n in enumerate(names)}
 
 

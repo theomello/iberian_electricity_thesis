@@ -92,7 +92,12 @@ def get_errors(x):
     return errs
 
 
-def main():
+def compute(get_errors_fn, prefix="tou_area_panel_pc", prep=None):
+    """Fit (or load) the errors, estimate every specification and write the CSVs.
+
+    Reusable for any variant of the design: `get_errors_fn(x)` returns the area errors (a variant can change the
+    temperature source, the window or the controls), `prep(x, counts, ptc)` may add columns to x first, and
+    `prefix` names the output files. Returns the pieces the rule reports read."""
     x = AP.load_frame()
     x = x[(x.date >= START) & (x.date <= POST1)].copy()
     cs, ptc = spain_counts(), pt_counts()
@@ -101,6 +106,8 @@ def main():
     add_pc(x, spain_counts(+0.005), "_up", "p48")
     add_pc(x, spain_counts(-0.005), "_dn", "p48")
     add_pc(x, spain_counts(drop_q3_2019=True), "_nq3", "p48")
+    if prep is not None:
+        prep(x, cs, ptc)
     print(f"rows {len(x)}", flush=True)
 
     # rule 1: counts valid
@@ -109,7 +116,7 @@ def main():
     qq = q.pct_change().dropna().abs().max().max()
     print(f"RULE 1 largest quarter-on-quarter change in a count: {100 * qq:.1f}% (<= 10% needed); sum check 99.1-99.9% (at build):", bool(qq <= 0.10), flush=True)
 
-    errs = get_errors(x)
+    errs = get_errors_fn(x)
     print("errors ready", flush=True)
     covid = x.date.between(*EV.COVID)
     pre = (x.date >= START) & (x.date <= "2020-12-31") & ~covid
@@ -196,28 +203,37 @@ def main():
         print(f"elasticity ({lab}) placebo 2019: eta {bp[0]:.3f} (se {sep[0]:.3f}, t {bp[0] / sep[0]:.2f})", flush=True)
         cols_all[lab] = (cols, bp[0], sep[0])
 
-    R.round(5).to_csv(T.OUT / "tou_area_panel_pc_effects.csv", index=False)
-    PL.round(5).to_csv(T.OUT / "tou_area_panel_pc_placebo.csv", index=False)
-    pd.concat([pd.DataFrame(v[0]).assign(version=k, placebo_eta=v[1], placebo_se=v[2]) for k, v in cols_all.items()]).round(5).to_csv(T.OUT / "tou_area_panel_pc_elasticity.csv", index=False)
-    pd.DataFrame([dict(comparison=k, ddd=v[0], se=v[1]) for k, v in ddd.items()]).round(5).to_csv(T.OUT / "tou_area_panel_pc_ddd.csv", index=False)
+    R.round(5).to_csv(T.OUT / f"{prefix}_effects.csv", index=False)
+    PL.round(5).to_csv(T.OUT / f"{prefix}_placebo.csv", index=False)
+    pd.concat([pd.DataFrame(v[0]).assign(version=k, placebo_eta=v[1], placebo_se=v[2]) for k, v in cols_all.items()]).round(5).to_csv(T.OUT / f"{prefix}_elasticity.csv", index=False)
+    pd.DataFrame([dict(comparison=k, ddd=v[0], se=v[1]) for k, v in ddd.items()]).round(5).to_csv(T.OUT / f"{prefix}_ddd.csv", index=False)
+    return dict(x=x, R=R, PL=PL, PLm=PLm, ddd=ddd, cols_all=cols_all, errs=errs)
 
-    # rules (version M is the main)
+
+def report(o):
+    """The eight rules of the per-capita design (docs/specs/2026-11-12-area-panel-percapita-design.md)."""
+    R, PL, PLm, ddd, cols_all = o["R"], o["PL"], o["PLm"], o["ddd"], o["cols_all"]
+    ok = {}
     g_ = lambda spec, term: R[(R.spec == spec) & (R.term == term)].iloc[0]
     pk, md, off = g_("M weighted", "wd_peak"), g_("M weighted", "wd_mid"), g_("M weighted", "wd_off")
     r2 = bool(pk.t <= -2 and -0.15 <= pk.b <= -0.03 and md.b < 0 and md.t <= -2 and abs(off.b) < 0.03)
+    ok[2] = r2
     print(f"\nRULE 2 (M) weekday peak {100 * pk.b:.2f}% (t {pk.t:.1f}), mid {100 * md.b:.2f}% (t {md.t:.1f}), off {100 * off.b:.2f}% (t {off.t:.1f}):", r2)
     for v, lab in (("M weighted", "M"), ("F REN control", "F")):
         a, b_, c_ = g_(v, "wd_peak"), g_(v, "wd_mid"), g_(v, "wd_off")
         print(f"   ({lab}) peak {100 * a.b:.2f}, mid {100 * b_.b:.2f}, off {100 * c_.b:.2f}; peak-off {100 * (a.b - c_.b):.2f}")
     rank = int((PLm.wd_peak.abs() >= abs(pk.b)).sum()) + 1
     c4, bp, sep = [c for c in cols_all["M"][0] if c["col"] == 4][0], cols_all["M"][1], cols_all["M"][2]
-    print(f"RULE 3 (M) rank of the real weekday peak effect: {rank} of {len(PLm) + 1} (top 3 needed); elasticity placebo t {bp / sep:.2f} (> -2 needed):", bool(rank <= 3 and bp / sep > -2))
+    print(f"RULE 3 (M) rank of the real weekday peak effect: {rank} of {len(PLm) + 1} (top 3 needed); elasticity placebo t {bp / sep:.2f} (> -2 needed):", ok.setdefault(3, bool(rank <= 3 and bp / sep > -2)))
     neg = {a: bool(g_(f"area {a}", "wd_peak").b < 0) for a in AREAS}
     print("RULE 4 areas with negative weekday peak:", neg, sum(neg.values()), "of 5 (>= 4 needed)")
-    print(f"RULE 5 (M) column 4 eta {c4['eta']:.3f} (se {c4['se']:.3f}, t {c4['t']:.1f}, F {c4['first_stage_F']:.1f}):", bool(c4["eta"] < 0 and c4["t"] <= -2 and -0.20 <= c4["eta"] <= -0.05 and c4["first_stage_F"] >= 10))
+    ok[4] = sum(neg.values()) >= 4
+    ok[5] = bool(c4["eta"] < 0 and c4["t"] <= -2 and -0.20 <= c4["eta"] <= -0.05 and c4["first_stage_F"] >= 10)
+    print(f"RULE 5 (M) column 4 eta {c4['eta']:.3f} (se {c4['se']:.3f}, t {c4['t']:.1f}, F {c4['first_stage_F']:.1f}):", ok[5])
     print("   all columns (M):", [(c["col"], round(c["eta"], 3), round(c["t"], 1), round(c["first_stage_F"], 0)) for c in cols_all["M"][0]], "| (F):", [(c["col"], round(c["eta"], 3), round(c["t"], 1), round(c["first_stage_F"], 0)) for c in cols_all["F"][0]])
     d6 = abs(ddd["pooled areas per consumer vs Portuguese unit per consumer"][0] - ddd["352 vs Portuguese unit per consumer"][0])
-    print(f"RULE 6 pooled areas minus 352 DDD: {100 * d6:.2f} points (< 1.5 needed):", bool(d6 < 0.015))
+    ok[6] = bool(d6 < 0.015)
+    print(f"RULE 6 pooled areas minus 352 DDD: {100 * d6:.2f} points (< 1.5 needed):", ok[6])
     dev = {k: abs(g_(s, "wd_peak").b - pk.b) for k, s in (("drop Endesa", "drop Endesa"), ("unweighted", "M unweighted"), ("PDBF", "PDBF stage"), ("REN control", "F REN control"))}
     sh = {k: abs(g_(s, "wd_peak").b - pk.b) for k, s in (("share +0.5", "share +0.5 pts"), ("share -0.5", "share -0.5 pts"), ("drop Q3 2019", "drop Q3 2019 count"))}
     print("RULE 7 deviations of the weekday peak effect (points):", {k: round(100 * v, 2) for k, v in dev.items()}, "(each < 2) and", {k: round(100 * v, 2) for k, v in sh.items()}, "(each < 1):",
@@ -226,6 +242,13 @@ def main():
     sd_old, sd_new_m, sd_new_f = old.wd_off.std(), PLm.wd_off.std(), PL[PL.version == "F"].wd_off.std()
     print(f"RULE 8 sd of weekday off-peak placebo effects: without counts {100 * sd_old:.2f} pts; per consumer (M) {100 * sd_new_m:.2f}, (F) {100 * sd_new_f:.2f} (must fall by at least half):",
           bool(sd_new_m <= 0.5 * sd_old))
+    ok[7] = bool(max(dev.values()) < 0.02 and max(sh.values()) < 0.01)
+    ok[8] = bool(sd_new_m <= 0.5 * sd_old)
+    return ok
+
+
+def main():
+    report(compute(get_errors))
 
 
 if __name__ == "__main__":

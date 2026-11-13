@@ -26,3 +26,21 @@ Rules 3 and 4 pass (rule 2 holding): area weather was the missing piece; the are
 
 ## Threats
 Weather per area is a few city points weighted by population with a hand-set assignment, not the paper's gridded areas (rule 1 bounds nothing about the assignment); MERRA-2 is a reanalysis; Madrid's split between Iberdrola and Naturgy (70/30) is approximate; 41 LASSO tasks again, so the run is as long as the previous one; the placebo windows overlap the training years as before (cross-fitted).
+
+## Results (run 2026-11-13, `tou_area_panel_pc_weather.py`, outputs `tou_area_panel_pcw_*.csv`)
+
+**Outcome: rules 3 and 4 both fail. The level drift is not weather. Per the registration, no further rescue is run.**
+
+| Rule | Result | Verdict |
+|---|---|---|
+| 1 Weather valid | no missing hour in any of the 7 series; correlation with ERA5 0.944 (EDP) to 0.987 (Endesa) | pass |
+| 2 No regression (per-capita rules 2-6 on M) | peak -8.17% (t -7.8), mid -5.93%, off -1.27%; real peak effect ranks 2 of 19; placebo elasticity t +1.56; 5 of 5 areas negative; column 4 -0.087 (t -6.4, F 872); DDD gap to 352 0.47 pts | pass |
+| 3 The drift falls | sd of weekday off-peak placebo effects **6.37 pts (M)**, 3.76 (F); previous 6.23 / 3.66; pass needs <= 2.34, partial <= 4.15 | **fail** |
+| 4 Control gap closes | weekday peak M vs F differs by **4.62 pts**; previous 4.57; needs < 2 | **fail** |
+| 5 Peak effect stable | M weekday peak -8.17% against -7.76%: moved 0.41 pts | pass |
+
+Area temperature is a valid input and changes no estimate by more than half a point, but it does not touch the two things it was meant to fix: the placebo spread of off-peak level effects (6.23 → 6.37) and the gap between the two Portuguese controls (4.57 → 4.62). The original rule 7 (REN control 4.62 pts) and rule 8 (6.37 against a bar of 2.34) still fail.
+
+**What this means.** The area-panel level remains control-dependent. The claim stays the contrast (evening versus night: weekday peak minus off-peak -6.9 pts on both controls, DDD, column 4 of Equation 4 at -0.086 to -0.087 per consumer on M and -0.06 on F), as in the headline. What is left unexplained, and is **not** investigated further here: the Portuguese regulated unit's level, and the schedule data. Stopping follows the registration.
+
+**Reusable.** `tou_area_panel_pc.py` now exposes `compute(get_errors_fn, prefix, prep)` and `report(o)`, so a variant that changes the temperature source, window or controls is one short script (this run is 90 lines). The same design can be pointed at another country's areas or another tariff reform.

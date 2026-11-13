@@ -1,0 +1,79 @@
+spec,term,b,se,t
+M weighted,wd_peak,-0.08169,0.01044,-7.82553
+M weighted,wd_mid,-0.05927,0.01022,-5.79945
+M weighted,wd_off,-0.01271,0.01448,-0.87793
+M weighted,we_peak,-0.06163,0.01183,-5.20997
+M weighted,we_mid,-0.0587,0.01167,-5.0309
+M weighted,we_off,-0.03208,0.01593,-2.01371
+M unweighted,wd_peak,-0.08113,0.00935,-8.67758
+M unweighted,wd_mid,-0.06071,0.00985,-6.1645
+M unweighted,wd_off,-0.04347,0.01335,-3.25739
+M unweighted,we_peak,-0.0606,0.01264,-4.79338
+M unweighted,we_mid,-0.05784,0.01268,-4.56337
+M unweighted,we_off,-0.06467,0.01473,-4.39096
+F REN control,wd_peak,-0.0355,0.00958,-3.70581
+F REN control,wd_mid,-0.01309,0.00925,-1.41442
+F REN control,wd_off,0.03347,0.01364,2.45472
+F REN control,we_peak,-0.01548,0.00909,-1.70298
+F REN control,we_mid,-0.01255,0.00885,-1.41782
+F REN control,we_off,0.01406,0.01386,1.01474
+area ENDESA,wd_peak,-0.07973,0.01498,-5.32246
+area ENDESA,wd_mid,-0.05716,0.01399,-4.08414
+area ENDESA,wd_off,0.01016,0.02026,0.50138
+area ENDESA,we_peak,-0.06624,0.01415,-4.68173
+area ENDESA,we_mid,-0.06246,0.01378,-4.53288
+area ENDESA,we_off,-0.00647,0.02017,-0.32102
+area IBERDROLA,wd_peak,-0.068,0.01329,-5.11632
+area IBERDROLA,wd_mid,-0.04834,0.01236,-3.90982
+area IBERDROLA,wd_off,-0.01684,0.01319,-1.27659
+area IBERDROLA,we_peak,-0.0546,0.01491,-3.66123
+area IBERDROLA,we_mid,-0.04882,0.01458,-3.34958
+area IBERDROLA,we_off,-0.03666,0.01645,-2.22814
+area NATURGY,wd_peak,-0.10869,0.0069,-15.74467
+area NATURGY,wd_mid,-0.08105,0.00501,-16.18897
+area NATURGY,wd_off,-0.0435,0.00755,-5.76195
+area NATURGY,we_peak,-0.06223,0.00857,-7.25815
+area NATURGY,we_mid,-0.06585,0.0076,-8.66247
+area NATURGY,we_off,-0.06757,0.00866,-7.80008
+area EDP,wd_peak,-0.11927,0.00592,-20.1522
+area EDP,wd_mid,-0.11281,0.00579,-19.49059
+area EDP,wd_off,-0.13786,0.00766,-18.0034
+area EDP,we_peak,-0.12579,0.00891,-14.11356
+area EDP,we_mid,-0.12408,0.00977,-12.69786
+area EDP,we_off,-0.15668,0.01326,-11.81975
+area REPSOL,wd_peak,-0.03063,0.00755,-4.05853
+area REPSOL,wd_mid,-0.005,0.00802,-0.62365
+area REPSOL,wd_off,-0.03064,0.01791,-1.71128
+area REPSOL,we_peak,0.00532,0.0121,0.43979
+area REPSOL,we_mid,0.01144,0.00889,1.28667
+area REPSOL,we_off,-0.05654,0.02149,-2.63077
+drop Endesa,wd_peak,-0.08332,0.01174,-7.09466
+drop Endesa,wd_mid,-0.06103,0.01082,-5.6395
+drop Endesa,wd_off,-0.03141,0.01094,-2.86964
+drop Endesa,we_peak,-0.05777,0.01228,-4.70245
+drop Endesa,we_mid,-0.05553,0.01257,-4.41879
+drop Endesa,we_off,-0.05286,0.01339,-3.94674
+PDBF stage,wd_peak,-0.08622,0.01152,-7.48383
+PDBF stage,wd_mid,-0.0641,0.01109,-5.7821
+PDBF stage,wd_off,-0.02041,0.0153,-1.33384
+PDBF stage,we_peak,-0.06608,0.01303,-5.07214
+PDBF stage,we_mid,-0.0625,0.01282,-4.87375
+PDBF stage,we_off,-0.03681,0.01715,-2.14633
+share +0.5 pts,wd_peak,-0.07262,0.01019,-7.12773
+share +0.5 pts,wd_mid,-0.05033,0.00996,-5.05484
+share +0.5 pts,wd_off,-0.00388,0.01417,-0.27379
+share +0.5 pts,we_peak,-0.05277,0.01154,-4.57173
+share +0.5 pts,we_mid,-0.0498,0.01139,-4.37192
+share +0.5 pts,we_off,-0.02317,0.0156,-1.48533
+share -0.5 pts,wd_peak,-0.09068,0.01081,-8.38552
+share -0.5 pts,wd_mid,-0.06831,0.01063,-6.42708
+share -0.5 pts,wd_off,-0.02172,0.01489,-1.45928
+share -0.5 pts,we_peak,-0.07057,0.01224,-5.76425
+share -0.5 pts,we_mid,-0.06777,0.01208,-5.61177
+share -0.5 pts,we_off,-0.04111,0.01634,-2.51647
+drop Q3 2019 count,wd_peak,-0.08223,0.01024,-8.03417
+drop Q3 2019 count,wd_mid,-0.05987,0.00999,-5.99101
+drop Q3 2019 count,wd_off,-0.01333,0.01423,-0.93684
+drop Q3 2019 count,we_peak,-0.06226,0.01156,-5.38394
+drop Q3 2019 count,we_mid,-0.05932,0.0114,-5.20236
+drop Q3 2019 count,we_off,-0.03271,0.01561,-2.09509

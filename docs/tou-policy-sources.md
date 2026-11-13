@@ -134,3 +134,25 @@ Precision and checks: the regulated share is a **whole percent in the 2018 and 2
 `scripts/build/build_area_weather.py` → `outputs/tables/regulated_area_panel/area_temperature_hourly.parquet` (area, hourly UTC, 2018-01 → 2026-05, no gaps). The paper uses population-weighted MERRA-2 per area; MERRA-2 needs a NASA Earthdata login (not enterable here), so the 21 ERA5 city series already on disk (`temperature_population_hourly.parquet`) are weighted by city population and an approximate city-to-area assignment (Endesa: Barcelona, Zaragoza, Seville, Málaga, Granada, Córdoba; Iberdrola: Madrid 70%, Valencia, Alicante, Bilbao, Valladolid, Murcia, Pamplona; Naturgy: A Coruña, Vigo, Madrid 30%; EDP: Gijón; Repsol/Viesgo: Santander; Portugal: Lisbon, Porto, Braga, Coimbra). Limits: a handful of cities per area, shares of Madrid set by hand, ERA5 not MERRA-2. Area correlations 0.83–0.99 (Spanish areas 0.86–0.99, Portugal 0.83–0.93): the series do differ across areas, most for EDP/Repsol (north coast) against Endesa/Iberdrola.
 
 **MERRA-2 area weather (2026-11-12, the paper's source).** `scripts/fetch/fetch_merra2_t2m.py` fetches MERRA-2 `M2T1NXSLV` v5.12.4 hourly 2 m temperature (T2M) over Iberia (35.5-44 N, 10 W-4 E) from NASA's Earthdata Cloud OPeNDAP with the user token (`EARTHDATA_TOKEN` in `.env`; the old goldsmr4 host answers 410), 1,461 days 2018-01-01 → 2021-12-31, 86 MB in `data/merra2/raw/`. Files are named `MERRA2_400` except September 2020 and June-September 2021 (`MERRA2_401`); a first run missed those 152 days, the patched fetcher tries both. `scripts/build/build_area_weather_merra2.py` interpolates the 0.5 x 0.625 degree grid to the 21 cities, weights as the ERA5 version, labels each hourly mean by its hour start (MERRA-2 stamps HH:30), and writes `outputs/tables/regulated_area_panel/area_temperature_merra2_hourly.parquet`. Against the ERA5 area series: correlation 0.94-0.99, bias -1.1 to +0.2 C, RMSE 1.1-1.9 C. Cite GMAO (2015), MERRA-2 tavg1_2d_slv_Nx, GES DISC. Limit unchanged: city points weighted by population, assignment of cities to areas approximate (not the paper's population-weighted gridded areas).
+
+## E-REDES open data as a Portuguese control (checked 2026-11-13): does not cover the reform window
+E-REDES (Portuguese distribution operator, `e-redes.opendatasoft.com`, 70 datasets, open licence) was checked as a better
+Portuguese control than the regulated retailer's load (`PTU`). **None of it reaches 2018-2021 at hourly resolution:**
+`consumo-total-nacional` (national consumption by voltage level BT/MT/AT/MAT, 15 minutes, the direct analogue of ESIOS 1201 for
+low voltage) starts **2023-01-01**; hourly consumption by postal code starts 2022-11; contract counts by voltage
+(`20-caracterizacao-pes-contrato-ativo`) 2022-01; customers by power band 2023-01; billed consumption by tariff period 2023-01;
+monthly billed consumption by municipality and voltage 2020-11. So it cannot replace `PTU` for the 2021 reform (placebo windows
+2018-04 to 2019-09 are before every start). It would serve a post-2023 comparison with ESIOS 1201 and 15-minute data. Not fetched.
+Not checked: E-REDES's yearly consumption-profile reports (settlement shapes only, modelled, no level).
+
+## Other countries as a setting for the method (quick check 2026-11-13)
+- **France: a candidate.** Enedis `conso-inf36` (opendata.enedis.fr): half-hourly aggregates for points <= 36 kVA, nationally, **by profile**
+  (RES1 base, RES2 peak/off-peak, RES11, PRO1-5, ENT1-5), with energy withdrawn, number of points and the average load curve; 9.3 M rows,
+  **2020-03-31 -> 2026-09**, quarterly updates. No regulated/free split. It starts after 2018-19, so a placebo window before a 2021 event does
+  not exist (and spring 2020 is the lockdown); it fits a **later French reform** (the shift of the off-peak hours, recalled from memory for
+  2025-26, not verified). Not fetched.
+- **Italy: nothing found.** ARERA publishes average consumption by region and power class (not hourly); Terna's hourly load is total, not by
+  segment. A research smart-meter sample exists (RSE) but is not a published file. Not found: any hourly load for the regulated (maggior
+  tutela) segment.
+- **Portugal 2018-2021 control: still open and important.** E-REDES starts in 2022-23 (see above). Revisit if a source for hourly
+  low-voltage or regulated-client load in 2018-2021 appears (ERSE, REN datahub, a data request to E-REDES or the retailer).

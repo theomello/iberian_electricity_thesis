@@ -33,3 +33,27 @@ N1-N5 pass with `σ_L > σ_U`: substitution is easier between the in-between hou
 
 ## Threats
 One policy regime (74 days); two parameters from the same regime; the same pre-reference-price treatment as the single CES (the taste path absorbs pre-reform price variation, bounded by the diagnostics); the nest structure (peak against rest) is chosen because the peak is the policy's target and the data rejected equality, not tested against the other nest orders (mid against rest; valley against rest), which are not run here.
+
+## Results (run 2026-11-13, `scripts/analysis/tou_ces_nested.py`, outputs `outputs/tables/tou_nested_ces_{summary,placebo}.csv`)
+**N1-N5 all pass. The nested model is the result.** Same sample as the single CES (744 days, 74 in the post window), REN control, nonlinear 2SLS, clustered by week. Nest weights (pre-reform mean expenditure shares): mid 0.619 and valley 0.381 within the nest; the peak is 0.407 of expenditure.
+
+| Parameter | Estimate | se | 95% interval |
+|---|---|---|---|
+| σ_U, peak against the rest | **0.0738** | 0.0034 | [0.067, 0.080] |
+| σ_L, mid against valley | **0.1669** | 0.0129 | [0.142, 0.192] |
+
+| Rule | Result | Verdict |
+|---|---|---|
+| N1 identification | first-stage F 1,486 and 453; Jacobian smallest/largest singular value 0.197 (bar 0.05) | pass |
+| N2 sign and size | both positive, intervals exclude zero, both inside [0.02, 3] | pass |
+| N3 nesting | Wald σ_U = σ_L: 68.9, p < 0.0001, σ_L > σ_U: **nested model is the result**; the single σ̂ = 0.065 is a restriction | rejected |
+| N4 placebo | σ_U ranks 1 of 10 (placebo −0.011 to +0.006), σ_L ranks 1 of 10 (placebo −0.013 to +0.018) | pass |
+| N5 robustness | both positive and σ_L > σ_U in every variant: no control σ_U 0.070 / σ_L 0.214; regulated-unit control 0.077 / 0.300; excluding July 0.075 / 0.169 | pass |
+
+**What it says.** Households substitute about twice as readily between the in-between hours and the night (σ_L ≈ 0.17) as between the peak and everything else (σ_U ≈ 0.07). Both are far below 1: the periods are complements at either margin, but the mid-to-valley margin is the one that moves. The single σ of 0.065 was close to the peak margin because the peak share carries most of the weight in the share residuals. The own-hour elasticity of the peak with η = 0 is −σ_U(1 − e_P) = −0.044, against −0.0999 for E0 column 4, so S3's finding stands: the shape response explains under half of column 4.
+
+**Limits, stated.**
+- **σ_L's range:** it depends on the control: 0.17 (REN), 0.21 (none), 0.30 (regulated unit). The ordering and the sign do not move; the size of the mid-valley margin is known to within a factor of two, not better. σ_U is steadier, 0.070 to 0.077.
+- **One regime:** both parameters come from one policy regime (74 days); the Jacobian ratio of 0.197 says the two are separately identified, but the placebo spread (about 0.01 for σ_U, 0.02 for σ_L) is the error scale to believe, not the standard errors.
+- **Nest order:** peak against the rest was chosen because it is the policy's target; the other orders were not tested.
+- **Level:** η is still not identified.

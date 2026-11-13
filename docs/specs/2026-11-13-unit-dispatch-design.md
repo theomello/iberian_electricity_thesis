@@ -47,3 +47,27 @@ Cost is a lower bound (start-up costs, minimum income, minimum run: gas units pr
 - **U6 closed form.** `Q_f = Σ K_i P̂_i` over the fuel's sample unit-hours of the hour plus `Σ K_i y_i` over its offered unit-hours outside the sample (far from the margin, probability set to the observed state), `K_i` the offered capacity; `S_f = Σ K_i P̂_i(1 − P̂_i)` over the sample; `σ_fuel(h) = [A_c A_g/(A_c + A_g)](1/Q_c + 1/Q_g)`, `A_f = β̂_f S_f`. Hours with no coal unit in the sample are skipped. "**At the median cost ratio**" is the `(Q_c + Q_g)`-weighted mean of `σ_fuel(h)` over hours whose daily `ln(c̄_c/c̄_g)` lies between the 40th and 60th percentile of the window; "lowest third" and "highest third" are the same mean over the hours below the 33rd and above the 67th percentile. The bootstrap resamples weeks (200 draws), refits Model 1 each time and recomputes the median-ratio `σ_fuel`; the interval is the 2.5th and 97.5th percentiles.
 - **U7.** Model 1 on window B, gas units only.
 - Code: `scripts/analysis/unit_dispatch.py`; outputs `outputs/tables/unit_dispatch_*.csv`.
+
+## Results (run 2026-11-13, `scripts/analysis/unit_dispatch.py`, outputs `outputs/tables/unit_dispatch_{summary,placebo,curve}.csv`)
+**U1 and U5 and U7 pass; U2, U3, U4 and U6 fail. The registered verdict is the U3/U4 branch: stop and report. The unit-level logit does not give a fuel-switching elasticity.**
+
+| Rule | Result | Verdict |
+|---|---|---|
+| U1 feasibility | window A 224,085 unit-hours (gas 182,075, coal 42,010), 54 gas and 21 coal units after dropping units without variation; window B 242,399 | pass |
+| U2 cost matters | β_gas 0.694 (se 0.284, t 2.4); β_coal 1.086 (se 0.496, t 2.2); both positive, both below the |t| ≥ 3 bar | fail |
+| U3 within-hour check | Model 2: β_gas 0.117 (t 9.1), β_coal 0.014 (t 1.1). Average marginal effect of Model 1 over Model 2: gas 0.20 (outside [0.5, 2]), coal 1.10 | fail (coal slope not distinguished from zero; gas ratio out of range) |
+| U4 placebo | 200 of 200 shifts converged. Real gas |t| ranks 34 of 201, coal 147 of 201 (bar: at most 10). 95th percentile of shifted |t|: gas 3.9, coal 4.6 | fail |
+| U5 one ranking logic | β_gas = β_coal not rejected (p 0.45) | pass |
+| U6 implied elasticity | σ_fuel at the median cost ratio 0.07, 95% bootstrap interval [−0.01, 0.15] (200 draws): not in [2, 20], interval includes zero; lowest third 0.06, highest third 0.25 (hump rule: lowest must exceed highest) | fail |
+| U7 crisis stability | window B gas β 1.175 (se 0.180, t 6.5); ratio to window A 1.69 (reported, not ruled) | pass |
+
+**What it says.**
+- **Not separable from persistence.** The cost slopes in the logit with a lag are of the size that a randomly shifted cost series produces (gas ranks 34 of 201). The lag coefficients (gas 5.4, coal 7.5) show that a unit's state last hour explains almost everything; the cost gap adds little once that is in.
+- **The within-hour model sees gas, not coal.** With hour effects, gas has a clear slope (t 9.1) and coal does not (t 1.1). The logit's average marginal effect for gas is a fifth of that, so the two models do not agree on how much a cost change moves a unit.
+- **Window B is stronger.** In the 2021-06 to 2022 window the gas slope is t 6.5 and 1.7 times window A's. Window B has much larger cost variation (the gas-price rise), which is what the power in window A lacked. It is a gas-only run with no placebo here, so it is a pointer and not a result.
+- **σ_fuel of 0.07 is not an estimate to quote.** It is far below the fleet-level 6.5, its interval includes zero, and it comes from slopes that fail the placebo. The closed form also ignores the long-run multiplier of the persistent state (with a lag coefficient of 5 to 7, a lasting cost change moves dispatch far more than the one-hour slope), so it understates long-run switching by construction. That is a limit of the registered design, not a finding about the fleets.
+- **Decile curve (not a rule).** σ_fuel by decile of the cost ratio rises from 0.02 at the lowest ratios to 0.35 near r = 0.34, then falls to 0.17. The shape has a hump, but the registered thirds comparison fails and the levels are not estimates.
+
+**Disclosed deviation in the run.** The first full run was killed (out of memory, in the U6 bootstrap) after U1-U5 had been computed and the placebo file written. U6 and U7 were then re-run with the same seed stream (the placebo draws advanced, not recomputed) after the σ computation was restructured so that the slope-independent parts are computed once; an assertion checks that the restructured σ equals the original at the point estimate. U1-U5 numbers are from the first run; U4's placebo file is that run's.
+
+**Not run, no other specification tried.** Per the registration, nothing else is tried after a failure. Window B with the placebo, a long-run version of the closed form with the persistence multiplier, and a window with more cost variation would each need their own pre-registration.

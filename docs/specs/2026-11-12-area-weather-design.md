@@ -44,3 +44,17 @@ Area temperature is a valid input and changes no estimate by more than half a po
 **What this means.** The area-panel level remains control-dependent. The claim stays the contrast (evening versus night: weekday peak minus off-peak -6.9 pts on both controls, DDD, column 4 of Equation 4 at -0.086 to -0.087 per consumer on M and -0.06 on F), as in the headline. What is left unexplained, and is **not** investigated further here: the Portuguese regulated unit's level, and the schedule data. Stopping follows the registration.
 
 **Reusable.** `tou_area_panel_pc.py` now exposes `compute(get_errors_fn, prefix, prep)` and `report(o)`, so a variant that changes the temperature source, window or controls is one short script (this run is 90 lines). The same design can be pointed at another country's areas or another tariff reform.
+
+## Results (run 2026-11-14, `scripts/analysis/tou_area_panel_pc_weather.py`)
+
+Outputs `outputs/tables/tou_area_panel_pcw_{effects,placebo,elasticity,ddd}.csv`; errors refitted with each area's own MERRA-2 temperature (errors correlate 0.955 with the national-temperature run, so the change is real, not a cache hit). One deviation from the registration: the 352 check uses the load-weighted mean of the five areas' temperatures, as registered; no other.
+
+| rule | outcome |
+|---|---|
+| W1 weather valid | pass: no missing hour; correlation with ERA5 0.94-0.99 (at build) |
+| W2 no regression (per-capita rules 2-6) | pass: weekday peak -8.17% (t -7.8), mid -5.93% (t -5.8), off -1.27% (t -0.9) |
+| W3 drift falls | **FAIL**: placebo sd of weekday off-peak effect 6.37 pts (M), 3.76 (F); per-capita run 6.23 / 3.66; pass needed <= 2.34, partial <= 4.15 |
+| W4 control gap closes | **FAIL**: swapping to REN moves the weekday peak by 4.62 points (was 4.57; < 2 needed) |
+| W5 peak stable | pass: -8.17% against -7.76% |
+
+Reading. Area-specific weather leaves the drift unchanged (6.37 against 6.23) and the control gap unchanged (4.62 against 4.57). Weather is therefore not the cause of the level drift or of the dependence of the level on the control; the replication still passes its own substantive rules (W2) with a slightly larger peak effect. Per the pre-registration: **no further rescue is run.** The level of the weekday peak effect is reported as control-dependent (about -3% against REN national, -8% against the Portuguese regulated unit); the contrast (evening versus night, peak minus off-peak) and column 4 (-0.086 on the area panel) are the result, and the Wald range stays the headline. What remains open and untested: the Portuguese unit itself (ERSE counts have gaps Jul-Dec 2020 and Mar-Apr 2021) and schedule data against metered load.

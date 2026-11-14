@@ -68,3 +68,12 @@ Read from the cached errors and the panel; nothing refitted. **This explains the
 - **The registered bar was set too optimistically.** W3 demanded half of the no-counts spread; even with REN as control the spread is 3.7. That is a limit of a 2018 start, not a defect in the counts or the unit.
 - **Contrast placebo (not registered; read it as supporting, not as a test).** The standard deviation of the weekday peak-minus-off-peak placebo effect is 3.4 points (same under either control and with area weather), maximum absolute value 5.4; the real contrast is -6.9, larger than all 18 placebo windows. Caveat: the 18 windows start monthly and are 106 days long, so they overlap and are not 18 independent draws.
 Consequence: the elasticity rests on the contrast (evening versus night, column 4), whose placebo noise is smaller than the real effect; the level of the weekday peak effect stays control-dependent. Headline unchanged.
+
+## Contrast placebo rule (registered 2026-11-14, **after** seeing the placebo results above; thresholds are therefore informed by them)
+
+Not a replacement for W3 and W4, which stay recorded as failed. A supporting test on the quantity the thesis relies on: the weekday peak-minus-off-peak effect (area-weighted, per consumer, `AP.did_types`).
+- **Windows:** non-overlapping, 106 days each, from 2018-04-01 (starts 2018-04-01, 2018-07-17, 2018-10-31, 2019-02-14, 2019-05-31, 2019-09-14; the last ends 2019-12-28), cross-fitted errors as before. Six windows: few, stated as a weakness.
+- **Real contrast:** the post window 2021-06-01 → 2021-09-14 on the real errors.
+- **C1:** the real contrast is negative and larger in absolute value than every placebo contrast. **C2:** its absolute value is at least twice the root mean square of the six placebo contrasts (placebo effects should centre on zero). **C3:** C1 and C2 hold under both controls (Portuguese unit M and REN F).
+- Run on the area-weather errors (`area_panel_pcw_errors`); the national-temperature errors (`area_panel_pc_errors`) reported beside as a check. No other variants, no new fit. Script `scripts/analysis/tou_contrast_placebo.py`, output `outputs/tables/tou_contrast_placebo.csv`.
+Outcome reading: pass = supporting evidence for the contrast, stated with the six-window caveat; fail = the contrast is within placebo noise and the headline must say so. Nothing else changes.

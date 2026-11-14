@@ -1,0 +1,7 @@
+control,ratio,loading,se
+REN,P,0.2976,0.0273
+regulated unit,P,0.1013,0.0237
+both,P,0.2815;0.0543,0.0270;0.0227
+REN,M,0.2618,0.0277
+regulated unit,M,0.0160,0.0251
+both,M,0.2630;-0.0093,0.0277;0.0227

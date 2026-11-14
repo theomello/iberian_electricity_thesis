@@ -466,7 +466,7 @@ Rebuilt for 202012 → 202109: the step curves, the at-cost stake and prices (`h
 `hcompcostprice`), the fixed-step rows, and the ten seeds' rows. Then `--estimate`, `--simulated
 1..10`, `--band-seed 0..10` and `--band-combine`. **`ADOURO` is left out over the window**
 (`AMBIGUOUS` in `fixed_step_test.py`), because it is not known whose stake its offers answer to.
-The old files are in `outputs/cache/backup/2026-10-21-ownership/`.
+The pre-rebuild copies were kept in `outputs/cache/backup/2026-10-21-ownership/` and deleted on 2026-11-12 to free disk space; the old figures are the ones quoted here.
 
 **One of 318 readings changes.** The profile read at 1.5 cf_s in the departure periods differed
 from the price-takers before (b 0.234). It no longer does: b is 0.210 and its low end, −0.023,

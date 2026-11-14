@@ -126,7 +126,7 @@ Douro date is fixed in CLAUDE.md. No panel has been rebuilt yet. Under the fix, 
 names Movhera for `ADOURO` inside the window.
 
 **Stage 1 rerun (2026-10-21).** Rebuilt with the fixes: `firm_residual_demand_full_owner`,
-`firm_incentive_net` and `firm_x`. The old files are in `outputs/cache/backup/2026-10-21-ownership/`.
+`firm_incentive_net` and `firm_x`. The pre-rebuild copies were kept in `outputs/cache/backup/2026-10-21-ownership/` and deleted on 2026-11-12 to free disk space.
 Only EDP's rows from 2020-12-17 to 2021-09-08 changed (6,383 periods), and Movhera appears as a
 group in `firm_incentive_net` over the same days. Nothing else moved; the `HCENE01` change moves
 none of these panels. EDP's stake inside the window:

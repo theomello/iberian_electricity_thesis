@@ -1,0 +1,58 @@
+# Replication on the paper's unit of observation: regulated retailers' demand by area
+
+**Status: pre-registered 2026-11-12, before any estimation on the panel.** Branch `tou-policy-prices`. Panel: `scripts/build/build_regulated_area_panel.py` (`d261245`, `docs/tou-policy-sources.md`, last section). Paper: Enrich, Li, Mizrahi and Reguant (JEEM 2024), `papers/md/4-time-of-use-impacts-enrich-li-mizrahi-reguant.md`.
+
+**In one example.** The paper does not study one national series. It studies the hourly demand of each distribution group's regulated retailer (Endesa, Iberdrola, Naturgy, EDP, Repsol) against Portugal's regulated supplier, one LASSO per area and hour, errors compared before and after 1 June 2021. We now hold those units, so the same design can run on the same kind of object, with five treated units instead of one.
+
+**Goals.** (1) Replicate the paper's period effects (their LASSO, weekdays: mid-peak −6.4%, peak −9.5%; off-peak not significant) and their elasticity range (−0.082 to −0.135) on the rebuilt panel. (2) Test that our national results (E0 −3.8% evening versus night; regulated-only −3.9%) are consistent with the area results. **Not goals:** per-capita figures (counts not on disk), industry, anything after 2021-09-14.
+
+## Data and what differs from the paper
+Panel: five Spanish areas (`ENDESA, IBERDROLA, NATURGY, EDP, REPSOL`), Portugal (`EDPUC2`), hourly, 2018-01 → 2021-09-14, PDBF purchases (a schedule, not metered load; they sum to ESIOS 352 within 1%). Not in our version: **(a) consumer counts** (the paper's per-capita variable and regression weights: CNMC data not on disk; the CNMC's published supervision reports give annual counts, quarterly by group not found); **(b) area weather**: baseline here is the national population-weighted temperature (ERA5) with area fixed effects; area-specific weather by territory is a sensitivity only if the territory mapping is verified from a source; **(c)** Portugal's unit is the regulated supplier's purchases, as the paper's, rather than national consumption. Weights: the mean of the area's load over the pre-window (a stand-in for consumer counts), with unweighted beside.
+
+## Design
+- **Step 1:** the paper's LASSO (`tou_lasso_paper.area_errors`): one model per area and hour, calendar and temperature interactions, 10-fold cross-validation with the one-standard-error rule, no trend, trained 2018-01-01 → 2020-12-31 without March–June 2020; log load in place of log load per capita.
+- **Step 2:** DiD on the errors, Spain's five areas against Portugal, period types as the paper (off-peak, mid-peak, peak by the new 2.0TD schedule; weekends and holidays off-peak), post 2021-06-01 → 2021-09-14, weekdays and weekends separately (their Table 5), clustered by area × month-of-sample. Evening-versus-night triple difference as in the national work, for comparison with E0 and ESIOS 352.
+- **Elasticity (their Equation 4):** error on ln PVPC price (ESIOS 1013 to May 2021, 1001 from June 2021; one price for all Spanish areas, constant for Portugal), instrument ln(charge + average pre-policy energy cost) (`tou_elasticity_paper` machinery), fixed-effect columns 1 to 4 as before, area-month clusters.
+- **Placebo:** the 18 fake break dates of the national work applied to the area errors (cross-fitted), and the 2019 calendar with the real charge pattern.
+
+## Stop rules, set before any run
+1. **Panel validity.** The Spanish areas' monthly mean sums to ESIOS 352 within 1.5% in every month 2018-01 → 2021-09 (checked at build: passes; re-checked on the final sample).
+2. **Period effects.** Weekdays: peak effect negative with t ≤ −2 and between −3% and −15%; mid-peak negative with t ≤ −2; off-peak absolute effect below 3%.
+3. **Placebo.** The real weekday peak effect ranks in the top 3 of the 18 placebo break dates by absolute size, and the 2019 calendar placebo has t > −2.
+4. **Areas.** The weekday peak effect is negative in at least four of the five Spanish areas (EDP and Repsol are small and noisy; a sign flip there alone does not fail the rule).
+5. **Elasticity.** Column 4: negative, t ≤ −2, between −0.20 and −0.05 (the paper's range is a check, not the bound); first-stage F ≥ 10. Columns 1 to 3 reported; the earlier national finding (weak first stages in 1 to 3) is stated as a prior, not a rule.
+6. **Consistency with the national result.** The evening-versus-night DDD of the pooled areas is within 1.5 points of the ESIOS 352 paper-LASSO value (−3.9%, se about 0.4; same units, so a failure here is a coding error or a weighting artefact).
+7. **Robustness.** Dropping Endesa (largest area) moves the pooled peak effect by less than 2 points; unweighted and pre-mean-weighted effects differ by less than 2 points; Portugal's national consumption in place of the regulated unit changes the peak effect by less than 2 points.
+
+## What each outcome means
+All pass: the paper's design reproduces on its own unit of observation and the national results are consistent with it; the thesis can carry the area panel as the main replication and E0 as the extension to all low-voltage customers. Rule 2 or 3 fails: the replication does not hold on schedule data, and the likely cause (a retailer schedule is a forecast of load, see the replication spec) is stated; E0 (measured demand) remains the headline. Rule 6 fails: coding error first, then weighting.
+
+## Threats
+PDBF is a day-ahead schedule: a retailer's load forecast, which cannot show a response it had not forecast (the paper uses REE's hourly demand of the same units, which may be a later stage). Customer counts are not in the panel; regulated customers left the segment (the paper: −4% January to September 2021) and Portugal's share moved differently, which area-month fixed effects absorb only if common; counts would fix this. National weather in place of area weather loses regional heat and cold. Three areas have source gaps of whole days (EDP 6 days, Repsol 18, other 9; Portugal 1). Five treated units give few clusters for inference on the area-level rule (rule 4) and none for area-level standard errors.
+
+## Amendment 2026-11-12, before any estimation on the panel (commit follows `dd18612`)
+
+1. **Data stage.** The panel is now available at REE's final schedule (P48, I90DIA02) for every day 2018-01-01 → 2021-12-31 (`build_regulated_area_p48.py`). **P48 is the main version; the OMIE PDBF version (earlier panel) is the robustness check** (rule 7 gets a fourth line: the pooled weekday peak effect on PDBF differs from P48 by less than 2 points). Naturgy's P48 runs 1-4% above its PDBF, which is why the check is there. Portugal's unit is not in REE's archive: it stays the OMIE PDBF series, on Lisbon clock hours.
+2. **Placebo windows (rule 3).** The national work's 18 fake breaks used trend-LASSO errors; here the area errors are the paper's LASSO, cross-fitted (each of 2018 and 2019 left out), so the fake windows are the **106-day windows starting on the first of each month from 2018-01 to 2019-09 that end by 2019-12-31 (21 windows)**, each with the same regression. Rule 3 reads "top 3 of 21".
+3. **Rule 6 comparison value.** The ESIOS 352 figure is re-estimated inside the same script (352 paper-LASSO errors against the Portuguese regulated unit and against REN consumption, same window), so the comparison is like for like rather than quoting an earlier number.
+4. **Regression details not fixed above.** Outcome: log load (no per-capita); effects: post x Spain x period type, weekdays (peak 10-14 and 18-22h, mid 8-10, 14-18, 22-24h, off 0-8h) and weekends and holidays (the same hours as fake types), with area x hour x weekend and month-of-sample x weekend effects, weighted by pre-window mean load (unweighted beside), clustered by area x month-of-sample. Weekend flag for fixed effects follows each country's own holidays; the type of a Spanish row follows the Spanish calendar. Elasticity: unweighted, as the national version, post window 2021-06-01 → 2021-09-14, columns 1 to 4, area x month-of-sample clusters.
+
+## Results (2026-11-12, `analysis/tou_area_panel.py`; `outputs/tables/tou_area_panel_{effects,placebo,elasticity,ddd}.csv`)
+
+P48 stage, five Spanish areas against Portugal's regulated unit, weights = pre-window mean MW (Endesa 1,337, Iberdrola 1,003, Naturgy 668, EDP 61, Repsol 44; Portugal 353). Effects in log points (about percent), area-month clusters.
+
+| weekdays | weighted | unweighted | PDBF stage | drop Endesa | Portugal REN as control |
+|---|---|---|---|---|---|
+| peak | +3.4 (t 2.3) | +7.0 | +2.9 | +5.1 | **-8.5** (t -7.3) |
+| mid-peak | +5.6 (t 3.9) | +8.9 | +5.0 | +7.1 | **-6.3** (t -5.8) |
+| off-peak | +10.3 (t 6.6) | +10.7 | +9.4 | +10.2 | -1.6 (t -1.3) |
+
+Weekdays by area (peak): Endesa +1.1, Iberdrola +7.3, Naturgy +0.6, EDP +12.9, Repsol +13.4. Elasticity (Equation 4, unweighted): column 1 -0.179 (se 0.026, F 77), 2 -0.180 (F 82), 3 -0.175 (F 89), **column 4 -0.085 (se 0.014, t -6.1, F 891)**; 2019 placebo -0.021 (t -1.86). Evening-versus-night DDD of errors: pooled areas -2.1% (se 0.7) and ESIOS 352 -1.6% (0.6) against Portugal's regulated unit; 352 -2.6% and pooled areas -3.1% against REN.
+
+**Rules as registered.** 1 pass (checked at build). **2 fail** (weekday peak +3.4%, mid +5.6%, off +10.3%: wrong sign and a large off-peak level shift). **3 fail** (the real peak effect ranks 11 of 22 among the placebo windows; the elasticity placebo t -1.86 passes). **4 fail** (0 of 5 areas negative). **5 pass** (column 4 -0.085, in the paper's -0.082 to -0.135). **6 pass** (pooled areas and 352 differ by 0.47 points). **7 fail** (Portugal REN moves the weekday peak by 11.9 points, unweighted by 3.6, drop Endesa 1.7, PDBF 0.5).
+
+**Reading.** Per the registered reading of rules 2 and 3, the replication does not hold in levels against Portugal's regulated unit, and the national E0 result stays the headline. The cause visible in the numbers: **the level against the Portuguese regulated unit drifts by +3 to +10 points** in the placebo windows too (2019 placebo weekday off-peak effects range from -8.2 to +8.9), and in the post window it is +10 on every period. That is what the missing per-capita normalisation predicts: Portugal's regulated customers were leaving the segment faster than Spain's (the paper: 41% to 20% to 15% of consumers), and the counts that the paper divides by are not in our panel. Counts are the missing input, not the schedule stage (PDBF and P48 agree within 0.5 points).
+
+**Post hoc, not registered, labelled as such.** A level drift common to all periods cancels in the contrast between period types, and Portugal's control (regulated unit or REN) drops out of the contrast by construction. Weekday peak minus off-peak is **-6.9 points** (mid minus off-peak -4.7), outside the range of all 21 placebo windows (-5.3 to +4.1; mid-off -3.2 to +2.2). By area, peak minus off-peak: Endesa -9.2, Naturgy -6.4, Iberdrola -4.9, EDP +2.4, Repsol 0.0 (the two small areas, 61 and 44 MW, are noisy). Unweighted -3.6 (small areas pull it). This is in the paper's range for the relative difference (peak -9.5, mid -6.4, off-peak about 0), but it was found after the registered rules failed and is not a pass. The REN-control column (-8.5, -6.3, -1.6) is the same contrast with a level that happens to sit near zero.
+
+**What stands.** Elasticity column 4 reproduces on the area panel at -0.085 (paper -0.082 to -0.135) with a strong first stage, and columns 1 to 3 are strong here (F 77 to 89, estimates -0.18) where they were weak on the national series; both facts are from this run and need the counts before being relied on. The national E0 headline (-0.10) is not changed.

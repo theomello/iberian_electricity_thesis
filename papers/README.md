@@ -127,3 +127,20 @@ Abstracts only, except where a section is cited.
 
 No OCR tool is installed here (`tesseract`, `pdftoppm` absent); the scans and the two
 garbled NBER papers cannot be read until one is.
+
+### Added 2026-11-13 — substitution-elasticity literature for the CES and fuel-switching threads
+
+Read from the first page and abstract only; nothing here has been read in full.
+
+| file | what it is | why it matters |
+|---|---|---|
+| `ssrn-2349534.pdf` | Papageorgiou, Saam & Schulte (ZEW DP 13-087, 2013; published in *REStat* 2017), clean vs dirty energy inputs, macro panel | nested CES on **quantities only** (NLS and Kmenta), σ ≈ 1.8–2 for electricity from the **capacity** margin, ≈ 3 for industry. A long-run object, unlike our dispatch σ. Useful for: estimating in ψ = 1 − 1/σ, the Kmenta cross-check, and the aggregate-σ-as-weighted-mean result (Miyagiwa & Papageorgiou 2007) |
+| `ssrn-1318167.pdf` | León-Ledesma, McAdam & Willman (ECB WP 2009; *AER* 2010), identifying σ with biased technical change | the normalised-system approach and Monte Carlo evidence that NLS on σ is flat and multimodal. Bears on whether our nested-CES objective needs a grid profile |
+| `dp08606.pdf` | Temple (Bristol DP 08/606, 2008), calibration of CES production functions | normalisation (reference point) of CES: our reference-price form is this device |
+| `EERH_RR33.pdf` | Stern (2009, EERH Research Report 33), interfuel substitution meta-analysis | the benchmark range for fuel-pair σ and why estimates differ by data type (time series < panel < cross-section). Compare our σ_fuel with its coal–gas figures |
+| `grw012.pdf` | Knittel, Metaxoglou & Trindade (2016, *Oxford Review of Economic Policy* 32(2)), coal-to-gas switching in US electricity | the closest published analogue to the coal-versus-gas dispatch response |
+| `2018Paper5-Linn_McCormack.pdf` | Linn & McCormack (2018), what reduced coal-plant profits and emissions, using a unit-level electricity model | unit-level model that reproduces operation; relevant for the unit-dispatch design |
+| `Caves-NeoclassicalModelConsumer-1987.pdf` | Caves, Christensen & Herriges (1987, *RAND J. Econ.* 18(4): 564–580), consumer demand with identically priced commodities, applied to time-of-use pricing | **the 1987 paper, not the 1984 one**. Treats hours with the same price as one commodity, which is our period-aggregation step. **The Markdown is page images, no text layer** |
+| `w23908.pdf` | Burlig, Knittel, Rapson, Reguant & Wolfram (NBER WP 23908), machine learning from schools about energy efficiency | LASSO-based per-unit counterfactuals in electricity; the same first-step idea as the paper's per-hour LASSO |
+| `belloni-et-al-2014-…effects.pdf`, `rdt044.pdf` | Belloni, Chernozhukov & Hansen (2014, two papers: *J. Econ. Perspectives* overview and *REStud* 81(2)) | post-LASSO inference with many controls: the formal basis for using a LASSO taste path and then testing a parameter |
+| `nihms637361.pdf` | Lockhart, Taylor, Tibshirani & Tibshirani (2014, *Annals of Statistics*), a significance test for the lasso | inference for variables entering the LASSO path |

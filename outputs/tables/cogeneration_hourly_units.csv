@@ -1,0 +1,303 @@
+unit,b10,mean_mw,cap,fuel,tech,per_cap,per_mean
+ATOMCEC,-0.00041,0.91148,9.7,gas,Gas natural cogeneración,-4e-05,-0.00045
+ATOMICO,-0.00831,1.01429,8.3,gas,Gas natural cogeneración,-0.001,-0.00819
+AUNGNR,0.00104,0.93628,1.0,gas,Gas natural cogeneración,0.00104,0.00111
+AYPGNR,-0.00071,0.11611,1.4,other_fossil,Derivados del petróleo o carbón,-0.00051,-0.00616
+AZULIB,-0.00885,2.84321,17.7,gas,Gas natural cogeneración,-0.0005,-0.00311
+BIRSPRA,-0.00043,0.08874,0.6,biomass_waste,Biogás,-0.00072,-0.00488
+BLAGAR,0.00397,0.2453,1.6,biomass_waste,Biogás,0.00248,0.01617
+BYDETIC,-0.00361,0.54806,1.1,biomass_waste,Biogás,-0.00328,-0.00658
+CILCOR,0.12739,17.33815,94.1,other_fossil,Derivados del petróleo o carbón,0.00135,0.00735
+CMILLAS,0.18528,2.9241,5.1,gas,Gas natural cogeneración,0.03633,0.06336
+COG75RQ,0.46361,50.74489,75.7,gas,Gas natural cogeneración,0.00612,0.00914
+DEESA,-0.00892,1.38062,3.4,biomass_waste,Biogás,-0.00262,-0.00646
+DPDETIC,0.80634,17.46036,24.5,other_fossil,Derivados del petróleo o carbón,0.03291,0.04618
+EEHU2,0.44737,33.97449,46.0,biomass_waste,Biomasa,0.00973,0.01317
+EMORELL,0.04701,34.82618,39.1,gas,Gas natural cogeneración,0.0012,0.00135
+EMORPER,0.15062,26.50708,86.7,gas,Gas natural cogeneración,0.00174,0.00568
+ENUFRV1,0.63164,21.51836,26.9,gas,Gas natural cogeneración,0.02348,0.02935
+ENUFRV5,0.06197,0.51936,8.0,biomass_waste,Biogás,0.00775,0.11932
+ENUFRV6,0.00437,1.2911,2.0,biomass_waste,Biomasa,0.00218,0.00338
+ENUFRV7,0.06888,7.00433,9.6,gas,Gas natural cogeneración,0.00717,0.00983
+EPU50,0.10743,33.29564,50.0,biomass_waste,Biomasa,0.00215,0.00323
+ESLA,0.10611,1.88303,3.8,gas,Gas natural cogeneración,0.02792,0.05635
+GASRGAN,-0.00129,0.12098,4.1,biomass_waste,Biogás,-0.00032,-0.0107
+GEPLAS,-0.03908,75.58291,97.9,gas,Gas natural cogeneración,-0.0004,-0.00052
+GESTCOM,0.00558,0.0424,1.5,biomass_waste,Biogás,0.00372,0.13151
+GOIEV01,0.00015,0.18148,0.6,biomass_waste,Biogás,0.00026,0.00085
+MILII,0.00733,0.75882,0.9,gas,Gas natural cogeneración,0.00814,0.00966
+RABANIL,-0.0007,0.57728,2.0,biomass_waste,Biogás,-0.00035,-0.00121
+RABIDA2,0.14101,42.59057,49.4,gas,Gas natural cogeneración,0.00285,0.00331
+RAFAP,-0.00378,5.43145,7.8,biomass_waste,Biomasa,-0.00048,-0.0007
+RAUDAX,0.00361,0.60625,2.4,biomass_waste,Biogás,0.0015,0.00596
+RBCESPA,0.00611,1.58823,3.1,biomass_waste,Biogás,0.00197,0.00385
+RBIOCAN,-0.02801,7.85502,10.0,biomass_waste,Biomasa,-0.0028,-0.00357
+RBIOLSI,0.10854,12.1743,15.0,biomass_waste,Biomasa,0.00724,0.00892
+RBIOSAN,0.07154,10.79507,14.3,biomass_waste,Biomasa,0.005,0.00663
+RBIPU,-0.02294,8.62628,9.8,biomass_waste,Biomasa,-0.00234,-0.00266
+RBOTARE,-0.0,0.96508,1.2,biomass_waste,Biogás,-0.0,-0.0
+RCAMPEL,0.00174,0.30288,1.4,biomass_waste,Biogás,0.00124,0.00575
+RCEASA,0.05684,25.11955,36.6,biomass_waste,Biomasa,0.00155,0.00226
+RCENER,0.12684,22.79914,40.9,biomass_waste,Biomasa,0.0031,0.00556
+RCESPA,-0.00373,1.24989,3.4,biomass_waste,Biogás,-0.0011,-0.00299
+RCESRE,0.00086,0.26258,4.5,biomass_waste,Biogás,0.00019,0.00329
+RCMOVA,-0.05766,4.9381,11.9,biomass_waste,Biomasa,-0.00485,-0.01168
+RCOGBIO,0.02847,2.09303,7.5,biomass_waste,Biogás,0.0038,0.0136
+RCOGENA,-0.0392,38.69676,40.3,biomass_waste,Residuos varios,-0.00097,-0.00101
+RCOPAMP,0.01345,1.49062,4.5,biomass_waste,Biogás,0.00299,0.00902
+RCUBILL,0.55919,33.96114,49.5,biomass_waste,Biomasa,0.0113,0.01647
+RCULEBR,0.00038,0.21657,1.4,biomass_waste,Biogás,0.00027,0.00177
+RDAKIN,0.00868,4.69634,25.5,biomass_waste,Residuos domésticos y similares,0.00034,0.00185
+REEM20,0.31803,17.50534,20.0,biomass_waste,Biomasa,0.0159,0.01817
+REGPE3,-0.00084,0.07904,0.4,biomass_waste,Biogás,-0.0021,-0.01064
+RENCE,0.05946,30.75133,34.5,biomass_waste,Biomasa,0.00172,0.00193
+RENMAN,-0.02106,11.6685,16.0,biomass_waste,Biomasa,-0.00132,-0.0018
+REPPLL,-0.00261,3.37641,84.0,other_fossil,Derivados del petróleo o carbón,-3e-05,-0.00077
+RFDETIC,0.00869,1.08245,1.2,biomass_waste,Biomasa,0.00724,0.00803
+RFEGED,0.062,51.03191,61.2,biomass_waste,Biomasa,0.00101,0.00121
+RFNEXU,-0.0,1.3,1.3,biomass_waste,Biogás,-0.0,-0.0
+RFVALDE,0.0132,7.30143,18.9,biomass_waste,Biogás,0.0007,0.00181
+RGAME,-0.00259,2.64593,6.1,biomass_waste,Biogás,-0.00042,-0.00098
+RGEDES,-0.01897,6.66781,15.5,biomass_waste,Biogás,-0.00122,-0.00284
+RIDAGST,0.02448,0.65353,2.2,biomass_waste,Biomasa,0.01113,0.03746
+RINUSA,-0.00596,1.26766,2.1,biomass_waste,Biogás,-0.00284,-0.0047
+RISLON,-0.00458,0.53411,1.9,biomass_waste,Biomasa,-0.00241,-0.00858
+RLALOM,-0.10116,10.6263,16.0,biomass_waste,Biomasa,-0.00632,-0.00952
+RMARINA,0.01291,0.92171,1.9,biomass_waste,Biomasa,0.0068,0.01401
+RMNEXU,-0.0002,0.19747,0.2,biomass_waste,Biomasa,-0.00098,-0.001
+RMSVGA,0.00761,0.97019,1.4,biomass_waste,Biogás,0.00544,0.00784
+RNAVARA,0.08291,4.28264,5.7,biomass_waste,Biogás,0.01454,0.01936
+ROFENV1,0.0071,6.90096,9.1,other_fossil,Derivados del petróleo o carbón,0.00078,0.00103
+ROFENV2,0.00522,2.05683,6.0,gas,Gas natural cogeneración,0.00087,0.00254
+ROLEIC,-0.0912,32.33358,42.9,biomass_waste,Biomasa,-0.00213,-0.00282
+RPAME,0.00139,1.22444,3.0,biomass_waste,Biogás,0.00046,0.00114
+RPCABAN,-0.0002,0.29351,0.3,biomass_waste,Biogás,-0.00065,-0.00067
+RPGUIZ,0.0058,4.29036,20.0,biomass_waste,Residuos varios,0.00029,0.00135
+RPIBCUR,-0.00113,0.15919,1.0,biomass_waste,Biomasa,-0.00113,-0.00707
+RPTRTAR,0.05067,34.49554,85.1,gas,Gas natural cogeneración,0.0006,0.00147
+RQUINA,-0.0025,1.54821,3.9,biomass_waste,Residuos varios,-0.00064,-0.00161
+RRBIOCO,-0.00202,0.04279,1.3,biomass_waste,Biogás,-0.00155,-0.04712
+RREBIOA,0.00169,3.84138,9.0,biomass_waste,Biogás,0.00019,0.00044
+RSAICA,1.01183,27.56739,49.9,biomass_waste,Residuos varios,0.02028,0.0367
+RSMURFT,0.03436,14.68232,21.4,biomass_waste,Residuos varios,0.00161,0.00234
+RSOGAM,-0.14096,38.54509,50.0,biomass_waste,Residuos domésticos y similares,-0.00282,-0.00366
+RSOGBI,-0.00068,1.07242,3.6,biomass_waste,Biogás,-0.00019,-0.00063
+RTFTPZB,-0.00669,10.83864,20.7,biomass_waste,Residuos varios,-0.00032,-0.00062
+RTIRCA,0.02841,8.00896,9.9,biomass_waste,Residuos domésticos y similares,0.00287,0.00355
+RTIRMA,0.00343,18.41023,29.8,biomass_waste,Residuos domésticos y similares,0.00011,0.00019
+RUCBIO2,0.02008,18.24975,50.0,biomass_waste,Biomasa,0.0004,0.0011
+RURBA,-0.00297,1.58725,4.2,biomass_waste,Biogás,-0.00071,-0.00187
+RURBAS,-0.0045,0.65628,2.5,biomass_waste,Biogás,-0.0018,-0.00686
+RURBZA,-0.00131,1.99888,5.4,biomass_waste,Biogás,-0.00024,-0.00065
+RVGRECA,0.00017,0.7424,5.2,biomass_waste,Residuos varios,3e-05,0.00023
+RVSEDAE,-0.06661,1.12987,37.0,biomass_waste,Residuos varios,-0.0018,-0.05895
+RYCEG,0.05358,1.49405,2.4,biomass_waste,Biogás,0.02233,0.03586
+RYEEXXI,0.00085,0.33988,6.9,biomass_waste,Biomasa,0.00012,0.0025
+RYEGLE,-0.00041,0.39928,0.4,biomass_waste,Biogás,-0.00103,-0.00103
+RYGEMSL,0.00792,0.93329,2.1,biomass_waste,Biogás,0.00377,0.00849
+RYGENER,-0.00129,0.20447,0.7,biomass_waste,Biogás,-0.00185,-0.00632
+RYGESTE,-0.00014,3e-05,1.8,biomass_waste,Biogás,-8e-05,-4.84914
+RYGNRA,-0.00462,5.54443,12.1,biomass_waste,Biogás,-0.00038,-0.00083
+RYGNSUR,7e-05,0.01986,0.4,biomass_waste,Biomasa,0.00017,0.00335
+RYIBCUR,-0.00994,2.14703,19.3,biomass_waste,Biogás,-0.00051,-0.00463
+RYNEXU,0.01234,1.46796,3.4,biomass_waste,Biogás,0.00363,0.00841
+RYTERSA,0.00721,2.96496,8.3,biomass_waste,Biogás,0.00087,0.00243
+RZABAL,0.31283,42.2275,93.5,biomass_waste,Residuos domésticos y similares,0.00335,0.00741
+SAICA1,0.79592,39.89032,49.3,gas,Gas natural cogeneración,0.01614,0.01995
+SAICA2,1.75963,39.05172,46.9,gas,Gas natural cogeneración,0.03752,0.04506
+SAICA3,1.27752,41.96366,46.5,gas,Gas natural cogeneración,0.02747,0.03044
+SAICA4,0.92402,41.13318,46.5,gas,Gas natural cogeneración,0.01987,0.02246
+SESBIO4,0.01138,6.15169,10.4,biomass_waste,Biogás,0.00109,0.00185
+SESBIO5,0.00431,1.54322,3.1,biomass_waste,Biogás,0.00139,0.00279
+SESBIO7,0.00576,1.48972,3.1,biomass_waste,Biogás,0.00186,0.00387
+SESBIO9,-5e-05,0.02343,2.0,biomass_waste,Biogás,-2e-05,-0.00194
+SOLVAYM,-0.00618,19.93127,21.0,gas,Gas natural cogeneración,-0.00029,-0.00031
+ST4,0.23092,3.07807,9.7,gas,Gas natural cogeneración,0.02381,0.07502
+T1CEG,0.29732,7.08757,10.0,gas,Gas natural cogeneración,0.02973,0.04195
+TACOR,-0.00282,2.9692,6.3,gas,Gas natural cogeneración,-0.00045,-0.00095
+TAE2COG,2.06055,24.0264,32.0,gas,Gas natural cogeneración,0.06439,0.08576
+TAE3COG,0.43458,10.93838,13.5,gas,Gas natural cogeneración,0.03219,0.03973
+TAE4COG,0.1585,5.7544,6.4,gas,Gas natural cogeneración,0.02476,0.02754
+TAE5COG,0.16458,5.67627,6.4,gas,Gas natural cogeneración,0.02572,0.02899
+TAE6COG,0.06217,7.73354,8.4,gas,Gas natural cogeneración,0.0074,0.00804
+TAE7COG,-0.00573,4.38573,4.4,gas,Gas natural cogeneración,-0.0013,-0.00131
+TAMIZAL,0.03711,4.36669,12.0,gas,Gas natural cogeneración,0.00309,0.0085
+TANTEX,-4e-05,0.17543,1.0,gas,Gas natural cogeneración,-4e-05,-0.00021
+TARATO,-0.00145,8.68129,12.5,gas,Gas natural cogeneración,-0.00012,-0.00017
+TARCILL,-0.00941,7.63022,9.9,gas,Gas natural cogeneración,-0.00095,-0.00123
+TARTABR,0.03515,0.32817,13.1,other_fossil,Derivados del petróleo o carbón,0.00268,0.10711
+TATOM,-0.02945,1.74411,17.8,gas,Gas natural cogeneración,-0.00165,-0.01689
+TBANER,0.00059,0.5222,1.9,gas,Gas natural cogeneración,0.00031,0.00112
+TBEFESA,0.00779,5.86588,12.2,biomass_waste,Residuos varios,0.00064,0.00133
+TBIEMTE,0.12063,5.67193,9.9,gas,Gas natural cogeneración,0.01218,0.02127
+TBIOBG,0.02783,22.71161,24.8,gas,Gas natural cogeneración,0.00112,0.00123
+TBIOEC,0.07208,20.00048,21.6,gas,Gas natural cogeneración,0.00334,0.0036
+TBLANSA,-0.00072,0.20265,4.9,gas,Gas natural cogeneración,-0.00015,-0.00355
+TBOIRO,1.1794,11.56478,24.6,other_fossil,Derivados del petróleo o carbón,0.04794,0.10198
+TBOREME,0.12555,16.46769,24.1,gas,Gas natural cogeneración,0.00521,0.00762
+TBPREF1,0.00493,2.9141,28.5,biomass_waste,Residuos varios,0.00017,0.00169
+TBPREF2,0.00223,2.91983,25.6,biomass_waste,Residuos varios,9e-05,0.00076
+TBUNGE,-0.03798,25.16723,29.7,gas,Gas natural cogeneración,-0.00128,-0.00151
+TBUTETE,0.0009,0.04413,1.6,biomass_waste,Biogás,0.00056,0.02034
+TCANAIS,0.01185,11.30761,19.9,gas,Gas natural cogeneración,0.0006,0.00105
+TCAPSA,-0.02098,8.90523,9.7,gas,Gas natural cogeneración,-0.00216,-0.00236
+TCAVLO,-0.01374,2.16063,4.9,gas,Gas natural cogeneración,-0.0028,-0.00636
+TCELISI,0.04775,22.45941,25.0,gas,Gas natural cogeneración,0.00191,0.00213
+TCELVSI,-0.06922,21.7475,24.9,gas,Gas natural cogeneración,-0.00278,-0.00318
+TCEMO,0.00088,0.31706,4.8,gas,Gas natural cogeneración,0.00018,0.00278
+TCEPMSI,-0.01359,12.06347,17.2,gas,Gas natural cogeneración,-0.00079,-0.00113
+TCEPUSI,-0.00649,21.15832,24.9,gas,Gas natural cogeneración,-0.00026,-0.00031
+TCERMA,0.01142,6.06896,9.9,gas,Gas natural cogeneración,0.00115,0.00188
+TCOBUR,0.01484,4.86305,4.9,gas,Gas natural cogeneración,0.00303,0.00305
+TCOGNA,0.0102,19.28165,24.0,other_fossil,Derivados del petróleo o carbón,0.00042,0.00053
+TCONOR,0.18879,13.97733,23.9,other_fossil,Derivados del petróleo o carbón,0.0079,0.01351
+TCOOSU2,0.57441,13.97812,20.7,other_fossil,Derivados del petróleo o carbón,0.02775,0.04109
+TCOOSUR,0.53417,14.13871,21.0,other_fossil,Derivados del petróleo o carbón,0.02544,0.03778
+TCOPAQ,0.06226,2.19053,3.6,other_fossil,Derivados del petróleo o carbón,0.01729,0.02842
+TCORCOG,-0.02839,3.10475,5.4,gas,Gas natural cogeneración,-0.00526,-0.00914
+TCRNOR,0.07841,11.64699,19.7,gas,Gas natural cogeneración,0.00398,0.00673
+TCTAULE,0.00683,7.81439,9.9,gas,Gas natural cogeneración,0.00069,0.00087
+TCUALIN,0.03019,5.96014,7.8,gas,Gas natural cogeneración,0.00387,0.00507
+TDEDRE,0.29933,3.50873,9.9,other_fossil,Derivados del petróleo o carbón,0.03024,0.08531
+TDERMO,0.00433,1.60897,3.6,other_fossil,Derivados del petróleo o carbón,0.0012,0.00269
+TDNEXU,0.08439,2.27208,7.0,other_fossil,Derivados del petróleo o carbón,0.01206,0.03714
+TECKER,0.0297,2.8029,4.8,gas,Gas natural cogeneración,0.00619,0.0106
+TEDARUB,-0.01592,4.61198,6.1,gas,Gas natural cogeneración,-0.00261,-0.00345
+TEGASN,0.04852,5.96848,15.2,gas,Gas natural cogeneración,0.00319,0.00813
+TEITOL,0.03573,4.97277,10.0,gas,Gas natural cogeneración,0.00357,0.00719
+TEMASA,0.00298,4.184,10.0,gas,Gas natural cogeneración,0.0003,0.00071
+TENCRI,0.04915,18.0339,19.6,gas,Gas natural cogeneración,0.00251,0.00273
+TENERCO,0.1525,11.19489,14.9,gas,Gas natural cogeneración,0.01023,0.01362
+TEPCSA,-0.00732,4.27681,5.0,gas,Gas natural cogeneración,-0.00146,-0.00171
+TEUROAT,0.23341,8.36955,9.9,gas,Gas natural cogeneración,0.02358,0.02789
+TFARMHI,0.00557,0.81876,3.3,gas,Gas natural cogeneración,0.00169,0.0068
+TFASESA,-0.0296,11.33288,13.5,gas,Gas natural cogeneración,-0.00219,-0.00261
+TFEGED,-6e-05,2.32183,4.6,gas,Gas natural cogeneración,-1e-05,-3e-05
+TFEIRA,0.13192,5.70788,7.3,gas,Gas natural cogeneración,0.01807,0.02311
+TFENAMU,0.29739,10.60594,14.9,gas,Gas natural cogeneración,0.01996,0.02804
+TFGASN,0.43668,28.60976,37.0,gas,Gas natural cogeneración,0.0118,0.01526
+TFGEGS1,0.03121,6.18578,37.0,gas,Gas natural cogeneración,0.00084,0.00505
+TFGEMAS,-0.05408,22.68661,27.0,gas,Gas natural cogeneración,-0.002,-0.00238
+TFIBGES,1.81649,109.46627,132.3,gas,Gas natural cogeneración,0.01373,0.01659
+TFINPEL,0.03558,1.18448,2.4,gas,Gas natural cogeneración,0.01483,0.03004
+TFINS2,-0.02711,11.57618,15.7,other_fossil,Derivados del petróleo o carbón,-0.00173,-0.00234
+TFINSA,0.01065,3.69165,24.9,gas,Gas natural cogeneración,0.00043,0.00289
+TFLUBRB,0.12753,35.94886,39.2,gas,Gas natural cogeneración,0.00325,0.00355
+TFNEXU,0.02343,3.44802,3.7,gas,Gas natural cogeneración,0.00633,0.0068
+TFOREST,0.12271,16.83853,23.5,other_fossil,Derivados del petróleo o carbón,0.00522,0.00729
+TFREPP,0.16303,36.84242,43.3,gas,Gas natural cogeneración,0.00377,0.00443
+TFRIGN,0.50797,7.12133,13.1,other_fossil,Derivados del petróleo o carbón,0.03878,0.07133
+TFSAMP,0.34518,24.35307,33.0,gas,Gas natural cogeneración,0.01046,0.01417
+TFSEDAE,-0.02387,47.82004,49.9,gas,Gas natural cogeneración,-0.00048,-0.0005
+TFUDEP,0.14078,12.30752,15.0,gas,Gas natural cogeneración,0.00939,0.01144
+TGCOOSU,0.31133,9.70561,13.7,gas,Gas natural cogeneración,0.02272,0.03208
+TGEC,0.05701,8.30955,9.8,gas,Gas natural cogeneración,0.00582,0.00686
+TGECAS,0.0086,1.33628,4.2,gas,Gas natural cogeneración,0.00205,0.00644
+TGEMOT,0.11868,1.55706,13.3,gas,Gas natural cogeneración,0.00892,0.07622
+TGIRCO,0.02382,3.30139,4.2,gas,Gas natural cogeneración,0.00567,0.00722
+TGIRSA,0.04083,3.16499,4.0,gas,Gas natural cogeneración,0.01021,0.0129
+TGRESP,-0.0395,1.89176,4.9,gas,Gas natural cogeneración,-0.00806,-0.02088
+TGRIFOL,-0.02662,4.59626,6.0,gas,Gas natural cogeneración,-0.00444,-0.00579
+THARIM,0.06212,0.49973,1.0,gas,Gas natural cogeneración,0.06212,0.12431
+THCTUDE,-0.09355,8.66983,10.0,gas,Gas natural cogeneración,-0.00936,-0.01079
+TIGALC,0.95695,10.43995,14.6,gas,Gas natural cogeneración,0.06554,0.09166
+TIGALT,1.02037,11.33307,14.6,gas,Gas natural cogeneración,0.06989,0.09003
+TIGCOR,0.31354,12.47928,14.6,gas,Gas natural cogeneración,0.02148,0.02513
+TIGERE,0.83375,10.0379,14.6,gas,Gas natural cogeneración,0.05711,0.08306
+TIGTUR,0.91734,10.49696,14.6,gas,Gas natural cogeneración,0.06283,0.08739
+TIGVOL,0.35634,12.71676,14.6,gas,Gas natural cogeneración,0.02441,0.02802
+TINDIP,-0.00025,0.66504,2.0,gas,Gas natural cogeneración,-0.00013,-0.00038
+TINMAL,0.41322,9.6947,13.2,gas,Gas natural cogeneración,0.0313,0.04262
+TKERAB,-0.01753,1.03575,9.6,gas,Gas natural cogeneración,-0.00183,-0.01693
+TLARODA,0.03159,7.20091,8.2,gas,Gas natural cogeneración,0.00385,0.00439
+TLEITZA,-0.03154,6.39254,7.2,gas,Gas natural cogeneración,-0.00438,-0.00493
+TLLERPR,0.14452,3.38207,7.7,gas,Gas natural cogeneración,0.01877,0.04273
+TMARIG,0.01857,1.85355,5.4,other_fossil,Derivados del petróleo o carbón,0.00344,0.01002
+TMOVIAL,-0.01547,15.50489,19.8,gas,Gas natural cogeneración,-0.00078,-0.001
+TMOVIAS,-0.06819,5.51745,23.7,gas,Gas natural cogeneración,-0.00288,-0.01236
+TMOYGI,-0.02579,17.20416,19.8,gas,Gas natural cogeneración,-0.0013,-0.0015
+TNCA,0.01218,1.60819,4.8,gas,Gas natural cogeneración,0.00254,0.00757
+TNEOROD,0.05861,0.44789,9.7,gas,Gas natural cogeneración,0.00604,0.13085
+TNESEP,0.00226,0.18117,5.5,gas,Gas natural cogeneración,0.00041,0.01248
+TNOEL,0.01287,3.3012,8.9,gas,Gas natural cogeneración,0.00145,0.0039
+TNPCE,0.2362,12.06184,13.6,gas,Gas natural cogeneración,0.01737,0.01958
+TNSA,0.05818,5.13304,6.7,gas,Gas natural cogeneración,0.00868,0.01133
+TNUCE,0.02567,1.6156,3.9,other_fossil,Derivados del petróleo o carbón,0.00658,0.01589
+TOLEPU,-2e-05,3.73682,9.1,gas,Gas natural cogeneración,-0.0,-0.0
+TOREMB,0.03315,11.11297,11.9,other_fossil,Derivados del petróleo o carbón,0.00279,0.00298
+TORIA,0.02514,4.29647,5.4,gas,Gas natural cogeneración,0.00466,0.00585
+TPAARA,0.09646,10.60229,13.9,gas,Gas natural cogeneración,0.00694,0.0091
+TPALAC,0.22979,8.1942,9.9,gas,Gas natural cogeneración,0.02321,0.02804
+TPAMEC,-0.00964,3.29862,9.1,gas,Gas natural cogeneración,-0.00106,-0.00292
+TPAPRI,0.00955,3.37451,4.7,gas,Gas natural cogeneración,0.00203,0.00283
+TPAYCA,0.48966,3.05436,7.5,gas,Gas natural cogeneración,0.06529,0.16031
+TPCOGE,0.58925,18.47154,31.3,gas,Gas natural cogeneración,0.01883,0.0319
+TPCOGEN,0.08858,2.11989,7.3,gas,Gas natural cogeneración,0.01213,0.04179
+TPCOVI,0.22665,9.95808,22.3,other_fossil,Derivados del petróleo o carbón,0.01016,0.02276
+TPERSAN,0.10633,5.80408,6.8,gas,Gas natural cogeneración,0.01564,0.01832
+TPGUIZ,0.53086,46.24635,48.6,gas,Gas natural cogeneración,0.01092,0.01148
+TPIBCUR,-0.00029,0.02302,2.0,other_fossil,Derivados del petróleo o carbón,-0.00015,-0.01281
+TPLACG,-0.00177,0.39486,8.3,other_fossil,Derivados del petróleo o carbón,-0.00021,-0.00449
+TPLAST,0.00412,5.86543,7.3,gas,Gas natural cogeneración,0.00057,0.0007
+TPYC2,0.07838,7.42981,8.8,gas,Gas natural cogeneración,0.00891,0.01055
+TPYCE,-0.00298,3.34288,9.9,gas,Gas natural cogeneración,-0.0003,-0.00089
+TPYSA,0.34481,28.03363,34.9,gas,Gas natural cogeneración,0.00988,0.0123
+TRELECO,0.02398,2.03127,4.7,other_fossil,Derivados del petróleo o carbón,0.0051,0.0118
+TREPP,0.02778,16.53664,40.8,gas,Gas natural cogeneración,0.00068,0.00168
+TRLE,0.07487,8.77518,28.9,gas,Gas natural cogeneración,0.00259,0.00853
+TRODO2,0.0332,2.2505,6.8,gas,Gas natural cogeneración,0.00488,0.01475
+TRODON,0.03155,2.22522,6.8,gas,Gas natural cogeneración,0.00464,0.01418
+TRPCAR2,0.16589,30.88029,39.9,gas,Gas natural cogeneración,0.00416,0.00537
+TSALIA,0.14009,5.86415,7.1,other_fossil,Derivados del petróleo o carbón,0.01973,0.02389
+TSANTG,0.25077,9.59009,12.8,gas,Gas natural cogeneración,0.01959,0.02615
+TSEPIOL,0.06843,1.53993,5.2,gas,Gas natural cogeneración,0.01316,0.04444
+TSERVI,-0.01129,12.01226,14.2,gas,Gas natural cogeneración,-0.0008,-0.00094
+TSIRUS,0.00945,5.3979,7.4,biomass_waste,Residuos domésticos y similares,0.00128,0.00175
+TSLQ,-0.01226,7.93262,14.8,gas,Gas natural cogeneración,-0.00083,-0.00155
+TSMURES,0.04137,21.80332,24.7,gas,Gas natural cogeneración,0.00168,0.0019
+TSOGAM,-0.01756,15.55037,21.2,gas,Gas natural cogeneración,-0.00083,-0.00113
+TSOLVAI,0.13452,6.50198,47.0,other_fossil,Derivados del petróleo o carbón,0.00286,0.02069
+TSOLVAY,0.33049,37.78029,42.0,gas,Gas natural cogeneración,0.00787,0.00875
+TSTENBA,0.01412,33.91623,46.0,gas,Gas natural cogeneración,0.00031,0.00042
+TTABLER,0.13984,18.68831,24.8,other_fossil,Derivados del petróleo o carbón,0.00564,0.00748
+TTARBA,0.07838,1.37742,8.1,biomass_waste,Residuos varios,0.00968,0.0569
+TTBAYPO,0.01664,9.93894,14.5,gas,Gas natural cogeneración,0.00115,0.00167
+TTECGA,0.10612,3.74115,7.3,gas,Gas natural cogeneración,0.01454,0.02837
+TTECQU,0.06059,1.64811,7.3,gas,Gas natural cogeneración,0.0083,0.03676
+TTFANOI,0.11684,4.72358,13.8,gas,Gas natural cogeneración,0.00847,0.02474
+TTFCONF,0.14686,3.79355,11.9,gas,Gas natural cogeneración,0.01234,0.03871
+TTFMOTR,0.35825,41.77915,48.8,gas,Gas natural cogeneración,0.00734,0.00857
+TTFTPSJ,0.18804,18.56071,24.9,gas,Gas natural cogeneración,0.00755,0.01013
+TTFTPZG,0.18716,19.60204,23.6,gas,Gas natural cogeneración,0.00793,0.00955
+TTIBGES,0.22556,11.72608,18.0,other_fossil,Derivados del petróleo o carbón,0.01253,0.01924
+TTINTS,0.04223,1.49573,2.0,gas,Gas natural cogeneración,0.02112,0.02823
+TTOVAG,-0.03727,19.09176,22.9,gas,Gas natural cogeneración,-0.00163,-0.00195
+TTUDELA,0.26968,7.37597,9.9,gas,Gas natural cogeneración,0.02724,0.03656
+TUEMADE,0.08458,11.26027,14.7,other_fossil,Derivados del petróleo o carbón,0.00575,0.00751
+TUFICS,0.49561,21.86589,32.5,gas,Gas natural cogeneración,0.01525,0.02267
+TUSARGO,0.04746,1.63581,1.9,other_fossil,Derivados del petróleo o carbón,0.02498,0.02902
+TUTETEM,0.06274,8.26004,13.1,biomass_waste,Residuos domésticos y similares,0.00479,0.0076
+TVALPBA,0.26643,14.82786,16.5,gas,Gas natural cogeneración,0.01615,0.01797
+TVCOMAT,0.29515,14.87119,16.5,gas,Gas natural cogeneración,0.01789,0.01985
+TWAME,-0.00651,0.63904,2.6,gas,Gas natural cogeneración,-0.0025,-0.01019
+TWART2,-0.09347,1.08888,13.0,other_fossil,Energía residual,-0.00719,-0.08584
+TWARTS,-0.00399,0.57828,14.9,other_fossil,Energía residual,-0.00027,-0.0069
+TYAME,0.04847,4.36759,8.1,gas,Gas natural cogeneración,0.00598,0.0111
+TYCEG,0.06857,2.50056,4.4,gas,Gas natural cogeneración,0.01559,0.02742
+TYEEXXI,0.17885,0.15981,62.7,gas,Gas natural cogeneración,0.00285,1.11918
+TYEGLE,0.00366,2.98511,3.0,gas,Gas natural cogeneración,0.00122,0.00122
+TYEONUR,-0.00124,0.07396,6.7,gas,Gas natural cogeneración,-0.00019,-0.01679
+TYGEMSL,-0.00141,0.12972,3.9,gas,Gas natural cogeneración,-0.00036,-0.01085
+TYGENER,-0.0,1e-05,0.9,gas,Gas natural cogeneración,-0.0,-0.01968
+TYGNRA,0.00827,0.959,3.4,gas,Gas natural cogeneración,0.00243,0.00863
+TYGNSUR,0.03504,0.31653,36.5,gas,Gas natural cogeneración,0.00096,0.1107
+TYHCCUR,0.0122,0.4592,6.0,gas,Gas natural cogeneración,0.00203,0.02658
+TYIBCUR,0.00162,1.92793,118.1,gas,Gas natural cogeneración,1e-05,0.00084
+TYLMER,0.53203,10.38788,28.6,gas,Gas natural cogeneración,0.0186,0.05122
+TYNEXU,0.03418,2.13878,7.7,gas,Gas natural cogeneración,0.00444,0.01598
+TYTERSA,-0.00688,18.91014,31.7,biomass_waste,Residuos domésticos y similares,-0.00022,-0.00036
+TYTRDB,0.00775,1.76155,5.0,biomass_waste,Biogás,0.00155,0.0044
+TYWMARK,0.02171,3.27433,3.8,gas,Gas natural cogeneración,0.00571,0.00663
+TZAME,-0.03013,9.45849,12.1,gas,Gas natural cogeneración,-0.00249,-0.00318
+UP_COGF,-5e-05,0.09639,0.4,gas,Gas natural cogeneración,-0.00013,-0.00053
+VPEL,0.00561,0.48975,0.9,biomass_waste,Biomasa,0.00623,0.01145

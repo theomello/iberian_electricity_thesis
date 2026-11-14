@@ -1,0 +1,29 @@
+step,variant,type,effect_pct,se_pct,t
+DiD,V1,peak,-5.868,0.845,-6.945
+DiD,V1,mid,-2.765,0.891,-3.105
+DiD,V1,off,0.086,0.809,0.106
+DiD,V1,peak-off,-5.954,0.592,-10.05
+DiD,V1,mid-off,-2.851,0.604,-4.721
+DiD,V2,peak,-5.573,1.044,-5.336
+DiD,V2,mid,-2.529,1.108,-2.282
+DiD,V2,off,-0.372,0.978,-0.38
+DiD,V2,peak-off,-5.2,0.715,-7.278
+DiD,V2,mid-off,-2.157,0.71,-3.037
+DiD,V3,peak,-6.384,0.833,-7.666
+DiD,V3,mid,-2.901,0.904,-3.21
+DiD,V3,off,0.154,0.785,0.196
+DiD,V3,peak-off,-6.538,0.605,-10.809
+DiD,V3,mid-off,-3.054,0.562,-5.432
+DiD,V4,peak-off,-5.963,0.583,-10.225
+DiD,V4,mid-off,-2.86,0.598,-4.784
+LASSO errors,mean error diff,peak,-7.359,,
+LASSO errors,mean error diff,mid,-3.818,,
+LASSO errors,mean error diff,off,0.793,,
+LASSO errors weekend,fake types,peak,-4.53,,
+LASSO errors weekend,fake types,mid,-0.764,,
+LASSO errors weekend,fake types,off,2.85,,
+DiD weekend fake types,V1,peak,-2.649,0.948,-2.795
+DiD weekend fake types,V1,mid,0.62,1.002,0.618
+DiD weekend fake types,V1,off,1.861,1.086,1.714
+DiD weekend fake types,V1,peak-off,-4.509,0.752,-5.999
+DiD weekend fake types,V1,mid-off,-1.241,0.591,-2.102

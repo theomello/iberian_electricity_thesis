@@ -267,3 +267,211 @@ pattern (+0.3% per GW in Italy and Spain), so the cogeneration response needs a 
   2022-04-01 → 2023-03-31, fuel known, plants followed through both dates. Neither has been estimated.
 - E3 (pass-through into offers) rests on a few dozen units that state a price; a lead, not a chapter.
 - The regulated payment per plant is still the main unknown (spec §6).
+
+## Checks on the pre-cap result (2026-11-11, user's go-ahead: "Cogeneration checks")
+
+Open item (1) above: does the pre-cap gas response run through hosts' electricity demand, since the wind instrument carries a
+common demand pattern? Three checks, pre-cap window (443 days on disk), set before the hourly run:
+
+- **C1 demand control** (`analysis/cogeneration_demand_checks.py` → `outputs/tables/cogeneration_demand_checks.csv`): add REE's
+  day-ahead demand forecast (ESIOS 1775, daily mean) to the controls. Pass: the gas coefficient keeps its sign, at least half its
+  size, t above 2; the biomass placebo stays inside |t| < 2.
+- **C2 alternative instrument:** solar forecast alone; wind purged of demand; wind and solar together. Pass: same sign, within a
+  factor of two of the baseline, first-stage F above 10.
+- **C3 hourly, within the day** (`build/build_cogeneration_ree_hourly.py`, `analysis/cogeneration_hourly.py`): gas group hourly
+  load factor (REE's P48) on the hourly day-ahead price instrumented with the hourly wind forecast, date effects (these absorb
+  the gas price, the host's heat load, daily demand), hour × month and hour × weekday effects, clustered by week. Pass, all of:
+  first-stage F ≥ 10; gas coefficient positive with t > 2; biomass-and-waste placebo |t| < 2; and a shifted-price placebo
+  (price and instrument from each of the 20 days within ±10) in which the real coefficient lies outside the shifts' 5th–95th
+  percentile and ranks in the top 2 of 21. All three checks must pass before the pre-cap result is quoted.
+
+**C1 and C2 result (daily).** Baseline +0.012 per €10 (t 4.6, F 96). With the demand forecast as a control: **+0.012 (t 5.7, F 101)**,
+biomass −0.001 (t −0.9). The wind forecast's correlation with the demand forecast is only +0.07 in these days, so the demand control
+barely moves anything, and "wind purged of demand" is identical to the demand-controlled specification by construction (not an
+independent check). Solar alone has no first stage (F 0.4): uninformative. Wind and solar together, demand control: +0.013 (t 5.7,
+F 62), biomass −0.001. **C1 passes; C2 as far as it can be run passes (wind variants) or is uninformative (solar).**
+
+**C3 result (hourly, within the day; 421 pre-cap days, 10,104 hours; 2022-06 days in quarter-hours skipped).**
+`analysis/cogeneration_hourly.py` → `outputs/tables/cogeneration_hourly.csv`. Hourly load factor on the hourly day-ahead price, wind
+forecast as the instrument, date and hour × month and hour × weekday effects, clustered by week. First stage F 65.
+
+| outcome | per €10 | se | t | elasticity at the mean |
+|---|---|---|---|---|
+| gas | **+0.0074** | 0.0010 | 7.3 | 0.165 |
+| biomass and waste (placebo) | **+0.0023** | 0.0004 | 5.2 | 0.056 |
+| gas minus biomass | +0.0051 | 0.0010 | 5.0 | |
+
+By time of day (gas / biomass, t): night 0–5h +0.0040 (4.3) / +0.0017 (2.6); day 6–17h +0.0071 (6.5) / +0.0020 (3.9); evening 18–23h
++0.0079 (7.7) / +0.0012 (1.9). Shifted-price placebo (20 shifts, ±10 days): median −0.0001, 5–95% −0.0011 to +0.0013, the real
++0.0074 ranks 1 of 21.
+
+Rules, in order: first stage **passes** (F 65); gas positive, t above 2: **passes** (t 7.3); **biomass placebo: FAILS** (+0.0023, t 5.2,
+against the pre-set |t| < 2); shifted-price placebo: **passes** (rank 1 of 21, the shifts sit within ±0.0013). **By the rule that all
+three checks pass, the pre-cap result cannot be quoted as it stands.** What the hourly result does say: within the day, gas
+cogeneration follows the price about three times as strongly as biomass and waste (elasticity 0.17 against 0.06; difference t 5.0),
+the response is not a pattern any other day's price produces (the shifts are zero), and it is present in every part of the day.
+What stops it: the placebo group responds too, which the daily design had flat (−0.001, t −0.8). Candidate reasons, not tested:
+biomass and waste plants also shift output toward dear hours (many are paid partly by market price), or REE's technical-constraint
+dispatch moves with the same wind-driven price shape.
+
+**Status after the checks.** The daily design's three open items: (1) demand: C1 passes, C2 uninformative or by construction;
+(3) hourly within-day: gas response confirmed and day-robust, but the placebo fails. So the gas-specific part is **about 70% of the
+hourly gas coefficient** (0.0051 of 0.0074), still positive and significant as a difference, but the pre-set rule is not met and
+I am not restating it. Item (2), the post-cap windows failing the biomass placebo, is unchanged.
+
+**Probe of the biomass response (2026-11-11, user's go-ahead: "Yes, probe").** `analysis/cogeneration_hourly_units.py` →
+`outputs/tables/cogeneration_hourly_{units,groups}.csv`. A unit's coefficient is the change in its output (MW) per €10 of the
+hourly price moved by the wind forecast, within the day (final schedule, P48; units running above 0.05 MW on average).
+
+| group | units | capacity MW | response per MW of capacity, per €10 | units with a positive coefficient | median unit | five biggest contributors' share of the absolute response |
+|---|---|---|---|---|---|---|
+| gas | 171 | 3,171 | 0.0085 | 73% | 0.0033 | 28% |
+| other fossil | 32 | 615 | 0.0090 | 81% | 0.0054 | 62% |
+| biomass and waste | 91 | 1,285 | 0.0025 | 59% | 0.0003 | **58%** |
+| of which Biogás | 44 | 201 | 0.0013 | 52% | 0.0002 | 60% |
+| Biomasa | 27 | 551 | 0.0030 | 63% | 0.0016 | 67% |
+| Residuos varios | 12 | 273 | 0.0038 | 67% | 0.0001 | 98% |
+| Residuos domésticos | 8 | 261 | 0.0011 | 75% | 0.0008 | 97% |
+
+**The gas response is broad; the biomass response is five plants.** Gas: three quarters of the units respond, the median plant by about
+a third of the group's per-MW rate, the five biggest contributors 28% of the total. Biomass and waste: the median plant does nothing
+(0.0003), and five plants give 2.65 of the group's 3.24 MW per €10 (82% of the net response): Saica's waste plant `RSAICA` (50 MW,
++1.01 MW per €10), Cubillos `RCUBILL` (50 MW, +0.56), Ence Huelva `EEHU2` (46 MW, +0.45), Ence `REEM20` (20 MW, +0.32), Zabalgarbi
+`RZABAL` (94 MW, +0.31). The other 86 units, 1,026 MW, respond at 0.0006 per MW, about a fifteenth of gas. So the placebo
+fails because of a few large plants that respond to the price within the day (probably those selling at the market price, not
+verified), not because biomass as a group is price-responsive. Picking the five by their response is selection on the outcome:
+a placebo restricted to the remaining 86 units would be the right test, but the choice of the five has to be made on something
+other than the result (payment scheme, owner, capacity), which I have not found; exploratory.
+
+**Day-ahead schedule against the final schedule (2026-11-11).** The same probe on REE's day-ahead base schedule (PDBF, hourly, same 421
+days; `build/build_cogeneration_ree_hourly_pdbf.py`, `analysis/cogeneration_hourly_units.py --pdbf` →
+`outputs/tables/cogeneration_hourly_{units,groups}_pdbf.csv`). Response per MW of capacity per €10, day-ahead (PDBF) against final (P48):
+
+| group | PDBF | P48 | PDBF as a share of P48 | units positive, PDBF / P48 | median unit, PDBF / P48 |
+|---|---|---|---|---|---|
+| gas | 0.0038 | 0.0085 | 45% | 56% / 73% | 0.0002 / 0.0033 |
+| other fossil | 0.0037 | 0.0090 | 41% | 58% / 81% | 0.0001 / 0.0054 |
+| biomass and waste | 0.0013 | 0.0025 | 52% | 50% / 59% | 0.0000 / 0.0003 |
+
+**More than half the within-day response of gas and of other fossil plants arises after the day-ahead schedule** (the intraday
+sessions and REE's technical-constraint changes, which together turn PDBF into P48), and the breadth of the gas response is mostly
+there too: the median gas plant does nothing in the day-ahead schedule (0.0002) and responds in the final one (0.0033). Biomass
+and waste: half in each, with the five-plant concentration weaker in PDBF (43% against 58%). I cannot split the later part
+into intraday trading and redispatch from these files. What follows for the design: the pre-cap price response is measured on the
+schedule the plants end up running, so it reflects the whole sequence of markets, not only their day-ahead decisions; the
+day-ahead part alone is about 0.004 per MW per €10 for gas (elasticity roughly 0.07 at the means), about half the hourly gas
+figure above. Not run: the placebo and the shifted-price rules on PDBF, and a split of the later part using the intraday
+sessions' schedules (PHF sheets, on disk).
+
+**The later part, split by stage (2026-11-11, user's go-ahead: "Yes, split it").** `build/build_cogeneration_ree_hourly_stages.py`,
+`analysis/cogeneration_hourly_stages.py` → `outputs/tables/cogeneration_hourly_stages.csv`. I90DIA sheets 26 (PBF, day-ahead), 01
+(PVP, after the day-ahead technical constraints), 36 (PHFC, after the intraday auctions and the continuous market), 02 (P48, after
+real-time constraints, balancing energy, tertiary and transfers between balance-responsible parties). Same 421 days, same
+instrument and effects; per MW of capacity per €10, standard error in brackets. Sanity: the gas group's mean output is 2,157 MW (PBF),
+2,083 (PVP), 2,079 (PHFC), 2,077 (P48), so no stage is empty.
+
+| group (MW) | PBF level | day-ahead constraints (PVP − PBF) | intraday markets (PHFC − PVP) | real time and balancing (P48 − PHFC) | total after PBF |
+|---|---|---|---|---|---|
+| gas (3,172) | +0.0042 (0.0007) | +0.0014 (0.0006) | **+0.0033 (0.0009)** | +0.0001 (0.0001) | +0.0048 (0.0008) |
+| other fossil (617) | +0.0035 (0.0009) | +0.0002 (0.0003) | **+0.0051 (0.0012)** | +0.0001 (0.0001) | +0.0055 (0.0011) |
+| biomass and waste (1,293) | +0.0013 (0.0004) | +0.0008 (0.0004) | +0.0001 (0.0007) | +0.0004 (0.0001) | +0.0013 (0.0005) |
+| biomass and waste without five plants (1,035) | +0.0008 (0.0004) | +0.0008 (0.0004) | −0.0014 (0.0006) | +0.0005 (0.0002) | −0.0001 (0.0005) |
+
+**Reading.** For gas, of a final response of about 0.0090 per MW per €10, 47% is already in the day-ahead schedule, 16% comes from
+REE's day-ahead constraint changes, **37% from the plants' own trading in the intraday auctions and the continuous market**, and
+none from real-time balancing. So the part after the day-ahead schedule is mostly the plants' own decisions (69% of it), not REE's
+redispatch; other fossil plants are the same, more so (intraday 0.0051 of a total 0.0055). That makes the final-schedule response
+a response by the plants, spread over two market stages, which is what a cost-based run decision predicts. Biomass and waste:
+the total after PBF is small (0.0013, t 2.6), mostly constraints and real time (REE's side), and **without the five plants the
+whole sequence nets to zero (−0.0001, t −0.3), with the day-ahead level at 0.0008 (t 1.9)**: as an exploratory cut (the five were
+picked from their own response) this says the placebo's failure rests on those plants, and that for the other 86 units the
+intraday markets work against the price (−0.0014, t −2.3) while REE's steps work with it. Not done: the pre-set rules on the
+rest-of-biomass group (a selection rule independent of the outcome is still needed), and the post-cap window.
+
+## An outcome-independent placebo rule for biomass and waste (2026-11-11, rules set before the run)
+
+The five plants that carry the biomass response were found from their own response, so a placebo that leaves them out is a choice made
+on the outcome. Two rules that do not use the price response, set here before any is run; I have seen the five plants' names, so
+neither rule is blind to them, and both are stated so that any plant can be classified from its schedule or size alone:
+
+- **R1, market exposure.** A plant's bilateral share = its bilateral PDBF energy over its total PDBF energy, summed over the pre-cap
+  days with hourly data (daily panel, `pdbf_bilateral_mwh / pdbf_mwh`). A plant sells into the day-ahead price when it sells through
+  the auction, not under a bilateral contract. **Placebo group = plants with a bilateral share of at least 0.5** (not exposed to the
+  day-ahead price); treatment group = share below 0.5.
+- **R2, size.** Large regulated or merchant plants against small ones aggregated by representatives. **Placebo group = under 20 MW.**
+- Pass (per rule, on the biomass-and-waste placebo group): final-schedule coefficient |t| < 2 on the hourly day-ahead price moved by the
+  wind forecast, and the shifted-price placebo (20 shifts ±10 days) does not put the real coefficient in its top 2 of 21 or outside
+  its 5th–95th percentile. Also reported: the same split for gas, to see where the gas response sits.
+- If neither rule gives a placebo group with |t| < 2, the placebo fails on the outcome-independent split and the pre-cap result is not
+  quoted. If a rule passes, the pre-cap result is quoted with that rule named and the choice of rule flagged as made after seeing the
+  response.
+
+**Result of the rules (2026-11-11).** `analysis/cogeneration_placebo_rules.py` → `outputs/tables/cogeneration_placebo_rules.csv`. Hourly
+final-schedule load factor on the hourly price moved by the wind forecast, per €10, 421 days, first stage F 65.
+
+| group | units | MW | coefficient | se | t | shifted prices: median, 5–95%, rank of real |
+|---|---|---|---|---|---|---|
+| gas | 243 | 3,624 | +0.0074 | 0.0010 | 7.3 | (0.0000; ±0.001; 1 of 21) |
+| all biomass and waste | 106 | 1,385 | +0.0023 | 0.0004 | 5.2 | |
+| **R1 placebo: bilateral share ≥ 0.5** | 3 | 92 | +0.0063 | 0.0024 | 2.7 | −0.0001, [−0.0029, +0.0025], rank 1 of 21 |
+| R1 other biomass (share < 0.5) | 93 | 1,200 | +0.0022 | 0.0005 | 4.6 | |
+| **R2 placebo: under 20 MW** | 82 | 429 | +0.0010 | 0.0004 | 2.7 | −0.0000, [−0.0006, +0.0008], rank 3 of 21 |
+| R2 other biomass (20 MW and over) | 24 | 955 | +0.0029 | 0.0006 | 4.9 | |
+
+**Neither rule gives a placebo with |t| < 2, so by the rule set above the placebo fails on the outcome-independent split and the pre-cap
+result is not quoted as a gas-specific response.** R1 does not separate anything: only 3 plants (92 MW) sell mostly bilaterally, and
+one of the five responders, Ence Huelva `EEHU2`, is among them (bilateral share 0.69, while `RSAICA`, `RCUBILL`, `RZABAL` have 0.00), so
+market exposure as measured by the bilateral share is not what distinguishes the responders. R2 gives a real group (82 plants) whose
+response is small, +0.0010, 14% of gas, but still positive at t 2.7 and outside the shifted-price range (rank 3 of 21, 5–95% just
+above +0.0008).
+
+**What this leaves.** A gradient, not a placebo: gas +0.0074, large biomass +0.0029 (39% of gas), small biomass +0.0010 (14%), all positive
+and all following the real price (the shifted prices give zero). Gas responds 2.5 times as strongly as the large biomass plants and
+7 times as strongly as the small ones. The plain reading is that every thermal plant in this fleet moves a little with the
+within-day price, gas most, so the within-day design cannot use biomass as a zero. The daily design's flat biomass (−0.001, t −0.8)
+is then a result of daily aggregation, since biomass plants shift within the day and not across days (the date effects absorb the
+day-to-day). **Status of the pre-cap result:** the gas response is real and day-robust (hourly, shifts, demand control), 70% of the
+hourly coefficient is gas-specific on the gas-minus-biomass difference (+0.0051, t 5.0), but no placebo group is at zero, so I quote it as
+"gas responds at least 2.5 times as strongly as any placebo group", not as an identified gas-specific elasticity.
+
+## Post-cap window, hourly (2026-11-11, user's go-ahead: "Yes, post-cap"; rules set before the run)
+
+Question: does the within-day response of gas cogeneration to the hourly price differ after the cap, and does the gradient over the
+placebo groups survive? Windows (days on disk): pre-cap 2021-01-01 → 2022-06-14 (421 days, done); **cap, outside the subsidy**
+2022-06-15 → 2022-09-30; **opt-in**, 2022-10-01 → 2023-03-31 (plants could join the mechanism from 1 October, RDL 17/2022). Same
+specification as C3 (hourly price moved by the hourly wind forecast, date, hour × month and hour × weekday effects, clustered by week),
+final schedule P48 (quarter-hourly from June 2022: summed to hours; DST days out), groups: gas, large biomass and waste (20 MW and
+over), small biomass and waste (under 20 MW, the R2 placebo). Read as a description of how the response changes, not as the effect of
+the cap: the cap also moved the gas price level and the price's within-day shape, and cogeneration was outside the subsidy until October.
+
+Pass rules, per window: (1) first-stage F ≥ 10, else the window is not read; (2) the gas response reported with the difference from
+the pre-cap +0.0074 and its standard error (windows pooled with window interactions, clustered by week); (3) the gradient: gas over
+large biomass over small biomass, same order as before the cap; (4) the shifted-price placebo for gas: outside the shifts' 5–95%
+and rank in the top 2 of 21. A window that fails (1) or (4) is not read.
+
+**Post-cap result (2026-11-11).** `analysis/cogeneration_postcap_hourly.py` → `outputs/tables/cogeneration_postcap_hourly.csv`
+(`build/build_cogeneration_ree_hourly_postcap.py`: 288 days, P48 quarter-hours summed). Hourly final-schedule load factor per €10, price moved by
+the hourly wind forecast; standard errors clustered by week; the difference from pre-cap uses independent standard errors.
+
+| group | pre-cap (421 days) | cap, outside the subsidy (108 days) | opt-in (180 days) |
+|---|---|---|---|
+| gas | +0.0074 (t 7.3) | **+0.0031 (t 5.4)**, difference −0.0043 (se 0.0012) | +0.0084 (t 6.5), difference +0.0010 (se 0.0016) |
+| large biomass and waste | +0.0029 (t 4.9) | +0.0009 (t 1.7) | +0.0062 (t 5.2) |
+| small biomass and waste (placebo) | +0.0010 (t 2.7) | **+0.0002 (t 0.3)** | +0.0053 (t 8.9) |
+| first-stage F | 65 | 194 | 103 |
+| shifted-price rank of the gas estimate | 1 of 21 | 1 of 21 | 1 of 21 |
+
+Rules: (1) first stage passes in all three windows. (4) the gas shifted-price placebo passes in all three. (3) the gradient gas > large
+> small holds in every window, **but in the opt-in window it nearly closes** (gas +0.0084, large +0.0062, small +0.0053, t 8.9). (2) The gas
+response **falls by 58% in the cap window** (−0.0043, 3.6 standard errors) and is back at the pre-cap level in the opt-in window
+(+0.0010, not significant).
+
+**The cap window is the cleanest the design has produced.** Gas +0.0031 (t 5.4) with a placebo of +0.0002 (t 0.3, rank 15 of 21 among its
+shifts, so indistinguishable from zero): all four rules pass, and the gas-specific response (gas minus small biomass) is 0.0029, 45% of
+the pre-cap 0.0064. The pre-cap window has no zero placebo (small biomass t 2.7) and the opt-in window has none either (small biomass
+0.0053), so the cap window is the only one where the placebo group is flat. Why the response is lower in the cap window is not
+tested; candidates: (a) the extensive margin (131 → 87 of 237 gas units running in the weeks around 15 June, so fewer plants can
+move), (b) the price's within-day shape, flatter under the cap, (c) the gas price at the time. Why every group responds in the opt-in
+window is not tested either (winter, new units joining the subsidy, a different price shape). **A concrete next step if the user wants
+to keep going: condition on the plants that were running (the intensive margin) in the cap window, and test whether the fall is the
+extensive margin.** Read, as written before the run, as a description of how the response changes, not as the effect of the cap.

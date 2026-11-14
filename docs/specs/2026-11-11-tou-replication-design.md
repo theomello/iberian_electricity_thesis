@@ -1,0 +1,166 @@
+# Replicating the time-of-use response in Spain (Enrich, Li, Mizrahi and Reguant, JEEM 2024)
+
+**Status: proposed 2026-11-11. Nothing here is built or estimated.** To be built on a fresh branch from `main`
+after PR #8 merges. Paper: `papers/md/4-time-of-use-impacts-enrich-li-mizrahi-reguant.md`.
+
+**In one example.** Before June 2021 a household on the regulated tariff paid the same network charge at every hour.
+From 1 June 2021 the charge is three-part: peak (10–14h and 18–22h on working days) about 200% dearer, off-peak
+(00–08h on working days, all weekend) about 86% cheaper. If a household's evening load falls 9% when the evening
+price triples, that is a price response with no need to separate it from weather, because the price change is set
+by the government, not by the market. Portugal had no such reform, shares the wholesale market and the weather, and is the control.
+
+**Why.** Every aggregate design in this repo has failed on a common demand component that moves with the instrument
+(the Italian placebo, `notes/rq-cogeneration.md`). Here the price variation comes from a policy with a known date
+and a known shape by hour, and the paper gets elasticities of −0.08 to −0.135 on aggregate (distribution-area) data
+with Portugal as the control. This is the one aggregate design the literature has shown to work in Spain.
+
+**Goals.** (1) Replicate the peak, mid-peak and off-peak effects on regulated-tariff load, with the paper's
+prediction-error difference-in-differences. (2) A price elasticity from the policy-moved price. (3) Compare with the
+paper's −0.08 to −0.135 as a replication check, not as a target.
+
+**Not goals.** An elasticity for industry (the reform changed their access tariffs too, so there is no clean control). A
+welfare number. Free-market households.
+
+## 1. Data
+
+| need | on disk | source |
+|---|---|---|
+| Treated load: regulated (reference) retailers' schedule, hourly | `data/esios/esios_352.parquet` (2018 →) | ESIOS 352. A **schedule** (PBF), not measured load; the paper has measured load by distribution area |
+| Control load: Portugal hourly consumption | `data/ren/ren_production_15min.parquet`, series `Consumption` (15-minute, 2018 →, mean 5.8 GW) | REN |
+| Second control: France | `data/rte/eco2mix_national.parquet` (`consommation`) | RTE |
+| Weather | `data/weather/temperature_population_index.parquet` (Spain), city files for Lisbon and Porto | Open-Meteo |
+| Regulated price by hour | **not on disk**: ESIOS 1013 (PVPC, old 2.0A), 1001/1003–1005 (PVPC 2.0TD, total and P1–P3), 1876 and 1018 (charges component) | ESIOS, token, small; fetch needs the user's go-ahead |
+| Holidays (peak definition) | `data/holidays/holidays_es_pt.parquet` | BOE |
+
+The paper's sample is regulated households in five distribution groups, 2018 to September 2021. ESIOS 352 is their
+total, and the reference retailers' schedule is a retailer forecast of load, so it cannot show a response the retailer
+had not forecast. That is the main weakness; it is not checked yet.
+
+## 2. Design
+
+- **Window** 2018-01-01 → 2021-09-30, break 2021-06-01 (as the paper). Hourly outcome: log load, by period type
+  (peak, mid-peak, off-peak, with weekends and holidays off-peak).
+- **Step 1, difference-in-differences:** log load of Spain 352 against Portugal, treated × post by period type, with
+  hour, weekday, month and temperature effects.
+- **Step 2, prediction-error version** (Burlig et al. 2020, as the paper): LASSO on the pre-period to predict each
+  series' load, prediction errors in the post-period, then errors on treated × post by period type with the same effects.
+- **Step 3, weekday against weekend:** the paper's lower bound (weekend "fake peaks").
+- **Step 4, elasticity:** the paper instruments log price with the policy-built price (the charges component under
+  the TOU plus the prior average energy cost). With the PVPC price series this is the same construction.
+
+## 3. Checks and stop rules, set before any run
+
+1. **The price shape.** From ESIOS 1013, 1001 and 1003–1005, the peak price rises and the off-peak price falls on 1
+   June 2021 by roughly the paper's +200% and −86% (charges component). If not, stop and find the difference.
+2. **Placebo dates.** The same DiD on every fake break at the 1st of each month 2018-06 → 2020-12: the real peak
+   effect must lie outside the placebos' 5th–95th percentile and rank in the top 5% by absolute size.
+3. **Control tracks the treated before the break.** Pre-period prediction errors of Spain 352 and Portugal
+   have the same trend: reported as the prediction-error trend by period type; a gap trending more than a third of the
+   real effect per year is a stop.
+4. **Weekend placebo.** Fake peaks on weekends reproduce the paper's pattern (an effect there too); reported, not a stop.
+5. **Sign and size.** Peak effect negative, in the paper's range (1–9%). A positive or implausibly large effect
+   (> 20%) is read as confounding, not a result.
+6. **Power.** The peak effect in MW (about 6–9% of 352's peak load) against the placebos' standard deviation, before
+   the elasticity step.
+
+## 3b. Check 1 result (2026-11-11)
+
+Fetched ESIOS 1013, 1001–1005, 1018 and 1876 (2018-01-01 → 2021-12-31, peninsular; `data/esios/esios_<id>.parquet`;
+`analysis/tou_price_shape.py` → `outputs/tables/tou_price_shape.csv`). The access charge of the old 2.0A tariff is a flat
+€44.0/MWh; the new 2.0TD charges component is €83.7 (peak), €31.9 (mid-peak), €3.4 (off-peak), average €28.8. Against the old
+flat charge that is +90%, −28% and −92%; against the new tariff's own average +190%, +11% and −88%, which is the paper's
+"+200% and −86%". So the paper's percentages appear to be relative to the new average, not the old flat charge (my reading, not
+confirmed in the paper). The peak-to-off-peak ratio is 24.6. **Check 1 passes on shape.**
+
+## 3c. Replication results (2026-11-11, user's go-ahead)
+
+`analysis/tou_did.py` → `outputs/tables/tou_did_{estimates,placebo}.csv`. Spain's regulated-retail schedule (ESIOS 352) against
+Portugal (REN `Consumption`), 32,847 hours 2018-01-01 → 2021-09-30, break 2021-06-01, each country on its own clock, difference of
+logs at the same local hour; clustered by week. scikit-learn 1.9.1 installed for LASSO.
+
+| log-point effect, % | peak | mid-peak | off-peak | peak − off |
+|---|---|---|---|---|
+| DiD V1 (hour, weekday, month effects) | −10.5 (se 1.1) | −6.4 (1.2) | −4.7 (1.1) | −5.8 (0.9) |
+| V2 (+ linear trend) | −13.0 | −6.8 | −2.4 | −10.7 |
+| V3 (+ temperature, holidays) | −13.8 | −7.2 | −1.6 | −12.2 |
+| V4 (year-month effects, contrasts only) | | | | −5.8 (0.9), mid − off −1.7 |
+| LASSO prediction errors (Burlig et al.) | −11.6 | −6.9 | −3.2 | |
+| Paper, standard / ML | −8.9 / −9.5 | −5.7 / −6.4 | n.s. | |
+
+Weekend and holiday days with fake peaks (same hours): DiD −9.3 / −5.7 / −1.5 (peak − off −7.8); LASSO −10.9 / −6.8 / +0.1.
+
+Stop rules from section 3, in order:
+2. **Placebo dates: fails by the letter, passes outside the COVID months.** 24 fake breaks at the 1st of each month 2019-01 →
+   2020-12 (4-month post window): DiD V1 peak placebo sd 5.4%, 5–95% range −5.2 to +12.1; the real −10.5 lies outside it
+   but ranks 3 of 25 by absolute size, because two COVID windows (breaks March and April 2020, Spain and Portugal locked
+   down differently) give +12.7 and +13.1. Dropping the seven breaks whose window touches March–June 2020, the real effect
+   is larger than all 17 others (largest −6.1): rank 1 of 18. LASSO: 5–95% −0.3 to +17.5, rank 4 of 25. The exclusion
+   is a choice made after seeing the placebos.
+3. **Control tracks the treated: a level difference in 2019 specific to ESIOS 352, size within its year-to-year noise
+   (second correction, 2026-11-11).** Pre-break placebos run mostly negative in 2019 (−1 to −6%). Monthly ln of each
+   pair, each month against the same month of 2018 (mean over months, log points):
+
+   | pair | 2019 vs 2018 | Jan–May 2021 vs 2019 | Jun–Sep 2021 vs 2019 |
+   |---|---|---|---|
+   | 352 / Portugal | **−3.9** | +2.2 | −4.8 |
+   | 352 / low-voltage demand (E0) | **−3.5** | +1.2 | −2.2 |
+   | 352 / free-market retail (351) | **−3.2** | +0.1 | −3.2 |
+   | 351 / Portugal | −0.8 | +2.1 | −1.6 |
+   | low voltage (E0) / Portugal | −0.4 | +1.0 | −2.6 |
+   | Spanish total / Portugal | −0.5 | −1.1 | −1.9 |
+   | Portugal / France | −0.2 | −1.2 | +0.7 |
+
+   So the 2019 fall is specific to ESIOS 352: not Portugal (Portugal / France is flat) and not Spanish demand in general.
+   Weather explains little: a regression of the monthly ratio on month and year effects and Spanish heating and cooling degree
+   hours (41 months) leaves a 2019 effect of −3.2 (se 1.7) for 352 / Portugal and −2.3 (se 2.1) for 352 / 351, from −3.9 and −3.2
+   without weather. The share of 352 in 351 + 352 (as a percentage, annual mean) is 11.47 (2018), 11.16 (2019), 11.78 (2020),
+   10.97 (2021): not a one-way migration out of the regulated tariff (my first explanation, and my first correction of it,
+   which used a share rounded to whole percentage points, were both too strong). The year effects of this ratio move by 1 to 3
+   points a year (2020: +1.5, 2021: −0.8), so a 2019 difference of −3 is of the size of its ordinary variation; the 2019
+   placebo breaks, with only 2018 in their pre-window, pick it up as an effect. Not found: whether ESIOS changed what counts as
+   a reference retailer. The trend variants raise the peak effect (−13%).
+
+   **Unit-sum check (2026-11-11, `analysis/esios352_unit_sum.py`).** ESIOS 352 against the PDBF purchases of the Spanish
+   regulated suppliers' own units (owners matched by `is_pass_through`; seven units, three that matter: Endesa Energía XXI
+   `EE21C01`, Curenergía `IBCUC01`, Gas Natural SUR `GNSUC01`). Without the Balearic-link units (not peninsular), the unit sum
+   falls 5.1% from 2018 to 2019 and 352 falls 5.0%; 2020 +0.4% and +0.3%; 2021 −3.3% and −3.1%. So **352 is the regulated
+   suppliers' load and was not redefined**: no retailer entered or left the list, and the 2019 fall is in the customers
+   (`EE21C01` −108 MW, −7.7%; `GNSUC01` −43 MW, −6.4%; `IBCUC01` −9 MW). With the Balearic unit (+55 MW in 2019) in the sum the
+   fall is 3.2%, the source of an apparent gap of about 2 points. What remains open is why regulated customers' load fell 5% in
+   2019 while the regulated share of regulated plus free-market retail moved only 0.3 points.
+
+   **Customer counts (search, 2026-11-11; press reports and CNMC press notes, not the reports themselves).** PVPC supply points:
+   11.26 million at the end of 2018 (a 304,000 fall during 2018), "almost 11 million" / 11.1 million at the end of 2019 (CNMC
+   press notes of 2020), so a fall of 1 to 1.5%; net switching out of PVPC was 660,000 in 2019 and 575,000 in 2020. If those
+   counts are right, fewer customers explains about a quarter of the 5% fall in regulated load, and the rest is lower load per
+   customer, which weather did not explain (−3.2, se 1.7). The leavers could also be bigger consumers than the stayers. **Not
+   found:** the energy supplied by reference retailers in 2018 and 2019 (the CNMC press notes do not carry it; the full
+   supervision reports `INF/DE/…` were not read). The CNMC press notes did not carry it.
+
+   **Found in the CNMC's full report** (*Informe de supervisión del mercado minorista de electricidad, año 2019*, IS/DE/027/20,
+   p. 11, read from the PDF with pymupdf): at 31 December 2019, 39% of supply points and **36% of energy** were supplied by a
+   reference retailer, **a reduction of 1 point in both, against a year earlier**. A fall of 1 point from 37% to 36% is 2.7%
+   of the regulated energy relative to the total, which is the size of the ESIOS ratio 352 / 351 (−3.2 log points in 2019).
+   The drift decomposes as 352 / Portugal = 352 / 351 (−3.2) + 351 / Portugal (−0.8) = −3.9, so **most of the 2019 fall is
+   regulated customers moving to the free market**, as the CNMC counts it (leavers on average larger than the 1.3% in counts
+   suggests, since the energy share falls as fast as the supply-point share). This brings back my first explanation, withdrawn
+   earlier on the ESIOS share path (11.47, 11.16, 11.78, 10.97%): that path rises in 2020 while the CNMC reports continued net
+   switching out of PVPC in 2020 (575,000), which I have not reconciled. Open: the 2020 rebound of the ESIOS share. The drift
+   is therefore mostly explained for 2019; the placebo breaks inside 2019 are picking up a migration step, not noise.
+4. **Weekend placebo: not separable.** Fake peaks on weekends fall about as much as real ones on working days (−9.3 against
+   −10.5; peak − off −7.8 against −5.8), as in the paper (−8.3 and −7.3 on weekends). So the all-hours fall is a level shift
+   or habit, and the policy-specific part (the contrast between periods on working days) is not distinguishable
+   from the weekend one.
+5. **Sign and size: passes.** Negative, below 20%; mid-peak −6.4% matches the paper's −6.4% exactly, peak −10.5 against −8.9.
+6. **Power.** Peak effect se 1.1% against a placebo sd of 5.4% (3.7% outside COVID); about 10% of 352's roughly 2 GW is
+   about 200 MW.
+
+**Verdict.** The magnitudes replicate. The identification is thin: the fall appears in every hour type including
+weekends, and the control drifts. The price elasticity step has not been run.
+
+## 4. What would make it a failure even if it runs
+
+The schedule (352) is not the load; the 2021 reform coincides with the post-lockdown recovery and a doubling of
+wholesale prices, which Portugal shares but whose pass-through to the two countries' regulated consumers differs;
+Portuguese national load includes industry, unlike the Spanish regulated segment, so the control's weather
+sensitivity differs; ESIOS 352 includes social-tariff customers.

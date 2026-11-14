@@ -1,0 +1,33 @@
+spec,term,coef,se,t
+Portugal OLS,const,0.0137,0.0122,1.1216
+Portugal OLS,eps_charge,-0.1194,0.0406,-2.9425
+Portugal OLS,eps_energy,-0.0102,0.0233,-0.4361
+Portugal weighted,const,-0.0047,0.0114,-0.4142
+Portugal weighted,eps_charge,-0.0922,0.0394,-2.3365
+Portugal weighted,eps_energy,0.0437,0.0391,1.1187
+Portugal trend,const,0.0047,0.0074,0.6362
+Portugal trend,eps_charge,-0.097,0.022,-4.4192
+Portugal trend,eps_energy,-0.0455,0.0343,-1.3279
+Portugal trend,trend_per_year,0.007,0.004,1.7647
+France OLS,const,0.0323,0.0142,2.2702
+France OLS,eps_charge,-0.1478,0.0373,-3.9565
+France OLS,eps_energy,-0.0136,0.0265,-0.5123
+LASSO OLS,const,0.0204,0.0115,1.7772
+LASSO OLS,eps_charge,-0.1258,0.0371,-3.3897
+LASSO OLS,eps_energy,-0.0239,0.0223,-1.0693
+industry OLS,const,0.0011,0.031,0.0345
+industry OLS,eps_charge,-0.1369,0.1044,-1.3112
+industry OLS,eps_energy,0.1959,0.0624,3.1375
+paper LASSO OLS,const,0.0033,0.0141,0.2365
+paper LASSO OLS,eps_charge,-0.0518,0.036,-1.4384
+paper LASSO OLS,eps_energy,-0.0528,0.0237,-2.2274
+paper LASSO weighted,const,0.0024,0.0141,0.172
+paper LASSO weighted,eps_charge,-0.0629,0.0372,-1.6894
+paper LASSO weighted,eps_energy,-0.0347,0.0555,-0.6256
+paper LASSO trend,const,-0.0095,0.0042,-2.2835
+paper LASSO trend,eps_charge,-0.0199,0.0119,-1.6665
+paper LASSO trend,eps_energy,-0.1032,0.0201,-5.1256
+paper LASSO trend,trend_per_year,0.0099,0.0018,5.4379
+paper LASSO industry,const,0.0124,0.0283,0.4361
+paper LASSO industry,eps_charge,-0.0463,0.0983,-0.4708
+paper LASSO industry,eps_energy,-0.0605,0.0911,-0.6647

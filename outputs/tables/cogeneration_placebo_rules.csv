@@ -1,0 +1,7 @@
+group,units,cap_mw,coef_per_10eur,se,t,F,shift_median,shift_p05,shift_p95,rank_of_real,n_shifts
+gas,243,3624.4,0.00744,0.00102,7.27109,64.75543,,,,,
+"R1 placebo: biomass, bilateral share >= 0.5",3,91.9,0.00633,0.00238,2.6607,64.75543,-0.00014,-0.0029,0.00252,1.0,20.0
+R1 other biomass (share < 0.5),93,1199.7,0.00222,0.00049,4.56064,64.75543,,,,,
+R2 placebo: biomass under 20 MW,82,429.3,0.00105,0.00039,2.69985,64.75543,-3e-05,-0.00065,0.00076,3.0,20.0
+R2 other biomass (20 MW and over),24,955.4,0.00292,0.00059,4.92759,64.75543,,,,,
+all biomass and waste,106,1384.7,0.00234,0.00045,5.20029,64.75543,,,,,

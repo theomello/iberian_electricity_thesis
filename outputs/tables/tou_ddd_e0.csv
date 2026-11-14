@@ -1,0 +1,13 @@
+est,contrast,effect_pct,se_pct,t
+"DiD V1 (hour, weekday, month effects)",peak-off work,-6.994,0.578,-12.094
+"DiD V1 (hour, weekday, month effects)",peak-off wknd,-4.516,0.752,-6.006
+"DiD V1 (hour, weekday, month effects)",mid-off work,-3.891,0.52,-7.476
+"DiD V1 (hour, weekday, month effects)",mid-off wknd,-1.248,0.591,-2.112
+"DiD V1 (hour, weekday, month effects)",DDD peak,-2.478,0.545,-4.548
+"DiD V1 (hour, weekday, month effects)",DDD mid,-2.643,0.589,-4.484
+LASSO errors,peak-off work,-10.015,0.54,-18.536
+LASSO errors,peak-off wknd,-7.38,0.757,-9.753
+LASSO errors,mid-off work,-6.474,0.415,-15.609
+LASSO errors,mid-off wknd,-3.614,0.584,-6.186
+LASSO errors,DDD peak,-2.635,0.508,-5.185
+LASSO errors,DDD mid,-2.86,0.535,-5.35

@@ -1,0 +1,11 @@
+regime,control,sigma_U,sigma_L,multiplier,contrast,euros,contrast_lo,contrast_hi
+actual hydro,selected,0.0725,0.2013,0.0,0.0,0.0,0.0,0.0
+actual hydro,selected,0.0725,0.2013,0.5,-2.104,0.1147,-2.2202,-1.9335
+actual hydro,selected,0.0725,0.2013,1.0,-4.0358,0.1546,-4.2852,-3.7081
+actual hydro,selected,0.0725,0.2013,1.5,-5.909,0.0495,-6.2852,-5.4561
+actual hydro,selected,0.0725,0.2013,2.0,-7.6596,-0.1138,-8.1724,-7.0513
+pre-announcement hydro,selected,0.0725,0.2013,0.0,0.0,0.0,0.0,0.0
+pre-announcement hydro,selected,0.0725,0.2013,0.5,-2.4676,0.0078,-2.6514,-2.2793
+pre-announcement hydro,selected,0.0725,0.2013,1.0,-4.9253,0.0432,-5.267,-4.5563
+pre-announcement hydro,selected,0.0725,0.2013,1.5,-7.2652,0.0148,-7.7609,-6.7378
+pre-announcement hydro,selected,0.0725,0.2013,2.0,-9.5829,-0.088,-10.2343,-8.8538

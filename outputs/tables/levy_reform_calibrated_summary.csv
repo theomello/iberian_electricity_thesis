@@ -1,0 +1,6 @@
+item,value,lo,hi
+cost per MWh actual,103.6641,,
+R reform effect (point),-0.0156,-0.0179,-0.0115
+H levy effect,-5.5966,-6.4949,-4.8573
+I interaction (point),0.0358,0.0281,0.0487
+reform effect under pre-announcement hydro (point),-0.0514,,

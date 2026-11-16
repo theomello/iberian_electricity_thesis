@@ -156,3 +156,13 @@ Not checked: E-REDES's yearly consumption-profile reports (settlement shapes onl
   tutela) segment.
 - **Portugal 2018-2021 control: still open and important.** E-REDES starts in 2022-23 (see above). Revisit if a source for hourly
   low-voltage or regulated-client load in 2018-2021 appears (ERSE, REN datahub, a data request to E-REDES or the retailer).
+
+## RDL 14/2022, Article 29 (read verbatim from BOE-A-2022-12925, 2026-11-16)
+Published BOE 2 Aug 2022. Apartados 1 (heating at most 19 °C, cooling not below 27 °C, in conditioned premises of RITE I.T. 3.8.1, with exceptions) and 4 (shop-window lighting off from 22:00; also public buildings unoccupied at that hour) enter into force "a los siete días naturales desde el día siguiente al de la publicación" = about 10 Aug 2022 (9 Aug under the other count), valid to 1 Nov 2023. Apartado 2 (information posters) one month after publication; apartado 3 (door closers) by 30 Sep 2022. Window lighting is the 22:00 rule; there is no hour limit stated for how long it stays off.
+
+Noise check (pre-2021 data only, `scripts/analysis/rdl14_noise.py`, `outputs/tables/rdl14_noise.csv`): lighting contrast ln(22-23h / 18-21h) on E1+E2, Spain minus Portugal, 58-weekday window-mean sd 0.016, detectable effect 4.5% (4.7% against 14-17h); air-conditioning slope sd 0.0009 per degree of cooling gap, detectable 0.0024 (14 overlapping windows from two summers, so the sd is itself uncertain).
+
+## PVPC reform RD 446/2023 (effective 1 Jan 2024) and its noise check (2026-11-16)
+Energy term: 75% day-ahead / 25% futures basket in 2024 (secondary sources: 40% futures 2025, 55% 2026; before 2024 the energy term was fully indexed to the day-ahead market). The 25% figure comes from Cuatrecasas and press summaries, not from the BOE text; verify at BOE-A-2023-14048 before citing it as official. Series 352 (PVPC retailers' scheduled demand) halves in 2025 because of the 15-minute switch, so the post window ends 2025-03-18.
+
+Noise check (`scripts/analysis/pvpc_noise.py`, `outputs/tables/pvpc_noise.csv`, 2018-2023 data only): ln(19-22h / 11-15h) of 352 minus 351, LASSO residual (trained 2018-2020, out of sample from 2021). Annual mean of the residual drifts from +0.025 (2018) to -0.034 (2023); sd of 250-weekday window means 0.019, detectable effect 5.4%. The dose (evening minus midday log price change from damping the hourly shape by 25%) is only -0.07 to -0.17 across futures price F 60-120 and non-energy component A 40-100, so the detectable sigma is 0.32 to 0.98, against 0.07-0.20 estimated. Not feasible.

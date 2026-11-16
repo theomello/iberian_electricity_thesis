@@ -1,0 +1,9 @@
+state,value,lo,hi
+"Delta_H hydro effect (mean, all valid hours)",-5.6319,-6.4654,-4.9127
+Delta_H evening,-6.7188,,
+Delta_H night,-5.6645,,
+Delta_R^A contrast (point),-2.391,-2.5878,-2.1857
+Delta_R^H contrast (point),-3.0142,-3.261,-2.7687
+interaction (point),0.6232,0.5816,0.676
+valid share,0.9655,,
+identity share,1.0,,

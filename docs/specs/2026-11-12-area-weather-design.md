@@ -44,3 +44,39 @@ Area temperature is a valid input and changes no estimate by more than half a po
 **What this means.** The area-panel level remains control-dependent. The claim stays the contrast (evening versus night: weekday peak minus off-peak -6.9 pts on both controls, DDD, column 4 of Equation 4 at -0.086 to -0.087 per consumer on M and -0.06 on F), as in the headline. What is left unexplained, and is **not** investigated further here: the Portuguese regulated unit's level, and the schedule data. Stopping follows the registration.
 
 **Reusable.** `tou_area_panel_pc.py` now exposes `compute(get_errors_fn, prefix, prep)` and `report(o)`, so a variant that changes the temperature source, window or controls is one short script (this run is 90 lines). The same design can be pointed at another country's areas or another tariff reform.
+
+## Results (run 2026-11-14, `scripts/analysis/tou_area_panel_pc_weather.py`)
+
+Outputs `outputs/tables/tou_area_panel_pcw_{effects,placebo,elasticity,ddd}.csv`; errors refitted with each area's own MERRA-2 temperature (errors correlate 0.955 with the national-temperature run, so the change is real, not a cache hit). One deviation from the registration: the 352 check uses the load-weighted mean of the five areas' temperatures, as registered; no other.
+
+| rule | outcome |
+|---|---|
+| W1 weather valid | pass: no missing hour; correlation with ERA5 0.94-0.99 (at build) |
+| W2 no regression (per-capita rules 2-6) | pass: weekday peak -8.17% (t -7.8), mid -5.93% (t -5.8), off -1.27% (t -0.9) |
+| W3 drift falls | **FAIL**: placebo sd of weekday off-peak effect 6.37 pts (M), 3.76 (F); per-capita run 6.23 / 3.66; pass needed <= 2.34, partial <= 4.15 |
+| W4 control gap closes | **FAIL**: swapping to REN moves the weekday peak by 4.62 points (was 4.57; < 2 needed) |
+| W5 peak stable | pass: -8.17% against -7.76% |
+
+Reading. Area-specific weather leaves the drift unchanged (6.37 against 6.23) and the control gap unchanged (4.62 against 4.57). Weather is therefore not the cause of the level drift or of the dependence of the level on the control; the replication still passes its own substantive rules (W2) with a slightly larger peak effect. Per the pre-registration: **no further rescue is run.** The level of the weekday peak effect is reported as control-dependent (about -3% against REN national, -8% against the Portuguese regulated unit); the contrast (evening versus night, peak minus off-peak) and column 4 (-0.086 on the area panel) are the result, and the Wald range stays the headline. What remains open and untested: the Portuguese unit itself (ERSE counts have gaps Jul-Dec 2020 and Mar-Apr 2021) and schedule data against metered load.
+
+## Diagnosis of W3 and W4 (2026-11-14, descriptive, post hoc, no new fit)
+
+Read from the cached errors and the panel; nothing refitted. **This explains the failures; it does not rescue them, and W3 and W4 stay recorded as failed.**
+- **Not the counts.** Counts move 0.3-1.1% a month (a few plateaus at round ERSE figures); errors swing 5-10 points. Pooled slope of the year-over-year change in load per consumer on the change in the count (month and area effects): 0.18 (se 0.42), no general selection of heavy users; only Endesa leans that way (3.4, se 1.7). The Portuguese unit's share of REN consumption falls 5.9% to 4.9% (June 2018 to June 2021, -17%) against a count fall of 22%; the five Spanish areas sum to 0.99-1.01 of ESIOS 352 in every month.
+- **Not the weather.** Year-over-year temperature changes are within 1 C; the errors barely move with area weather (Endesa monthly sd 6.8 against 6.7).
+- **What it is.** Load per consumer in the same calendar month differs by several percent between years by area (weekday night, 2018 to 2019: Portuguese unit +5.7 / +5.3 in Jul-Sep / Oct-Dec, Endesa -7.4 / -8.3, Iberdrola -2.2 / +2.6), and the Portuguese unit's winter share of national consumption varies by year (6.9%, 6.8%, 6.2% in three Decembers). With about two training years for each calendar month, such year-specific shifts cannot be absorbed by month dummies and temperature. Monthly sd of the weekday-night error: Portuguese unit 5.2, REN 2.3, Endesa 6.8, Repsol 7.3, EDP 5.3, Naturgy 3.9, Iberdrola 2.7; Spain minus the Portuguese unit 5.1, Spain minus REN 2.2.
+- **The registered bar was set too optimistically.** W3 demanded half of the no-counts spread; even with REN as control the spread is 3.7. That is a limit of a 2018 start, not a defect in the counts or the unit.
+- **Contrast placebo (not registered; read it as supporting, not as a test).** The standard deviation of the weekday peak-minus-off-peak placebo effect is 3.4 points (same under either control and with area weather), maximum absolute value 5.4; the real contrast is -6.9, larger than all 18 placebo windows. Caveat: the 18 windows start monthly and are 106 days long, so they overlap and are not 18 independent draws.
+Consequence: the elasticity rests on the contrast (evening versus night, column 4), whose placebo noise is smaller than the real effect; the level of the weekday peak effect stays control-dependent. Headline unchanged.
+
+## Contrast placebo rule (registered 2026-11-14, **after** seeing the placebo results above; thresholds are therefore informed by them)
+
+Not a replacement for W3 and W4, which stay recorded as failed. A supporting test on the quantity the thesis relies on: the weekday peak-minus-off-peak effect (area-weighted, per consumer, `AP.did_types`).
+- **Windows:** non-overlapping, 106 days each, from 2018-04-01 (starts 2018-04-01, 2018-07-17, 2018-10-31, 2019-02-14, 2019-05-31, 2019-09-14; the last ends 2019-12-28), cross-fitted errors as before. Six windows: few, stated as a weakness.
+- **Real contrast:** the post window 2021-06-01 → 2021-09-14 on the real errors.
+- **C1:** the real contrast is negative and larger in absolute value than every placebo contrast. **C2:** its absolute value is at least twice the root mean square of the six placebo contrasts (placebo effects should centre on zero). **C3:** C1 and C2 hold under both controls (Portuguese unit M and REN F).
+- Run on the area-weather errors (`area_panel_pcw_errors`); the national-temperature errors (`area_panel_pc_errors`) reported beside as a check. No other variants, no new fit. Script `scripts/analysis/tou_contrast_placebo.py`, output `outputs/tables/tou_contrast_placebo.csv`.
+Outcome reading: pass = supporting evidence for the contrast, stated with the six-window caveat; fail = the contrast is within placebo noise and the headline must say so. Nothing else changes.
+
+### Contrast placebo result (2026-11-14, `scripts/analysis/tou_contrast_placebo.py`)
+Deviation from the registration: the window starts are 106 days apart from 2018-04-01, i.e. 2018-07-16, 2018-10-30, 2019-02-13, 2019-05-30, 2019-09-13 (the registered dates were one day late; the last window ends 2019-12-26). Placebo contrasts (area-weather errors, points): +0.27, -3.56, -4.45, +1.44, +3.70, +2.42; real **-6.90**. Maximum absolute placebo 4.45, root mean square 3.00. **C1 pass** (negative, larger than every placebo), **C2 pass** (6.90 >= 2 x 3.00 = 6.00, a margin of 0.9), **C3 pass** (identical under both controls: the control's level cancels in a contrast; and on the national-temperature errors: max 4.54, rms 2.99). Reading: the contrast is outside the placebo spread, but with six windows, a C2 margin of under one point, and a rule written after seeing the earlier placebos, this is supporting evidence, not a clean test. W3 and W4 remain failed.

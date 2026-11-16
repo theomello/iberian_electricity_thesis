@@ -1,12 +1,12 @@
-# Time-of-use thread: headline and results outline (draft, 2026-11-12)
+# Time-of-use thread: headline and results outline (draft, updated 2026-11-16)
 
-Branch `tou-policy-prices`. Every number below is in `docs/specs/2026-11-11-tou-hardening-design.md` with its script and csv in `outputs/tables/tou_*`.
+Branches `tou-policy-prices` (merged, PR #9) and `tou-replication-closure` (per-capita, weather, contrast placebo, industry). Every number below is in `docs/specs/2026-11-11-tou-hardening-design.md` with its script and csv in `outputs/tables/tou_*`.
 
 ## Headline
 
 **Spain's June 2021 time-of-use reform cut evening electricity demand by about 4–5% relative to night. On the method of Enrich, Li, Mizrahi and Reguant this is a within-day price elasticity of about −0.06 to −0.09 for aggregate low-voltage demand (evening-versus-night Wald ratios; decision 2026-11-12, reversing the earlier choice of column 4 to lead). The paper's column-4 regression gives −0.10 (se 0.012) and corroborates it; on the rebuilt regulated-area panel column 4 gives −0.085. It is a response to the reform as a whole, not a clean price slope: it does not scale with later charge changes.**
 
-*Status: provisional until the per-capita consumer counts (CNMC request, drafted) are in; the area-panel replication fails in levels without them (`docs/specs/2026-11-12-area-panel-design.md`).*
+*Status 2026-11-16: the headline stays the Wald range. The per-capita consumer counts are in (CNMC for Spain, ERSE for Portugal) and the area panel was rerun with them and with area weather (MERRA-2): rules 1-6 pass, rules 7 and 8 fail (the level of the weekday peak effect depends on the control: about -8% against the Portuguese regulated unit, -3% against REN). The contrast (peak minus off-peak, -6.9 points) and column 4 (-0.086) do not depend on the control. Details in the "Replication closure" section.*
 
 One-sentence claim: *the reform worked, the implied elasticity is in the paper's range, and what the reform changed is not only the price.*
 
@@ -38,12 +38,24 @@ One-sentence claim: *the reform worked, the implied elasticity is in the paper's
 | charge-change events against the seasonal baseline (six rules) | rules 2–6 fail: the autumn fade is seasonal |
 | paper-style elasticity regression (seven rules) | rules 1–6 fail as registered (columns 1–3); column 4 −0.100, placebo passes |
 
+## Replication closure (2026-11-12 to 2026-11-16)
+
+Specs: `docs/specs/2026-11-12-area-panel-percapita-design.md`, `2026-11-12-area-weather-design.md`, `2026-11-16-industry-adjusted-design.md`.
+
+- **Per-capita area panel (counts, version M, Portuguese regulated unit as control).** Rules 1-6 pass: weekday peak -7.76% (t -7.6), mid -5.59%, off-peak -0.86% (ns); 5 of 5 areas negative; column 4 -0.086 (se 0.014, F 872); within 0.3 points of the ESIOS 352 evening-versus-night DDD. **Rule 7 fails** (control swap to REN moves the peak effect by 4.6 points) and **rule 8 fails** (the placebo spread of the off-peak level does not fall: 6.23 against 4.68 without counts).
+- **Area weather (MERRA-2, the paper's source; ERA5 stand-in earlier, correlation 0.94-0.99).** Rules W1, W2, W5 pass; **W3 fails** (placebo spread 6.37) and **W4 fails** (control gap 4.62). Weather is not the cause; no further rescue.
+- **Why the level drifts (descriptive, post hoc).** Not the counts (steps of 0.3-1.1% a month; Portuguese unit tracks its count over 2018-21), not the weather. Load per consumer in the same month differs by several percent between years by area (Endesa -7% to -8% 2018 to 2019, Portuguese unit +5%), which two training years per month cannot absorb. A limit of the 2018 start, not a defect in the counts. The registered bar (half of the no-counts spread) was too optimistic.
+- **Contrast placebo (registered after seeing the earlier placebos, six non-overlapping windows).** Real peak-minus-off-peak -6.90 against placebo contrasts between -4.45 and +3.70 (rms 3.00); C1-C3 pass under both controls. Supporting evidence, not a clean test (six windows; C2 margin 0.9 points).
+- **Industry (placebo-adjusted, 2018 and 2019 placebo years).** E0 adjusted -0.090 [-0.119, -0.061] reproduces the household anchor. E1+E2: -0.082 [-0.252, +0.088], placebo years agree but no detectable response. Pooled industry E1-E6: adjusted -0.265 [-0.408, -0.122] but **its placebo years disagree in sign, so no point estimate is reported**. 6.2-6.4: noise. **No industrial elasticity is identified.** The adjusted evening-versus-night effect is about the same for households (-4.4%), E1+E2 (-4.1%) and pooled industry (-3.1%) although the doses are 0.64, 0.16 and 0.12: industry's response is not proportional to the price change.
+- **Further extensions run on 2026-11-13 (see memory and specs):** price effect of the load shift (re-clearing the day-ahead curve), CES and nested CES substitution (sigma_U 0.07, sigma_L 0.20 after control selection), fuel-switching and unit-dispatch logits (no fuel-switching elasticity). Pointers: `docs/specs/2026-11-13-*.md`.
+
 ## Limits to state
 
 - Aggregate low-voltage demand: households and small businesses together, regulated and free-market. Not a household elasticity; Fabra et al. (2021) study regulated households and are not directly comparable.
 - Identified from one reform in one year; the reform bundles the price change with awareness and the new tariff structure.
 - Portugal is the only untreated area with weather data; France enters without weather.
-- Industry was also treated by the same reform (six-period tariffs), so it is not a placebo; the 2.0TD charge series stops us from running an industry elasticity without hand-building charges.
+- Industry was also treated by the same reform (six-period tariffs), so it is not a placebo; the toll tables were built and the industry elasticity is **not identified** (placebo years disagree; see Replication closure).
+- The level of the weekday peak effect on the area panel is control-dependent (-8% against the Portuguese unit, -3% against REN); only the contrast and column 4 are claimed.
 - Seasonal shape changes specific to Spain in 2021 are bounded by the cross-fitted placebo years (which swing by about 2 points), not removed.
 - The post-hoc reading of column 4 is not a registered result.
 
@@ -51,4 +63,4 @@ One-sentence claim: *the reform worked, the implied elasticity is in the paper's
 
 1. Confirm the start date of the new tolls for the larger tariffs (CNMC resolution or BOE).
 2. ~~Decide whether column 4 or the Wald range leads~~ Decided 2026-11-12 (first column 4, then reversed the same day): **the Wald range −0.06 to −0.09 leads** until the per-capita counts are in; column 4 (−0.100, se 0.012, F 80; −0.085 on the area panel) corroborates. Keep stating that columns 1–3 fail the registered rules on the national series and that the reading of column 4 was made after the run. Revisit when the CNMC counts arrive.
-3. Optional designs: industry as a treated group (needs a hand-built 3.0TD/6.xTD charge table); a regulated-only version of column 4 on ESIOS 352; a longer placebo window.
+3. Optional: a regulated-only version of column 4 on ESIOS 352 (partly redundant: regulated households respond less than the rest); extending the regulated-retailer series back to 2015-2017 would add training years and could shrink the level drift (not pursued; the level is not a claim).

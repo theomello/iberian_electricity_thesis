@@ -105,3 +105,11 @@ The household elasticity is stable across subsets at about -0.05. The placebo ce
 
 ## G5b Placebo check of the night-share and peak-share pattern (registered 2026-11-16 after G5, before the run; saved data only, no new fitting)
 Question: does the dependence of the household response on baseline consumption shares reflect the reform, or is it mechanical (a difference of two log errors predicted by the baseline mix)? For the real window and each of the 26 placebo windows, OLS slope b of the household response y (g5 files) on the standardised baseline share (z-score across the window's households), for **share_night (C1)** and **share_peak (C2)**. Adjusted real slope = b_real - mean of the placebo slopes. **C1/C2 pass when** the adjusted real slope has the sign seen in G5 (positive for night share, negative for peak share) and two-sided rank p = (1 + #{|b_pl - mean b_pl| >= |b_real - mean b_pl|}) / 27 <= 0.05 (the real slope lies beyond every placebo slope). **If both pass,** the pattern is attributed to the reform response (descriptively); **if either fails, the G5 heterogeneity is not attributed to the reform** and is reported as a baseline-mix pattern only. Descriptive quartile gaps (top minus bottom quartile of the share) reported alongside. No other covariate or specification is tried after a failure. Code `scripts/analysis/goiener_g5b_placebo.py`.
+
+### G5b results (run 2026-11-16; `goiener_g5b_placebo.py`, committed before the run; `outputs/tables/goiener_g5b.csv`)
+| Covariate | Real slope | Placebo mean (sd) | Adjusted slope | Two-sided rank p | Quartile gap, real / placebo mean | Pass |
+|---|---|---|---|---|---|---|
+| share_night (C1) | +0.052 | +0.024 (0.012) | +0.028 | 0.037 | +0.189 / +0.099 | yes |
+| share_peak (C2) | -0.057 | -0.021 (0.018) | -0.036 | 0.074 | -0.189 / -0.068 | **no** |
+
+**Rule outcome: both did not pass, so the G5 heterogeneity is not attributed to the reform.** It is reported as a baseline-mix pattern. More than half of the raw slope is present in the placebo windows (night share 0.024 of 0.052; peak share 0.021 of 0.057), so most of the pattern is mechanical; the night-share excess over the placebo is beyond every placebo window, the peak-share excess is not (p 0.074). Recorded, not rescued.

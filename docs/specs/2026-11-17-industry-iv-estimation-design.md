@@ -32,3 +32,28 @@ Exclusion restriction (forecast errors correlate with weather and the generation
 
 ## Data and code
 Same files as step zero. New code: `scripts/analysis/industry_iv_estimation.py` (imports the builders and `iv()` from `industry_iv_noise_reducers.py`); outputs `outputs/tables/industry_iv_estimation.csv` (variant, block, slope, elasticity, SE, normal/AR/randomization intervals, p) and `industry_iv_estimation_checks.csv` (E3-E5, E7, E8). Seed 20261117.
+
+## Results (run 2026-11-16; script `industry_iv_estimation.py`, committed before the run; outputs `industry_iv_estimation{,_checks}.csv`)
+
+Impact elasticity of industrial load (E3-E6 voltage bands) to the day-ahead price, randomization intervals (1,000 permutations), at mean price €98:
+
+| Variant | First-stage F | Elasticity | Randomization interval | p (rank of abs t) |
+|---|---|---|---|---|
+| **V3 (primary)** | 94 | **+0.005** | [-0.005, +0.023] | 0.66 |
+| V1 | 112 | +0.003 | [-0.010, +0.029] | 0.69 |
+| V2 | 32 | -0.008 | [-0.043, +0.040] | 0.28 |
+
+| Rule | Result | Detail |
+|---|---|---|
+| E1 sign and plausibility | **fail** | elasticity +0.005, wrong sign (tiny) |
+| E2 detected | **fail** | p 0.66; interval includes zero |
+| E3 placebo outcome | **fail** | lag-7-day load 'elasticity' -0.022, p 0.002 |
+| E4 overidentification | **fail** | Hansen J p 0.083 (pass) but wind-only +0.001 [-0.012, 0.017] excludes solar-only +0.052 (solar-only F 7.3, weak) |
+| E5 stability over years | **fail** | 2019 +0.054, 2021 +0.022, 2022 -0.026, 2023 -0.008; equality p 0.006 |
+| E6 hour blocks (exploratory) | | night -0.003, day +0.013 [-0.005, 0.037], evening -0.001 [-0.010, 0.020] |
+| E7 variant agreement | **fail** | V1 +0.003 and V2 -0.008 vs V3 interval: V2 is inside, V1 outside the upper... see CSV; rule as registered fails |
+| E8 permutation calibration | pass (near-tautological) | leave-one-out share 0.049; share abs(t)>1.96 is 0.12 for V3 |
+
+**Reading.** The design is now sharp (SE 0.006) and the central estimate is a precise near-zero: with V3 the data rule out industrial impact elasticities more negative than about -0.005 and less than +0.023 at 95%. By the registered rules this is **not reported as an identified elasticity**: the placebo (E3) fails, so the instruments carry information about lagged load that price cannot have caused, at a size (-0.022) as large as the interval itself; the response drifts across years (E5; 2019 positive, 2022 negative), which suggests the pooled number averages regimes; solar-only is weak (F 7). What survives is a bounded statement: no detectable hourly price response of industrial load larger than about 2% per 100% price change, with the exclusion caveat. Two implementation notes: the 2023 randomization interval is empty (the permutation AR test rejects every slope on the grid, p_AR0 0.007), recorded as an unreliable subset, not interpreted; the V2 normal AR set is empty for the same reason.
+
+**What the diagnostics suggest next (not run).** The placebo failure localises the problem: the same-hour lag-7 load is correlated with the forecast instruments after residualisation, which points to weather/mix channels (wind forecast correlates with weather regimes that persist over a week). A candidate fix is to residualise on lagged forecasts or to use the forecast *error* (forecast minus realised wind), which is a cleaner surprise; needs its own registered spec.

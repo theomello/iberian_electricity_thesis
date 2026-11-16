@@ -40,3 +40,14 @@ The first run returned NaN for most events because the weekend side of each wind
 - **S1 fails as registered:** placebo-date sd of DD (Serveis minus Residencial) = 0.038 (mean +0.017), detectable elasticity 2.8 × 0.038 / 0.248 = **0.43**, bar 0.15. Mid-month dates (53 events) give sd 0.058, detectable 0.66. Indústria is noisier (sd 0.11, detectable 1.24).
 
 **By the registered rule the design closes here.** One point must be recorded with the failure: S1, as I wrote it, is a *single-event* detectability (one boundary against the placebo spread). The estimator the design would use pools many events (a regression of D on the log dose through the origin, about 34 real boundary-years), whose precision is about sd / sqrt(sum of squared doses) = 0.038 / sqrt(3.09) = 0.0215, a detectable elasticity of **0.060** if the 34 events were independent (they are not: events in the same year share year effects, and 2019 is the only base year, so the effective number is lower). So S1 asked a stricter question than the estimator needs. This is recorded as a flaw in the rule, not as a pass; whether to amend S1 to a pooled, year-clustered version and run a new step zero is the user's decision, as it would be made after seeing this result.
+
+## Amendment 2026-11-16 (user decision, after seeing the S1 result): S1b, a pooled and year-clustered detectability
+
+**This amendment is post hoc**: it was written after S1 failed as registered and after the independence-based pooled figure (0.060) was seen. The original S1 and its failure stay in the record. The bar is **not relaxed**: 0.15.
+
+**S1b (replaces S1 as the gate).** Detectable elasticity of the pooled estimator `eta = sum(dose_i · D_i) / sum(dose_i²)` over the real boundary-years (dose_i the log top-period price change of the 34 real events, `calendar_boundary_dose.csv`):
+1. Event-level noise sd = the placebo-date sd of DD (Serveis minus Residencial), 0.0379 (13 events; computed in step zero).
+2. Independence precision: SE_ind = sd / sqrt(sum(dose_i²)).
+3. **Year clustering:** events in one year share year effects. The intra-year correlation rho is estimated from the 53 mid-month placebo events by one-way ANOVA across the five years (estimator (MSB - MSW) / (MSB + (k0 - 1) MSW), floored at 0 and capped at 1; k0 the adjusted mean group size). Design effect DEFF = 1 + (m - 1) rho with m = mean number of real events per year (34 / 5 = 6.8). SE_pooled = SE_ind × sqrt(DEFF); detectable = 2.8 × SE_pooled.
+4. **Pass if detectable <= 0.15.** Sensitivity (no rule): the same with the mid-month sd (0.0584) instead of the placebo-date sd, and with rho replaced by 0.5.
+Only placebo outputs and prices are used; no real boundary outcome is computed. If S1b fails, the design closes and the estimate stays recorded. If it passes, the estimation rules are registered next as a separate amendment before any real boundary window is opened.

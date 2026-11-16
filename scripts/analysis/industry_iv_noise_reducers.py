@@ -54,6 +54,7 @@ def build():
 
 def iv(y, p, Z, g):
     """2SLS of y on p with instruments Z (all already residualised); returns beta, se(beta), first-stage F (clustered)."""
+    y, p, Z, g = (np.asarray(v, dtype=float) if k < 3 else np.asarray(v) for k, v in enumerate((y, p, Z, g)))
     ug, inv = np.unique(g, return_inverse=True)
 
     def cl(M):
@@ -69,7 +70,7 @@ def iv(y, p, Z, g):
     fit = Z @ b
     beta = float(fit @ y / (fit @ p))
     u = y - beta * p
-    se = float(np.sqrt((cl(fit * u[:, None]) ** 2).sum()) / abs(fit @ p))
+    se = float(np.sqrt((cl((fit * u)[:, None]) ** 2).sum()) / abs(fit @ p))
     return beta, se, F
 
 

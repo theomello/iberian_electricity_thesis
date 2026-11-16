@@ -1,0 +1,5 @@
+variant,n,days,first_stage_F,se_elasticity,detectable_elasticity,I1,I2,share_perm_gt2,I3
+V0 baseline,27136,1172,296.12518,0.00988,0.02765,True,True,1.0,False
+V1 week-on-week difference,25900,1125,111.54512,0.00853,0.02388,True,True,0.0,True
+V2 double ML (boosting),26277,1148,32.4254,0.00921,0.02579,True,True,0.0,True
+V3 difference + double ML,25167,1105,93.61383,0.00566,0.01584,True,True,0.09,True

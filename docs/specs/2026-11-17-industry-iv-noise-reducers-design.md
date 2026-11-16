@@ -29,3 +29,16 @@ Differencing against last week assumes no break in the weekly pattern across the
 
 ## Data and code
 `data/esios` (1204-1207, 1775, 1777, 1779), OMIE prices, temperature files, MIBGAS (`data/mibgas`). New code: `scripts/analysis/industry_iv_noise_reducers.py`; outputs `outputs/tables/industry_iv_noise_reducers.csv`.
+
+## Results of step zero (run 2026-11-16, no slopes computed)
+
+Two estimator bugs were fixed before the run that produced these numbers (pandas indexing of the cluster scores, and a broadcast that inflated the clustered SE). The rules I1–I4 were not changed.
+
+| Variant | n | First-stage F | SE of elasticity | Detectable elasticity (2.8·SE) | I1 | I2 | Share of permutation draws with F>2 | I3 |
+|---|---|---|---|---|---|---|---|---|
+| V0 baseline (OLS partialling) | 27,136 | 296 | 0.010 | 0.028 | pass | pass | 1.00 | **fail** |
+| V1 week-on-week difference | 25,900 | 112 | 0.009 | 0.024 | pass | pass | 0.00 | pass |
+| V2 double ML (boosting) | 26,277 | 32 | 0.009 | 0.026 | pass | pass | 0.00 | pass |
+| V3 difference + double ML | 25,167 | 94 | 0.006 | 0.016 | pass | pass | 0.09 | pass |
+
+**I4:** V1, V2 and V3 pass I1–I3; the smallest SE is V3. V0 fails the size check: its instruments pick up residual structure that survives a permutation of date blocks, so its high F is not evidence of strength. By I4, an estimation spec must be registered before any slope is computed. No slope has been computed.

@@ -57,3 +57,21 @@ The national series mixes customers with different tariffs and sectors; the 6.1T
 - **E7 Other tariffs (description).** 6.2 as a secondary series (detectable 0.109); 6.3 and 6.4 descriptive; whether the estimates line up across the four tariffs given their doses.
 - **E8 Exploratory.** By year and by sign.
 Failed rules are recorded and kept; no other window, series, base year or control is tried. If E1 or E3 fails, the calendar design is closed for good (Barcelona and national).
+
+## Results of estimation (run 2026-11-16; `calendar_national_estimate.py`, committed in c290c26 before the run; outputs `outputs/tables/calendar_national_{old_dose,estimate,estimate_summary}.csv`; seed 20261117, 10,000 draws)
+
+**R0 passes: the old calendar is reproduced for 8 of 8 boundaries.** This is a consistency check (the expected old day types were transcribed from the same BOE text the schedule module encodes), not an independent one. The dose difference (new minus old) is much smaller than the new dose on several boundaries: mean doseDiff for E1+E2 by month, 1 Mar +0.091, 1 Apr -0.234, 1 Jun +0.016, 1 Jul +0.229, 1 Aug +0.008, 1 Oct -0.014, 1 Nov +0.157, 1 Dec -0.047 (June, August and October nearly cancel against the old calendar's own steps). 34 real and 50 placebo events; no missing statistics.
+
+| Rule | Result | Pass |
+|---|---|---|
+| **E1** sign and detection | eta **+0.013**, one-sided p 0.640, interval [-0.059, +0.084] | **fail** (wrong sign, no detection) |
+| E2 alternation | up steps -0.055 (21 events), down steps **+0.121** (13 events) | fail |
+| **E3** Portugal alone | eta +0.029, two-sided p 0.395, interval [-0.047, +0.097]; fails the one-third size condition | fail |
+| E4 leave-out | estimates from -0.052 to +0.071; most are positive | fail |
+| E5 hours 9-14 and 18-22 | +0.022 [-0.054, +0.095] | fail (wrong sign) |
+| E6 no control | +0.042 [-0.020, +0.099] against +0.013 with control | fail (wrong sign) |
+| E6b year intercepts | +0.013, p 0.645 [-0.060, +0.087] | fail (same as E1, so year drift is not the issue) |
+| E7 other tariffs (description) | 6.2TD -0.067 [-0.188, +0.056]; 6.3TD -0.154 [-0.364, +0.058]; 6.4TD -0.767 [-1.059, -0.391], mean doseDiff 0.033 | not a rule |
+| E8 by year (description) | 2021 -0.092, 2022 +0.093, 2023 +0.068, 2024 -0.066, 2025 +0.136; Portugal control without 1 Apr and 1 Oct -0.051 | not a rule |
+
+**Verdict: E1 and E3 fail, so the calendar design is closed for good (Barcelona and national), as registered.** The national E1+E2 estimate is a bounded null with the wrong sign: the 95% interval [-0.059, +0.084] rules out an elasticity more negative than -0.06 in the day-to-night ratio at the month scale, and the estimate is unstable across years and between price-up and price-down steps. The 6.4TD figure is not read as a finding: its dose is tiny (0.033), the detectable elasticity at step zero was 0.248, and an estimate of -0.77 sits inside that noise; no rule covers it and none is added.

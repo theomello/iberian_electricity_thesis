@@ -52,3 +52,22 @@ Uses the offer-curve re-clear of `hydro_levy_simulation.py` and `levy_reform_cal
 **G0 pass:** 9,763 usable households (bar 8,000), median imputed share 0.0 (bar 0.10). **G1 pass:** on a random subsample of 3,000 households, the standard deviation across the 26 season-matched placebo windows of the pooled peak-minus-off response is 0.00917; dose contrast 0.784; detectable contrast elasticity **0.033** (bar 0.05).
 
 Two features of the placebo windows, recorded because they change how G2 must be read (the registered G1 rule only uses the sd): (1) the placebo response is **not centred on zero**: the 26 pooled placebo responses run from -0.048 to -0.084 (mean about -0.07), which on the 0.784 dose is an apparent elasticity of about -0.09 before any reform exists; the real-window response must be judged against this level (randomization-inference centring, as in the aggregate design), not against zero; (2) the 26 windows are 7-day shifts of a 107-day window, so neighbouring windows overlap almost fully and the sd of 0.009 reflects a smooth drift across about two independent seasons, not 26 independent draws. G2 therefore reports eta_RI = eta_real - mean placebo with the rank-based p and Fisher interval of `2026-11-17-randomization-inference-design.md`. G2, G5, G6 and Part B wait for confirmation.
+
+## Results of G2 (run 2026-11-16; `goiener_household.py`, committed before the run; output `outputs/tables/goiener_g2.csv`)
+
+Same 3,000-household 2.0TD subsample as step zero (2,819 households, 216,569 household-days with window data), per-household LASSO trained on all pre-lockdown weekdays, used out of sample on the window 2021-06-01 -> 2021-09-15, Portugal's error subtracted, dose contrast 0.784 (pure 2.0TD, mean window price €100.8). Randomization inference against the 26 season-matched placebo windows.
+
+| Series | Dose | Window response | Raw eta | Mean placebo eta | **eta_RI** | One-sided p | Fisher interval for eta_RI |
+|---|---|---|---|---|---|---|---|
+| GoiEner 2.0TD households | 0.784 | -0.1141 | -0.1456 | -0.0927 | **-0.053** | 0.037 | [-0.077, -0.039] |
+| E0 aggregate, mix dose | 0.609 | -0.0663 | -0.109 | -0.003 | **-0.106** | 0.037 | [-0.123, -0.089] |
+| E0 aggregate, pure 2.0TD dose | 0.784 | -0.0663 | -0.085 | -0.002 | -0.082 | 0.037 | [-0.095, -0.069] |
+
+**G2 passes as registered:** the household eta_RI -0.053 is inside [-0.20, -0.03] and p 0.037 <= 0.05 (raw eta -0.146 passes the same band). Difference household minus E0 (mix dose): +0.053; the household response is about half of the aggregate one after centring.
+
+**Caveats recorded with the result.**
+1. The household placebo windows are centred at **-0.093**, whereas the aggregate E0 placebo is centred at -0.003. The centring is what moves the household estimate from -0.146 to -0.053. A household-specific placebo drift of this size is not explained by the design. One candidate: the placebo errors are cross-fitted inside the training span (leave-one-year-out) while the real-window errors are forecasts forward from the end of 2019, so any trend in households' peak against off-peak use (a growing off-peak share) enters the real window and not the placebo. This is a hypothesis, not tested.
+2. p = 0.037 is the smallest value 26 windows can give (the real response is below every placebo window). The windows are 7-day shifts of a 107-day window, so they carry about two independent seasons; the p-value is optimistic.
+3. The household sample is cooperative members in the north on free-market contracts, a subsample of 3,000 of 9,763 usable households, with an assumed dose.
+
+**Reading.** Household data replicate the sign and order of magnitude of the aggregate result (about -0.05 to -0.15 depending on whether the placebo drift is netted out), with the aggregate E0 at -0.106 on the same transformation. The thesis can say the response replicates at household level and gives about half the aggregate elasticity after placebo centring, with the centring explicitly flagged. G5, G6 and Part B wait for confirmation.

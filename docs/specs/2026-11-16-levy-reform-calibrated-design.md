@@ -32,3 +32,20 @@ Static re-clear (no strategic reaction, water budget held fixed); the 2021 bilat
 
 ## Data and code
 All on disk (`outputs/cache/step`, `hydro_cost_daily`, the load-model errors). New code: `scripts/analysis/levy_reform_calibrated.py`, importing `hydro_levy_simulation` and `tou_price_effect`. Outputs `outputs/tables/levy_reform_calibrated_*.csv`.
+
+## Results (run 2026-11-17, `scripts/analysis/levy_reform_calibrated.py`, seed 20261117; outputs `outputs/tables/levy_reform_calibrated_*.csv`)
+K1, K2, K3, K6 and K7 pass; **K4 and K5 fail**. Nothing was tried after the failures.
+
+| Rule | Result | Verdict |
+|---|---|---|
+| K1 anchors | dose 0 equals the reform-removed state, dose 1 the actual one | pass |
+| K2 reform effect R | −€0.016/MWh [−0.018, −0.011] on a cost of €103.66/MWh | pass (tiny) |
+| K3 levy effect H | −€5.60/MWh [−6.50, −4.86] | pass |
+| K4 additivity | interaction +0.036 = 229% of \|R\| (bar 25%); the reform effect is −0.051 with hydro as before the announcement and −0.016 with hydro as offered | **fail** |
+| K5 dose shape | actual hydro: 0, +0.008, −0.015, −0.092, −0.172 at m = 0, 0.5, 1, 1.5, 2 (the half dose is slightly positive); pre-announcement hydro monotone: 0, −0.044, −0.053, −0.082, −0.135 | **fail** (non-monotone at m = 0.5 under actual hydro) |
+| K6 placebo | reform effect ranks 1 of 10; placebo mean \|levy\| 0.81 vs a third of the real 1.87 | pass |
+| K7 robustness | July dropped: R −0.008, H −5.96; pre-announcement ratios 2021-03 → 05: H −5.87 | pass |
+
+**Reading.** In euros per MWh over the whole window the two channels are not comparable in size: the levy channel lowers the average cost by about €5.6, the tariff by about 1.6 cents, a ratio of about 350 to 1. The tariff moves load between hours at constant daily energy, so it reshapes prices within the day (evening-minus-night contrast about −€2.4, H3 of the earlier run) and leaves the load-weighted average almost where it was. The paper's window is therefore, in its average price, almost entirely a levy window; the reform's footprint is in the shape. The reform effect also depends on the hydro regime (K4): with hydro as before the announcement, the load shift saves three times as much, because the same shift runs against a steeper supply at higher hydro offers.
+K5 is a shape failure of a tiny quantity: the half-dose point under actual hydro is +€0.008, within the second decimal, and sits on a flat part of the offer curve; read the dose table as nearly flat below m = 1 and falling after. The calibrated scenarios are anchored (K1) but the euro value of a different tariff ratio is of the order of cents per MWh averaged over national load.
+Limits: national load stands in for household load, so the level of R understates the saving per MWh bought by the households whose profile moved (the same shift divided by household load only would be larger by the inverse of the household share); the pre-announcement ratios, the static re-clear and the common timing of announcement and tariff are as in the first run.

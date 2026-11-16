@@ -1,0 +1,11 @@
+regime,multiplier,cost_per_mwh,effect_vs_no_reform,lo,hi
+actual hydro,0.0,103.6787,0.0,0.0,0.0
+actual hydro,0.5,103.6864,0.0076,0.0029,0.0109
+actual hydro,1.0,103.6641,-0.0146,-0.0179,-0.0118
+actual hydro,1.5,103.5861,-0.0917,-0.1046,-0.0787
+actual hydro,2.0,103.5059,-0.1719,-0.2008,-0.1473
+pre-announcement hydro,0.0,109.3137,0.0,0.0,0.0
+pre-announcement hydro,0.5,109.2701,-0.0437,-0.0543,-0.0359
+pre-announcement hydro,1.0,109.2607,-0.053,-0.0642,-0.0438
+pre-announcement hydro,1.5,109.2319,-0.0823,-0.092,-0.0751
+pre-announcement hydro,2.0,109.1782,-0.1355,-0.16,-0.1092

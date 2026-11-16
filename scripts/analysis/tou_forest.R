@@ -48,7 +48,8 @@ w <- real[iw, ]; tw <- tau1[iw]
 pdp <- do.call(rbind, lapply(names(sort(imp, decreasing = TRUE))[1:8], function(v) {
   x <- w[[v]]; if (length(unique(x)) < 3) return(NULL)
   b <- cut(x, unique(quantile(x, seq(0, 1, 0.1), na.rm = TRUE)), include.lowest = TRUE)
-  data.frame(var = v, bin = as.integer(b), x_mean = tapply(x, b, mean), tau = tapply(tw, b, mean))
+  xm <- tapply(x, b, mean); tm <- tapply(tw, b, mean)
+  data.frame(var = v, bin = seq_along(xm), x_mean = as.numeric(xm), tau = as.numeric(tm))
 }))
 mono <- sapply(split(pdp, pdp$var), function(d) abs(cor(d$x_mean, d$tau, method = "spearman")))
 print(round(mono, 2))

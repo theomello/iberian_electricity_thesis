@@ -29,8 +29,8 @@ def hourly(i):
     return pd.DataFrame({"date": pd.to_datetime(loc.date), "hour": loc.hour, "v": s.to_numpy()}).drop_duplicates(["date", "hour"]).set_index(["date", "hour"]).v
 
 
-def build():
-    grid = pd.MultiIndex.from_product([pd.date_range("2018-10-01", "2023-12-31"), range(24)], names=["date", "hour"])
+def build(end="2023-12-31"):
+    grid = pd.MultiIndex.from_product([pd.date_range("2018-10-01", end), range(24)], names=["date", "hour"])
     df = pd.DataFrame(index=grid)
     df["load"] = sum(hourly(i) for i in (1204, 1205, 1206, 1207)).reindex(grid)
     df["wind"] = hourly(1777).reindex(grid) / 1000

@@ -25,8 +25,8 @@ ROOT, H, SEED = T.ROOT, N.H, N.SEED
 CACHE = ROOT / "data/cache_tou/industry_iv_curve_sets.pkl"
 
 
-def instruments(df):
-    months = [f"{y}{m:02d}" for y in range(2019, 2024) for m in range(1, 13)]
+def instruments(df, months=None):
+    months = months or [f"{y}{m:02d}" for y in range(2019, 2024) for m in range(1, 13)]
     cv = PE.Curves(months)
     h = cv.h[cv.h.valid.astype(bool)].copy()
     cnt = cv.h.groupby("date").period.transform("count")

@@ -48,3 +48,18 @@ The dose parameters and η are only weakly separated by one summer; the fit crit
 Under A4 the paper's convention stays primary and the −0.07 to −0.10 range (the dose sensitivities already reported) is the uncertainty to quote; the wider grid here (E up to €150, w down to 0.5) is a bound, not a result.
 **One thing the placebo windows show:** in 75 of the 109 placebo windows the search picks the hourly-price dose (E_h) as best, against 19 for E = 40 and 15 for E = 150. In windows where nothing happened, the hourly dose fits best, which means its shape tracks something that is not the reform: the wholesale price itself follows the load pattern, so a dose built from it correlates with demand by construction. That is a reason not to prefer the hourly variant as the primary dose, and it settles the earlier question: the hourly −0.079 is not a better-identified number than the fixed-price ones, and the choice stays with the paper's convention.
 Part B (area heterogeneity) is not blocked by A; its step zero (B0) is the next run, with the dose fixed at the paper's convention.
+
+## Part B step zero results (run 2026-11-17, `scripts/analysis/tou_area_heterogeneity_b0.py`; `outputs/tables/tou_area_heterogeneity_b0*.csv`). No real-window area effect was computed or printed.
+**B0 fails for every area; Part B stops.**
+
+| Area | Mean regulated points | Placebo sd of the weekday-peak effect (18 windows) | B0 (drop if > 3 points) |
+|---|---|---|---|
+| Endesa | 4.98 M | 4.5 points | dropped |
+| Iberdrola | 3.46 M | 4.3 | dropped |
+| Naturgy | 2.21 M | 4.8 | dropped |
+| EDP | 0.22 M | 5.3 | dropped |
+| Repsol | 0.22 M | 3.7 | dropped |
+
+The pooled weekday-peak placebo sd is 3.6 points (range −9.0 to +6.5), against a pooled real effect of about −7.8: detectable at about two standard deviations, but each single area is noisier than the pooled series. With all five areas above the bar, there is nothing to test heterogeneity on (B3): report the pooled estimate only and the five area effects already in `outputs/tables/tou_area_panel_pc_effects.csv` as descriptive. The placebo cross-area variance (median 4.5e-4, 95th percentile 2.1e-3) is recorded for any later run.
+**B4:** the CNMC counts hold no tariff-mix field (2.0 vs 3.0). The regulated share varies by area (EDP 0.20, Repsol 0.27, Iberdrola 0.35, Endesa 0.49, Naturgy 0.52) but it measures migration out of the regulated tariff, not the dose, so it cannot serve for a dose-response across areas.
+Extension 2 therefore ends at step zero, as its rules allow. The dose stays at the paper's convention (Part A, A4).

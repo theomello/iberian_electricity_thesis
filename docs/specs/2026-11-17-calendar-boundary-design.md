@@ -73,3 +73,22 @@ A failed rule is recorded and kept; no other window length, sector aggregation o
 **What each outcome means.** E1 to E4 pass: a business response to the regulated price calendar, identified from repeated alternating steps, comparable with the household -0.05 (a different margin: month-scale shifting of daytime use, in one city, for services). E1 fails with E3 passing: a bounded response whose interval is the contribution. E3 fails: the design does not isolate a business response.
 
 Code: `scripts/analysis/calendar_boundary_estimate.py`; outputs `outputs/tables/calendar_boundary_estimate.csv`.
+
+## Results of the estimation rules (run 2026-11-16; `calendar_boundary_estimate.py`, committed before the run; outputs `outputs/tables/calendar_boundary_estimate{,_summary}.csv`)
+
+34 real boundary-years (2021 H2 to 2025), Serveis minus Residencial, Barcelona, 3.0TD top-period log dose (2021 tolls and charges; 2022-25 values not read), within-year randomization over 100 events (10,000 draws).
+
+| Rule | Result | Detail |
+|---|---|---|
+| **E1 sign and detection** | **fail** | **eta = -0.004, one-sided p 0.46, interval [-0.080, +0.071]** |
+| E2 alternation | fail | price-up boundaries -0.103 (17 events); price-down boundaries **+0.053** (17 events): the two signs disagree |
+| E3 placebo outcome | fail (by the size clause) | Residencial alone eta -0.029, two-sided p 0.35; the p-value passes but the size is not below one third of the main estimate (-0.004) |
+| E4 leave-out stability | fail | leaving out 2021, 2024, March, July or November flips the sign (+0.009, +0.044, +0.008, +0.038, +0.022); range -0.053 to +0.044 |
+| E5 band robustness | fail | bands 12-24 as day: +0.022 |
+| E6 (description) | | half pass-through range -0.004 to -0.008 |
+| E7 (exploratory) | | by year 2021 -0.157, 2022 -0.002, 2023 +0.012, 2024 -0.077, 2025 +0.152; Indústria -0.041 |
+| E8 Portuguese control | fail (by the interval clause) | eta -0.143 (24 events), same sign as the main estimate but outside its interval; the result depends on the control |
+
+**By the user's stated stop rule (E1 or E3 failing closes the design), the calendar-boundary design is closed.** No other window, sector aggregation or base year is tried.
+
+**What stands.** A bounded result: the pooled elasticity of Barcelona services' relative day-use to the 3.0TD calendar steps is -0.004 with a 95% randomization interval of [-0.080, +0.071], consistent with no response and ruling out responses stronger than about -0.08 (Blonz's -0.12 is outside the interval; Jessoe and Rapson's near-zero is inside). The sign pattern is not alternating (up-steps negative, down-steps positive), single years and boundaries move the estimate, and a different control (Portugal's national load) gives -0.14, so the estimate is sensitive to the control and the design does not identify a business response. The small residual household 'response' (-0.029) means the dose pattern also moves households relative to the 2019 base.

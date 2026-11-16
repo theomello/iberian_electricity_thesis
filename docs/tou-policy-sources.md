@@ -156,3 +156,8 @@ Not checked: E-REDES's yearly consumption-profile reports (settlement shapes onl
   tutela) segment.
 - **Portugal 2018-2021 control: still open and important.** E-REDES starts in 2022-23 (see above). Revisit if a source for hourly
   low-voltage or regulated-client load in 2018-2021 appears (ERSE, REN datahub, a data request to E-REDES or the retailer).
+
+## RDL 14/2022, Article 29 (read verbatim from BOE-A-2022-12925, 2026-11-16)
+Published BOE 2 Aug 2022. Apartados 1 (heating at most 19 °C, cooling not below 27 °C, in conditioned premises of RITE I.T. 3.8.1, with exceptions) and 4 (shop-window lighting off from 22:00; also public buildings unoccupied at that hour) enter into force "a los siete días naturales desde el día siguiente al de la publicación" = about 10 Aug 2022 (9 Aug under the other count), valid to 1 Nov 2023. Apartado 2 (information posters) one month after publication; apartado 3 (door closers) by 30 Sep 2022. Window lighting is the 22:00 rule; there is no hour limit stated for how long it stays off.
+
+Noise check (pre-2021 data only, `scripts/analysis/rdl14_noise.py`, `outputs/tables/rdl14_noise.csv`): lighting contrast ln(22-23h / 18-21h) on E1+E2, Spain minus Portugal, 58-weekday window-mean sd 0.016, detectable effect 4.5% (4.7% against 14-17h); air-conditioning slope sd 0.0009 per degree of cooling gap, detectable 0.0024 (14 overlapping windows from two summers, so the sd is itself uncertain).

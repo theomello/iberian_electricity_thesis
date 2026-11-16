@@ -1,0 +1,11 @@
+rule,pass,detail
+B1 curve check,True,share 1.000
+B2 first stage,True,"F 19.7, detectable 0.0423"
+B3 first-stage economics,False,levels coefficient -0.664 (se 0.194); differenced 0.126 (se 0.097)
+B4 balance,True,Bonferroni p 0.3223
+B5 placebo outcome,True,"elasticity -0.0045 [-0.0442,0.0450], p_t 0.820"
+B6 estimate,False,"elasticity -0.0357 [-0.0798,0.0096], p_t 0.010, p_AR0 0.178"
+B7 overidentification,True,"J 2.10 p 0.147; wind -0.0728 [-0.1712,0.0409] F 8.5; solar -0.0190 [-0.0551,0.0177] F 20.6"
+B8 stability over years,True,"elasticities -0.0114, -0.3228, -0.1034, -0.0143, -0.0193; equality p 0.264"
+B9 sensitivity,True,"V1 -0.0343, S -0.0365 vs V3 [-0.0798,0.0096]"
+B10 comparison and hour blocks (exploratory),,"forecast design 0.0049 [-0.0046,0.0225]; night 0-7 -0.0929 [-0.4147,0.0404]; day 8-17 -0.0262 [-0.0772,0.0204]; evening 18-23 -0.0461 [-1.5440,1.4519]"

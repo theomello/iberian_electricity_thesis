@@ -40,3 +40,22 @@ The curve slope depends on the forecast (offers are made on forecasts) and on th
 `outputs/cache/step/{hours,market}_{ym}.parquet`, `data/ree/ree_realtime_5min.parquet`, ESIOS 1204-1207, 1775, 1777, 1779, OMIE prices, temperature, MIBGAS. New code `scripts/analysis/industry_iv_bid_curve.py` (imports `Curves` from `tou_price_effect.py` and the estimation helpers); outputs `outputs/tables/industry_iv_bid_curve{,_checks}.csv`. Seed 20261117.
 
 **Status update 2026-11-16: confirmed by the user ("Lets go"); script `industry_iv_bid_curve.py` committed before the run.** Implementation notes (no rule changed): hours on daylight-saving days (23 or 25 periods) are dropped; Variant S scales the demand forecast to the curve's market by the month-by-hour ratio of mean cleared demand to mean forecast; B3 is judged on the unresidualised price-level regression (constant only, date-clustered), the differenced version is reported beside it; B8 uses five years including 2020; the slope control is evaluated at cleared demand ±500 MW.
+
+## Results (run 2026-11-16; `industry_iv_bid_curve.py`, committed before the run; outputs `industry_iv_bid_curve{,_checks}.csv`)
+
+V3 (differenced + boosted double ML), instruments the simulated price effects of the wind and PV forecast misses on the day's offer curve; 21,636 hours; impact elasticity at €98.
+
+| Rule | Result | Detail |
+|---|---|---|
+| B1 curve check | pass | re-cleared price within €0.50 of OMIE in 100.0% of 40,082 valid hours |
+| B2 first stage (stop) | **pass** | F 19.7 (bar 10), detectable elasticity 0.042 |
+| B3 first-stage economics | **fail** | price on simulated effect: levels -0.66 (se 0.19, wrong sign, confounded by levels); differenced +0.13 (se 0.10) against the 0.5-1.5 band |
+| B4 balance | pass | temperature does not predict the instruments, Bonferroni p 0.32 |
+| B5 placebo outcome | **pass** | lag-7 load: -0.005 [-0.044, +0.045], p 0.82 (the forecast design gave -0.022, p 0.002) |
+| B6 estimate | **fail (interval)** | **-0.036 [-0.080, +0.010]**, rank-of-t p 0.010 but permutation-AR p 0.18 and the interval includes zero |
+| B7 overidentification | pass | J p 0.15; wind-only -0.073 (F 8.5), solar-only -0.019 (F 20.6), each inside the other's interval |
+| B8 stability | pass | 2019 -0.011, 2020 -0.32 (F 0.9), 2021 -0.10 (F 4.4), 2022 -0.014, 2023 -0.019; equality p 0.26 (low power: three of five years have F below 10) |
+| B9 sensitivity | pass | V1 -0.034, Variant S -0.037, both inside the V3 interval |
+| B10 (exploratory) | | forecast design +0.005 [-0.005, +0.023] overlaps this interval; hour blocks night -0.093 (F 3.8), day -0.026 (F 17.8), evening -0.046 (F 2.4, interval unbounded) |
+
+**Reading.** This is the first industrial design that passes the placebo and the balance test: conditioning on the day's offer curve and realised weather removes the weather channel that sank the forecast instruments (E3), and the first stage survives (F 19.7). The central impact elasticity is negative and small, about -0.04, but it is not distinguishable from zero under the weak-instrument-robust (permutation-AR) set, and the two tests disagree (t-rank p 0.010, AR p 0.18). By the registered B6 it is **not reported as detected**. B3 is a warning about what the instrument is: raw price moves only about 0.13 euro per euro of simulated effect in differences, far below one, so the market does not clear on the day-ahead curve's implied price effect as cleanly as the simulation assumes (re-offering, interconnection, complex conditions), and the first stage lives in the residual variation, not in the raw pass-through. Year and hour-block subsets are mostly weak (F below 10), so their slopes carry little information. Statement that stands: industrial impact elasticity between about -0.08 and +0.01 at 95%, central -0.04, placebo-clean, not a detected effect.

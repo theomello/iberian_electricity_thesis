@@ -31,3 +31,18 @@ Only one reform and one treated country: the forest learns variation in effects,
 
 ## Data and code
 `data/cache_tou` errors (cross-tariff and RI caches), the temperature, ESIOS forecast and OMIE price files. New code: `scripts/analysis/tou_forest_prep.py` (builds the samples and writes CSVs under `data/cache_tou/forest/`), `scripts/analysis/tou_forest.R` (the forests), outputs `outputs/tables/tou_forest_*.csv`.
+
+## Results (run 2026-11-17, `scripts/analysis/tou_forest_prep.py`, `scripts/analysis/tou_forest.R`, grf 2.6.1; `outputs/tables/tou_forest_*.csv`)
+**F0, F1, F2 and F3 all fail; F4 does not apply.** Nothing else was tried.
+
+| Rule | Result | Verdict |
+|---|---|---|
+| F0 average effect | all rows −0.0715 (se 0.294, t −0.24); window days −0.0787 (se 0.0395, t −1.99, descriptive); window rows 16.3% of the sample | **fail** (all-rows t as coded; window-day t misses −2 by 0.01) |
+| F1 calibration | differential coefficient 0.035 (se 1.21), p 0.49; mean forest prediction 0.83 (se 0.34), p 0.008 | **fail** |
+| F2 beyond noise | real sd of out-of-bag τ on window days 0.0315 against a placebo 95th percentile of 0.0828 (placebo median 0.0498, max 0.0883, 26 windows) | **fail** |
+| F3 stable | rank correlation 0.893 with the seed-2 forest, 0.426 with the no-price forest; top-3 non-price covariates (days_since, f_demand, doy) in the top 5 of seed 2, not of the no-price forest | **fail** |
+
+**Reading.** The forest finds less spread in the effect across conditions in the real window than in the placebo windows (0.032 against a placebo median of 0.050), so it detects no heterogeneity beyond noise. The mean forest prediction is positive and significant (0.83, p 0.008): the average effect is picked up, the variation around it is not. Variable importance (previous-day price 0.32, days since the window began 0.17, price 0.16) and the best-linear-projection coefficients (all insignificant: tmean −0.009, hour +0.004, weekend −0.044, price +0.002, days since −0.003) carry no interpretation (F4 not met). The partial-dependence monotonicity of the top covariates ranges from 0.30 to 0.99, which is not evidence on its own.
+The placebo average effects are erratic (for example +18.4 and +6.9 in two windows, against ±0.3 in most), which shows the unscaled continuous treatment gives forests a weak first stage in some windows; the sd statistic is robust to this but the placebo ATEs should not be read.
+**What this does and does not say.** No heterogeneity of the response along these 21 conditions can be shown in one reform window of 107 days with the level drift removed; this is a power result, not evidence that the response is uniform. Low-dimensional pre-registered tests (dynamics within the window, temperature interaction, evening hours) and household-level data (GoiEner, if fetched) are the next routes.
+Deviations as run: the sample months were widened to 1 April → 31 October so every season-matched placebo window lies inside the sample; 2018 rows carry NA in the three D-1 forecast covariates (forecasts start in 2019); the heat-wave indicator is constant in most windows (population-weighted maximum rarely reaches 35 °C).

@@ -34,3 +34,25 @@ Any failure: record it and stop; no other `s_t`, lag, region set or index is tri
 
 ## Threats
 Common trends (region-specific trends in C1 and S4); lumpy builds with 2-4 year lags (auctions 2019-22, grid-access permits: the 24-month lag block is a guess and is not searched); coal closures set by regulation (so the dirty side cannot answer to price, hence C2); grid and permitting differences by region (region effects absorb levels, not their change); few independent decisions (C5, the wild bootstrap); `q_rt` includes curtailment and cannibalisation (hence the predetermined `q_r` as instrument); the shock is a cost, not a measured return. Looked at before setting thresholds: the capacity table by region (combined-cycle capacity is nearly flat everywhere, so C2 was expected to be at risk). No slope or regression was run.
+
+## Step zero result (run 2026-11-16, `scripts/analysis/capacity_clean_dirty_noise.py`, `outputs/tables/capacity_clean_dirty_noise.csv`)
+11 regions × 68 months. No elasticity was printed. Thresholds were committed before the run.
+
+| Rule | Value | Bar | |
+|---|---|---|---|
+| C1 sd of `z` after region and month effects | 0.055 | ≥ 0.03 | pass |
+| C1 same, plus region trends | 0.039 | ≥ 0.03 | pass |
+| C2 sd of ln combined-cycle capacity after effects | 0.000 | ≥ 0.03 | **fail** |
+| C3 first-stage F (region-clustered) | 2.9 | ≥ 10 | **fail** |
+| C4a F vs 95th pct of 2,000 region permutations | 2.9 vs 9.2 (21% of permutations as strong) | above | **fail** |
+| C4b F vs 95th pct of circular shifts of `s` | 2.9 vs 3.8 (24% as strong) | above | **fail** |
+| C5 effective independent time points of `s` | 0.33 (lag-1 autocorrelation 0.990) | ≥ 8 | **fail** |
+| C6 detectable elasticity | 0.49 (SE cluster 0.176, permutation 0.135) | ≤ 2 | pass, not informative |
+
+**Outcome: STOP under the registered rule; the capacity elasticity is not estimated.** Five of eight fail, and the failures share one cause each:
+- **The dirty side does not move.** Combined-cycle capacity is constant within every one of the 11 regions over 2021-2026. The only variation in dirty capacity is coal closure, which is regulatory. The ratio's within-region variation is therefore clean-capacity growth against a fixed denominator: this would be a clean-growth regression, not a substitution elasticity.
+- **One smooth shock.** The 24-35 month lagged gas-and-carbon cost is a single rise and fall (autocorrelation 0.99), about one independent observation in 68 months. Interacted with a fixed regional ranking it cannot be told from a region-specific trend, and 21-24% of random placebos give a first stage as strong as the real one.
+- **The first stage is weak (F 2.9):** realised regional quality (trailing output per MW, which includes curtailment and PV/wind composition) has too little in common with the 2018-19 ranking.
+- C6 passes only because the outcome is smooth; with F below 10 the null-imposed SE is not a reliable guide, so it is not evidence the design can detect anything.
+
+Not rescued: no other shock (module price, auction round, rate), lag, region set or quality index is tried. A different design would need a dirty side that responds (a thermal fleet that changes with price, which Spain's combined-cycle fleet does not) or a much richer set of independent shocks (an international panel of countries), neither of which is in this repo.

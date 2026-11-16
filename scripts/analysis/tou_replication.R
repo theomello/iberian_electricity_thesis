@@ -115,5 +115,33 @@ py <- fread(file.path(root, "outputs/tables/tou_elasticity_paper.csv"))[col %in%
 res <- merge(res, py, by = "col")
 print(res[, lapply(.SD, function(v) if (is.numeric(v)) round(v, 4) else v)])
 out <- rbind(data.table(item = "DDD evening vs night (errors)", value = ddd, se = ddd_se), res[, .(item = paste0("eta column ", col), value = eta, se = se)])
-fwrite(out, file.path(root, "outputs/tables/tou_replication_R.csv"))
 cat("column 4 (the within-day comparison): R", round(res[col == 4, eta], 4), "vs Python", round(res[col == 4, eta_py], 4), "\n")
+
+# ---------------------------------------------------------------- Wald ratios: effect divided by the change in ln relative price (evening 18-21h against night)
+# (a) OLS triple difference of ln(load Spain) - ln(load Portugal) (tou_evening_ddd V1): hour, weekday and month effects, cell effects, post x cell, clustered by week; break 2021-06-01, to 2021-09-30
+o <- x[date <= as.Date("2021-09-30") & !(date >= COVID[1] & date <= COVID[2]) & (hour < 8 | hour %in% 18:21)]
+o[, `:=`(dl = log(load_es) - log(load_pt), cls = ifelse(hour < 8, "off", "peak"), kind = ifelse(weekend, "wknd", "work"))]
+o[, `:=`(cell = paste(cls, kind, sep = "_"), post = as.numeric(date >= POST0), wk = format(date, "%G-%V"))]
+for (cc in c("peak_work", "off_work", "peak_wknd", "off_wknd")) o[, (paste0("p_", cc)) := post * as.numeric(cell == cc)]
+ols_ddd <- function(dat) {
+  m <- feols(dl ~ i(hour) + i(dow) + i(month) + factor(cell) + p_peak_work + p_off_work + p_peak_wknd + p_off_wknd, data = dat, cluster = ~wk, ssc = ssc(adj = FALSE, cluster.adj = FALSE), notes = FALSE)
+  cw <- c(p_peak_work = 1, p_off_work = -1, p_peak_wknd = -1, p_off_wknd = 1)
+  c(b = sum(cw * coef(m)[names(cw)]), se = sqrt(as.numeric(t(cw) %*% vcov(m)[names(cw), names(cw)] %*% cw)))
+}
+v1 <- ols_ddd(o); v2 <- ols_ddd(o[!(date >= as.Date("2021-01-01") & date <= as.Date("2021-05-31"))])
+ddd_ols <- v2["b"]; ddd_ols_se <- v2["se"]
+# (b) change in ln relative price: mean over working days June-September 2021 of ln[(E+charge_block)/(E+charge_night)] new regime minus old flat charge
+q <- merge(hrly(1001), hrly(1876), by = c("date", "hour"))
+q <- q[date >= POST0 & date <= as.Date("2021-09-30") & !(as.integer(format(date, "%u")) > 5) & (hour < 8 | hour %in% 18:21)]
+q[, `:=`(E = v1001 - v1876, blk = ifelse(hour < 8, "n", "b"))]
+dd <- dcast(q[, .(E = mean(E), ch = mean(v1876)), by = .(date, blk)], date ~ blk, value.var = c("E", "ch"))
+dln <- mean(log((dd$E_b + dd$ch_b) / (dd$E_n + dd$ch_n)) - log((dd$E_b + OLD) / (dd$E_n + OLD)))
+cat(sprintf("\nchange in ln relative price (evening vs night, working days Jun-Sep 2021): %.3f\n", dln))
+cat(sprintf("OLS triple difference V1 (all pre days): %.4f (se %.4f)  [Python: -4.943%%, se 0.713]\n", v1["b"], v1["se"]))
+cat(sprintf("OLS triple difference V2 (without Jan-May 2021): %.4f (se %.4f) -> Wald ratio %.3f  [Python: -5.248%% -> -0.086]\n", ddd_ols, ddd_ols_se, ddd_ols / dln))
+cat(sprintf("paper-LASSO triple difference: %.4f (se %.4f)  -> Wald ratio %.3f  [Python: -0.062]\n", ddd, ddd_se, ddd / dln))
+cat(sprintf("Wald range (R): %.3f to %.3f; column 4 of Equation 4: %.3f\n", ddd_ols / dln, ddd / dln, res[col == 4, eta]))
+out <- rbind(data.table(item = "DDD evening vs night (LASSO errors)", value = ddd, se = ddd_se), data.table(item = "DDD evening vs night (OLS V1, ln load)", value = v1["b"], se = v1["se"]), data.table(item = "DDD evening vs night (OLS V2, ln load)", value = ddd_ols, se = ddd_ols_se),
+             data.table(item = "change in ln relative price", value = dln, se = NA_real_), data.table(item = "Wald ratio (OLS V2 DDD)", value = ddd_ols / dln, se = ddd_ols_se / abs(dln)),
+             data.table(item = "Wald ratio (LASSO DDD)", value = ddd / dln, se = ddd_se / abs(dln)), res[, .(item = paste0("eta column ", col), value = eta, se = se)])
+fwrite(out, file.path(root, "outputs/tables/tou_replication_R.csv"))

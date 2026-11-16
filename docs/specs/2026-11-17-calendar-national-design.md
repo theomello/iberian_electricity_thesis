@@ -29,3 +29,30 @@ The national series mixes customers with different tariffs and sectors; the 6.1T
 
 ## Code
 `scripts/analysis/calendar_national_noise.py` (placebo events only); outputs `outputs/tables/calendar_national_noise*.csv`. The statistic is deterministic; no random draws.
+
+## Results of step zero (run 2026-11-16; `calendar_national_noise.py`, committed before the run; outputs `outputs/tables/calendar_national_noise{,_summary}.csv`)
+
+**S0 passes:** 99.9% of the window days exist in every series (E1+E2, 6.2, 6.3, 6.4, Portugal) in 2018, 2019 and the post years. 50 placebo events (the 15th of eleven months, 2021 H2 to 2025). Real boundary windows were not computed.
+
+| Series | Tariff | Mean abs log dose | Placebo sd of DD | rho (mid-month ANOVA) | Detectable (S1b) | Detectable at rho = 0.5 |
+|---|---|---|---|---|---|---|
+| **E1+E2** | 6.1TD | 0.185 | 0.0321 | 0.0 | **0.067** | 0.132 |
+| 6.2 | 6.2TD | 0.111 | 0.0335 | 0.0 | 0.109 | 0.215 |
+| 6.3 | 6.3TD | 0.104 | 0.0504 | 0.0 | 0.172 | 0.340 |
+| 6.4 | 6.4TD | 0.061 | 0.0440 | 0.0 | 0.248 | 0.491 |
+
+**S1b passes for E1+E2 (0.067, bar 0.15), also at an assumed intra-year correlation of 0.5 (0.132).** 6.2 would pass at rho 0 and fail at 0.5; 6.3 and 6.4 fail and are descriptive only. The rho estimate is again 0 and rests on five years. The national E1+E2 noise (sd 0.032) is similar to Barcelona services (0.038), with a smaller dose (0.185 against 0.248) and 50 placebo events instead of 13.
+
+## Estimation rules (proposed 2026-11-16; binding when the user confirms and this file is committed; the real boundary windows stay sealed until then)
+
+**Prerequisite R0 (old-tariff dose).** The old 6.x tariffs had their own season boundaries (Orden ITC/2794/2007), so on each real date the 2018-2019 base already contains an old step. The regressor is the **dose difference** dose_new - dose_old (log top-period price change at that date under the new and the old calendar, the same energy price). The old table is built from `docs/tou-policy-sources.md` (old period calendar) and the old tolls in `outputs/tables/tou_tariff_old_vs_new_2021.csv`; **stop rule: if the old dose cannot be reproduced for at least six of the eight boundaries, the estimation is not run.**
+**Estimator.** eta = sum(doseDiff_i DD_i) / sum(doseDiff_i²) over the 34 real boundary-years of E1+E2 (DD against Portugal). Randomization: doseDiff labels permuted within year over the real and the 50 placebo events (placebo dose 0; 10,000 draws), one-sided p, interval eta - [q97.5, q2.5].
+- **E1 Sign and detection.** eta in [-1, 0], one-sided p <= 0.05, interval excluding zero.
+- **E2 Alternation.** Estimates from price-up and price-down boundaries separately are both negative.
+- **E3 Placebo outcome.** The same estimator with Portugal's D alone as outcome: two-sided p above 0.05 and absolute eta below one third of the main estimate.
+- **E4 Leave-out stability.** Dropping each year and each boundary month keeps the sign and stays inside the main interval.
+- **E5 Hour-window robustness.** With the top-period hours 9-14 and 18-22 as 'day' (against 0-7), same sign and inside the main interval.
+- **E6 Control sensitivity.** With no control (D alone) and with the Portugal control, the estimates have the same sign and each lies inside the other's interval. (The Barcelona estimate failed here.)
+- **E7 Other tariffs (description).** 6.2 as a secondary series (detectable 0.109); 6.3 and 6.4 descriptive; whether the estimates line up across the four tariffs given their doses.
+- **E8 Exploratory.** By year and by sign.
+Failed rules are recorded and kept; no other window, series, base year or control is tried. If E1 or E3 fails, the calendar design is closed for good (Barcelona and national).

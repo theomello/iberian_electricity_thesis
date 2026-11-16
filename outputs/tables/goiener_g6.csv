@@ -1,0 +1,5 @@
+subset,households,window_household_days,eta_raw,mean_placebo,eta_RI,p_one_sided,fisher_lo,fisher_hi,G6_pass
+all (G2 sample),2819,216569,-0.14554,-0.0379,-0.10764,0.03704,-0.12892,-0.0932,True
+declared self-consumption excluded (true by construction),2819,216569,-0.14554,-0.0379,-0.10764,0.03704,-0.12892,-0.0932,True
+>= 24 pre-lockdown months,2190,168277,-0.14364,-0.03998,-0.10366,0.03704,-0.12529,-0.0882,True
+Gipuzkoa and Bizkaia only,2059,158200,-0.14969,-0.03808,-0.11162,0.03704,-0.13255,-0.09284,True

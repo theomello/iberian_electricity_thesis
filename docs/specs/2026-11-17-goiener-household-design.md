@@ -71,3 +71,15 @@ Same 3,000-household 2.0TD subsample as step zero (2,819 households, 216,569 hou
 3. The household sample is cooperative members in the north on free-market contracts, a subsample of 3,000 of 9,763 usable households, with an assumed dose.
 
 **Reading.** Household data replicate the sign and order of magnitude of the aggregate result (about -0.05 to -0.15 depending on whether the placebo drift is netted out), with the aggregate E0 at -0.106 on the same transformation. The thesis can say the response replicates at household level and gives about half the aggregate elasticity after placebo centring, with the centring explicitly flagged. G5, G6 and Part B wait for confirmation.
+
+## G6 results (run 2026-11-16 from the saved household errors; `goiener_g6.py`, committed before the run; `outputs/tables/goiener_g6.csv`)
+
+The shared error run finished (2,696 households with placebo errors, 2,862 with window mid errors). Rule G6 (eta_RI in [-0.20, -0.03] and p <= 0.05) **passes in all four subsets as written** (p 0.037 each), but **the 'all' row does not reproduce G2**:
+
+| Subset | Households | eta_raw | Mean placebo | eta_RI | Fisher interval |
+|---|---|---|---|---|---|
+| all (G2 sample) | 2,819 | -0.146 | **-0.038** | **-0.108** | [-0.129, -0.093] |
+| >= 24 pre-lockdown months | 2,190 | -0.144 | -0.040 | -0.104 | [-0.125, -0.088] |
+| Gipuzkoa and Bizkaia only | 2,059 | -0.150 | -0.038 | -0.112 | [-0.133, -0.093] |
+
+G2 reported the same raw estimate (-0.146) but a placebo mean of **-0.093** (eta_RI -0.053). The raw estimates agree; the placebo centring does not. The pooled household placebo contrast per window computed from the saved errors is about -0.029 on average (before the Portuguese series), against -0.073 for the registered step-zero windows (`goiener_step_zero_windows.csv`, after the Portuguese series, 2,460 households per window against 2,691 here). The two placebo constructions differ in household coverage and perhaps in the Portuguese component; the cause is **not yet found**. Until it is, the household elasticity is bounded by the two centrings, **-0.053 (G2 windows) and -0.108 (saved errors)**, and the first-differencing DiD (-0.047) agrees with the first. The claim 'about half the aggregate' is therefore not established; G6 passes the registered band but fails the check that its 'all' row reproduces G2 (not a registered rule; recorded as a flaw). Nothing is rescued.

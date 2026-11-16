@@ -33,3 +33,18 @@ The dose parameters and η are only weakly separated by one summer; the fit crit
 
 ## Data and code
 `data/cache_tou/cross_tariff_errors.parquet`, `cross_tariff_ri_errors.parquet`, the regulated area panel (`outputs/tables/regulated_area_panel`, `tou_area_panel_pc_*`). New code: `scripts/analysis/tou_dose_search.py` (A), `scripts/analysis/tou_area_heterogeneity.py` (B). Outputs `outputs/tables/tou_dose_search*.csv`, `tou_area_heterogeneity*.csv`.
+
+## Part A results (run 2026-11-17, `scripts/analysis/tou_dose_search.py`; `outputs/tables/tou_dose_search{_grid,_placebo,_summary}.csv`)
+**A1, A2 and A3 fail; A4 applies: the dose is not identified by the response shape.** Nothing further was tried.
+
+| Rule | Result | Verdict |
+|---|---|---|
+| A0 windows | 109, as the RI run | ok |
+| A1 dose identified | minimiser at the grid edge (E = 40, w = 0.9, η −0.051); real search gain 2.6e-4 against a placebo 95th percentile of 5.7e-4 (rank p 0.255) | **fail** |
+| A2 η at the selected dose | −0.051, below the −0.05 … −0.15 band's inner edge only just, but A1 failed, so not applicable; randomization p 0.009 | **fail** (A1 fails) |
+| A3 narrowing | 30 of 35 grid points are inside the placebo noise band; their η range is [−0.158, −0.051], width 0.107 | **fail** |
+
+η over the grid (real window, Portugal control) is almost proportional to the dose scale: from −0.051 (E = 40, w = 0.9) to −0.158 (E = 150, w = 0.5), −0.100 at the paper's convention, −0.084 at the hourly price with w = 0.69. The residual sum of squares is nearly flat across the grid: the data cannot tell the energy price from the tariff mix, because both rescale the dose and change its shape only slightly.
+Under A4 the paper's convention stays primary and the −0.07 to −0.10 range (the dose sensitivities already reported) is the uncertainty to quote; the wider grid here (E up to €150, w down to 0.5) is a bound, not a result.
+**One thing the placebo windows show:** in 75 of the 109 placebo windows the search picks the hourly-price dose (E_h) as best, against 19 for E = 40 and 15 for E = 150. In windows where nothing happened, the hourly dose fits best, which means its shape tracks something that is not the reform: the wholesale price itself follows the load pattern, so a dose built from it correlates with demand by construction. That is a reason not to prefer the hourly variant as the primary dose, and it settles the earlier question: the hourly −0.079 is not a better-identified number than the fixed-price ones, and the choice stays with the paper's convention.
+Part B (area heterogeneity) is not blocked by A; its step zero (B0) is the next run, with the dose fixed at the paper's convention.

@@ -24,3 +24,21 @@ Only 2019 windows (13, overlapping, about one independent season) are available 
 
 ## Data and code
 `data/goiener/daily/daily.parquet`, the G2 outputs, the Portuguese and E0 series as in `goiener_household.py`. New code `scripts/analysis/goiener_drift.py` (imports `goiener_household.py`); outputs `outputs/tables/goiener_drift.csv`. Seed 20261117, same 3,000-household subsample.
+
+## Amendment 2026-11-16 (after discussion with the user): D1 runs first, and a first-differencing DiD is added. Binding when committed; both are cheap (no LASSO).
+
+**Order and stop rule.** D1 and the first-differencing DiD (F1-F3 below) run first. D2 and D3 (forward LASSO placebo) run only if the gate **D0** says drift is a live explanation.
+
+**Sample for D1 and F.** Household days = weekday, non-holiday (national) days of the three windows **June 1 -> September 15 of 2018, 2019 and 2021**; households need at least 40 such days in each of the three windows. Outcome per day: log(peak kWh) minus log(off-peak kWh). Households: (a) the G2 subsample (the same 3,000 selected households, those with enough days) as the primary, (b) all eligible 2.0TD households as a check. Portugal (REN, same period types, Portuguese holidays) and E0 (Spanish regulated load, national holidays) through the same daily log ratio. Dose 0.784 (pure 2.0TD) for households and Portugal, 0.609 (E0 mix) for E0, as in G2.
+
+- **D1 Raw levels and drift (descriptive).** Household mean log(peak/off) in each window, the change 2018 -> 2019 (**drift19**, one year, window dates identical) and 2019 -> 2021 (**change21**), each net of Portugal's change; household-cluster bootstrap intervals (2,000 draws; Portugal and E0 treated as fixed numbers).
+- **F1 First-differencing DiD.** eta_FD = change21 (net of Portugal) / 0.784 with its bootstrap interval. No weather adjustment.
+- **F2 Drift-adjusted.** eta_FD_adj = (change21 - 2 × drift19) / 0.784 (two years of drift assumed linear, as drift19 is one year), with its bootstrap interval; also reported with one year of drift subtracted (assumes drift stops after 2019).
+- **F3 Comparison (description, no pass/fail).** Whether the F1 and F2 intervals contain the G2 raw value (-0.146) and the G2 centred value (-0.053); the same transformation for E0 (G2: -0.106 centred, -0.109 raw) as a check that the DiD reproduces the aggregate answer.
+- **D0 Gate for D2/D3.** Drift is a live explanation, and D2/D3 are then run, if the household drift19 net of Portugal, converted to elasticity units (drift19 / 0.784), is larger than 0.02 in absolute value **or** its 95% interval excludes zero. If both conditions fail (|drift| <= 0.02 and the interval contains zero), drift over one year does not explain the placebo offset, D2 and D3 are not run, and the -0.093 offset is recorded as a property of the household placebo whose cause is unknown.
+
+**What each outcome means.** D0 'live': a year-to-year trend in the household peak/off ratio exists; F2 then gives a drift-robust elasticity and the forward LASSO placebo (D2) is the like-for-like check. D0 'not live': the placebo offset is not an annual trend; the headline is the centred η_RI -0.053 with the caveat, and F1 is the cross-check. F1 close to -0.146: the raw response is largely real. F1 close to -0.053: the centring was right.
+
+**Threats of F.** Weather differs between the three summers (the LASSO adjusts for it, this DiD does not); the drift estimate comes from one year-pair (2018 -> 2019) and is noisy; 2021 had COVID aftermath in working-from-home patterns, which may move the peak/off ratio of households independent of the reform (Portugal nets part of it); cooperative customers may have changed over time (composition), partly handled by requiring days in all three windows.
+
+Code: `scripts/analysis/goiener_drift_d1.py`; output `outputs/tables/goiener_drift_d1.csv`; seed 20261117.

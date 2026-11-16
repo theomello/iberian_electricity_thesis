@@ -1,0 +1,32 @@
+# Calendar boundaries of the business tariffs as a repeated price shock (proposal; step zero only)
+
+**Status: proposed 2026-11-16, not registered. Binding when the user confirms and this file is committed; only step zero (S0-S2) is covered now. The estimation rules are registered in a separate amendment after step zero passes.** Source idea: `notes/idea-calendar-boundary-business-tariffs.md`. Data: `docs/data-reference/barcelona-electricity-by-postal-code.md` (unit kWh, 42 postal codes, 2019-2025, four six-hour bands, sectors Serveis, Residencial, Indústria). Literature read: Jessoe and Rapson (2015, mandatory TOU for commercial and industrial firms: little or no change in usage), Blonz (critical-peak pricing for small business: peak use -13.5%, elasticity -0.119), Hausman and Rapson (regression discontinuity in time: seasonality, serial correlation and short windows are the pitfalls). Aigner, Newman and Tishler (1994) not available.
+
+**In one example.** A shop in the Eixample on tariff 3.0TD pays about €77/MWh in tolls and charges for a weekday 9-14h hour in July and about €32 in June (2021 values). On 1 July the top-period price steps up by about €45; on 1 September nothing changes. A model that looks at how the weekday daytime use of services in Barcelona moved around 1 July, relative to its own nights and weekends, relative to households (who face no step), and relative to the same dates in 2019 (before the six-period tariff), asks whether business demand follows the calendar. The step-zero question is only whether the data are quiet enough to see such a response: the same statistic on dates where nothing changes (1 January, 1 February, 1 May, 1 September) must be tight relative to the size of a real step.
+
+## Why not the paper's LASSO here
+The seasons are calendar months, so month dummies in a per-hour LASSO would absorb the boundary jump. The design uses **year-over-year differencing against 2019** (the first-differencing logic that worked for GoiEner), with day-minus-night, working-day-minus-weekend and business-minus-household layers; a LASSO is not used.
+
+## The statistic (computed per boundary date b and year Y, city level, sector s)
+Window: 14 days before and 14 days after the date (the date itself belongs to the 'after' window).
+1. Log of the sum over the day bands (06-12, 12-18, 18-24) minus log of the 00-06 band, daily.
+2. Working-day mean minus weekend-and-national-holiday mean, within each side of the date.
+3. After minus before: **S(b, Y, s)**.
+4. Difference against 2019 at the same calendar date: **D(b, Y, s) = S(b, Y, s) - S(b, 2019, s)**.
+5. Business minus household: **DD(b, Y) = D(b, Y, Serveis) - D(b, Y, Residencial)**. Indústria is reported separately in the same way.
+Event set. **Real boundaries** (price step in the top daytime period, sealed in step zero): 1 March, 1 April, 1 June, 1 July, 1 August, 1 October, 1 November, 1 December. **Placebo dates** (no change in the season: top period price unchanged): 1 January, 1 February, 1 May, 1 September. The 1 June 2021 boundary coincides with the reform start and is dropped in 2021. Years Y: 2021 (second half), 2022, 2023, 2024, 2025 (to November); 2019 is the base year; 2020 is excluded (COVID). The sample of events is 4 placebo dates by up to 5 years, about 18 usable (some 2021 and 2025 windows are incomplete).
+
+## Step zero
+- **S0 Data.** At least 95% of the calendar days of the windows around the placebo dates and the real boundaries exist in 2019 and in at least three of the post years (missing day 2025-08-19 and the cut at 2025-11-30 noted); Serveis has non-zero day-band values in at least 30 postal codes on at least 95% of days; the 'No consta' band is dropped. *Fails:* stop, the data cannot support the design.
+- **S1 Noise.** The standard deviation of DD across the placebo events (computed only on placebo dates; the real-boundary windows stay sealed) gives a detectable elasticity (2.8 × sd / dose) of at most **0.15**, where the dose is the mean absolute log change of the top-period price for the real boundaries (3.0TD, 2021 tolls and charges, each year's mean OMIE price over the window as the energy price, `outputs/tables/tou_tariff_prices_2021.csv`; 2022-25 tolls and charges are not yet read, so this dose is an approximation and is labelled so). Also reported: the same sd for mid-month dates (the 15th of each month, windows of 14 days) as a larger placebo set, and for Indústria. *Fails:* the design is closed with the detectable elasticity recorded; no real boundary is computed.
+- **S2 Seal.** The step-zero script takes the list of events as an argument and computes only the placebo dates and mid-month dates; the real boundary windows are not computed or printed. (Checked in the script: the real dates are not in the event list.)
+Both S0 and S1 are gates; S1's 0.15 bar is a judgement set before any number is seen: it sits between the Blonz elasticity (-0.12) and zero.
+
+## What each outcome means
+S0 and S1 pass: the design is feasible; the estimation rules (sign pattern across steps of both signs, dose-response across years, a randomization test that reassigns real doses over real and placebo events, a placebo outcome in Residencial, leave-one-boundary-out, hour-band checks) are registered next and the real boundaries are opened. S1 fails: the data are too noisy at the 2-week window, and either longer windows or a tariff-level data source (which the national E1-E6 series cannot give for 3.0TD) is needed; recorded as a stop. S0 fails: gap or coverage problem in Barcelona.
+
+## Threats (carried from the note, plus)
+Pass-through of toll changes to the contract the shop pays; July heat and August holidays coincide with boundaries (the layers guard, not prove); 2019 is the only clean pre-year in Barcelona, so the base year is one year of noise; the dose for 2022-2025 uses 2021 tolls and charges until the later resolutions are read; services are not only 3.0TD; the six-hour bands blend several price periods (06-12 contains P6, P2 and the top period); anticipation (the calendar is known a year ahead).
+
+## Data and code
+`data/barcelona_electricity/raw/*.csv`, `outputs/tables/tou_tariff_prices_2021.csv`, OMIE hourly prices, holiday calendar. New code `scripts/analysis/calendar_boundary_noise.py`; outputs `outputs/tables/calendar_boundary_noise.csv`. No random draws; the statistic is deterministic.

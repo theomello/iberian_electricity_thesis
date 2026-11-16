@@ -1,0 +1,2 @@
+obs,days,mean_price,first_stage_F,se_elasticity,detectable_elasticity,F_ok,noise_ok
+27136,1172,98.2052,296.1252,1.5927,4.4595,True,False

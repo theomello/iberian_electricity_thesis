@@ -1,0 +1,5 @@
+kind,measure,n_events,mean,sd,detectable
+placebo,DD_serv,13,0.0166,0.03789,0.42798
+placebo,DD_ind,13,-0.01708,0.10963,1.2385
+mid-month,DD_serv,53,-0.00222,0.05838,0.65954
+mid-month,DD_ind,53,0.00827,0.07395,0.83536

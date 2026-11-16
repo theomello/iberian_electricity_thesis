@@ -30,3 +30,13 @@ Pass-through of toll changes to the contract the shop pays; July heat and August
 
 ## Data and code
 `data/barcelona_electricity/raw/*.csv`, `outputs/tables/tou_tariff_prices_2021.csv`, OMIE hourly prices, holiday calendar. New code `scripts/analysis/calendar_boundary_noise.py`; outputs `outputs/tables/calendar_boundary_noise.csv`. No random draws; the statistic is deterministic.
+
+## Results of step zero (run 2026-11-16; `calendar_boundary_noise.py`, committed before the run; outputs `outputs/tables/calendar_boundary_noise{,_summary}.csv`, `calendar_boundary_dose.csv`)
+
+The first run returned NaN for most events because the weekend side of each window was built from national holidays only (a code bug; weekends were not counted). Fixed (weekends and national holidays), rules unchanged, rerun. Forced by the data: 1 January cannot be computed (the 2018 days of its 2019 window do not exist), so the placebo dates are 1 Feb, 1 May, 1 Sep: 13 events (2021 Sep; 2022-2025 Feb, May, Sep).
+
+- **S0 passes:** 99.9% of the window days exist (1,862 of 1,863); 99.9% of days have at least 30 Serveis postal codes with non-zero day bands.
+- **Dose (prices only; no outcome at a real boundary was computed):** 34 real boundary-years (2021 H2 to 2025), steps of ±14.7, ±18.1, ±41.9 and ±45.3 €/MWh on the 3.0TD top period, **mean |log dose| 0.248** (by year 0.19, 0.15, 0.25, 0.32, 0.34).
+- **S1 fails as registered:** placebo-date sd of DD (Serveis minus Residencial) = 0.038 (mean +0.017), detectable elasticity 2.8 × 0.038 / 0.248 = **0.43**, bar 0.15. Mid-month dates (53 events) give sd 0.058, detectable 0.66. Indústria is noisier (sd 0.11, detectable 1.24).
+
+**By the registered rule the design closes here.** One point must be recorded with the failure: S1, as I wrote it, is a *single-event* detectability (one boundary against the placebo spread). The estimator the design would use pools many events (a regression of D on the log dose through the origin, about 34 real boundary-years), whose precision is about sd / sqrt(sum of squared doses) = 0.038 / sqrt(3.09) = 0.0215, a detectable elasticity of **0.060** if the 34 events were independent (they are not: events in the same year share year effects, and 2019 is the only base year, so the effective number is lower). So S1 asked a stricter question than the estimator needs. This is recorded as a flaw in the rule, not as a pass; whether to amend S1 to a pooled, year-clustered version and run a new step zero is the user's decision, as it would be made after seeing this result.

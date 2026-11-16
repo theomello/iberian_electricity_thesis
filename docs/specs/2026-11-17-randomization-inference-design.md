@@ -35,3 +35,29 @@ Placebo windows overlap heavily (about 15 independent ones), so (a) overstates p
 
 ## Data and code
 `data/cache_tou/cross_tariff_errors.parquet` plus new leave-2020-out fits. New code: `scripts/analysis/tou_randomization_inference.py`, reusing `tou_cross_tariff`, `tou_industry_adjusted` helpers. Output `outputs/tables/tou_randomization_inference.csv` (one row per window and series) and `..._summary.csv`.
+
+## Results (run 2026-11-17, `scripts/analysis/tou_randomization_inference.py`; `outputs/tables/tou_randomization_inference{,_summary}.csv`)
+109 placebo windows qualified (k = 37 … 178; the COVID block removed k = 52 … 78). **RI0-RI6 all pass.** Nothing else was tried.
+
+| Rule | Result | Verdict |
+|---|---|---|
+| RI0 enough windows | 109 ≥ 40 | pass |
+| RI1 headline, one-sided p | 0.009 (real −0.101; placebo mean +0.003, sd 0.012) | pass |
+| RI2 null centred | \|mean placebo\| 0.003 ≤ 0.03 | pass |
+| RI3 non-overlapping (N = 8) | p 0.111 (the smallest possible, 1/9: the real estimate is the most extreme of 9) | pass |
+| RI4 season-matched (N = 26) | p 0.037 (the smallest possible, 1/27) | pass |
+| RI5 consistency | η_RI −0.104 vs two-year −0.090 (difference 0.014) | pass |
+| RI6 interval | [−0.122, −0.079], excludes zero | pass |
+
+**Household elasticity.** The real estimate is about eight placebo standard deviations from the placebo mean and more extreme than all 108 placebo windows bar one. The randomization interval ([−0.122, −0.079]) sits around the earlier placebo-adjusted −0.090 and the Wald range. The headline can be quoted with a randomization p-value and interval.
+
+**Other series (descriptive, no pass/fail rule).** The placebo means for the non-household series are positive and large (0.06 to 0.31) and their spread is wide (sd 0.2 to 0.46 in all windows), so these numbers move with the sample:
+| Series | real η | p one-sided (all / season-matched) | interval (all) | interval (season-matched) |
+|---|---|---|---|---|
+| E1+E2 | −0.168 | 0.055 / 0.037 | [−0.66, +0.05] | [−0.25, −0.05] |
+| IND | −0.288 | 0.027 / 0.037 | [−0.88, −0.10] | [−0.39, −0.17] |
+| 6.2 | −0.080 | 0.345 / 0.630 | [−1.12, +0.33] | [−0.20, +0.32] |
+| 6.3 | −0.321 | 0.064 / 0.037 | [−1.14, +0.10] | [−0.61, −0.10] |
+| 6.4 | −0.533 | 0.018 / 0.037 | [−1.64, −0.09] | [−1.46, −0.66] |
+Reading: the household result is an identified elasticity. For IND, 6.3 and 6.4 the real estimate is more negative than every season-matched placebo, but (i) 0.037 is the smallest p that 26 windows allow and the 26 come from two summers (two clusters in practice), (ii) the placebo means are positive and the adjustment (η_RI = real minus mean) inflates the estimates to −0.37, −0.46 and −0.85, which are not believable magnitudes at doses of 0.04-0.07, and (iii) the earlier registered industry verdict (rules 3-7: placebo years disagree, reduced form, sensitivity) stands. They remain descriptive: the industrial series respond in the predicted direction in 2021 more than in any placebo summer, with a size that this design cannot pin down.
+Limits as registered: overlapping windows (about 15 independent), two summers in the season-matched set, Fisher intervals assume a constant additive effect.

@@ -31,3 +31,11 @@ Realised wind and PV are from REE's real-time system (peninsular, may differ sli
 
 ## Data and code
 `data/ree/ree_realtime_5min.parquet` (realised), ESIOS 1775, 1777, 1779, OMIE prices, temperature, MIBGAS. New code `scripts/analysis/industry_iv_forecast_error.py` (imports builders from `industry_iv_noise_reducers.py` and `industry_iv_estimation.py`); outputs `outputs/tables/industry_iv_forecast_error{,_checks}.csv`. Seed 20261117.
+
+## Result (run 2026-11-16; script `industry_iv_forecast_error.py`, committed before the run)
+
+**Q1 fails: first-stage F 6.95 (bar 10); standard error of the elasticity 0.0188, detectable 0.053 (passes the 0.25 bar).** Stop rule applied: no slope was computed or stored, and Q2-Q8 were not run. Output `outputs/tables/industry_iv_forecast_error_checks.csv` holds the Q1 row only.
+
+**Reading.** Once realised wind and PV are held fixed, the forecast error moves the day-ahead price too little for the instrument to be strong (the forecast and the realised output correlate at 0.965 and 0.992, so the error is a small part of the forecast's variation). The earlier design's strong first stage (F 94) came largely from the forecast carrying the weather itself, which is what also made it fail the placebo. So the strength and the invalidity had the same source: a clean instrument is weaker. This is the cost of repairing exclusion by conditioning on realised weather.
+
+**Consequence under the spec.** The industrial IV by this route is closed. The statement that stands is the bounded one from the forecast design, with its exclusion caveat: V3 elasticity +0.005 [-0.005, +0.023], placebo failed, years unstable; no detectable hourly industrial price response larger than about 2% per 100% price change, not reported as an identified elasticity. **Open idea, not registered:** an instrument built from the day-ahead *bids* (re-clear the market with offered wind and PV volumes replaced by realised output; the price change is a merit-order-weighted supply shock) could be stronger than the linear error because it follows the slope of the curve; it needs its own spec and a reliable wind/PV unit list.

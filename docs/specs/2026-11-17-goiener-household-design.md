@@ -86,3 +86,14 @@ G2 reported the same raw estimate (-0.146) but a placebo mean of **-0.093** (eta
 
 ### Diagnosis of the G6 / G2 placebo difference (2026-11-16)
 **Cause found: the saved placebo errors were contaminated.** `goiener_save_errors.py` passed each household's pre-lockdown days **and the 2021 window days** to the leave-year-out LASSO, so the placebo model trained partly on post-reform summer days and its 2018-2019 errors shifted up (less negative). Registered step zero and G2 trained the placebo on pre-lockdown days only. Test on 32 households: placebo contrast over all April-October days **-0.060 trained on pre-lockdown days only, -0.048 with the window days in training; the saved errors reproduce the second exactly** (-0.048, 9,129 household-days). The G2 window errors and the G2 placebo windows are unaffected (pre-lockdown training only), so **G2 (-0.053) stands and the G6 table above is invalid** (its placebo centring is wrong; its raw -0.146 is the G2 raw). The 32-household gap (0.012 on all days) is smaller than the -0.038 against -0.093 gap in the table, so part of the difference may remain after the fix; G6 is rerun on corrected errors before any statement. Corrected script `goiener_save_placebo.py` (pre-lockdown training only, saves in chunks of 250 households so it resumes); `goiener_g6.py` now reads `g_placebo_errors_pre.parquet`. The first G6 table is kept above as a recorded flaw.
+
+### G6 rerun on corrected placebo errors (2026-11-16; `goiener_save_placebo.py`, 2,489 households, 725,234 placebo household-days; `outputs/tables/goiener_g6.csv` overwritten)
+**The 'all' row now reproduces G2** (eta_RI -0.0533 against -0.0528; mean placebo -0.0922 against -0.0927). The earlier table above, from contaminated errors, is superseded and kept as a recorded flaw. **G6 passes in all subsets (p 0.037 each):**
+
+| Subset | Households | eta_raw | Mean placebo | eta_RI | Fisher interval |
+|---|---|---|---|---|---|
+| all (G2 sample) | 2,819 | -0.146 | -0.092 | **-0.053** | [-0.077, -0.041] |
+| >= 24 pre-lockdown months | 2,190 | -0.144 | -0.093 | -0.051 | [-0.075, -0.039] |
+| Gipuzkoa and Bizkaia only | 2,059 | -0.150 | -0.094 | -0.056 | [-0.080, -0.038] |
+
+The household elasticity is stable across subsets at about -0.05. The placebo centring at about -0.09 (its cause unexplained) remains the main caveat; first-differencing (-0.047) agrees without it.

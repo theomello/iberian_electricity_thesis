@@ -99,7 +99,8 @@ def gb_resid(Y, X, blocks, dates):
     return R
 
 
-def main():
+def build_sets(placebo=False):
+    """Residualised (y, p, Z) for V0-V3; placebo=True adds 'V3 placebo' (outcome = 7-day-lagged differenced load, excluded from the predictors)."""
     df = build()
     hol = pd.read_parquet(ROOT / "data/holidays/holidays_es_pt.parquet")
     hes = set(pd.to_datetime(hol[(hol.area == "AN") & (hol.mark == "national")].date))
@@ -111,8 +112,6 @@ def main():
     base = (df.date >= "2019-01-01") & (df.dow < 5) & ~df.date.isin(hes) & ~covid
     partner_ok = ~(df.date - pd.Timedelta(days=7)).isin(hes) & ~(df.date - pd.Timedelta(days=7)).between("2020-03-01", "2020-06-30")
     pbar = float(df.loc[base, "p"].mean())
-    rng = np.random.default_rng(SEED)
-    rows = []
 
     def Zmat(w, s):
         return np.column_stack([w, s, w ** 2, s ** 2])
@@ -164,6 +163,19 @@ def main():
     R3 = gb_resid(Y3, X3, blocks3, d3.date.to_numpy())
     sets["V3 difference + double ML"] = dict(d=d3, y=R3[:, 0], p=R3[:, 1], Z=R3[:, 2:])
     print("V3 residuals done", flush=True)
+    if placebo:
+        keep = [i for i in range(X3.shape[1]) if i != 6]  # drop d_lnL_7, the placebo outcome
+        Y3p = np.column_stack([d3.d_lnL_7, d3.d_p, d3.d_wind, d3.d_solar, d3.d_wind ** 2, d3.d_solar ** 2])
+        R3p = gb_resid(Y3p, X3[:, keep], blocks3, d3.date.to_numpy())
+        sets["V3 placebo"] = dict(d=d3, y=R3p[:, 0], p=R3p[:, 1], Z=R3p[:, 2:])
+        print("placebo residuals done", flush=True)
+    return sets, pbar
+
+
+def main():
+    sets, pbar = build_sets()
+    rng = np.random.default_rng(SEED)
+    rows = []
 
     for name, s in sets.items():
         g = s["d"].date.to_numpy()

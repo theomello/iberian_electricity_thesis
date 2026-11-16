@@ -1,0 +1,3 @@
+window,days,C1_sd_lnPCoverPD,C2_share_days_both_ge5pct,C3_first_stage_F,C4_se_slope,C4_detectable_sigma,mean_hydro_share,mean_thermal_share,C1,C2,C3,C4
+pre-cap,1070,0.116,0.9944,7.0965,2.3911,6.6951,0.2931,0.6568,False,True,False,False
+post-cap,542,0.1451,0.9668,138.6041,0.3502,0.9806,0.3354,1.0324,False,True,True,True

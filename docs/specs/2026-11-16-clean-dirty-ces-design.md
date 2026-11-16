@@ -43,3 +43,14 @@ Hydro dispatch also responds to storage limits, environmental flows and irrigati
 
 ## Data (on disk)
 `outputs/cache/step` (units, hours), `outputs/tables/hydro_cost_daily.parquet`, `implied_mc` series, `data/ree/ree_realtime_5min.parquet` (generation by technology), ESIOS 1775/1777/1779, MITECO reservoirs, JRC hydro, MIBGAS, EUA, coal (investing). New code: `scripts/analysis/clean_dirty_noise.py` (step zero), then `clean_dirty_ces.py` only after step zero is recorded.
+
+## Step zero result (run 2026-11-16, `scripts/analysis/clean_dirty_noise.py`, `outputs/tables/clean_dirty_noise.csv`)
+No slope was printed. The rule was: a window that fails C1-C4 is dropped; if all fail, stop.
+
+| Window | Days | C1 sd ln(P_C/P_D) ≥ 0.15 | C2 both ≥ 5% of R on ≥ 70% of days | C3 first-stage F ≥ 10 | C4 detectable σ ≤ 1.5 |
+|---|---|---|---|---|---|
+| pre-cap 2019-01-01 → 2022-06-14 (lockdown out) | 1,070 | 0.116 **fail** | 99.4% pass | 7.1 **fail** | 6.7 **fail** |
+| post-cap 2022-06-15 → 2023-12-31 | 542 | 0.145 **fail** (by 0.005) | 96.7% pass | 138.6 pass | 0.98 pass |
+
+**Outcome: STOP under the registered rule; the clean-dirty CES is not estimated.** The pre-cap window has too little variation in the relative cost, a weak first stage (rainfall and lagged storage do not move the water value enough) and a detectable σ of 6.7. The post-cap window is a near miss on C1 only (0.145 against 0.15), with a strong first stage and a detectable σ of 0.98; it is not rescued by lowering the threshold. Because the cap subsidises the gas cost in that window, `P_D` there is the bid-time cost, which already includes the subsidy, so the variation in the ratio is partly the cap itself.
+Deviations as run: C4 uses the equation's own controls (month effects, spline in ln R) and 2.8 times the week-clustered IV standard error instead of a LASSO residual window sd. `R` excludes exports, so after 2022 hydro plus thermal exceeds `R` (thermal share 1.03); exports belong in the controls of any later run.

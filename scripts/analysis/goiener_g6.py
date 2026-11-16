@@ -32,7 +32,7 @@ def main():
     premonths = pre.assign(m=pre.date.dt.to_period("M")).groupby("user").m.nunique()
     E = pd.read_parquet(ROOT / "data/goiener/daily/g2_household_window.parquet")
     E["date"] = pd.to_datetime(E.date)
-    P = pd.read_parquet(ROOT / "data/goiener/daily/g_placebo_errors.parquet")
+    P = pd.read_parquet(ROOT / "data/goiener/daily/g_placebo_errors_pre.parquet")
     P["date"] = pd.to_datetime(P.date)
     P["contrast"] = P.peak - P.off
     hol = pd.read_parquet(ROOT / "data/holidays/holidays_es_pt.parquet")

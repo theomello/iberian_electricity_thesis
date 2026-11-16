@@ -1,0 +1,11 @@
+rule,pass,detail
+P1 curve check,True,share 1.000
+P2 first stage,True,"F 114.3, n 41150, detectable 0.0906"
+P3 placebo outcome,True,"elasticity -0.0032 [-0.0194,0.0205], p_t 0.713, F 111.3"
+P4 balance,True,Bonferroni p 0.4300
+P5 estimate,False,"elasticity 0.0170 [-0.0633,0.1748], p_t 0.559, p_AR0 0.562"
+P6 consistency with earlier sample,True,"original-sample combined -0.0310 [-0.0553,0.0059] F 37.6; earlier -0.0357 [-0.0798,0.0096]"
+P7 where new hours matter (description),,"weekend+holiday -0.0283 [-0.0636,0.0102] F 45.1 n 11438; 2024-25 0.0914 [-0.4460,0.4825] F 160.4 n 11366"
+P8 stability over years,True,"elasticities (F) 0.0424 (55.4), -0.0326 (15.9), -0.3636 (1.0), -0.0356 (12.7), -0.0152 (85.3), 0.0057 (91.5), 0.1845 (69.8); equality p over years with F>=10: 0.332"
+P9 ML first stage,False,"ML instrument 0.1629 [-6.1459,6.4717] F 3.2"
+P10 hour blocks (exploratory),,"night 0-7 0.0191 [-0.1109,0.2510] F 35.1; day 8-17 0.0069 [-0.0461,0.1119] F 84.5; evening 18-23 0.0321 [-0.2210,0.3197] F 40.5"

@@ -34,3 +34,33 @@ Weekends and holidays have different industrial load, different flexibility and 
 
 ## Data and code
 Same as the bid-curve spec, window extended to 2025-09-30. New code `scripts/analysis/industry_iv_power.py` (imports from `industry_iv_bid_curve.py`, `industry_iv_estimation.py`, `industry_iv_noise_reducers.py`); outputs `outputs/tables/industry_iv_power{,_checks}.csv`. Seed 20261117.
+
+## Results (run 2026-11-16; `industry_iv_power.py`, committed before the run; outputs `industry_iv_power{,_checks}.csv`)
+
+Combined bid-curve instrument, weights fitted on the other half (odd/even ISO weeks), impact elasticity at the mean price.
+
+| Sample | n (hours) | F | Elasticity | Randomization interval | p (t-rank / AR) |
+|---|---|---|---|---|---|
+| **Extended, 2019-01 -> 2025-09, all days (main)** | 41,150 | 114 | **+0.017** | [-0.063, +0.175] | 0.56 / 0.56 |
+| Original sample (weekdays 2019-23), combined instrument (P6) | 21,636 | 38 | -0.031 | [-0.055, +0.006] | 0.010 / 0.114 |
+| Earlier two-instrument result (bid-curve spec) | 21,636 | 19.7 | -0.036 | [-0.080, +0.010] | 0.010 / 0.178 |
+| Weekends and holidays only | 11,438 | 45 | -0.028 | [-0.064, +0.010] | 0.033 / 0.133 |
+| 2024-25 only | 11,366 | 160 | +0.091 | [-0.446, +0.483] | 0.32 / 0.37 |
+| Placebo outcome (lag-7 load), extended | 41,150 | 111 | -0.003 | [-0.019, +0.021] | 0.71 / 0.72 |
+
+| Rule | Result |
+|---|---|
+| P1 curve check | pass (100.0% of 53,273 valid hours) |
+| P2 first stage (stop) | pass: F 114; detectable elasticity **0.091** |
+| P3 placebo | pass: -0.003, p 0.71 |
+| P4 balance | pass: p 0.43 |
+| P5 estimate | **fail**: +0.017, wrong sign, p 0.56 / 0.56, interval wide |
+| P6 consistency | pass: original sample -0.031 inside the earlier interval; the single combined instrument narrowed the interval (width 0.061 against 0.089) |
+| P7 (description) | weekends and holidays -0.028, consistent with the weekday result; 2024-25 +0.091 with SE 0.070: uninformative |
+| P8 stability | pass on years with F >= 10 (equality p 0.33): 2019 +0.042, 2020 -0.033, 2022 -0.036, 2023 -0.015, 2024 +0.006, 2025 +0.185 (2021 F 1.0 excluded) |
+| P9 ML first stage | **fail**: F 3.2 (the boosted first stage is weaker than the linear combination), elasticity +0.163, interval unbounded |
+| P10 hour blocks (exploratory) | night +0.019, day +0.007, evening +0.032; all intervals include zero |
+
+**Reading.** The power expectation registered before the run did not come true: the extended sample's standard error is 0.032 (detectable **0.091**), about three times the expected 0.010, so more hours made the interval wider, not narrower. The weekday and weekend results up to 2023 agree (about -0.03), and the combined instrument improved the original sample slightly (interval width 0.061 against 0.089, F 38 against 19.7). The widening comes from 2024-25: in 2025 the elasticity is +0.185 with SE 0.14, and the pooled 2024-25 slope has a larger SE than 2024 alone (0.070 against 0.015). A single slope fitted across subperiods with different responses inflates the sandwich residuals; that is consistent with a regime break after 2023 but does not prove one. A hypothesis, **not tested**: the April 2025 blackout and the reinforced-operation regime that followed, more zero- and negative-price hours, and batteries changed how the offer curve and industrial load relate. The 2025 months with a broken clearing identity (2025-03-19 -> 06-09) also thin the 2025 sample (valid hours 43% in May 2025).
+
+**Statement that stands.** Industrial impact elasticity near zero and small in absolute value: -0.03 (2019-23, weekdays and weekends) with 95% randomization interval about [-0.06, +0.006]; not detected under the registered both-tests rule (t-rank p 0.010 against AR p 0.11); the full 2019-2025 window cannot narrow it. The industrial IV is closed by the registered rules.

@@ -41,7 +41,7 @@ The dose parameters and η are only weakly separated by one summer; the fit crit
 |---|---|---|
 | A0 windows | 109, as the RI run | ok |
 | A1 dose identified | minimiser at the grid edge (E = 40, w = 0.9, η −0.051); real search gain 2.6e-4 against a placebo 95th percentile of 5.7e-4 (rank p 0.255) | **fail** |
-| A2 η at the selected dose | −0.051, below the −0.05 … −0.15 band's inner edge only just, but A1 failed, so not applicable; randomization p 0.009 | **fail** (A1 fails) |
+| A2 η at the selected dose | −0.051 (inside the −0.15 … −0.05 band) with randomization p 0.009, but A2 applies only if A1 passes | **fail** (A1 fails) |
 | A3 narrowing | 30 of 35 grid points are inside the placebo noise band; their η range is [−0.158, −0.051], width 0.107 | **fail** |
 
 η over the grid (real window, Portugal control) is almost proportional to the dose scale: from −0.051 (E = 40, w = 0.9) to −0.158 (E = 150, w = 0.5), −0.100 at the paper's convention, −0.084 at the hourly price with w = 0.69. The residual sum of squares is nearly flat across the grid: the data cannot tell the energy price from the tariff mix, because both rescale the dose and change its shape only slightly.

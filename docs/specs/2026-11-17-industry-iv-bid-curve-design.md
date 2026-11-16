@@ -1,0 +1,40 @@
+# Industrial IV with a bid-curve instrument: the simulated price effect of the forecast error (proposal)
+
+**Status: proposed 2026-11-16, not registered. Binding when the user confirms and this file is committed; the run follows that commit.** Follows `2026-11-17-industry-iv-forecast-error-design.md` (Q1 failed, first-stage F 6.95: with realised wind and PV held fixed, the linear forecast error moves the day-ahead price too little), and `2026-11-17-industry-iv-estimation-design.md` (forecast instruments: strong, F 94, but placebo failed). No slope has been computed in this design.
+
+**In one example.** At 3 pm on a day when the supply curve is flat around the clearing point (many gas plants at similar costs), 2 GW less wind than forecast moves the price by €1. At 8 pm on a day when the curve is steep (the next plant is far up the merit order), the same 2 GW moves it by €25. A linear instrument treats both the same; the bids tell us which is which. The instrument is the price change the day's own offer curve implies for the day's forecast miss: how far the market would have cleared from where it did if the missing (or surplus) wind and solar had been in (or out of) the curve. It is large when the miss is large *and* the curve is steep, and the first stage should follow the economics instead of a straight line.
+
+## What the bids provide
+The cache `outputs/cache/step/` holds, for each month 2019-01 -> 2025-09, `hours_{ym}` (date, hour, `hid`, `d_tot` cleared quantity, `valid`) and `market_{ym}` (the day's effective offer curve per `hid`: price, cumulative supply `a`; units withdrawn by minimum income stay in the offered curve and are handled as in the existing re-clear, see `tou_price_effect.Curves`). `Curves.clear(hid, target)` returns the price at which cumulative supply reaches `target`. Renewable offers sit at about €0 at the bottom of the curve, so a forecast miss of e MW moves the curve horizontally at the bottom, which is equivalent to adding e MW of demand to the unchanged curve.
+
+## Instruments
+For each valid weekday hour: error_w = wind forecast (ESIOS 1777) - realised wind, error_s = PV forecast (1779) - realised PV (MW, realised from `ree_realtime_5min`, hourly mean). Simulated price effects `dp_w = clear(hid, d_tot + error_w) - clear(hid, d_tot)` and `dp_s` likewise (€/MWh; positive when output falls short). Two instruments, **no squares** (the curve supplies the nonlinearity). Tag `dp_w`, `dp_s` for the sensitivity versions: replace `d_tot` by the demand forecast (ESIOS 1775 scaled to the curve's market, Variant S) to check the instrument does not use the cleared quantity.
+
+## Estimate (same pipeline as the forecast-error spec)
+V3 (week-on-week difference + boosted double ML) primary; V1 (difference + OLS controls) secondary. Outcome ln load of ESIOS 1204-1207, price OMIE, sample non-holiday weekdays 2019-01-01 -> 2023-12-31 without 2020-03-01 -> 2020-06-30, **short-run impact elasticity**, mean price €98. Controls in the learner: those of the forecast-error spec (temperature, demand forecast, realised wind and PV levels and day means, load and price lags of 7/14/28 days, gas) **plus the local slope of the offer curve** at the clearing point, `(clear(d_tot + 500) - clear(d_tot - 500)) / 1000` €/MWh per MW, and the forecast-implied level of the zero-price block, so that the instrument's variation is the *error given the curve*, not the curve. Differencing, cross-fitting, folds, seeds (20261117) and randomization inference (1,000 permutations, rank of |t|, permutation Anderson-Rubin interval, grid ±40 SE) as before.
+
+## Rules, set before the run
+- **B1 Curve check (gate).** The re-cleared actual price `clear(hid, d_tot)` equals the OMIE day-ahead price within €0.50 in at least 95% of valid hours of the sample; days with a broken clearing identity are dropped (identity detected from the files, never from a date list). *Fails:* the cached curves are not the curves that cleared, and the simulated instrument is not an economic object; fix the cache, no estimation.
+- **B2 First stage (stop rule).** Date-clustered first-stage F of the price on the residualised `dp_w`, `dp_s` is at least 10 **and** the detectable elasticity (2.8 × SE) is at most 0.25. *If B2 fails, no slope is computed:* the industrial IV is closed, with the forecast design's bound as the only statement.
+- **B3 First-stage economics (diagnostic).** In the unresidualised first stage of the price on `dp_w + dp_s`, the coefficient is positive and between 0.5 and 1.5 (a one-euro simulated effect shows up as roughly a one-euro price effect). *Fails:* the market does not clear as the effective curve says (interconnection, complex conditions, strategic re-offering around the forecast), which shows where the simulated price channel leaks.
+- **B4 Balance.** The residualised instruments are not predicted by temperature (Bonferroni, cluster-robust joint test, p above 0.05).
+- **B5 Placebo outcome.** Lag-7-day load as outcome: randomization p above 0.05, absolute 'elasticity' below 0.01.
+- **B6 Estimate.** V3 elasticity negative, absolute value at most 1, randomization p at most 0.05, interval excludes zero. *Fails with B5 passing:* a clean near-zero industrial response, reported as a bound; *with B5 failing:* not reported as an elasticity.
+- **B7 Overidentification.** Hansen J (one degree of freedom) p above 0.05 and the wind-only and solar-only slopes inside each other's randomization intervals; when one is weak (F below 10) judged on J alone.
+- **B8 Stability.** Slopes for 2019, 2021, 2022, 2023 with the same sign and equality p above 0.05 (the 2020 months outside the lockdown block, about eight, are added as a fifth year in this spec).
+- **B9 Sensitivity (description).** Variant S (demand forecast in place of cleared demand) and V1 give elasticities inside the V3 randomization interval.
+- **B10 Comparison with the forecast design and hour blocks (exploratory, no pass/fail).**
+
+A failed rule is recorded and kept; no other instrument or learner is tried after a failure.
+
+## Part B (only described, not run): bid volumes by unit
+The tagged wind (249 units) and PV (804 units) of `unit_agents.parquet` give offered and cleared volumes by unit, which would let the instrument use the firms' own forecasts instead of REE's. Coverage is the limit (most wind and PV is under retailers or generic units; 3,645 of the units are untagged), so this needs a coverage rule first: the hourly cleared MW of tagged wind and PV correlates at least 0.9 with realised output. It is not part of this spec.
+
+## What each outcome means
+B2 passes and B5 passes: a clean industrial impact elasticity from supply shocks scaled by the market's own merit-order slope, comparable with the household one. B2 passes and B5 fails: strength was available from the curve, but the weather channel persists beyond realised wind and PV; the next step is named by B4. B2 fails: the industrial IV is closed with the forecast bound.
+
+## Threats
+The curve slope depends on the forecast (offers are made on forecasts) and on the demand bids; given realised wind and PV and the slope control, the error varies the price only through the forecast miss; the slope control and the zero-price block level are an attempt to separate that, not a proof; effective curves are reconstructions (withdrawn units, complex conditions, `MIEU` appears only as cleared); the REE forecast is a proxy for the bidders' own forecasts; renewable offers are not all at €0; the instrument is nonlinear in the miss, so the first-stage F is a clustered-linear approximation; the day-ahead price used for industrial pass-through is the spot price, retail contract terms are not observed.
+
+## Data and code
+`outputs/cache/step/{hours,market}_{ym}.parquet`, `data/ree/ree_realtime_5min.parquet`, ESIOS 1204-1207, 1775, 1777, 1779, OMIE prices, temperature, MIBGAS. New code `scripts/analysis/industry_iv_bid_curve.py` (imports `Curves` from `tou_price_effect.py` and the estimation helpers); outputs `outputs/tables/industry_iv_bid_curve{,_checks}.csv`. Seed 20261117.

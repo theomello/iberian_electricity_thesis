@@ -50,7 +50,7 @@ def s_stat(lr, sector, t0, wk):
         w = s.loc[a:b]
         if len(w) < 12:
             return np.nan
-        isw = w.index.map(lambda d: d in wk)
+        isw = np.array([(d.dayofweek >= 5) or (d in wk) for d in w.index])
         out.append(w[~isw].mean() - w[isw].mean())
     return out[1] - out[0]
 
@@ -119,7 +119,8 @@ def main():
     O = pd.DataFrame(out)
     print(O.round(4).to_string(index=False))
     s1 = float(O[(O.kind == "placebo") & (O.measure == "DD_serv")].detectable.iloc[0])
-    print(f"S1: placebo-date sd of DD (Serveis minus Residencial) -> detectable elasticity {s1:.3f} (bar 0.15) -> {'PASS' if s1 <= 0.15 else 'FAIL, close the design'}", flush=True)
+    ok1 = bool(np.isfinite(s1) and s1 <= 0.15)
+    print(f"S1: placebo-date sd of DD (Serveis minus Residencial) -> detectable elasticity {s1:.3f} (bar 0.15) -> {'PASS' if ok1 else 'FAIL (or not computable), close the design'}", flush=True)
     R.round(5).to_csv(T.OUT / "calendar_boundary_noise.csv", index=False)
     O.round(5).to_csv(T.OUT / "calendar_boundary_noise_summary.csv", index=False)
     Dz.round(4).to_csv(T.OUT / "calendar_boundary_dose.csv", index=False)

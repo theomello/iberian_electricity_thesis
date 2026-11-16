@@ -49,3 +49,25 @@ Static re-clear: no firm reacts, so effects are first-round; the water budget (l
 
 ## Data (all on disk)
 `outputs/cache/step` (hours, market, units, hydro, 2019-01 → 2025-09), `outputs/tables/hydro_cost_daily.parquet`, the load-model errors (`data/cache_tou/price_effect_e0_errors.parquet`), the nested-CES estimates and control loadings (`outputs/tables/tou_nested_ces_*.csv`, `tou_control_selection_*.csv`). New code: `scripts/analysis/hydro_levy_simulation.py`, importing `tou_price_effect` and `counterfactual_hydro`. Outputs `outputs/tables/hydro_levy_simulation_*.csv`.
+
+## Results (run 2026-11-16, `scripts/analysis/hydro_levy_simulation.py`, seed 20261116)
+
+Rules H1, H2, H3, H5 and H7 pass. H4 and H6 fail. Nothing was tried after the failures.
+
+| Rule | Result | Verdict |
+|---|---|---|
+| H1 curve valid | 96.5% valid hours (bar 70%), identity 100%, 1,761 hours | pass |
+| H2 levy channel | Δ_H −€5.63 [−6.47, −4.91]/MWh (actual price 102.94; hydro at pre-announcement pattern 108.57) | pass |
+| H3 reform effect | evening-minus-night contrast −2.39 [−2.59, −2.19] under actual hydro; −3.01 under pre-announcement hydro | pass |
+| H4 additivity | interaction +0.62 = 26% of the reform contrast (bar 25%) | **fail by a hair** |
+| H5 placebo | reform contrast ranks 1 of 10; placebo mean \|Δ_H\| 0.74 vs a third of the real 1.88 | pass |
+| H6 closure | model period shifts peak/mid/valley −3.54 / −1.14 / +7.43 against DiD intervals (−2.38,−2.10) / (−0.80,−0.42) / (4.02,4.88): all three outside; monotone in the multiplier under both regimes: yes | **fail** (closure) |
+| H7 robustness | contrast negative at every multiplier > 0 in all 3 controls × 5 σ corners × 2 regimes | pass |
+
+Scenario contrasts (selected control, central σ, evening minus night, €/MWh): actual hydro 0 / −2.10 / −4.04 / −5.91 / −7.66 and pre-announcement hydro 0 / −2.47 / −4.93 / −7.27 / −9.58 at multipliers 0, 0.5, 1, 1.5, 2.
+
+Reading. The levy's offer change lowered the price by about €5.6/MWh, and the reform's evening-minus-night effect (−€2.4) stays when hydro is held fixed; the two do not add exactly (the reform effect is 0.6 larger in magnitude if hydro offered as before the announcement). H4 fails by 26% against 25%, so the interaction is reported rather than rounded away.
+
+H6 is the finding that limits use of the scenario module. At the actual ratio the nested CES reproduces the sign pattern but over-shoots the DiD period shifts (peak −3.5 vs about −2.2; valley +7.4 vs about +4.5). The module is therefore a monotone, sign-correct simulator whose **level at multiplier 1 is about 1.6 times the estimated shifts**; scenario euros are upper bounds, and the contrast at multiplier 1 (−4.04) is nearly twice the re-clear of the actual shift (−2.39). Do not quote the scenario table as a level.
+
+Deviations from the spec, as run: no same-water iteration of k; hydro placebo only in windows with at least 56 pre-announcement days (six of nine, Δ_H between −0.15 and −1.68); scenario σ draws are independent; the hydro-effect interval is a week-block bootstrap.

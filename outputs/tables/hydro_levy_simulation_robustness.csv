@@ -1,0 +1,31 @@
+control,dU,dL,regime,all_negative,contrast_m1
+none,0.0,0.0,actual hydro,True,-4.1066
+none,0.0,0.0,pre-announcement hydro,True,-4.9862
+none,0.011,0.02,actual hydro,True,-4.5854
+none,0.011,0.02,pre-announcement hydro,True,-5.6245
+none,0.011,-0.02,actual hydro,True,-4.2015
+none,0.011,-0.02,pre-announcement hydro,True,-5.1509
+none,-0.011,0.02,actual hydro,True,-4.0026
+none,-0.011,0.02,pre-announcement hydro,True,-4.8278
+none,-0.011,-0.02,actual hydro,True,-3.594
+none,-0.011,-0.02,pre-announcement hydro,True,-4.3774
+REN,0.0,0.0,actual hydro,True,-3.6795
+REN,0.0,0.0,pre-announcement hydro,True,-4.5455
+REN,0.011,0.02,actual hydro,True,-4.2131
+REN,0.011,0.02,pre-announcement hydro,True,-5.1783
+REN,0.011,-0.02,actual hydro,True,-3.7615
+REN,0.011,-0.02,pre-announcement hydro,True,-4.7035
+REN,-0.011,0.02,actual hydro,True,-3.5957
+REN,-0.011,0.02,pre-announcement hydro,True,-4.3956
+REN,-0.011,-0.02,actual hydro,True,-3.154
+REN,-0.011,-0.02,pre-announcement hydro,True,-3.9244
+"selected (both, estimated)",0.0,0.0,actual hydro,True,-4.0358
+"selected (both, estimated)",0.0,0.0,pre-announcement hydro,True,-4.9253
+"selected (both, estimated)",0.011,0.02,actual hydro,True,-4.5146
+"selected (both, estimated)",0.011,0.02,pre-announcement hydro,True,-5.5928
+"selected (both, estimated)",0.011,-0.02,actual hydro,True,-4.1376
+"selected (both, estimated)",0.011,-0.02,pre-announcement hydro,True,-5.0873
+"selected (both, estimated)",-0.011,0.02,actual hydro,True,-3.9394
+"selected (both, estimated)",-0.011,0.02,pre-announcement hydro,True,-4.7497
+"selected (both, estimated)",-0.011,-0.02,actual hydro,True,-3.4913
+"selected (both, estimated)",-0.011,-0.02,pre-announcement hydro,True,-4.2767

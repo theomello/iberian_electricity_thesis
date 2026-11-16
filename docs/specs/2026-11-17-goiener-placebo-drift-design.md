@@ -42,3 +42,17 @@ Only 2019 windows (13, overlapping, about one independent season) are available 
 **Threats of F.** Weather differs between the three summers (the LASSO adjusts for it, this DiD does not); the drift estimate comes from one year-pair (2018 -> 2019) and is noisy; 2021 had COVID aftermath in working-from-home patterns, which may move the peak/off ratio of households independent of the reform (Portugal nets part of it); cooperative customers may have changed over time (composition), partly handled by requiring days in all three windows.
 
 Code: `scripts/analysis/goiener_drift_d1.py`; output `outputs/tables/goiener_drift_d1.csv`; seed 20261117.
+
+## Results of D1 and the first-differencing DiD (run 2026-11-16; `goiener_drift_d1.py`, committed before the run; output `outputs/tables/goiener_drift_d1.csv`)
+
+Daily log(peak/off) of weekday non-holiday days, June 1 -> September 15; households with at least 40 such days in each of 2018, 2019 and 2021; household-cluster bootstrap (2,000 draws); Portugal's change netted; elasticity units divide by the dose 0.784 (E0: 0.609).
+
+| Sample | Households | mean 2018 / 2019 / 2021 | drift19 (elasticity units) | change21 (elasticity) = **eta_FD** | eta_FD minus two years of drift |
+|---|---|---|---|---|---|
+| **G2 subsample (primary)** | 2,405 | 0.331 / 0.332 / 0.291 | +0.004 [-0.011, +0.017] | **-0.047 [-0.066, -0.030]** | -0.055 [-0.092, -0.018] |
+| All eligible 2.0TD | 7,765 | 0.328 / 0.336 / 0.296 | +0.012 [+0.005, +0.019] | -0.045 [-0.054, -0.035] | -0.068 [-0.088, -0.048] |
+| E0 aggregate (mix dose) | | 0.491 / 0.485 / 0.421 | -0.009 | -0.097 | -0.079 |
+
+**D0 gate (primary sample): drift is not a live explanation** (|drift19| 0.004 <= 0.02 and the interval contains zero). D2 and D3 (forward LASSO placebo) are not run. The all-eligible sample's drift19 has an interval excluding zero but a magnitude of 0.012, below the 0.02 line; the registered gate applies to the primary sample.
+
+**Reading.** The first-differencing DiD, which has no LASSO and no placebo centring, gives a household elasticity of about **-0.05** ([-0.07, -0.03]), the same as the LASSO result after placebo centring (G2 eta_RI -0.053) and far from the raw LASSO figure (-0.146). Its E0 counterpart (-0.097) is close to the E0 LASSO result (-0.106/-0.109), so the DiD reproduces the aggregate answer. The household peak/off ratio did not trend between 2018 and 2019 (drift19 about zero), so the -0.093 centring offset of the household LASSO placebo is **not an annual trend**; its cause stays unknown (candidates: LASSO forecast bias for households that the leave-year-out placebo shares and the aggregate does not; composition). Two independent methods now agree that the household response is about half the aggregate one, so the thesis headline for households is -0.05 with two methods, not the raw -0.146. The weather caveat of F (no adjustment between three summers) and the single-year drift estimate remain.

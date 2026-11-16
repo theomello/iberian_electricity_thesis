@@ -38,3 +38,5 @@ The curve slope depends on the forecast (offers are made on forecasts) and on th
 
 ## Data and code
 `outputs/cache/step/{hours,market}_{ym}.parquet`, `data/ree/ree_realtime_5min.parquet`, ESIOS 1204-1207, 1775, 1777, 1779, OMIE prices, temperature, MIBGAS. New code `scripts/analysis/industry_iv_bid_curve.py` (imports `Curves` from `tou_price_effect.py` and the estimation helpers); outputs `outputs/tables/industry_iv_bid_curve{,_checks}.csv`. Seed 20261117.
+
+**Status update 2026-11-16: confirmed by the user ("Lets go"); script `industry_iv_bid_curve.py` committed before the run.** Implementation notes (no rule changed): hours on daylight-saving days (23 or 25 periods) are dropped; Variant S scales the demand forecast to the curve's market by the month-by-hour ratio of mean cleared demand to mean forecast; B3 is judged on the unresidualised price-level regression (constant only, date-clustered), the differenced version is reported beside it; B8 uses five years including 2020; the slope control is evaluated at cleared demand ±500 MW.

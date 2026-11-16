@@ -64,7 +64,7 @@ def main():
     fit = Zr @ b
     beta = float(fit @ y_r / (fit @ p_r))
     u = y_r - beta * p_r
-    se_beta = float(np.sqrt(((cl(fit * u[:, None])) ** 2).sum()) / abs(fit @ p_r))
+    se_beta = float(np.sqrt(((cl((fit * u)[:, None])) ** 2).sum()) / abs(fit @ p_r))
     se_el = se_beta * pbar
     R = pd.DataFrame([dict(obs=len(d), days=len(ug), mean_price=pbar, first_stage_F=F, se_elasticity=se_el, detectable_elasticity=2.8 * se_el, F_ok=F >= 10, noise_ok=2.8 * se_el <= 0.25)])
     R.round(4).to_csv(T.OUT / "industry_iv_noise.csv", index=False)

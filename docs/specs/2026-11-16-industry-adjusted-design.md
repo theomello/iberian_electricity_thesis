@@ -39,3 +39,31 @@ No rescue beyond the rules above: no further placebo years (2020 is excluded by 
 
 ## Threats
 (a) Two placebo years are few; the instability term is a crude, not a calibrated, allowance. (b) The old-regime hours for 2018 and 2019 are assumed equal to the one consolidated order (e of the earlier design). (c) Seasonal shape in industry may have changed in 2021 for reasons other than the reform (COVID recovery by sector; energy-price crisis from autumn 2021 is outside the window, but gas prices were already rising); the adjustment cannot remove a 2021-specific shape. (d) `IND` weights are shares of energy, not of price-responsive load; contract exposure is unmeasured (many industrial contracts are fixed-price per period). (e) The reform bundled the price change with the new period structure and with awareness; η_adj is the response to the reform-induced hourly price change. (f) The 6.x single-tariff series are noisy by construction.
+
+## Results (run 2026-11-16, `scripts/analysis/tou_industry_adjusted.py`; `outputs/tables/tou_industry_adjusted.csv`)
+
+New fits: IND (three), France cross-fits (two). The E0 and E1+E2 2019 placebos reproduce the earlier run (-0.023, -0.078). Portugal control, central dose (E = €100.81); adjusted = real minus the mean of the 2018 and 2019 placebos; interval includes the placebo-instability term.
+
+| series | eta real | placebo 2018 | placebo 2019 | **eta adj [95%]** | adjusted reduced form (evening vs night, working vs weekend) |
+|---|---|---|---|---|---|
+| E0 | -0.101 | +0.003 | -0.023 | **-0.090 [-0.119, -0.061]** | -4.4% |
+| E1+E2 | -0.168 | -0.095 | -0.078 | -0.082 [-0.252, +0.088] | -4.1% |
+| IND (E1-E6) | -0.288 | -0.069 | +0.023 | -0.265 [-0.408, -0.122] | -3.1% |
+| 6.2 | -0.080 | -0.250 | +0.117 | -0.013 [-0.407, +0.381] | +0.2% |
+| 6.3 | -0.321 | +0.058 | +0.254 | -0.477 [-0.900, -0.055] | -2.1% |
+| 6.4 | -0.533 | +0.714 | +0.988 | -1.384 [-2.096, -0.672] | -1.2% |
+
+France as control gives the same signs and overlapping intervals for every series (E0 -0.095, E1+E2 -0.078, IND -0.301).
+
+**Rules as registered.**
+1. Readable: all but 6.4 (within-day sd 0.014).
+2. **E0 household check: pass** (-0.090, inside [-0.15, -0.03]; the Wald range was -0.06 to -0.09).
+3. Placebo years agree: **E1+E2 passes** (same sign, difference 0.017 < 0.084). **E0 fails on the sign condition** (+0.003 against -0.023; the magnitude difference 0.026 is below the 0.050 allowed). **IND fails** (-0.069 against +0.023: opposite signs; magnitude difference 0.092 < 0.144 would have passed). 6.2, 6.3, 6.4 fail.
+4. Detected (interval excludes zero): E1+E2 **fails** (upper end +0.088). The series that pass the sign-and-magnitude guard therefore show no detectable response.
+5. Reduced form agrees: E0, E1+E2, IND, 6.3 yes; 6.2, 6.4 no (not relevant after rule 3/4).
+6. France: all series agree.
+7. Sensitivity (E = €60 and hourly within 30%): E0 passes; E1+E2, IND, the tariff series fail (e.g. IND -0.18 and -0.28 against -0.27; E1+E2 -0.05 and -0.09 against -0.08).
+
+**Reading, per the registered outcomes.** The E0 household check passes: the adjustment reproduces the household elasticity (-0.09) and corrects the 2019 placebo's pull. **For industry the pre-registered result is: E1+E2 passes the identification guard but the response is not detectable (interval -0.25 to +0.09); IND, the series with the tighter interval, fails the guard on the sign of the placebo years, so no point estimate is reported for it.** 6.2-6.4 are noise (their placebos are as large as, and opposite to, the real estimates). **No industrial point estimate is identified.** For the record: IND's adjusted -0.27 (and its interval excluding zero) is not reported as an estimate, and E0's sign failure of rule 3 is a technicality of a tiny positive placebo, which does not change its reading.
+
+**A pattern the table shows (descriptive, not registered):** the adjusted evening-versus-night effect is about the same for households (-4.4%), E1+E2 (-4.1%) and the pooled industry series (-3.1%), although the dose is 0.64, 0.16 and 0.12. The implied elasticity therefore rises as the dose falls, as in the earlier run: the evening-versus-night shift in industrial demand is not proportional to the reform's price change. Either industrial flexibility per unit of price is several times higher, or what moved industry in 2021 is not the price change alone.

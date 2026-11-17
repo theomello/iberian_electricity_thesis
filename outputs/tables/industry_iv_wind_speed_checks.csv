@@ -1,0 +1,10 @@
+rule,pass,detail
+E1 sign and plausibility,False,elasticity 0.0001
+E2 detected,False,"p_t 0.992, p_AR0 0.992, rand [-0.0210, 0.0284]"
+E3 placebo outcome,True,"elasticity -0.0083, p_t 0.381"
+E4 overidentification,True,"J 0.05 p 0.826; d_pc only -0.0002 [-0.0124,0.0242]"
+E5 stability over years,False,"elasticities 0.0333, 0.0185, -0.0371, -0.0071; equality p 0.100"
+E6 hour blocks and sub-periods (exploratory),,"night 0-7 0.0004 [-0.0213,0.0280]; day 8-17 -0.0005 [-0.0263,0.0344]; evening 18-23 0.0007 [-0.0262,0.0387]; 2019-21H1 0.0376 [-0.0134,0.1068]; 2021H2-23 -0.0137 [-0.0289,0.0086]"
+E7 variant agreement,True,"V1 -0.0000 [-0.0222,0.0285], primary 0.0001 [-0.0210,0.0284]"
+E8 calibration of permutation test,True,leave-one-out share p<0.05 0.049; share |t|>1.96 0.032
+E9 context (no pass/fail),,"earlier: forecast instruments +0.005; bid curve -0.036 [-0.080,+0.010]; weekday bound -0.03 [-0.055,+0.006]; Hirth et al. about -0.05 aggregate"

@@ -32,3 +32,21 @@ Wind speed correlates with temperature and cloud, which affect load directly (co
 
 ## Data and code
 Script `scripts/analysis/industry_iv_wind_speed_estimation.py` (to be written and committed before it is run); reuses `industry_iv_instrument_settlement.build_frame`, `industry_iv_second_settlement.residualise` and `industry_iv_estimation.run_sub`. Outputs `outputs/tables/industry_iv_wind_speed{,_checks}.csv`. Running it needs a go-ahead.
+
+## Results (run 2026-11-17, script `industry_iv_wind_speed_estimation.py`, committed before the run; outputs `outputs/tables/industry_iv_wind_speed{,_checks}.csv`)
+Mean price of the sample used to scale the slope is **92.41 EUR/MWh** (the common 19,388 rows), not the 98.7 named above (that was the earlier, larger sample's mean). Elasticity of industrial load to the day-ahead price, randomization intervals:
+
+| Estimate | Elasticity | 95% randomization interval | p (t-rank) |
+|---|---|---|---|
+| **Primary, full (F 93)** | **+0.0001** | **[-0.021, +0.028]** | 0.99 |
+| d_pc only (F 182) | -0.0002 | [-0.012, +0.024] | 0.98 |
+| V1 FE, no ML | -0.0000 | [-0.022, +0.029] | 1.00 |
+| 2019-21H1 | +0.038 | [-0.013, +0.107] | 0.011 (AR 0.23) |
+| 2021H2-23 | -0.014 | [-0.029, +0.009] | 0.12 |
+| 2019 / 2021 / 2022 / 2023 | +0.033 / +0.019 / **-0.037** / -0.007 | 2022: [-0.079, -0.005] | 2022: 0.002 (AR 0.024) |
+| night / day / evening | +0.000 / -0.001 / +0.001 | each about [-0.02, +0.04] | 0.95-0.97 |
+| Placebo outcome | -0.008 | [-0.052, +0.021] | 0.38 |
+
+**Rules.** E1 fails (the point estimate is +0.0001, a precise zero, not negative). E2 fails (p 0.99; the interval contains zero). E3 passes (placebo p 0.38). E4 passes (Hansen J p 0.83; single instrument inside the interval). E5 fails (signs differ across years; equality p 0.10). E6 exploratory, above. E7 passes. E8 passes (0.049; share |t|>1.96 0.032).
+
+**Reading, per the pre-registered rule for E2 failing with a tight interval: a bounded null.** The data rule out industrial impact elasticities more negative than about **-0.021** (and above +0.028) at the 95% level, which excludes Hirth et al.'s aggregate -0.05 for this load. The year pattern is unstable (2019-21H1 positive, 2022 negative); the 2022 interval excluding zero is one of four year cuts, flagged as exploratory, not a finding, and not rescued. The result does not say individual firms are inelastic: it says aggregate same-hour response of E3-E6 load to the day-ahead price is small, consistent with exposed share being small and with the 91% offset between procurement channels.

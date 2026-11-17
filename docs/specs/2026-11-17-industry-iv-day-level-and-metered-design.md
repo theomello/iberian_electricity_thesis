@@ -98,5 +98,27 @@ Scripts `scripts/analysis/industry_iv_day_level.py` (Part A, step 0 and step 1) 
 
 Both units pass B1 (the expected DAY failure did not happen). The metered series can detect an elasticity of about -0.3 and not -0.1: **a real null here rules out only responses more negative than about -0.2 to -0.3**, which is weak next to the aggregate bound, and the contractual consumption floor applies. Step 1 not yet run.
 
-### Step 1
-(not run)
+### Step 1 (run 2026-11-17, same scripts with `--step 1`, committed before the run; outputs `industry_iv_day_level{,_checks,_crossday}.csv`, `industry_iv_metered{,_checks}.csv`). Real outcomes.
+**Part A, day level (993 days, F 57; elasticity of daily E3-E6 load to the daily day-ahead price, randomization intervals).**
+
+| Estimate | Elasticity | 95% interval | p (t-rank) |
+|---|---|---|---|
+| Primary | -0.0014 | [-0.027, +0.028] | 0.92 |
+| d_pc only (F 109) | 0.0000 | [-0.020, +0.024] | 1.00 |
+| 2019-21H1 | +0.040 | [-0.031, +0.141] | 0.090 |
+| 2021H2-23 | -0.015 | [-0.041, +0.005] | 0.035 (AR 0.139) |
+| Placebo outcome | -0.0203 | [-0.066, +0.023] | 0.088 |
+
+**Rules.** A0b fails (fixed in step 0: a margin check, not a new bound). **A1 fails**: placebo p 0.088 passes but |elasticity| 0.0203 exceeds the registered 0.01, so per the rule **the day-level result is not interpreted**; it is reported for completeness and the failure is kept. A2 fails (p 0.92). A3 passes (-0.0014 inside the hourly interval [-0.021, +0.028]). A4 reported above. A6 passes (leave-one-out 0.049). Hansen J 0.32, p 0.57.
+**A5 cross-day** (conditional F 56 / 45 / 64, so identified; 993 days with neighbours): price d-1 +0.011 [-0.013, +0.036] (t-rank p 0.021), own day +0.006 [-0.031, +0.043] (p 0.38), **next-day price -0.015 [-0.040, +0.010] (p 0.005)**, sum of three +0.002 [-0.020, +0.025] (p 0.55). Intertemporal substitution (positive next-day coefficient) **not detected**; the point estimate has the opposite sign. The t-rank p-values of the d-1 and d+1 terms and the robust normal intervals disagree (as for the bid-curve estimate, t-rank p 0.010 against AR p 0.178): the intervals contain zero and nothing is rescued.
+**Reading.** Same-day and next-day prices do not move aggregate daily E3-E6 load detectably; the point estimate is a precise zero, matching the hourly result, but the placebo check fails by magnitude and the day-level design is no sharper than hourly, so this adds consistency, not a bound.
+
+**Part B, metered consumption of the interruptibility-service participants, 2019.**
+
+| Unit | Elasticity | 95% interval | p (t-rank) | Placebo | B2 | B3 |
+|---|---|---|---|---|---|---|
+| HOUR (F 48) | -0.0147 | [-0.133, +0.149] | 0.86 | +0.070 [-0.037, +0.218], p 0.058 | pass (borderline) | not detected |
+| DAY (F 66) | -0.0086 | [-0.127, +0.109] | 0.91 | +0.012 [-0.072, +0.139], p 0.74 | pass | not detected |
+
+B4 (ratio of means 0.51, approximate): the hourly interval translates to [-0.068, +0.076] and the daily to [-0.065, +0.056] in aggregate terms; both are far wider than the aggregate bound (-0.021). B5: G1 (purchases, all years) -0.033 [-0.116, +0.017].
+**Reading.** Not detected, as expected under the contractual consumption floor. The step-0 gate showed only about -0.3 would have been detected, and the intervals confirm it: **the 2019 metered series rules out responses more negative than about -0.13 and says nothing finer**. It does not show these plants would not respond without the floor. Part B closes with "uninformative at the precision that matters"; its value is the metered-versus-purchases comparison, which is too wide to use.

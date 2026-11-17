@@ -1,0 +1,97 @@
+instrument,cell,n,coef,t
+C1 d_pc,regime 2019-21H1,10070,0.0104,1.9712
+C1 d_pc,regime 2021H2-23,9318,0.0002,0.0169
+C1 d_pc,H1 year 2019,4917,0.0045,0.7257
+C1 d_pc,H1 year 2020,3183,0.0139,1.0751
+C1 d_pc,H1 year 2021,1970,0.0185,2.0874
+C1 d_pc,H1 season DJF,2815,0.0242,2.2789
+C1 d_pc,H1 season MAM,2471,0.0043,0.555
+C1 d_pc,H1 season JJA,2174,0.0151,1.0154
+C1 d_pc,H1 season SON,2610,-0.0042,-0.5488
+C1 d_pc,H1 hours night 0-7,3301,0.0093,1.358
+C1 d_pc,H1 hours day 8-17,4163,0.0099,1.4464
+C1 d_pc,H1 hours evening 18-23,2606,0.0121,2.1292
+X1 int,regime 2019-21H1,10070,-0.0151,-1.6798
+X1 int,regime 2021H2-23,9318,0.0051,0.9799
+X1 int,H1 year 2019,4917,-0.0153,-1.3418
+X1 int,H1 year 2020,3183,-0.0198,-0.9463
+X1 int,H1 year 2021,1970,-0.0064,-0.5608
+X1 int,H1 season DJF,2815,-0.0422,-2.418
+X1 int,H1 season MAM,2471,0.0112,1.0137
+X1 int,H1 season JJA,2174,-0.0116,-0.5617
+X1 int,H1 season SON,2610,0.0046,0.3423
+X1 int,H1 hours night 0-7,3301,-0.0072,-0.6002
+X1 int,H1 hours day 8-17,4163,-0.0171,-1.4751
+X1 int,H1 hours evening 18-23,2606,-0.0188,-1.8366
+B0 d_dpw,regime 2019-21H1,10070,-0.0012,-3.6592
+B0 d_dpw,regime 2021H2-23,9318,0.0002,1.5
+B0 d_dpw,H1 year 2019,4917,-0.0006,-1.3502
+B0 d_dpw,H1 year 2020,3183,-0.0008,-0.8588
+B0 d_dpw,H1 year 2021,1970,-0.0016,-3.9226
+B0 d_dpw,H1 season DJF,2815,-0.0025,-4.044
+B0 d_dpw,H1 season MAM,2471,-0.0005,-1.2021
+B0 d_dpw,H1 season JJA,2174,-0.0,-0.0522
+B0 d_dpw,H1 season SON,2610,-0.0004,-0.6996
+B0 d_dpw,H1 hours night 0-7,3301,-0.0005,-1.0833
+B0 d_dpw,H1 hours day 8-17,4163,-0.002,-4.1678
+B0 d_dpw,H1 hours evening 18-23,2606,-0.0011,-2.3424
+B0 d_dps,regime 2019-21H1,10070,-0.0012,-1.1207
+B0 d_dps,regime 2021H2-23,9318,0.0002,1.1672
+B0 d_dps,H1 year 2019,4917,-0.0034,-1.4043
+B0 d_dps,H1 year 2020,3183,-0.0075,-1.0722
+B0 d_dps,H1 year 2021,1970,-0.0001,-0.0609
+B0 d_dps,H1 season DJF,2815,-0.0044,-1.3389
+B0 d_dps,H1 season MAM,2471,0.0001,0.1713
+B0 d_dps,H1 season JJA,2174,-0.0026,-0.702
+B0 d_dps,H1 season SON,2610,0.0016,0.7403
+B0 d_dps,H1 hours night 0-7,3301,-0.0003,-0.0873
+B0 d_dps,H1 hours day 8-17,4163,-0.0013,-1.3355
+B0 d_dps,H1 hours evening 18-23,2606,-0.0009,-0.4957
+B1 w,regime 2019-21H1,10070,-0.0023,-3.3007
+B1 w,regime 2021H2-23,9318,0.0003,1.4793
+B1 w,H1 year 2019,4917,-0.0012,-1.0602
+B1 w,H1 year 2020,3183,-0.0008,-0.3899
+B1 w,H1 year 2021,1970,-0.0033,-4.1609
+B1 w,H1 season DJF,2815,-0.0043,-3.43
+B1 w,H1 season MAM,2471,-0.0011,-1.2268
+B1 w,H1 season JJA,2174,-0.0005,-0.3216
+B1 w,H1 season SON,2610,-0.0006,-0.4858
+B1 w,H1 hours night 0-7,3301,-0.0007,-0.6533
+B1 w,H1 hours day 8-17,4163,-0.0033,-4.0148
+B1 w,H1 hours evening 18-23,2606,-0.0022,-2.1242
+B1 s,regime 2019-21H1,10070,-0.0005,-1.2443
+B1 s,regime 2021H2-23,9318,0.0001,1.5056
+B1 s,H1 year 2019,4917,-0.0019,-2.1253
+B1 s,H1 year 2020,3183,-0.0014,-0.7853
+B1 s,H1 year 2021,1970,-0.0,-0.0751
+B1 s,H1 season DJF,2815,-0.0017,-1.2489
+B1 s,H1 season MAM,2471,-0.0001,-0.1451
+B1 s,H1 season JJA,2174,-0.001,-0.8142
+B1 s,H1 season SON,2610,0.0001,0.1351
+B1 s,H1 hours night 0-7,3301,0.0003,0.5167
+B1 s,H1 hours day 8-17,4163,-0.0009,-1.5133
+B1 s,H1 hours evening 18-23,2606,-0.0005,-0.9001
+B2 iw,regime 2019-21H1,10070,0.0006,0.9803
+B2 iw,regime 2021H2-23,9318,0.0,0.497
+B2 iw,H1 year 2019,4917,0.0022,1.6661
+B2 iw,H1 year 2020,3183,-0.0018,-0.9649
+B2 iw,H1 year 2021,1970,0.001,1.4229
+B2 iw,H1 season DJF,2815,0.0023,1.4771
+B2 iw,H1 season MAM,2471,-0.0004,-0.8649
+B2 iw,H1 season JJA,2174,-0.001,-0.8426
+B2 iw,H1 season SON,2610,0.0003,0.2588
+B2 iw,H1 hours night 0-7,3301,0.0003,0.4241
+B2 iw,H1 hours day 8-17,4163,0.0013,1.4538
+B2 iw,H1 hours evening 18-23,2606,-0.0001,-0.1968
+B2 is,regime 2019-21H1,10070,0.0012,0.8079
+B2 is,regime 2021H2-23,9318,-0.0,-0.7047
+B2 is,H1 year 2019,4917,0.0044,1.1751
+B2 is,H1 year 2020,3183,-0.0017,-0.2537
+B2 is,H1 year 2021,1970,0.0008,0.5301
+B2 is,H1 season DJF,2815,0.0027,0.5038
+B2 is,H1 season MAM,2471,0.0004,0.3079
+B2 is,H1 season JJA,2174,0.0011,0.1907
+B2 is,H1 season SON,2610,0.0039,1.0852
+B2 is,H1 hours night 0-7,3301,0.0009,0.2723
+B2 is,H1 hours day 8-17,4163,0.0018,1.2035
+B2 is,H1 hours evening 18-23,2606,-0.003,-0.9679

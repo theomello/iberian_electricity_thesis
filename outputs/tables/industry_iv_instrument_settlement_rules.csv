@@ -1,0 +1,6 @@
+candidate,S1,S2,S3,S3_note,passes,minF,chosen
+C0,True,True,False,tested,False,68.45659938955146,False
+C1,True,True,True,tested,True,71.05970462580358,True
+C2,False,False,False,tested,False,1.6724007293786087,False
+C3,False,True,False,tested,False,1.3629910072565707,False
+C4,False,True,True,not applicable (no wind component),False,0.10181406451505892,False

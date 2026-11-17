@@ -53,4 +53,19 @@ Script `scripts/analysis/industry_iv_price_shape.py` (`--step 0`, `--step 1`; st
 4. **Log-ratio rows.** Days with p_E or p_M at or below zero are dropped from the primary sample's ratio (the exclusion matters only if such days exist in 2019-2023; the build gave 993 days, the same as the day-level frame).
 
 ## Results
-(not run)
+### Step 0, primary sample (run 2026-11-17, `industry_iv_price_shape.py --sample primary --step 0`, committed before the run; outputs `outputs/tables/industry_iv_price_shape_primary_step0{,_checks,_choice}.csv`). 993 days, log-ratio form, instrument W1. Planted effects only.
+**First stage.** W1 F 22.7; S1 F 17.0; W1+S1 F 22.5. **Q0 passes.** **Q1 passes**: S1 on ln(p_E / p_V) has F 1.1 (idle). S1 is therefore eligible as a second instrument (its midday-load self-supply threat is not tested by Q1).
+**Planted sigma (instrument W1).**
+
+| Plant σ0 | Estimate | 95% randomization interval | Detected | Recovered |
+|---|---|---|---|---|
+| 0.05 | 0.029 | [-0.009, 0.051] | no (p 0.048, interval contains zero) | interval contains 0.05, point 0.021 off |
+| 0.10 | 0.077 | [0.039, 0.100] | yes | contains 0.10 (upper end), 23% low |
+| **0.15** | **0.118** | **[0.070, 0.142]** | yes | **no: interval excludes 0.15** |
+| 0.30 | 0.268 | [0.213, 0.298] | yes | interval excludes 0.30 by 0.002, 11% low |
+| 0.30 in 2019-21H1 only | 0.151 (weight 0.50) | [0.081, 0.246] | yes | |
+| 0.30 in 2021H2-23 only | 0.105 (weight 0.35) | [-0.033, 0.177] | no | |
+
+**Q2 fails** (planted 0.15 detected but **not recovered**: the interval [0.070, 0.142] excludes 0.15). The pipeline returns about 77-89% of a planted σ: it is **biased towards zero by roughly 10-25%** at these plants, which also means an estimate of σ from the real outcome would be a lower bound on the true response and could not be compared with the literature values without that correction. The smallest detected pooled plant is 0.10. Regime weights 0.50 / 0.35 (the 2021H2-23 half is not detected).
+**Per the registered stop rule, step 1 does not run on the primary sample.** The failure is kept and not rescued. The script refuses to run step 1 (`sys.exit`). Not run: the extension step 0, and any real-outcome estimate.
+**What this means.** The price ratio can be moved by wind shape (F 22.7), so the design is not closed for lack of an instrument; it fails at calibration. Candidate causes, not tested: attenuation introduced by refitting the planted outcome's double-ML residual (the plant is added on the raw ratio but the residual of the planted outcome is refitted, so part of the plant is predicted by the controls and removed), or by measurement error in the block price ratio. Any diagnostic of that attenuation, and any decision to alter the gate in light of it, would be a new registration.

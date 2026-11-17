@@ -24,3 +24,14 @@ A detected negative purchase response in an informative group: the response sits
 
 ## Data and code
 Script `scripts/analysis/industry_iv_exposed_subgroup.py` (committed before it runs); reuses the settlement frame and second-settlement helpers. Outputs `outputs/tables/industry_iv_exposed_subgroup{,_checks}.csv`.
+
+## Results (run 2026-11-17, script `industry_iv_exposed_subgroup.py`, committed before the run; outputs `outputs/tables/industry_iv_exposed_subgroup{,_checks}.csv`)
+Purchase responses to the day-ahead price with C1 (first stage F 90 / 93 / 60), 95% randomization intervals; share = mean of the group in E3-E6 load.
+
+| Group (share of E3-E6) | Real estimate | Placebo p | Planted -0.1 | Planted -0.3 |
+|---|---|---|---|---|
+| G1 ESIOS 353 direct consumers (12.7%) | **-0.033 [-0.116, +0.017]**, p 0.13 | 0.64 | -0.133 [-0.211, -0.078] detected | -0.342 [-0.407, -0.286] detected |
+| G2 process units (2.6%) | -0.007 [-0.091, +0.118], p 0.85 | 0.36 | -0.110 [-0.192, +0.011] not detected (p 0.014, interval touches zero) | -0.313 [-0.389, -0.204] detected |
+| G3 refinery units, own generation (4.1%) | -0.069 [-0.157, +0.064], p 0.21 | 0.34 | -0.169 [-0.251, -0.036] detected | -0.399 [-0.495, -0.258] detected |
+
+**Rules.** X1 (power: planted -0.3 detected and recovered): all three groups informative. X2 (placebo p above 0.05): all pass. **X3 (detection): none; no group has a detected purchase response.** Per the rules the results are bounds: G1 rules out purchase elasticities more negative than about **-0.12** (and G3 more negative than -0.16, G2 -0.09), which excludes the -0.2 to -0.5 range that Hirth et al. imply for the exposed share. G1's planted -0.1 is recovered and detected, so a purchase response of -0.1 in the exposed group would have been found. Translated to the aggregate, G1's bound is -0.116 x 0.127 = -0.015, consistent with the aggregate bound of -0.021. These are purchase responses (day-ahead, bilateral and intraday net purchases; ESIOS 353 is scheduled day-ahead): the 91% offset finding means consumption responses could be smaller, not larger. Not examined: heterogeneity among units inside the groups (composition changes are uncorrected), regimes (the 30/72 weighting applies), and responses to sustained price levels rather than wind-driven hours.

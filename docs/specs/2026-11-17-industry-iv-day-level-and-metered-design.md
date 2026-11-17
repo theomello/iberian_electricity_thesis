@@ -75,4 +75,28 @@ Also: the planted estimates in step 0 contain the real component (as in the earl
 Scripts `scripts/analysis/industry_iv_day_level.py` (Part A, step 0 and step 1) and `scripts/analysis/industry_iv_metered.py` (Part B), written and committed before they run; they reuse `industry_iv_instrument_settlement.build_frame`, `industry_iv_second_settlement.residualise`, `industry_iv_estimation.run_sub`. Outputs `outputs/tables/industry_iv_day_level{,_checks}.csv` and `industry_iv_metered{,_checks}.csv`. **Running needs the user's go-ahead ('Confirmed, run it').** Proposed order: step 0 of both parts (planted only, no real slope), then step 1 of whichever passes its gate. A gate that fails is reported and kept, not rescued by changing the instrument, sample or unit.
 
 ## Results
+### Step 0 (run 2026-11-17, scripts `industry_iv_day_level.py --step 0` and `industry_iv_metered.py --step 0`, committed before the run; outputs `outputs/tables/industry_iv_day_level_step0{,_checks}.csv`, `industry_iv_metered_step0{,_checks}.csv`). Planted effects only; no real-outcome result computed.
+**Part A, day level (993 days, mean daily price 95.74, first stage F 57).**
+
+| Plant | Estimate | 95% randomization interval | Detected |
+|---|---|---|---|
+| pooled -0.02 | -0.0200 | [-0.046, +0.010] | no (p 0.041, interval contains zero) |
+| pooled -0.03 | -0.0296 | [-0.056, +0.0003] | no (interval just touches zero; p 0.004) |
+| pooled -0.05 | -0.0474 | [-0.075, -0.017] | yes |
+| pooled -0.10 | -0.1006 | [-0.130, -0.069] | yes |
+| -0.10 in 2019-21H1 only | -0.0299 | [-0.058, -0.005] | yes (regime weight 0.30) |
+| -0.10 in 2021H2-23 only | -0.0721 | [-0.103, -0.034] | yes (regime weight 0.72) |
+
+**A0 passes** (-0.05 detected and recovered). **A0b fails**: the smallest detected pooled plant is -0.05, not smaller than the hourly design's -0.03, so any real day-level result is a check on the margin, **not a new or tighter bound**. Regime weights 0.30 / 0.72, the same as hourly. Step 1 is therefore allowed to run, with that reading fixed in advance.
+
+**Part B, metered consumption of the interruptibility-service participants, 2019 (mean price 50.19 HOUR / 49.17 DAY; metered load 0.511 of E3-E6).**
+
+| Unit | n | F | Planted -0.1 | Planted -0.3 | B1 |
+|---|---|---|---|---|---|
+| HOUR | 5,554 hours, 232 days | 48.0 | -0.111 [-0.227, +0.049], not detected | -0.320 [-0.427, -0.167], detected | **pass** |
+| DAY | 212 days | 65.6 | -0.119 [-0.236, +0.005], not detected | -0.315 [-0.435, -0.196], detected | **pass** |
+
+Both units pass B1 (the expected DAY failure did not happen). The metered series can detect an elasticity of about -0.3 and not -0.1: **a real null here rules out only responses more negative than about -0.2 to -0.3**, which is weak next to the aggregate bound, and the contractual consumption floor applies. Step 1 not yet run.
+
+### Step 1
 (not run)

@@ -8,7 +8,7 @@
 
 ## Candidates (closed list; no others will be added)
 Same rows, week-on-week differences, double ML (10 time blocks, 14 days purged) and common-sample rows as the first settlement (19,388 weekday hours, 2019-2023).
-- **C1** unchanged: the first-settlement scores are carried over, not re-run.
+- **C1**: re-scored here under the first settlement's predictors (no realised wind), because the first settlement's placebo (S2) was invalid (see its Results section: the placebo outcome sat among its own predictors). F1 and F3 are recomputed and should reproduce the earlier values.
 - **B0** the original bid-curve instruments d_dpw and d_dps (wind and PV forecast-miss price effects), no hour weights, predictors = the first-settlement set **plus** the original bid-curve controls: d and level of realised wind and solar (d_wr, d_sr, wr, sr), their daily means, the offer-curve slope and the first-quantity price a0 with their daily means.
 - **B1** B0 instruments each divided by their hour-of-day sd in 2019; same predictors as B0.
 - **B2** B0 instruments plus B0 instruments x the one-week-lagged offer-curve slope (standardised), same predictors as B0.
@@ -26,3 +26,8 @@ No elasticity on the real outcome is computed or stored. The C1 elasticity (and 
 
 ## Data and code
 Script `scripts/analysis/industry_iv_second_settlement.py` (to be written and committed before it is run); reuses the first settlement's frame builder and `industry_iv_estimation.py` helpers. Output `outputs/tables/industry_iv_second_settlement{,_rules,_f3}.csv`.
+
+## Pre-run amendments (2026-11-17, after the placebo flaw, before this run)
+1. **Placebo residualised without its own lag.** For every candidate the placebo outcome d ln load(t-7d) is residualised with the predictor set **excluding** d ln load at lag 7 (as in `industry_iv_noise_reducers.py`).
+2. **Two predictor sets.** C1 uses the first settlement's set (no realised wind, so that it is not absorbed). B0-B2 use that set plus the realised-wind and offer-curve controls. Each candidate's price and instruments are residualised with its own set.
+3. **J is computed in each candidate's home set.** (a) Under C1's set: incremental F of B's instruments (raw, no realised-wind control) over C1's. (b) Under B's set: incremental F of C1's instruments over B's (C1 is mostly absorbed by realised wind there). B adds to C1 only if (a) is at least 10; (b) is reported as context. Because B only has power after conditioning on realised wind, which C1 is close to collinear with, the two are likely substitutes; J says whether that is so.

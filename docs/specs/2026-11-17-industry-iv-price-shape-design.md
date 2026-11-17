@@ -77,3 +77,19 @@ The first step 0 (nuisance method **N1**, the boosting of the other designs) ret
 **Q2 fails** (planted 0.15 detected but **not recovered**: the interval [0.070, 0.142] excludes 0.15). The pipeline returns about 77-89% of a planted σ: it is **biased towards zero by roughly 10-25%** at these plants, which also means an estimate of σ from the real outcome would be a lower bound on the true response and could not be compared with the literature values without that correction. The smallest detected pooled plant is 0.10. Regime weights 0.50 / 0.35 (the 2021H2-23 half is not detected).
 **Per the registered stop rule, step 1 does not run on the primary sample.** The failure is kept and not rescued. The script refuses to run step 1 (`sys.exit`). Not run: the extension step 0, and any real-outcome estimate.
 **What this means.** The price ratio can be moved by wind shape (F 22.7), so the design is not closed for lack of an instrument; it fails at calibration. Candidate causes, not tested: attenuation introduced by refitting the planted outcome's double-ML residual (the plant is added on the raw ratio but the residual of the planted outcome is refitted, so part of the plant is predicted by the controls and removed), or by measurement error in the block price ratio. Any diagnostic of that attenuation, and any decision to alter the gate in light of it, would be a new registration.
+
+### Step 0 with learner N2 (run 2026-11-17, `--sample primary --step 0 --method N2`, committed before the run; outputs `industry_iv_price_shape_primary_N2_step0{,_checks,_choice}.csv`)
+F: W1 20.5, S1 13.4, W1+S1 16.6 (**Q0 passes**); idle test F 3.0 (**Q1 passes**; S1 eligible). Planted σ (instrument W1):
+
+| Plant σ0 | Estimate | 95% interval | Detected | Recovered |
+|---|---|---|---|---|
+| 0.05 | 0.0336 | [0.003, 0.055] | yes (p 0.015) | yes |
+| 0.10 | 0.0836 | [0.053, 0.105] | yes | yes |
+| **0.15** | **0.1336** | **[0.103, 0.155]** | yes | **yes** |
+| 0.30 | 0.2836 | [0.253, 0.305] | yes | yes |
+| 0.30 in 2019-21H1 only | 0.183 (weight 0.61) | [0.111, 0.364] | yes | |
+| 0.30 in 2021H2-23 only | 0.084 (weight 0.28) | [-0.117, 0.162] | no | |
+
+**Q2 passes under N2** (0.15 detected and recovered; smallest detected plant 0.05). Per the registered fixed order, **N2 is the learner for step 1; N3 is not run.** The residual-scale diagnostic gives the same numbers as the refit plants (OLS is exactly linear, so refitting the plant changes nothing).
+**Correction of my earlier reading of the N1 failure, recorded here.** Every N2 planted estimate sits at σ0 - 0.0164 (0.0336, 0.0836, 0.1336, 0.2836): the planted estimates contain the real-outcome component (disclosed in the step-0 design), so this offset **is the real-outcome σ under N2, about -0.016**, and was visible in step 0. The same reading of the N1 table gives offsets of -0.02 to -0.03. The N1 "attenuation" was therefore mostly this additive real component, not a proportional bias of the pipeline, and the N1 gate failed because the real component pushed the 0.15 plant's interval below 0.15. The N1 failure stands as recorded and the learner order was applied as registered, but **the planted gate was not blind to the real slope**, contrary to the intent of "no real-outcome slope printed or stored"; step 1 now adds the formal inference (interval, p, placebo, rules) around a number that step 0 already revealed approximately. This is stated before step 1 is run.
+

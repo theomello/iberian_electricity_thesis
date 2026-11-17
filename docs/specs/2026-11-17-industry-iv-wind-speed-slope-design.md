@@ -20,3 +20,8 @@ Then (separate go-ahead) the elasticity is estimated with X1 under the same rule
 
 ## Not done here
 No elasticity is computed. Script `scripts/analysis/industry_iv_wind_speed_slope_settlement.py` (to be written and committed before it runs); outputs `outputs/tables/industry_iv_wind_speed_slope{,_rules}.csv`.
+
+## Results (run 2026-11-17, script `industry_iv_wind_speed_slope_settlement.py`, committed before the run; outputs `outputs/tables/industry_iv_wind_speed_slope{,_rules,_f3}.csv`)
+First stage F (full / 2019-21H1 / 2021H2-23): 107 / 55 / 84 (S1 pass). Placebo p: 0.19 / **0.015** / 0.92 (S2 **fails** in 2019-21H1). Idle-wind rows 1,598: wind component d_pc ratio 0.54, p 0.095 (limit 0.5: **fails narrowly**); interaction ratio -1.10, p 0.34 (**fails**). S3 fails. S4: incremental F of the interaction over d_pc alone is 35, so the slope scaling does add price variation, but the added variation does not pass the validity checks.
+
+**Outcome.** X1 fails S2 and S3 and is **not used**. Per the registration, the bid-curve and slope routes are closed for good; no further instrument candidates. C1 alone remains the primary instrument. Pattern across the thread: every instrument carrying offer-curve information (B1, B2, X1) fails the placebo in 2019-21H1 (p 0.008, 0.023, 0.015), which suggests the lagged curve shape is correlated with how load evolves in that period; not investigated further. Instrument sets tried in this thread: nine (C0-C4, B0-B2, X1); one passes.

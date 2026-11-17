@@ -1,0 +1,30 @@
+# Industrial electricity demand elasticities: what the literature reports, by margin
+
+Written 2026-11-17 for the proto-meta-analysis. Values are as stated in the papers in `papers/` (markdown in `papers/md/`); rows marked † are carried from `docs/business-demand-evidence.md` and were not re-read in this pass. **Margin matters more than the number**: hourly or within-day responses, month-scale and annual responses are different objects, and none of these is directly comparable with a same-hour elasticity from a wind-driven price move.
+
+| Study | Margin | Who is exposed | Elasticity (as reported) | Identification |
+|---|---|---|---|---|
+| Patrick and Wolak (NBER 8213, 2001) | within-day, half-hourly | industrial and commercial customers on England and Wales pool-price contracts, five industries, 1991-95 | own-price mostly 0 to -0.27 in absolute value (water supply most responsive, steel tubes small), small at peak, larger in the shoulders; strong cross-price substitution | structural demand system with expected prices; real-time contract customers |
+| Boisvert, Cappers, Neenan, Scott (2004) | day-ahead real-time price, summers 1998-2001 | 54 volunteer large customers, Oklahoma-region utility | **substitution** elasticity 0.10-0.18 (standard), 0.20-0.27 (more short-term exposure); about 75% of response is shifting, not saving | Generalized Leontief; volunteers, hedged at baseline load |
+| Niagara Mohawk case (Goldman 2004, via Ambrosio) | day-ahead real-time price | 141 customers above 2 MW | substitution 0.11 industrial, 0.30 government/education, 0.00 commercial | secondary review |
+| Hirth, Khanna, Ruhnau (2024) † | hourly, aggregate German demand | all demand | about -0.05 aggregate; -0.2 to -0.5 for the exposed share | wind instrument (full text in `papers/`) |
+| Jessoe and Rapson (2015) † | mandatory TOU, business | commercial and industrial | no or very little change in usage; decreases above 1% ruled out | field/panel |
+| Blonz (2022) † | critical-peak pricing | small businesses | -0.119 (peak use -13.5%) at about tripled prices | event-based |
+| von Graevenitz and Rottner (2024) | **annual, sustained level**, procurement | German manufacturing plants | **-0.4 to -0.6**, larger for small procurers, falling 2009-17; onsite generation replaces procurement | network-charge changes, plant fixed effects |
+| Gerster and Lamp (2024) | sustained level (levy exemption) | German plants | implied short-run **-0.09 to -0.20** (31% price cut, +3-6% consumption) | exemption design, matching/DiD |
+| Labandeira, Labeaga, López-Otero (FEDEA DT 2009-18) | short-run, average prices | Spanish households, companies, large consumers | households **-0.247**, companies **-0.024**, large consumers **-0.015** (mean estimates in the results table) | calibrated demand model with incomplete information; "reaction of companies and large consumers virtually non-existent" |
+| Moral-Carcedo and Pérez-García (Applied Energy 2015) | temperature, not price | Spanish firms by NACE sector (REE data, contracted power above 15 kW? see paper), 2009-13 | no price elasticity; cooling effect +0.7% per degree, heating +0.1% | sectoral regression; one sector (basic metals) falls in summer, attributed to seasonal activity not interruptibility |
+| Ciarreta and Espinosa (J Regul Econ 2010; Energy J 2010; 2012) | wholesale market power | n/a | **no demand elasticity estimated**; demand treated as very inelastic; residual-demand slopes; prices about 20% above a competitive benchmark | bids; supply side |
+| **This thesis**, wind-speed IV (2019-23) | same-hour, impact | aggregate E3-E6 | +0.0001 [-0.021, +0.028]; day level -0.001 [-0.027, +0.028] (placebo fails by magnitude, not interpreted) | C1 instrument, randomization inference |
+| **This thesis**, exposed groups | same-hour purchases | ESIOS 353 / process / refinery units | -0.033 [-0.116, +0.017] / -0.007 / -0.069 | C1 |
+| **This thesis**, metered 2019 | same-hour, consumption under a contractual floor | interruptibility-service participants | -0.015 [-0.133, +0.149] (hour), -0.009 [-0.127, +0.109] (day) | C1; uninformative |
+
+## Where we sit
+- **Against exposed-customer, within-day estimates (0 to -0.27, substitution 0.10-0.27):** our exposed-share translation (aggregate bound -0.021, exposed share 0.32-0.50) bounds the exposed customers' same-hour response at about -0.04 to -0.07, below the shoulder values of Patrick and Wolak and the Boisvert range, which are for customers who face and manage hourly prices and are not elasticities of load to a price level.
+- **Against the sustained-level estimates (-0.1 to -0.6):** not comparable and not tested here (see the amendment in the day-level spec).
+- **Against Spanish evidence:** the only Spanish industrial elasticities found are Labandeira et al.'s near-zero values (-0.015 to -0.024) from average prices; Moral-Carcedo and Pérez-García report that Spanish industrial consumers' production cuts to save electricity cost do not seem profitable (citing Torriti, Hassan and Leach 2010).
+
+## Still to get
+- **Torriti, Hassan and Leach (2010), "Demand response experience in Europe: policies, programmes and implementation", Energy 35(4):1575-83** (the source of the claim that interruptions were rare, 0-4 days a year, and that cutting production to save electricity is not profitable for Spanish industry).
+- Ciarreta and Espinosa (2006) working paper, "Demand Elasticity and Market Power in the Spanish Electricity Market" (not in `papers/`; the published versions have no demand elasticity).
+- Jessoe and Rapson, Blonz, Herter (source of the "18% of customers give 75% of the response" figure not identified), Zarnikau, Ito, Ganapati-type full texts if the table is to be complete.

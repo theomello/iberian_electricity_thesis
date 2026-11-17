@@ -1,0 +1,5 @@
+rule,pass,detail
+P1 recovery (pooled plants),True,"-0.02: est -0.0197 [-0.0354,0.0088] ok; -0.03: est -0.0298 [-0.0474,-0.0007] ok; -0.05: est -0.0503 [-0.0679,-0.0203] ok; -0.1: est -0.1049 [-0.1182,-0.0789] ok"
+P2 detection at -0.05 and -0.10,True,-0.05: detected; -0.1: detected
+P3 half-sample,False,half 2019-21H1: est -0.0296 vs expected -0.0519; half 2021H2-23: est -0.0723 vs expected -0.0481
+P4 power (no pass/fail),,"detected pooled plants: -0.03, -0.05, -0.1; smallest detected: -0.03"

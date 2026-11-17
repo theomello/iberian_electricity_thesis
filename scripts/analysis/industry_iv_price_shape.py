@@ -16,6 +16,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.linear_model import LinearRegression
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import industry_iv_day_level as DL  # noqa: E402
@@ -28,6 +30,35 @@ SAMPLES = {"primary": dict(first="2019-01-01", last="2023-12-31", end="2023-12-3
            "ext": dict(first="2024-01-01", last="2025-09-30", end="2025-09-30", form="spread", mask_days=("2025-04-28", "2025-04-30"), regimes=(("2024", "2025-01-01", True), ("2025", "2025-01-01", False)))}
 PLANTS = (0.05, 0.10, 0.15, 0.30)
 GATE = 0.15
+METHODS = ("N1", "N2", "N3")
+
+
+def lin_matrix(d):
+    dm = pd.get_dummies(d.date.dt.dayofweek, dtype=float).to_numpy()[:, 1:]
+    mm = pd.get_dummies(d.date.dt.month, dtype=float).to_numpy()[:, 1:]
+    return np.column_stack([dm, mm, d.d_tempE, d.d_tempM, d.d_demE, d.d_demM, d.d_y_7, d.d_y_14, d.d_y_28, d.d_x_7, d.d_x_14, d.d_x_28, d.gas])
+
+
+def resid(Y, Xb, Xl, bl, dates, method):
+    """Cross-fitted residuals (10 time blocks, 14 days purged each side) with learner N1 (boosting as the other designs), N2 (OLS on Xl) or N3 (regularised boosting)."""
+    if method == "N1":
+        return N.gb_resid(Y, Xb, bl, dates)
+    R = np.zeros_like(Y)
+    for k in np.unique(bl):
+        te = bl == k
+        d0, d1 = dates[te].min() - pd.Timedelta(days=14), dates[te].max() + pd.Timedelta(days=14)
+        tr = ~((dates >= d0) & (dates <= d1))
+        for j in range(Y.shape[1]):
+            if method == "N2":
+                m = LinearRegression().fit(Xl[tr], Y[tr, j])
+                R[te, j] = Y[te, j] - m.predict(Xl[te])
+            else:
+                m = HistGradientBoostingRegressor(max_iter=100, learning_rate=0.05, max_leaf_nodes=8, min_samples_leaf=100, l2_regularization=5.0, early_stopping=False, random_state=N.SEED)
+                m.fit(Xb[tr], Y[tr, j])
+                R[te, j] = Y[te, j] - m.predict(Xb[te])
+    return R
+
+
 LITERATURE = "Boisvert et al. 0.10-0.18 (0.20-0.27 more exposed); Niagara Mohawk industrial 0.11; Patrick-Wolak 0-0.27; exposed share s 0.32-0.50"
 
 
@@ -81,20 +112,22 @@ def shape_frame(day, cfg):
     return d
 
 
-def build(sample):
+def build(sample, method="N1"):
     cfg = SAMPLES[sample]
     df = DL.hourly_base(end=cfg["end"])
     d = shape_frame(shape_days(df), cfg)
     X = np.column_stack([d.dow, d.date.dt.month, d.date.dt.dayofyear, d.d_tempE, d.d_tempM, d.d_demE, d.d_demM, d.d_y_7, d.d_y_14, d.d_y_28, d.d_x_7, d.d_x_14, d.d_x_28, d.gas])
     bl, dates = DL.blocks_of(d), d.date.to_numpy()
     Y = np.column_stack([d.d_y, d.d_x, d.d_xev, d.d_w, d.d_s]).astype(float)
-    R = dict(zip(["y", "x", "xev", "w", "s"], N.gb_resid(Y, X, bl, dates).T))
+    XL = lin_matrix(d)
+    R = dict(zip(["y", "x", "xev", "w", "s"], resid(Y, X, XL, bl, dates, method).T))
     keep = [i for i in range(X.shape[1]) if i != 7]  # drop d_y_7, the placebo outcome
-    R["yplac"] = N.gb_resid(np.asarray(d.d_y_7, float)[:, None], X[:, keep], bl, dates)[:, 0]
+    keepl = [i for i in range(XL.shape[1]) if i != XL.shape[1] - 7]  # d_y_7 column of lin_matrix
+    R["yplac"] = resid(np.asarray(d.d_y_7, float)[:, None], X[:, keep], XL[:, keepl], bl, dates, method)[:, 0]
     R["Z"] = np.column_stack([R["w"], R["s"]])
     srcs = E.perm_sources(d, np.random.default_rng(N.SEED), E.NPERM)
     print(f"{sample}: {len(d)} days {d.date.min().date()} -> {d.date.max().date()}, form {cfg['form']}", flush=True)
-    return cfg, d, X, R, srcs
+    return cfg, d, X, R, srcs, XL
 
 
 def fs_F(d, R, cols, endog="x"):
@@ -121,22 +154,23 @@ def detected(s):
     return bool(s["p_t_rank"] <= 0.05 and (s["sig_lo"] > 0 or s["sig_hi"] < 0))
 
 
-def tag(sample, name):
-    return T.OUT / f"industry_iv_price_shape_{sample}{name}.csv"
+def tag(sample, name, method="N1"):
+    suffix = "" if method == "N1" else f"_{method}"
+    return T.OUT / f"industry_iv_price_shape_{sample}{suffix}{name}.csv"
 
 
-def step0(sample):
-    cfg, d, X, R, srcs = build(sample)
+def step0(sample, method):
+    cfg, d, X, R, srcs, XL = build(sample, method)
     F = {"W1": fs_F(d, R, [0]), "S1": fs_F(d, R, [1]), "W1+S1": fs_F(d, R, [0, 1])}
     Fidle = fs_F(d, R, [1], endog="xev")
     ch = [("Q0 first stage W1 (F at least 10)", bool(F["W1"] >= 10), f"F W1 {F['W1']:.1f}; S1 {F['S1']:.1f}; W1+S1 {F['W1+S1']:.1f}"),
           ("Q1 idle test for S1 (first stage on ln(pE/pV) F below 10)", bool(Fidle < 10), f"F {Fidle:.1f}")]
     s1_ok = bool(F["S1"] >= 10 and Fidle < 10)
     primary = "W1" if F["W1"] >= 10 else ("S1" if s1_ok else None)
-    pd.DataFrame([dict(primary=primary or "none", s1_eligible=s1_ok)]).to_csv(tag(sample, "_step0_choice"), index=False)
+    pd.DataFrame([dict(primary=primary or "none", s1_eligible=s1_ok)]).to_csv(tag(sample, "_step0_choice", method), index=False)
     if primary is None:
         ch.append(("Q2 planted gate", False, "not run: no eligible instrument (Q0 failed for W1 and S1); stop"))
-        pd.DataFrame(ch, columns=["rule", "pass", "detail"]).to_csv(tag(sample, "_step0_checks"), index=False)
+        pd.DataFrame(ch, columns=["rule", "pass", "detail"]).to_csv(tag(sample, "_step0_checks", method), index=False)
         print(pd.DataFrame(ch, columns=["rule", "pass", "detail"]).to_string(index=False))
         return
     cols = [0] if primary == "W1" else [1]
@@ -147,35 +181,47 @@ def step0(sample):
     rows = []
     for name, s0, m in plants:
         yp = np.asarray(d.d_y, float) - np.where(m, s0, 0.0) * np.asarray(d.d_x, float)
-        yres = N.gb_resid(yp[:, None], X, bl, dates)[:, 0]
+        yres = resid(yp[:, None], X, XL, bl, dates, method)[:, 0]
         s = sig(run(d, R, srcs, yres, cols))
-        rows.append(dict(plant=name, sigma0=s0, expected=s0 * (m.mean() if name != "pooled" else 1.0), instrument=primary, **s))
+        rows.append(dict(plant=name, construction="refit", sigma0=s0, expected=s0 * (m.mean() if name != "pooled" else 1.0), instrument=primary, **s))
         print(name, s0, {k: round(float(v), 4) for k, v in s.items()}, flush=True)
+    for b in PLANTS:  # diagnostic only: plant on the residual scale (no refit)
+        s = sig(run(d, R, srcs, R["y"] - b * R["x"], cols))
+        rows.append(dict(plant="pooled", construction="residual-scale (diagnostic)", sigma0=b, expected=b, instrument=primary, **s))
+        print("residual-scale", b, {k: round(float(v), 4) for k, v in s.items()}, flush=True)
     P = pd.DataFrame(rows)
-    P.round(5).to_csv(tag(sample, "_step0"), index=False)
-    pooled = P[P.plant == "pooled"]
+    P.round(5).to_csv(tag(sample, "_step0", method), index=False)
+    pooled = P[(P.plant == "pooled") & (P.construction == "refit")]
     g = pooled[np.isclose(pooled.sigma0, GATE)].iloc[0]
     rec = bool(g.sig_lo <= g.sigma0 <= g.sig_hi and abs(g.sigma - g.sigma0) <= max(0.02, 0.3 * g.sigma0))
     dets = [r.sigma0 for r in pooled.itertuples() if detected(r._asdict())]
-    ch.append((f"Q2 planted gate: sigma0 {GATE} detected and recovered (instrument {primary})", bool(detected(g.to_dict()) and rec), f"est {g.sigma:.4f} [{g.sig_lo:.4f},{g.sig_hi:.4f}], p {g.p_t_rank:.3f}"))
+    ch.append((f"Q2 planted gate [{method}]: sigma0 {GATE} detected and recovered (instrument {primary})", bool(detected(g.to_dict()) and rec), f"est {g.sigma:.4f} [{g.sig_lo:.4f},{g.sig_hi:.4f}], p {g.p_t_rank:.3f}"))
     ch.append(("detectable sigma (no pass/fail)", None, "smallest detected pooled plant: " + (str(min(dets)) if dets else "none")))
     hs = P[P.plant != "pooled"]
+    dg = P[P.construction != "refit"]
+    ch.append(("diagnostic: residual-scale plants (no pass/fail)", None, "; ".join(f"{r.sigma0}: {r.sigma:.4f} [{r.sig_lo:.4f},{r.sig_hi:.4f}]" for r in dg.itertuples())))
     ch.append(("regime weights (no pass/fail)", None, "; ".join(f"{r.plant}: {r.sigma / r.sigma0:.2f}" for r in hs.itertuples())))
     C = pd.DataFrame(ch, columns=["rule", "pass", "detail"])
-    C.to_csv(tag(sample, "_step0_checks"), index=False)
+    C.to_csv(tag(sample, "_step0_checks", method), index=False)
     pd.set_option("display.width", 250, "display.max_colwidth", 250)
     print(P[["plant", "sigma0", "expected", "F", "sigma", "sig_lo", "sig_hi", "p_t_rank"]].round(4).to_string(index=False))
     print(C.to_string(index=False))
 
 
 def step1(sample):
-    f0, fc = tag(sample, "_step0_checks"), tag(sample, "_step0_choice")
-    if not f0.exists() or not fc.exists():
-        sys.exit("step 0 has not been run: no real-outcome result is produced")
-    g, ch0 = pd.read_csv(f0), pd.read_csv(fc).iloc[0]
-    if ch0.primary == "none" or not bool(g[g.rule.str.startswith("Q2")]["pass"].iloc[0]):
-        sys.exit("Q0 or Q2 failed in step 0: stop (spec rules Q0, Q2)")
-    cfg, d, X, R, srcs = build(sample)
+    method = None
+    for mth in METHODS:  # fixed order: the first learner whose step-0 gate passed (spec amendment 2)
+        f0, fc = tag(sample, "_step0_checks", mth), tag(sample, "_step0_choice", mth)
+        if not f0.exists() or not fc.exists():
+            continue
+        g, ch0 = pd.read_csv(f0), pd.read_csv(fc).iloc[0]
+        if ch0.primary != "none" and bool(g[g.rule.str.startswith("Q2")]["pass"].iloc[0]):
+            method = mth
+            break
+    if method is None:
+        sys.exit("no learner passed Q0 and Q2 in step 0 (or step 0 has not been run): stop (spec rules Q0, Q2, amendment 2)")
+    print(f"learner {method}", flush=True)
+    cfg, d, X, R, srcs, XL = build(sample, method)
     prim, s1_ok = ch0.primary, bool(ch0.s1_eligible)
     cols = [0] if prim == "W1" else [1]
     one = np.ones(len(d), bool)
@@ -209,9 +255,10 @@ def step1(sample):
         q.append(("Q6 overidentification", None, "not run: S1 not eligible (Q0/Q1)"))
     lo, hi = m["sig_lo"], m["sig_hi"]
     q.append(("Q10 context and exposed-share translation (no pass/fail)", None, f"{LITERATURE}; if only the exposed share responded the exposed-customer interval is [{lo / 0.50:.3f}, {hi / 0.50:.3f}] (s 0.50) to [{lo / 0.32:.3f}, {hi / 0.32:.3f}] (s 0.32)"))
-    pd.DataFrame(rows).round(5).to_csv(tag(sample, ""), index=False)
+    q.insert(0, ("learner (the first of N1, N2, N3 whose planted gate passed)", None, f"{method}; N1 gate failed in the first step 0" if method != "N1" else "N1"))
+    pd.DataFrame(rows).round(5).to_csv(tag(sample, "", method), index=False)
     C = pd.DataFrame(q, columns=["rule", "pass", "detail"])
-    C.to_csv(tag(sample, "_checks"), index=False)
+    C.to_csv(tag(sample, "_checks", method), index=False)
     pd.set_option("display.width", 250, "display.max_colwidth", 300)
     print(pd.DataFrame(rows)[["variant", "block", "n", "F", "sigma", "sig_lo", "sig_hi", "p_t_rank"]].round(4).to_string(index=False))
     print(C.to_string(index=False))
@@ -221,8 +268,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--sample", choices=tuple(SAMPLES), required=True)
     ap.add_argument("--step", type=int, choices=(0, 1), required=True)
+    ap.add_argument("--method", choices=METHODS, default="N1", help="nuisance learner for step 0 (step 1 picks it from the step-0 files)")
     a = ap.parse_args()
-    (step0 if a.step == 0 else step1)(a.sample)
+    step0(a.sample, a.method) if a.step == 0 else step1(a.sample)
 
 
 if __name__ == "__main__":

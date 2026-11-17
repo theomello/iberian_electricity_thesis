@@ -131,7 +131,7 @@ def main():
         if cl is None:
             f3.append(dict(candidate=c, f3_rows=int(idle.sum()), f3_status="not applicable (no wind component)"))
             continue
-        z = res[f"{c}:{cl[0]}"]
+        z = res[f"{'C2' if c == 'C3' else c}:{cl[0]}"]
         idx = np.flatnonzero(idle)
         st = E.starts_of(d.date.to_numpy()[idx])
         b_i, t_i = t_slope(res["p"][idx], z[idx], st)

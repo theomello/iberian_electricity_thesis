@@ -39,9 +39,9 @@ def holiday_set():
     return set(pd.to_datetime(hol[(hol.area == "AN") & (hol.mark == "national")].date))
 
 
-def hourly_base(load=None):
+def hourly_base(load=None, end="2023-12-31"):
     """Hourly grid 2018-10-01 -> 2023-12-31 with load (default ESIOS 1204-1207; `load` = Series indexed by (date, hour) overrides it), price, temperature, forecasts, gas, wind speed and pc."""
-    df = N.build()
+    df = N.build(end=end)
     if load is not None:
         df["load"] = load.reindex(pd.MultiIndex.from_arrays([df.date, df.hour])).to_numpy()
         df["lnL"] = np.log(df.load.where(df.load > 0))
@@ -50,6 +50,8 @@ def hourly_base(load=None):
     w = pd.DataFrame({"date": dt_, "hour": hr_, "ws": a.wind_speed_100m_wind_sites}).drop_duplicates(["date", "hour"]).set_index(["date", "hour"]).ws
     df["ws"] = w.reindex(pd.MultiIndex.from_arrays([df.date, df.hour])).to_numpy()
     df["pc"] = np.minimum(df.ws / 12.0, 1.0) ** 3
+    r = pd.DataFrame({"date": dt_, "hour": hr_, "rad": a.radiation_solar_sites}).drop_duplicates(["date", "hour"]).set_index(["date", "hour"]).rad
+    df["rad"] = r.reindex(pd.MultiIndex.from_arrays([df.date, df.hour])).to_numpy()
     return df
 
 

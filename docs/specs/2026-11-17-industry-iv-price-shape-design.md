@@ -46,5 +46,11 @@ The sustained price level (von Graevenitz and Rottner; Gerster and Lamp), purcha
 ## Data and code
 Script `scripts/analysis/industry_iv_price_shape.py` (`--step 0`, `--step 1`; step 1 refuses to run if a step 0 gate failed), to be written and committed before any run, reusing the frame and inference helpers of `industry_iv_day_level.py`. Outputs `outputs/tables/industry_iv_price_shape{_step0,}{,_checks}.csv`. **Running needs the user's go-ahead ('Confirmed, run it').** Proposed order: step 0 on the primary sample (first stage, idle test, planted gate), then step 1; E1 afterwards, with its own step 0.
 
+## Amendment (2026-11-17, script written, before any run)
+1. **Blackout exclusion in the extension.** A data build (no estimation) showed the largest week-on-week load-ratio changes of the extension sample on 2025-04-28 (-0.67), 2025-05-05 (+0.65) and 2025-04-29 (+0.22): the Iberian blackout of 28 April 2025 and its restoration, and the partner days a week later. Registered before the run: **the outcome, price and ratio of 2025-04-28 → 2025-04-30 are set missing**, so those days, their partner days (05-05 → 05-07) and the rows whose 7, 14, 21, 28 and 35-day lags touch them drop out. The extension sample is **409 days** (427 without the exclusion). The primary sample is **993 days** (the same days as the day-level design); no exclusions.
+2. **Instrument scaling.** W1 and S1 are standardised to unit standard deviation after differencing (scale does not change the estimate).
+3. **Gate in the spread form.** Planted σ0 in the extension is a shape semi-elasticity per unit of (spread / mean price); the gate value 0.15 is applied to it as is, and the result is not read as σ.
+4. **Log-ratio rows.** Days with p_E or p_M at or below zero are dropped from the primary sample's ratio (the exclusion matters only if such days exist in 2019-2023; the build gave 993 days, the same as the day-level frame).
+
 ## Results
 (not run)

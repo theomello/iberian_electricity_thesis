@@ -124,3 +124,11 @@ Household period effects (log points x 100): real window peak -10.85, mid -6.18,
 **Reading.** Two independent load estimates agree on the shape of the price effect (evening lower, night higher; the household one about 60% of the aggregate), and neither finds a material effect on the average cost of energy.
 
 **B2 not run (decision 2026-11-16, user).** The aggregate effect on the cost of energy is under 0.1 EUR/MWh, so the value per household over the window would be a few cents and the registered rule (positive mean, interval excluding zero) is very unlikely to be met; the raw-archive streaming for hourly profiles was judged not worth it. Recorded as not run, not as a pass or a failure.
+
+## G7 results (run 2026-11-17, script `goiener_g7_weighted.py` committed before the run in 1c47b37; output `outputs/tables/goiener_g7.csv`)
+| | eta_real | mean placebo | **eta_RI** | one-sided p | Fisher interval | households |
+|---|---|---|---|---|---|---|
+| Unweighted (baseline) | -0.1485 | -0.0915 | **-0.057** | 0.037 | [-0.081, -0.044] | 2,433 |
+| Weighted by baseline kWh | -0.1762 | -0.0942 | **-0.082** | 0.037 | [-0.125, -0.044] | 2,433 |
+
+**G7a** (sanity, unweighted within 0.01 of the G2 value -0.053): pass (-0.057). **G7b, by the registered rule: weighting explains the gap** (weighted eta_RI -0.082 is at or below -0.080, with p 0.037). Reading limits, stated now: the margin over the threshold is 0.002; the weighted interval [-0.125, -0.044] contains the unweighted estimate and the two are not tested against each other, so the shift from -0.057 to -0.082 is suggestive, not established; baseline-kWh weights stand in for load weights; E0 also contains small businesses, so a closed gap does not rule out a business-share contribution; the weighted placebo mean (-0.094) is similar to the unweighted (-0.092), so the shift comes from the real window, not from the placebo centring. The weighted figure is about 0.75 of the aggregate E0 value of -0.106 through the same transform.

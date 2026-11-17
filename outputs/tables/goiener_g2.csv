@@ -1,0 +1,4 @@
+series,dose,response_real,eta_real,eta_RI,mean_placebo,p_one_sided,fisher_lo,fisher_hi
+GoiEner 2.0TD households,0.78394,-0.11411,-0.14556,-0.05284,-0.09271,0.03704,-0.07731,-0.03866
+E0 aggregate (mix dose),0.60886,-0.06628,-0.10886,-0.10594,-0.00292,0.03704,-0.1228,-0.08884
+E0 aggregate (pure 2.0TD dose),0.78394,-0.06628,-0.08455,-0.08228,-0.00227,0.03704,-0.09537,-0.069

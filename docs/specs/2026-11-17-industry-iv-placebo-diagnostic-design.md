@@ -1,0 +1,25 @@
+# Why do the offer-curve instruments fail the 2019-21H1 placebo? (descriptive diagnostic, pre-registration)
+
+**Status: registered 2026-11-17, before any run. Descriptive only: no elasticity, no new instrument, no pass/fail on an estimate.** Background: B1, B2 and X1 (offer-curve information) fail the placebo (load of the same hour 7 days earlier) in 2019-21H1 with p 0.008, 0.023, 0.015; B0 narrowly (0.073); C1 alone passes (0.12). The question is what drives it, because a driver we can name is a validity problem we could control for in a future, separately registered instrument.
+
+**In one example.** The placebo regresses last week's load on this week's instrument. A clean instrument cannot predict last week's load. If it does in spring 2021, say, that points to something that moves both: a plant outage in that season, or a demand pattern the lagged curve shape reflects.
+
+## What is computed (common sample of the first settlement, residuals in X1's home set: V3 predictors plus the lagged slope level)
+For instruments C1 (d_pc), X1 interaction (d_pc x s), B0 (d_dpw, d_dps), B1 (hour-weighted), B2 interactions: residualised instruments and the residualised placebo outcome (without its own lag).
+1. **Reduced form on the placebo, by regime and cell.** Slope of the residual placebo outcome on each residual instrument (date-clustered t), by regime (2019-21H1, 2021H2-23), then within 2019-21H1 by year (2019, 2021H1), season (DJF, MAM, JJA, SON), and hour block (night 0-7, day 8-17, evening 18-23).
+2. **Correlation of each (raw, week-on-week differenced) instrument with candidate drivers**, by regime: d demand forecast, d temperature, d planned outage MW, d fault outage MW, and the lagged slope s itself. Also the standard deviation of each instrument by regime.
+3. **Leave-driver-out:** the same placebo reduced form with the instrument residualised additionally on the one candidate driver most correlated with it in 2019-21H1 (reported next to the unadjusted one).
+
+## Reading rules (set now)
+- **A driver is named only if** (i) the placebo reduced form is concentrated: one cell (year, season or hour block) has |t| at least 2.5 and is at least twice the |t| of the others, and (ii) the instrument's correlation with a candidate driver in that regime is at least 0.2 in absolute value, and (iii) residualising on that driver cuts the full-regime placebo |t| by at least half. All three: that driver is reported as the likely validity problem.
+- **Otherwise** the report says no single driver was found (the failure is diffuse or reflects regime-specific persistence), and the offer-curve route stays closed with that statement.
+- All cells are reported; with about 15 cells, a lone |t| near 2.5 is suggestive only and is labelled so. Nothing here changes the closed status of B0-B2 and X1; using a named driver would need a new registration.
+
+## Data and code
+Script `scripts/analysis/industry_iv_placebo_diagnostic.py` (committed before it runs); reuses `industry_iv_instrument_settlement.build_frame` and `industry_iv_second_settlement` helpers. Outputs `outputs/tables/industry_iv_placebo_diagnostic{,_corr}.csv`.
+
+## Results (run 2026-11-17; outputs `outputs/tables/industry_iv_placebo_diagnostic{,_corr,_leave_driver_out}.csv`)
+Placebo reduced-form t (date-clustered), 2019-21H1 regime / 2021H2-23: B0 wind component d_dpw **-3.66** / +1.50; B1 w **-3.30** / +1.48; B0 PV component -1.12 / +1.17; X1 interaction -1.68 / +0.98; B2 interactions +0.98, +0.81; C1 d_pc +1.97 / +0.02. The failure is in the **wind forecast-miss price effect** (d_dpw, B1 w) and only in 2019-21H1.
+**Where inside 2019-21H1:** year 2021 (H1 only) t -3.92 (d_dpw) / -4.16 (B1 w), against 2019 -1.35 / -1.06 and 2020 -0.86 / -0.39; **winter (DJF) -4.04 / -3.43**, against MAM -1.20, JJA -0.05, SON -0.70; **day hours 8-17 -4.17 / -4.01**, evening -2.34, night -1.08. C1 itself shows the same sign pattern more weakly (DJF +2.28, 2021 +2.09).
+**Candidate drivers:** correlations of the instruments with d demand forecast, d temperature, d planned and fault outages are all below 0.13 in absolute value; the largest is with the lagged slope (0.16 for d_dpw and B1 w in 2019-21H1). Residualising on the most-correlated driver leaves the placebo t unchanged (d_dpw -3.66 -> -3.75; B1 w -3.30 -> -3.39). Instrument sd is 3.8 to 25 times larger in 2021H2-23 than in 2019-21H1 for the offer-curve instruments (price levels in the crisis).
+**Reading by the registered rules.** (i) Concentrated: **yes** (winter, 2021H1, day hours). (ii) Correlated driver with |corr| >= 0.2: **no** (max 0.16). (iii) Residualising halves the placebo t: **no**. **No single driver was named.** The failure is concentrated in winter 2021H1 days for the wind forecast-miss instrument, and is not explained by demand, temperature, outages or the slope level. A hypothesis, not tested here: the period contains the January 2021 cold wave and storm and exceptionally high winter prices; whether dropping those weeks would repair the placebo would need its own registration (a new forking choice, to be counted with the nine instrument sets). The offer-curve route stays closed.

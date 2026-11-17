@@ -13,6 +13,8 @@ to touch **before** touching it; the traps are the cheapest way to avoid a silen
 | [`ree-ren-esios-miteco.md`](ree-ren-esios-miteco.md) | REE, REN, ESIOS indicators and archives, MITECO reservoirs |
 | [`costs-and-hydro.md`](costs-and-hydro.md) | implied gas/coal cost, hydro cost, JRC hydro, SNIRH, E-OBS, HydroBASINS |
 | [`outages-renewables-other.md`](outages-renewables-other.md) | outages, wind/solar locations, holidays, PDVD, France, Italy, GB, GIE, `indisp`, interconnection |
+| [`goiener-household-smart-meters.md`](goiener-household-smart-meters.md) | GoiEner household smart-meter series, tariffs, 3.0TD pre-period gap |
+| [`barcelona-electricity-by-postal-code.md`](barcelona-electricity-by-postal-code.md) | Barcelona consumption by postal code, sector and six-hour band (unit kWh, not MWh) |
 | [`traps.md`](traps.md) | every silent-failure trap, the whole-day dropouts, audit exceptions |
 
 Related: [`../unit-agent-mapping.md`](../unit-agent-mapping.md) (the agent mapping in full),

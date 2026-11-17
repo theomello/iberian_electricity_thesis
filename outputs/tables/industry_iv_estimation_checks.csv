@@ -1,0 +1,9 @@
+rule,pass,detail
+E1 sign and plausibility,False,elasticity 0.0049
+E2 detected,False,"p_t 0.658, p_AR0 0.169, rand [-0.0046, 0.0225]"
+E3 placebo outcome,False,"elasticity -0.0216, p_t 0.002"
+E4 overidentification,False,"J 6.68 p 0.083; wind 0.0014 [-0.0115,0.0169], solar 0.0519 [-0.0107,0.2466]"
+E5 stability over years,False,"elasticities 0.0544, 0.0223, -0.0261, -0.0078; equality p 0.006"
+E6 hour blocks (exploratory),,"night 0-7 -0.0029 [-0.0193,0.0197]; day 8-17 0.0132 [-0.0052,0.0365]; evening 18-23 -0.0007 [-0.0103,0.0196]"
+E7 variant agreement,False,"V1 0.0034, V2 -0.0082, V3 0.0049 [-0.0046,0.0225]"
+E8 calibration of permutation test,True,leave-one-out share p<0.05 0.049 (near-tautological); share |t|>1.96 0.121

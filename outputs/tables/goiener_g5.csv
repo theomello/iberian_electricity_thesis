@@ -1,0 +1,2 @@
+"real_spread","placebo_q95","placebo_median","placebo_max","rank_p","calib_diff","calib_p","seed_rank_corr","a","b","c","pass"
+0.0802549099973269,0.0548688421340959,0.0436754559052494,0.0551419737530254,0.037037037037037,0.98756825615359,3.20602574291436e-19,0.999990970492439,TRUE,TRUE,TRUE,TRUE

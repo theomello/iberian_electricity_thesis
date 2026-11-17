@@ -1,0 +1,9 @@
+instrument,driver,corr,t_unadjusted,t_adjusted
+C1 d_pc,slope7z,-0.0452,1.9712,1.9568
+X1 int,d_out_fault,-0.0362,-1.6798,-1.5555
+B0 d_dpw,slope7z,0.1586,-3.6592,-3.7514
+B0 d_dps,slope7z,0.1188,-1.1207,-1.16
+B1 w,slope7z,0.158,-3.3007,-3.3907
+B1 s,slope7z,0.1281,-1.2443,-1.2585
+B2 iw,slope7z,0.0693,0.9803,-0.1198
+B2 is,d_temp,0.0616,0.8079,0.7328

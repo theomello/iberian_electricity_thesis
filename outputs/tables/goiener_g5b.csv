@@ -1,0 +1,3 @@
+covariate,slope_real,slope_placebo_mean,slope_placebo_sd,slope_adjusted,p_two_sided,gap_real,gap_placebo_mean,expected_sign,passed
+share_night,0.05174,0.02401,0.01227,0.02773,0.03704,0.18917,0.0987,1,True
+share_peak,-0.05712,-0.02128,0.01822,-0.03584,0.07407,-0.18848,-0.06781,-1,False

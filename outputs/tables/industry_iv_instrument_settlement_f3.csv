@@ -1,0 +1,6 @@
+candidate,f3_rows,f3_coef_idle,f3_coef_full,f3_ratio,f3_p,f3_status
+C0,1598,-2.27991,-3.45797,0.65932,0.004,tested
+C1,1598,-24.52847,-52.22959,0.46963,0.09191,tested
+C2,1598,-0.28784,0.35518,-0.81041,0.51948,tested
+C3,1598,-0.28784,0.35518,-0.81041,0.51948,tested
+C4,1598,,,,,not applicable (no wind component)

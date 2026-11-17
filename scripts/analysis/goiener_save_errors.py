@@ -1,0 +1,75 @@
+"""Save household-level errors for G5, G6 and Part B of docs/specs/2026-11-17-goiener-household-design.md (no new estimate, no rule evaluated here).
+
+    .venv/bin/python scripts/analysis/goiener_save_errors.py
+
+Same 3,000-household 2.0TD subsample, same LASSO as goiener_noise.py / goiener_household.py. Writes
+  data/goiener/daily/g_placebo_errors.parquet : user, date, peak, mid, off  (leave-year-out errors for Apr-Oct 2018 and 2019 weekdays)
+  data/goiener/daily/g2_window_mid.parquet    : user, date, mid             (window 2021-06-01 -> 2021-09-15, trained on all pre-lockdown days)
+Peak and off-peak window errors are already in g2_household_window.parquet.
+"""
+import sys
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from joblib import Parallel, delayed
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import goiener_household as GH  # noqa: E402
+import goiener_noise as G  # noqa: E402
+import tou_did as T  # noqa: E402
+
+ROOT = T.ROOT
+PERS = ("kwh_peak", "kwh_mid", "kwh_off")
+
+
+def one(u, g, temp):
+    g = g.set_index("date").sort_index()
+    pl, wm = {}, None
+    for per in PERS:
+        y = np.log(g[per].where(g[per] > 0)).dropna()
+        pl[per] = G.errors_leave_year(y, temp)
+        if per == "kwh_mid":
+            wm = GH.errors_window(y, temp)
+    if any(len(v) == 0 for v in pl.values()):
+        placebo = pd.DataFrame(columns=["user", "date", "peak", "mid", "off"])
+    else:
+        e = pd.concat(pl, axis=1).dropna()
+        e.columns = ["peak", "mid", "off"]
+        e["user"] = u
+        e.index.name = "date"
+        placebo = e.reset_index()[["user", "date", "peak", "mid", "off"]]
+    win = pd.DataFrame({"user": u, "date": wm.index, "mid": wm.to_numpy()}) if wm is not None and len(wm) else pd.DataFrame(columns=["user", "date", "mid"])
+    return placebo, win
+
+
+def main():
+    daily = pd.read_parquet(ROOT / "data/goiener/daily/daily.parquet")
+    meta = pd.read_parquet(ROOT / "data/goiener/daily/selected_metadata.parquet").set_index("user")
+    hol = pd.read_parquet(ROOT / "data/holidays/holidays_es_pt.parquet")
+    hes = set(pd.to_datetime(hol[(hol.area == "AN") & (hol.mark == "national")].date))
+    daily["date"] = pd.to_datetime(daily.date)
+    wd = daily[(daily.date.dt.dayofweek < 5) & ~daily.date.isin(hes)].copy()
+    pre = wd[wd.date < "2020-03-01"]
+    win = wd[(wd.date >= GH.W0) & (wd.date <= GH.W1)]
+    npre, nwin = pre.groupby("user").size(), win.groupby("user").size()
+    imp = wd[wd.user.isin(win.user)].groupby("user").n_imputed.sum() / (24 * wd.groupby("user").size())
+    g0 = (npre.reindex(meta.index).fillna(0) >= 250) & (nwin.reindex(meta.index).fillna(0) >= 60) & (imp.reindex(meta.index).fillna(1) <= 0.10)
+    elig = meta.index[g0]
+    temps = G.daily_temps()
+    rng = np.random.default_rng(G.SEED)
+    e20 = [u for u in elig if meta.loc[u, "contracted_tariff"] == "2.0TD"]
+    sub = list(rng.choice(e20, size=min(G.NSUB, len(e20)), replace=False))
+    both = wd[(wd.date < "2020-03-01") | ((wd.date >= GH.W0) & (wd.date <= GH.W1))]
+    grp = {u: g for u, g in both[both.user.isin(sub)].groupby("user")}
+    res = Parallel(n_jobs=4, verbose=0)(delayed(one)(u, grp[u], temps[G.CITY[meta.loc[u, "province"]]]) for u in sub if u in grp)
+    P = pd.concat([r[0] for r in res], ignore_index=True)
+    Wm = pd.concat([r[1] for r in res], ignore_index=True)
+    P.to_parquet(ROOT / "data/goiener/daily/g_placebo_errors.parquet")
+    Wm.to_parquet(ROOT / "data/goiener/daily/g2_window_mid.parquet")
+    print(f"placebo errors: {len(P)} household-days from {P.user.nunique()} households; window mid errors: {len(Wm)} household-days from {Wm.user.nunique()} households", flush=True)
+    print("DONE", flush=True)
+
+
+if __name__ == "__main__":
+    main()

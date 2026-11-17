@@ -1,0 +1,5 @@
+candidate,S1,S2,S3,passes,minF
+C1,True,True,True,True,71.05970462580358
+B0,False,False,False,False,13.446216399833212
+B1,False,False,False,False,9.320787634542318
+B2,False,False,False,False,7.062833981199769

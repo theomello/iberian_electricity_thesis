@@ -114,3 +114,46 @@ A failed rule is recorded and kept; no other window, series, training span, cont
 Fetchers as above; new `scripts/analysis/tou_industry_six_summer.py` reusing `tou_cross_tariff` (Fit, make_stack,
 series_dose, old_new_tables) and the LASSO of `tou_lasso_paper.py`; cache `data/cache_tou/six_summer_errors.parquet`;
 outputs `outputs/tables/tou_industry_six_summer{,_summary}.csv`. Deterministic (no random draws).
+
+## Results (run 2026-11-18; `scripts/analysis/tou_industry_six_summer.py`, committed in b9b0183 before the run; outputs `outputs/tables/tou_industry_six_summer{,_summary}.csv`; 43 LASSO fits, about 10 minutes)
+
+**Data step X0.** E0, 6.2, 6.3, 6.4 complete 2014–2017 (pass); REN 92/96/100 points (pass); aligned windows have no
+missing hour. **The E0–E6 = 1193 gate passes 2017 and fails 2014** (July 2014: +2.6%; other months within 0.04%), so by
+the registered gate **2014 leaves IND and E1+E2: S = 3 for industry (2017, 2018, 2019)**, not 4. Deviation recorded:
+the gate's first computation summed the voltage series with index alignment, so the gaps in E5 (1206, which is not
+empty: 650 days missing from spring 2014) produced a spurious ratio of 0; fixed to treat absent E5 hours as zero before
+the run (the verdict, failure on July 2014, is the same either way). Some LASSO fits print scikit-learn convergence
+warnings (duality gaps of order 1e-3), as in the earlier runs; not acted on.
+
+| series | S | η 2021 | placebo summers | m (sd) | t | p_t | p_rank | 95% interval |
+|---|---|---|---|---|---|---|---|---|
+| E0 | 6 | −0.116 | 2014 −0.047, 2015 +0.061, 2016 +0.004, 2017 −0.008, 2018 −0.012, 2019 −0.028 | −0.005 (0.037) | −2.78 | 0.019 | 0.143 | [−0.213, −0.008] |
+| **IND** | 3 | **−0.288** | 2017 +0.024, 2018 −0.056, 2019 +0.041 | +0.003 (0.052) | −4.85 | **0.020** | 0.250 | **[−0.549, −0.033]** |
+| E1+E2 | 3 | −0.182 | 2017 −0.006, 2018 −0.086, 2019 −0.021 | −0.038 (0.043) | −2.93 | 0.050 | 0.250 | [−0.357, +0.068] |
+| 6.2 | 6 | +0.050 | −0.085 … +0.179 | +0.016 (0.096) | +0.33 | 0.62 | 0.714 | [−0.232, +0.301] |
+| 6.3 | 6 | −0.250 | +0.134 … +0.524 | +0.336 (0.143) | −3.79 | 0.006 | 0.143 | [−0.984, −0.189] |
+| 6.4 | 6 | −0.548 | +0.560 … +1.192 | +0.816 (0.220) | −5.72 | 0.001 | 0.143 | [−1.975, −0.751] |
+| IND corrected by 6.4 | 3 | −0.148 | 2017 −0.267, 2018 −0.476, 2019 −0.442 | −0.395 (0.112) | +1.91 | 0.90 | 1.000 | [−0.310, +0.804] |
+
+**Rules.** R0 E0 machinery **pass** (p 0.019). R1 IND detection **pass** (p 0.020). R2 rank **pass** (2021 below all
+three summers; p_rank 0.25, the floor). R3 null centred **pass** (|m| 0.003 ≤ 0.096). R4 leave-one-summer-out **pass**
+(p 0.093, 0.015, 0.080). **R5 common shift fails** (η_corr −0.148 is negative, but above every corrected placebo
+summer; p 0.90).
+
+**Verdict, as registered (R1–R4 pass, R5 fails):** industry's evening-versus-night shift in summer 2021 is unusual
+against the pre-reform summers, but it **cannot be separated from a shift common to all voltage levels**, so it is
+reported as a reduced-form change, **not as a price elasticity**. The reduced form (η × evening-versus-night dose): IND
+**−3.4%** in 2021 against +0.3%, −0.7%, +0.5% in 2017–2019.
+
+**Why R5 fails (descriptive, not a rule).** The near-zero-dose series move most. In evening-versus-night shift terms
+(η × d): 6.4 (dose 0.04) is −2.3% in 2021 against +2.3% to +4.9% in every placebo summer; 6.3 (dose 0.06) −1.5% against
++0.8% to +3.2%; IND (dose 0.12) −3.4% against −0.7% to +0.5%. Relative to its own normal summer, the ≥145 kV tariff,
+whose tolls barely changed, dropped by about 5–6 points, more than industry as a whole. A response to the tolls would
+scale with the dose; this does not. Consistent readings (none tested here): a non-price change in large-industry
+operation in summer 2021 (post-COVID schedules), or a response to the **wholesale** price, which rose through summer
+2021 and is not in the dose. The 6.4 correction is also noisy: 6.4's placebo values are large and positive (mean
++0.82), and the formula carries them into every corrected placebo.
+
+**Other descriptive points.** The leave-one-year-out fit moves the 2021 estimates little (E0 −0.101 → −0.116, IND
+−0.288 → −0.288, E1+E2 −0.168 → −0.182; 6.2 −0.08 → +0.05). Shifted-window placebo sd: E0 0.033, IND 0.060, E1+E2
+0.050, 6.2 0.13, 6.3 0.18, 6.4 0.29. E0 with six summers: households' p 0.019, rank 1/7 (the floor).

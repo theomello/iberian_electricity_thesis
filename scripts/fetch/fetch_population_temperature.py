@@ -66,6 +66,7 @@ from __future__ import annotations
 import argparse
 import sys
 import time
+from datetime import date, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -109,10 +110,10 @@ def raw_path(name: str) -> Path:
     return OUT / f"raw_temp_{name}.parquet"
 
 
-def fetch_city(sess, name, lat, lon, country, pop) -> pd.DataFrame:
+def fetch_city(sess, name, lat, lon, country, pop, start=START, end=END) -> pd.DataFrame:
     r = sess.get(API, params={
         "latitude": lat, "longitude": lon,
-        "start_date": START.isoformat(), "end_date": END.isoformat(),
+        "start_date": start.isoformat(), "end_date": end.isoformat(),
         "hourly": HOURLY, "timezone": "UTC",
     }, timeout=300)
     r.raise_for_status()
@@ -180,6 +181,8 @@ def verify() -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--verify", action="store_true")
+    ap.add_argument("--start", type=date.fromisoformat, default=START,
+                    help="extend each city's file back to this date (only the missing span is fetched)")
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     if args.verify:
@@ -189,7 +192,16 @@ def main() -> int:
     for name, lat, lon, country, pop in CITIES:
         p = raw_path(name)
         if p.exists():
-            print(f"  skip {name} (on disk)")
+            have = pd.read_parquet(p)
+            first = have.utc_timestamp.min().date()
+            if args.start < first:
+                print(f"  extending {name} back to {args.start}...", flush=True)
+                early = fetch_city(sess, name, lat, lon, country, pop, args.start, first - timedelta(days=1))
+                pd.concat([early, have], ignore_index=True).drop_duplicates(["utc_timestamp"]).sort_values(
+                    "utc_timestamp").to_parquet(p, index=False)
+                time.sleep(1.0)
+            else:
+                print(f"  skip {name} (on disk)")
             continue
         print(f"  fetching {name} ({country}, pop {pop:,})...", flush=True)
         df = fetch_city(sess, name, lat, lon, country, pop)

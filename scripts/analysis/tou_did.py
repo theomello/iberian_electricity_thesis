@@ -34,7 +34,7 @@ def hourly(s, tz):
     return s
 
 
-def build(src="352", end=None) -> pd.DataFrame:
+def build(src="352", end=None, start="2017-12-31") -> pd.DataFrame:
     last = END if end is None else pd.Timestamp(end)
     if src == "ind":  # industry placebo: E1-E6 (ESIOS 1202-1207) summed
         es = sum(pd.read_parquet(ROOT / f"data/esios/esios_{i}.parquet")[["utc_timestamp", "value"]].drop_duplicates("utc_timestamp").set_index("utc_timestamp").value for i in range(1202, 1208))
@@ -53,7 +53,7 @@ def build(src="352", end=None) -> pd.DataFrame:
     rows = {}
     for name, s, tz, temp in [("es", es, "Europe/Madrid", tes), ("pt", pt, "Europe/Lisbon", tpt)]:
         d = pd.DataFrame({"load": s, "temp": temp}).dropna()
-        d = d[(d.index >= "2017-12-31") & (d.index < (last + pd.Timedelta(days=2)).tz_localize("UTC"))]
+        d = d[(d.index >= start) & (d.index < (last + pd.Timedelta(days=2)).tz_localize("UTC"))]
         loc = d.index.tz_convert(tz)
         d["date"] = pd.to_datetime(loc.date)
         d["hour"] = loc.hour

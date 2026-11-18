@@ -254,7 +254,10 @@ do not average).
   July 2014 2.6%). **In 2015 and 2016 E1 and E2 are incomplete**: E1+E2 falls from about 5–6.9 TWh a month to 1.1–1.6,
   and 10269 is 4–5.5 TWh a month below 1193; E0, E3/6.2, E4/6.3 and E6/6.4 look complete. 1369 (6.1A) is complete
   in 2015–16 (July 2015 4.99 TWh; 0.72 of E1+E2 in 2017, matching the 72% mix share), so it can stand in for E1+E2
-  there. E5 is empty throughout.
+  there. **Correction (2026-11-18, from the fetched files): E5 (1206) is not empty** — up to 228 MW, but with gaps
+  (650 days from spring 2014 to January 2016, and shorter ones), so an index-aligned sum of 1201–1207 is NaN in those
+  hours; treat absent E5 hours as zero when checking against 1193. **July 2014: E0–E6 is 2.6% above 1193** (all other
+  2014 months within 0.04%).
 - **By access tariff, 1209 (2.0TD), 1216–1218 (6.2–6.4), 1369 (6.1), 2531–2534 (3.0TD(VE), 6.1/6.2 TDVE) and
   "total" 10268: do not use as a split before 2024.** 10268 is not total demand: it is exactly the sum of the tariff
   series ESIOS publishes, 100–114 TWh in 2018–2023, because the low-voltage tariffs (2.0, 3.0) are empty until 2024

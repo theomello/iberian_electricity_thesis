@@ -58,6 +58,10 @@ OUT = OUT_DIR / "holidays_es_pt.parquet"
 URL = "https://www.boe.es/diario_boe/xml.php?id={id}"
 
 BOE_IDS = {  # holiday year -> BOE id of the resolution publishing it
+    2014: "BOE-A-2013-12147",  # 2014-2017 found 2026-11-18 via the BOE daily-summary API (titles checked)
+    2015: "BOE-A-2014-10823",
+    2016: "BOE-A-2015-11348",
+    2017: "BOE-A-2016-9244",
     2018: "BOE-A-2017-11639",
     2019: "BOE-A-2018-14369",
     2020: "BOE-A-2019-14552",
@@ -113,9 +117,75 @@ def fetch(year: int, force: bool = False) -> Path:
     return path
 
 
+MONTHS = {m: i + 1 for i, m in enumerate(["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
+                                           "agosto", "septiembre", "octubre", "noviembre", "diciembre"])}
+
+
+def parse_boe_old(year: int, table: str) -> pd.DataFrame:
+    """2014-2017 layout: no axis/id attributes; region names in the second header row; each body row is a
+    month block whose cells hold one <p> per line (line 0 the month name, then one line per holiday)."""
+    ths = re.findall(r"<th[^>]*>(.*?)</th>", table, flags=re.S)
+    cols = []
+    for body in ths:
+        k = _key(_text(body))
+        hits = [code for kw, code in REGION if kw in k]
+        if len(hits) == 1:
+            cols.append(hits[0])
+    if sorted(cols) != sorted(code for _, code in REGION):
+        raise SystemExit(f"{year}: old-layout region columns {cols}")
+    rows, month = [], None
+    for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", table, flags=re.S):
+        tds = re.findall(r"<td[^>]*>(.*?)</td>", tr, flags=re.S)
+        if not tds:
+            continue
+        if len(tds) == len(cols) + 2:  # 2015-2017 variant: one row per holiday (day, name, marks)
+            day_txt, name = _text(tds[0]), _text(tds[1])
+            if not re.fullmatch(r"\d{1,2}", day_txt) or month is None:
+                raise SystemExit(f"{year}: unread holiday row {day_txt!r} {name!r} (month {month})")
+            for area, cell in zip(cols, tds[2:]):
+                mk = _text(cell)
+                if not mk:
+                    continue
+                if mk not in MARK:
+                    raise SystemExit(f"{year}-{month:02d}-{int(day_txt):02d} {area}: unknown mark {mk!r}")
+                rows.append((pd.Timestamp(year, month, int(day_txt)), area, MARK[mk], name, BOE_IDS[year]))
+            continue
+        if MONTHS.get(_key(_text(tds[0]))) and not any(_text(c) for c in tds[1:]):  # a month header row
+            month = MONTHS[_key(_text(tds[0]))]
+            continue
+        # the first holiday of a month sits in <p> lines under the month name; later ones are plain cell text
+        lines = [[_text(p) for p in re.findall(r"<p[^>]*>(.*?)</p>", td, flags=re.S)] or ([_text(td)] if _text(td) else []) for td in tds]
+        if len(lines) != len(cols) + 1:
+            raise SystemExit(f"{year}: old-layout row with {len(lines)} cells for {len(cols)} regions")
+        n = len(lines[0])
+        if any(len(c) not in (0, n) for c in lines[1:]):
+            raise SystemExit(f"{year}: old-layout cells misaligned in row {lines[0][:2]}")
+        for i, label in enumerate(lines[0]):
+            mo = MONTHS.get(_key(label))
+            if mo:
+                month = mo
+                continue
+            m = re.match(r"(\d{1,2})\s+(.*)", label)
+            if not m:
+                if label:
+                    raise SystemExit(f"{year}: unread line {label!r}")
+                continue
+            day, name = int(m.group(1)), m.group(2)
+            for area, cell in zip(cols, lines[1:]):
+                mk = cell[i] if cell else ""
+                if not mk:
+                    continue
+                if mk not in MARK:
+                    raise SystemExit(f"{year}-{month:02d}-{day:02d} {area}: unknown mark {mk!r}")
+                rows.append((pd.Timestamp(year, month, day), area, MARK[mk], name, BOE_IDS[year]))
+    return pd.DataFrame(rows, columns=["date", "area", "mark", "name", "source"])
+
+
 def parse_boe(year: int, path: Path) -> pd.DataFrame:
     x = path.read_text(encoding="utf-8")
     table = re.search(r"<table.*?</table>", x, flags=re.S).group(0)
+    if 'axis="CA"' not in table and 'axis="comunidad"' not in table:
+        return parse_boe_old(year, table)
     cols = []
     for attrs, body in re.findall(r"<th([^>]*)>(.*?)</th>", table, flags=re.S):
         if 'axis="CA"' in attrs or 'axis="comunidad"' in attrs:
@@ -153,6 +223,28 @@ def parse_boe(year: int, path: Path) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=["date", "area", "mark", "name", "source"])
 
 
+# 2016 and 2017: the BOE resolutions (BOE-A-2015-11348, BOE-A-2016-9244) publish their tables only in the PDF,
+# whose text loses column alignment for regional days. Hand-read from page 3 of each PDF (data/holidays/raw/*.pdf)
+# for ANDALUCÍA ONLY, the column the analysis reads (national = "*"); other regions are absent for these years.
+HAND_AN = {2016: [((1, 1), "*", "Año Nuevo"), ((1, 6), "**", "Epifanía del Señor"),
+                ((2, 29), "***", "Día de Andalucía"), ((3, 24), "**", "Jueves Santo"),
+                ((3, 25), "*", "Viernes Santo"), ((5, 2), "**", "Lunes siguiente a la Fiesta del Trabajo"),
+                ((8, 15), "*", "Asunción de la Virgen"), ((10, 12), "*", "Fiesta Nacional de España"),
+                ((11, 1), "*", "Todos los Santos"), ((12, 6), "*", "Día de la Constitución Española"),
+                ((12, 8), "*", "La Inmaculada Concepción"), ((12, 26), "**", "Lunes siguiente a la Natividad del Señor")],
+           2017: [((1, 2), "**", "Lunes siguiente a Año Nuevo"), ((1, 6), "**", "Epifanía del Señor"),
+                  ((2, 28), "***", "Día de Andalucía"), ((4, 13), "**", "Jueves Santo"),
+                  ((4, 14), "*", "Viernes Santo"), ((5, 1), "*", "Fiesta del Trabajo"),
+                  ((8, 15), "*", "Asunción de la Virgen"), ((10, 12), "*", "Fiesta Nacional de España"),
+                  ((11, 1), "*", "Todos los Santos"), ((12, 6), "*", "Día de la Constitución Española"),
+                  ((12, 8), "*", "La Inmaculada Concepción"), ((12, 25), "*", "Natividad del Señor")]}
+
+
+def hand_an(year: int) -> pd.DataFrame:
+    return pd.DataFrame([(pd.Timestamp(year, m, d), "AN", MARK[mk], n, BOE_IDS[year] + " (PDF, hand-read, AN only)")
+                         for (m, d), mk, n in HAND_AN[year]], columns=["date", "area", "mark", "name", "source"])
+
+
 def portugal(year: int) -> pd.DataFrame:
     e = pd.Timestamp(easter(year))
     days = {
@@ -161,9 +253,12 @@ def portugal(year: int) -> pd.DataFrame:
         (11, 1): "Todos os Santos", (12, 1): "Restauração da Independência",
         (12, 8): "Imaculada Conceição", (12, 25): "Natal",
     }
-    rows = [(pd.Timestamp(year, m, d), n) for (m, d), n in days.items()]
-    rows += [(e - pd.Timedelta(days=2), "Sexta-feira Santa"), (e, "Páscoa"),
-             (e + pd.Timedelta(days=60), "Corpo de Deus")]
+    # Lei 23/2012 suspended four national holidays for 2013-2015; Lei 8/2016 restored them from 2016
+    suspended = {(10, 5), (11, 1), (12, 1)} if 2013 <= year <= 2015 else set()
+    rows = [(pd.Timestamp(year, m, d), n) for (m, d), n in days.items() if (m, d) not in suspended]
+    rows += [(e - pd.Timedelta(days=2), "Sexta-feira Santa"), (e, "Páscoa")]
+    if not 2013 <= year <= 2015:
+        rows.append((e + pd.Timedelta(days=60), "Corpo de Deus"))
     return pd.DataFrame([(d, "PT", "pt_national", n, PT_SOURCE) for d, n in rows],
                         columns=["date", "area", "mark", "name", "source"])
 
@@ -176,7 +271,7 @@ def main() -> int:
     parts = []
     for year in BOE_IDS:
         path = RAW / f"{BOE_IDS[year]}.xml" if a.parse_only else fetch(year, a.force)
-        parts += [parse_boe(year, path), portugal(year)]
+        parts += [hand_an(year) if year in HAND_AN else parse_boe(year, path), portugal(year)]
     h = pd.concat(parts, ignore_index=True).sort_values(["date", "area"], ignore_index=True)
     if h.duplicated(["date", "area"]).any():
         raise SystemExit(f"duplicate date-area rows: {h[h.duplicated(['date', 'area'], keep=False)]}")

@@ -126,6 +126,16 @@ Portugal's national holidays by law (Código do Trabalho, art. 234). Municipal h
 each Canary island's own day are left out, so the Canaries list 11 a year and every mainland
 region 12–13. Used by the regional-holiday design (`notes/rq-regional-holidays.md`).
 
+**Extended to 2014–2017 on 2026-11-18 (2,695 rows, 2014–2026).** BOE ids found via the BOE daily-summary API
+(`datosabiertos/api/boe/sumario/YYYYMMDD`): 2014 BOE-A-2013-12147, 2015 BOE-A-2014-10823, 2016 BOE-A-2015-11348,
+2017 BOE-A-2016-9244. Two more layouts: 2014 is one row per month with `<p>` lines (later holidays of the month as plain
+cell text); 2015 one row per holiday (day, name, 19 marks) under month rows. **2016 and 2017 publish the table only
+in the PDF**: their rows are hand-read from the PDF (kept in `raw/`) for **Andalucía only** (`source` says so), which
+is the column every analysis reads (`area == "AN"`, `mark == "national"`); other regions are absent for those years,
+so the regional-holiday design cannot use 2016–17. **Portugal 2013–2015:** Lei 23/2012 suspended Corpo de Deus,
+5 October, 1 November and 1 December (restored from 2016 by Lei 8/2016); `portugal()` drops them, giving 9 days
+in 2014–15 against 13.
+
 **The BOE table's layout changes by year**: 2018 marks regions `axis="comunidad"` and dates
 `id="headerDDMM"`, later years `axis="CA"` and `id="fDDMM"`, and a date with two named rows
 carries a letter suffix (`f2304a` San Jorge for Aragón, `f2304b` Villalar for Castilla y León;

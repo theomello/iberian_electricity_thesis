@@ -76,6 +76,14 @@ def gates(x):
 def build():
     x = D.prep(T.build("e0", end="2021-09-15", start="2013-12-31"))
     for n, ids in {**IDS, **{f"c_{k}": v for k, v in COMP.items()}}.items():
+        if 1206 in ids:
+            # Erratum fix (2026-11-18): E5 (1206) has no rows in hours when it is zero; an index-aligned sum made the
+            # whole series NaN there (60% of the 2021 window). Sum the other components, then add E5 with absent = 0.
+            rest = [i for i in ids if i != 1206]
+            v = CT.esios_load(rest).merge(CT.esios_load([1206]).rename(columns={"v": "e5"}), on=["date", "hour"], how="left")
+            v["v"] = v.v + v.e5.fillna(0.0)
+            x = x.merge(v[["date", "hour", "v"]].rename(columns={"v": f"load_{n}"}), on=["date", "hour"], how="left")
+            continue
         x = x.merge(CT.esios_load(ids).rename(columns={"v": f"load_{n}"}), on=["date", "hour"], how="left")
     return x
 

@@ -140,3 +140,19 @@ not as a single number. The spec named no outcome for an E3 failure; this readin
   +9 to +17 points, daytime −3 to −11; August night +5 to +7, day and evening −3 to −10. Buyers without period-priced
   contracts moved the same way, so the response is not a contract artefact. Their pattern is less hour-specific than
   6.4's (14–17h did not rise in July).
+
+## Amendment A (2026-11-18, after the results above; approved by the user: "lets do it if its cheap and fast")
+**Post hoc, stated as such.** Two changes that fix known problems, registered before either is computed. The
+original verdict above stands; these are reported beside it.
+
+**A1 Capacity payments in the dose.** Add the per-period capacity payment (pagos por capacidad, €/kWh, an energy-term
+adder by period) to both regimes: new from Orden TED/371/2021 art. 2 last table (segments 3–6: 1.031 / 0.476 / 0.317 /
+0.238 / 0.238 / 0 €/MWh, P1…P6); old for 6.2–6.4 from the BOE order that set them for those tariffs (to be found; the
+6.1A/6.1B values are in Orden IET/2444/2014). **Gate A1-Z:** the old 6.2–6.4 values are found in a BOE text and read
+twice (XML and PDF) with equal results; if they are not found, A1 is not run and that is recorded.
+**A2 Trend-adjusted null.** The no-reform value for 2021 is predicted from a straight line in year through the six
+placebo values (2014–2019), not their mean. Prediction t-test with S − 2 = 4 degrees of freedom: t = (η_2021 − ŷ_2021)
+/ se_pred, se_pred = s_e·sqrt(1 + 1/S + (2021 − ȳear)² / Σ(year − ȳear)²), one-sided p; 95% prediction interval
+likewise. Applied to the full dose and to the A1 dose.
+**Reported, no new rule:** η, p and interval for (i) full dose, mean null (as above), (ii) full dose, trend null,
+(iii) A1 dose, mean null, (iv) A1 dose, trend null. **Stop after this:** no further dose components or null models.

@@ -165,3 +165,22 @@ the 2021 window (June 680 of 720), none in the 2017–2019 aligned windows. **Th
 and the corrected R5) compare a selected 40% of 2021 hours with complete placebo summers, and are not valid as
 written.** The same applies to IND in `2026-11-16-industry-adjusted-design.md` and the 2026-11-17 randomization run.
 E0, E1+E2, 6.2, 6.3, 6.4 are unaffected. The fix (absent E5 hours as zero) and any rerun wait for the user.
+
+## Corrected results (rerun 2026-11-18 after the E5 fix, committed in 4409d97 before the run; same rules)
+IND now has no missing hour in any window (2021 mean 14.3 GW). The placebo summers are unchanged (2017–2019 had no
+gaps); only the 2021 estimate moves. E0, E1+E2 and 6.2–6.4 are identical to the first run.
+
+| series | S | η 2021 | m (sd) | p_t | p_rank | 95% interval |
+|---|---|---|---|---|---|---|
+| **IND** | 3 | **−0.189** (was −0.288) | +0.003 (0.052) | 0.043 | 0.250 | **[−0.449, +0.067]** |
+| IND corrected by 6.4 | 3 | +0.005 (was −0.148) | −0.395 (0.112) | 0.955 | 1.000 | [−0.157, +0.957] |
+
+**Rules (corrected run).** R0 pass (E0 p 0.019). R1 pass (p 0.043). R2 pass (rank floor). R3 pass (|m| 0.003 ≤ 0.063).
+**R4 fails** (leave-one-summer-out p 0.139, 0.022, 0.122). **R5 fails** (corrected +0.005, p 0.95).
+
+**Verdict, as registered (R4 and R5 fail): no industrial price elasticity is identified.** The 2021 industry
+shift is below all three placebo summers, but it rests on which summers are used, its two-sided interval includes
+zero, and after the 6.4 common-shift correction nothing remains. Together with the event-time evidence
+(`notes/scope-2021-high-voltage-shift.md`: E1+E2 already −3 to −9 points in January–May 2021, before the reform; 6.3
+and 6.4 move only in July–August, at weekends too), the industrial summer-2021 shift is not attributable to the
+reform's tolls. **This supersedes the first-run IND rows above.**

@@ -156,3 +156,24 @@ placebo values (2014–2019), not their mean. Prediction t-test with S − 2 = 4
 likewise. Applied to the full dose and to the A1 dose.
 **Reported, no new rule:** η, p and interval for (i) full dose, mean null (as above), (ii) full dose, trend null,
 (iii) A1 dose, mean null, (iv) A1 dose, trend null. **Stop after this:** no further dose components or null models.
+
+## Results of amendment A (2026-11-18)
+**A1 not run: gate A1-Z fails.** The old capacity payments for 6.2–6.4 are not in the orders read (IET/2444/2014 gives
+6.1A and 6.1B only: 13.630 / 6.291 / 4.193 / 3.145 / 3.145 / 0 €/MWh; ITC/3127/2011 and IET/1491/2013 hold no
+such table). Finding them means tracing the 2007–2013 orders; not done, as registered. Raw texts kept in
+`data/tariffs/raw/`.
+
+**A2 trend null (pooled 6.2+6.3+6.4), with the mean null beside it.** Correction to the reading above: the 95%
+interval of the mean-null test is an interval for the **effect** η_2021 − m, centred at −0.320, not around η_2021.
+
+| dose | η_2021 | mean null: effect, p, 95% interval | trend null: ŷ_2021 (slope/yr), effect, p, 95% interval |
+|---|---|---|---|
+| **full (registered)** | −0.177 | **−0.320**, p 0.007, [−0.544, −0.096] | −0.026 (−0.038), **−0.151**, p 0.044, [−0.337, +0.036] |
+| energy only | −0.150 | −0.400, p 0.003, [−0.629, −0.172] | +0.197 (−0.012), −0.348, p 0.031, [−0.723, +0.028] |
+| power only | −0.320 | −0.505, p 0.011, [−0.901, −0.109] | −0.134 (−0.071), −0.186, p 0.052, [−0.433, +0.061] |
+| contract bound | −0.165 | −0.307, p 0.006, [−0.508, −0.106] | −0.007 (−0.033), −0.158, p 0.034, [−0.334, +0.019] |
+
+**Reading.** The industrial elasticity to the regulated period price is **−0.15 (trend null) to −0.32 (mean null)**.
+It is detected one-sided under both nulls (p 0.044 and 0.007). Under the trend null the two-sided 95% interval just
+includes zero (upper end +0.04). The reduced form (−1.0 point per period step, p 0.0001) does not depend on either
+null. Stop here, as registered.

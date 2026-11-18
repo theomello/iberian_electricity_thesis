@@ -157,3 +157,11 @@ operation in summer 2021 (post-COVID schedules), or a response to the **wholesal
 **Other descriptive points.** The leave-one-year-out fit moves the 2021 estimates little (E0 −0.101 → −0.116, IND
 −0.288 → −0.288, E1+E2 −0.168 → −0.182; 6.2 −0.08 → +0.05). Shifted-window placebo sd: E0 0.033, IND 0.060, E1+E2
 0.050, 6.2 0.13, 6.3 0.18, 6.4 0.29. E0 with six summers: households' p 0.019, rank 1/7 (the floor).
+
+## Erratum (2026-11-18, after the results): the IND series lost 60% of its 2021 hours
+Found while scoping the cause of the shift (`notes/scope-2021-high-voltage-shift.md`). E5 (ESIOS 1206) has no rows
+in many hours; `esios_load` sums with index alignment, so IND is NaN wherever E5 is absent: 1,548 of 2,568 hours of
+the 2021 window (June 680 of 720), none in the 2017–2019 aligned windows. **The IND rows of the results above (R1–R4,
+and the corrected R5) compare a selected 40% of 2021 hours with complete placebo summers, and are not valid as
+written.** The same applies to IND in `2026-11-16-industry-adjusted-design.md` and the 2026-11-17 randomization run.
+E0, E1+E2, 6.2, 6.3, 6.4 are unaffected. The fix (absent E5 hours as zero) and any rerun wait for the user.

@@ -89,3 +89,31 @@ in 2021 against +0.3 to +2.0 and −0.1 to +1.9 in normal years.
 4. What fits 6.3 and 6.4: an event confined to July–August 2021 at the largest plants, on all days of the week.
    Candidates for the next check: specific plants (D, the direct-consumer panel), cogeneration (C), and the August
    2021 heat wave at industrial sites (the LASSO uses population-weighted city temperature).
+
+## Cause found (2026-11-18, descriptive): the July and August change of the 6.x period calendar
+Working days, load by hour as a share of the daily mean, 2021 minus the 2017–19 mean (percentage points), against the
+period of each hour under the old (ITC/2794/2007) and new (Circular 3/2020) calendars:
+- **6.4, July** (old A1 → new high season): hours 9–10 (period 2 → 1) −7, −6; hours 14–17 (1 → 2) +3 to +5; hours 19–21
+  (2 → 1) −6, −8, −8; hours unchanged in period move little (11–13 −2 to −3, 22 −1); night +3 to +5. Normal-year sd
+  about 1.1.
+- **6.4, August** (old: every hour period 6; new: 9–14h and 18–22h period 3, other daytime period 4): night +3 to +5,
+  every daytime hour −1 to −4.
+- **6.3, August:** night +5 to +7, every daytime hour −3 to −4 (sd 0.9). 6.3 July: weak (sd 1.8).
+- **June and September** (old B → new medium: small changes): 6.4 and 6.3 within about ±3, no matching pattern.
+- E1+E2: July and August night +3, day −2 to −3; but June and September show a smaller version of the same, and
+  January–May 2021 was already off, so its pattern mixes the calendar with the pre-reform deviation.
+
+**Reading.** The largest plants moved load out of exactly the hours that became dearer *periods*, and into the hours
+that became cheaper ones, in the two months where the calendar changed most. That is a response to the reform, but
+**not to the energy toll in €/MWh**, which for 6.3 and 6.4 is a few euros (dose 0.04–0.06). The incentive must come
+from what follows the period calendar: the **power (capacity) term by period** and **supply contracts priced by
+period** (CNMC: about a third of industrial energy is fixed by period, a third mixed). So:
+1. **The dose is mismeasured for large industry**: it counts only the energy toll, so η = response / dose is inflated
+   where the toll is small, and does not scale across tariffs.
+2. **The R5 correction assumed 6.4 was untreated. It was treated.** R5's failure says nothing about a common non-price
+   shift.
+3. An identification route follows: the **change in period by month and hour** (old versus new calendar) is a sharp,
+   known treatment with many cells (24 hours × 12 months × day types) and an old-calendar placebo in every pre-reform
+   year. Turning the response into a price elasticity needs the price of each period as large consumers pay it:
+   power charges from the toll orders, and per-period contract prices (retailer price sheets or CNMC data), not yet in
+   the repo.

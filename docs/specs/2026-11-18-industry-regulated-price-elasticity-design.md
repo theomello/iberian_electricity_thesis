@@ -94,3 +94,49 @@ for the fixed and mixed share (0.5 weight), giving a smaller elasticity in absol
 `scripts/analysis/tou_industry_regulated_price.py` reusing `tou_industry_six_summer` (build, errors, aligned windows) and
 `tou_cross_tariff`; power-term table `outputs/tables/tou_power_term_6x.csv` (old and new, € per kW-year, source BOE ids);
 outputs `outputs/tables/tou_industry_regulated_price{,_summary}.csv`. Deterministic.
+
+## Results (run 2026-11-18; `scripts/analysis/tou_industry_regulated_price.py`, committed in eba9f4e before the run; outputs `outputs/tables/tou_industry_regulated_price_summary.csv`, `tou_power_term_6x.csv`)
+
+**Z1 pass.** All twelve power-term rows (old 6.1A–6.4 from BOE-A-2014-13475 and BOE-A-2014-1052; new tolls 6.1TD–6.4TD,
+BOE-A-2021-4565 Annex I 1.a, transport + distribution; new charges segments 3–6, BOE-A-2021-6390 art. 2.a) read from
+the XML tables and, independently, from the PDF text: identical to six decimals. Independent check: the new transport
+and distribution tables sum exactly to the published T&D table. Equivalent €/MWh (6.4TD, old → new): P1 21.6 → 18.5,
+P2 7.8 → 10.7, P3 11.6 → 6.2, P6 0.5 → 0.2. **Z2 pass:** within-day sd of the dose 6.2 0.055, 6.3 0.050, 6.4 0.036,
+E1+E2 0.086 (energy-only: 0.026, 0.023, 0.014, 0.050).
+
+| pooled 6.2+6.3+6.4 | η 2021 | placebo summers 2014 … 2019 | m (sd) | p_t | p_rank | 95% interval |
+|---|---|---|---|---|---|---|
+| **full dose (energy + power)** | **−0.177** | +0.232 +0.216 +0.183 +0.102 +0.024 +0.100 | +0.143 (0.081) | **0.007** | 0.143 | **[−0.544, −0.095]** |
+| energy only (old dose) | −0.150 | +0.307 … +0.339 | +0.250 (0.082) | 0.003 | 0.143 | [−0.629, −0.172] |
+| power only | −0.320 | +0.339 … +0.063 | +0.185 (0.143) | 0.011 | 0.143 | [−0.901, −0.109] |
+| contract bound (half weight) | −0.165 | | +0.142 (0.072) | 0.006 | 0.143 | [−0.508, −0.106] |
+
+Series alone (full dose): 6.2 −0.064, 6.3 −0.233, 6.4 −0.337; E1+E2 −0.084 (S = 3, p 0.077, interval [−0.20, +0.06]).
+**Reduced form (E6):** hour share changes by **−1.00 point of the daily mean per one-step dearer period** in
+June–September 2021; placebo years −0.11 to +0.08; p_t 0.0001.
+
+**Rules.** E1 detection **pass** (p 0.007). E2 rank **pass** (below all six summers). **E3 null centred fails**
+(placebo mean +0.143 > |η|/3 = 0.059). E4 leave-one-summer-out **pass** (all p ≤ 0.016). **E5 proportionality fails**
+(6.2 −0.064 lies outside [−0.544, −0.095]; the series estimates still rise with voltage). E6 reduced form **pass**.
+
+**Verdict, as registered.** The response to the reform's period calendar is detected, against every pre-reform summer,
+in both the elasticity (E1, E2, E4) and the price-free reduced form (E6, the strongest result). But the elasticity's
+size is not pinned down: its null is drifted (E3) and the series do not scale with the new dose (E5). Reported as a
+detected industrial response to the regulated period price with an interval of **[−0.54, −0.10]** and these two caveats,
+not as a single number. The spec named no outcome for an E3 failure; this reading follows the six-summer spec's wording
+("rests on a drifted null; reported as such").
+
+**Descriptive, not rules.**
+- The drift has a direction: placebo values fall from +0.23 (2014) to +0.02–0.10 (2018–19). Large-plant load in the
+  dose-heavy cells has been declining across years, so the "no reform" value for 2021 is somewhere between the trend's
+  extrapolation (about −0.05) and the placebo mean (+0.14): the elasticity is roughly **−0.13 to −0.32**, centred near
+  the raw −0.18. This bracket is post hoc and is not a test.
+- Contracts barely matter: the contract bound moves the estimate from −0.177 to −0.165.
+- Omitted price component: old capacity payments by period (e.g. 6.1A P1 €13.63/MWh) fell to about €1/MWh with
+  Orden TED/371/2021. Not in the dose. It makes the new period 1 *cheaper* in energy than the old one, so leaving it out
+  overstates the dose in P1 hours and makes the elasticity too small in absolute value, if anything.
+- Direct consumers (59 units present in 2018, 2019 and 2021, 47% of own and represented volume; purchases, not
+  metering): hour share on the rank change −0.0054 against ±0.0012 in the 2018/2019 placebo pair. July night hours
+  +9 to +17 points, daytime −3 to −11; August night +5 to +7, day and evening −3 to −10. Buyers without period-priced
+  contracts moved the same way, so the response is not a contract artefact. Their pattern is less hour-specific than
+  6.4's (14–17h did not rise in July).

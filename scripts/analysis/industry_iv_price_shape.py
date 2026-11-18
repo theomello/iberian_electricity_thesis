@@ -208,9 +208,9 @@ def step0(sample, method):
     print(C.to_string(index=False))
 
 
-def step1(sample):
+def step1(sample, forced=None):
     method = None
-    for mth in METHODS:  # fixed order: the first learner whose step-0 gate passed (spec amendment 2)
+    for mth in ((forced,) if forced else METHODS):  # fixed order: the first learner whose step-0 gate passed (spec amendment 2); --method forces one learner (solar-probe spec: run both ways)
         f0, fc = tag(sample, "_step0_checks", mth), tag(sample, "_step0_choice", mth)
         if not f0.exists() or not fc.exists():
             continue
@@ -270,7 +270,7 @@ def main():
     ap.add_argument("--step", type=int, choices=(0, 1), required=True)
     ap.add_argument("--method", choices=METHODS, default="N1", help="nuisance learner for step 0 (step 1 picks it from the step-0 files)")
     a = ap.parse_args()
-    step0(a.sample, a.method) if a.step == 0 else step1(a.sample)
+    step0(a.sample, a.method) if a.step == 0 else step1(a.sample, a.method if "--method" in sys.argv else None)
 
 
 if __name__ == "__main__":

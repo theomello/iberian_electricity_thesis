@@ -28,4 +28,19 @@ One year (about 210 days); plants under a consumption floor are not representati
 Script `scripts/analysis/industry_iv_solar_probe.py` (one pass: P1-P4 and the benchmark D), to be written and committed before any run, reusing `industry_iv_price_shape.py` (block frame, learner N2) and `industry_iv_metered.py` (series). Output `outputs/tables/industry_iv_solar_probe{,_checks}.csv`. **Running needs the user's go-ahead ('Confirmed, run it').** The extension's step 1 waits for this probe.
 
 ## Results
-(not run)
+(see below)
+
+### Run 2026-11-18 (`industry_iv_solar_probe.py`, committed before the run; outputs `outputs/tables/industry_iv_solar_probe{,_checks}.csv`). A first launch stopped on a coding error (the first-stage F of a reduced form divides by a zero residual) before any result existed; the F is now undefined for reduced forms (class `RFSub`) and nothing else changed.
+Benchmark **D = 0.00252** log-ratio points per sd of S1 (slope_S1 0.0647, slope_W1 0.0164, π_S 0.0522). Probe sample 212 days, 2019. Reduced forms (slope per sd of the instrument, randomization intervals):
+
+| Item | Slope | 95% interval | p (t-rank) |
+|---|---|---|---|
+| S1 on the interruptible outcome, **planted D** | 0.00611 | [-0.0003, 0.0118] | 0.001 |
+| W1 on the interruptible outcome | 0.00016 | [-0.0050, 0.0050] | 0.94 |
+| S1 on the interruptible outcome | 0.00359 | [-0.0028, 0.0093] | 0.021 |
+| W1 on aggregate E3-E6, 2019 (225 days) | 0.00043 | [-0.0019, 0.0028] | 0.50 |
+| S1 on aggregate E3-E6, 2019 | 0.00322 | [0.0005, 0.0060] | 0.001 |
+
+**P1 fails**: the planted D is detected by the t-rank (p 0.001) but its randomization interval [-0.0003, 0.0118] includes zero, and the rule requires both. The probe cannot see a direct effect of the size that would explain S1's behaviour, so it is **uninformative and condemns nothing; P2-P4 are recorded and not read**, per the registered rule. (For the record only: W1's reduced form is a precise zero on the floor plants, S1's is +0.0036 with the sign of D and p 0.021 but an interval containing zero, and the aggregate S1 reduced form +0.0032 [0.0005, 0.0060] is of the size of D.)
+**Consequence, registered in advance:** the extension's step 1 runs **both ways, reported side by side**: N1 with S1 (the registered order) and N2 with W1; a disagreement between them is read as heterogeneity or invalidity indistinguishably. S1 keeps its flag in the primary sample.
+

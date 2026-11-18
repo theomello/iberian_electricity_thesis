@@ -24,10 +24,17 @@ import industry_iv_price_shape as PS  # noqa: E402
 import tou_did as T  # noqa: E402
 
 
+class RFSub(E.Sub):
+    """Reduced form: the instrument is its own regressor, so the first stage is exact and its F is undefined."""
+
+    def first_stage_F(self, Z):
+        return float("nan")
+
+
 def rf(d, y, z, srcs, mask=None):
     """Reduced form: slope of residualised y on residualised z (z is its own instrument), randomization interval."""
     m = np.ones(len(d), bool) if mask is None else mask
-    sub = E.Sub(d, y, z, z[:, None], m, [0])
+    sub = RFSub(d, y, z, z[:, None], m, [0])
     sub.Zfull = z[:, None]
     r, _ = E.run_sub(sub, srcs, 1.0)
     return dict(slope=r["elasticity"], lo=r["rand_lo"], hi=r["rand_hi"], p_t_rank=r["p_t_rank"], n=r["n"])

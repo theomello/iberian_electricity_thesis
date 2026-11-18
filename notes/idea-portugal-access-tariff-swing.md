@@ -125,3 +125,7 @@ The user decided to use Portugal only as a control. The treated-Portugal design 
 **What this says for the control.** On the tariff side Portugal is clean for the Spanish June 2021 reform: its access tariffs did not change at that date, and the previous steps are all annual on 1 January. Caveats: (1) MT regulated-tariff extinction on 1 January 2022 sits in the post window; (2) COVID restrictions differed in timing between the countries; (3) Portugal and Spain share the Iberian gas-cap exception from June 2022, so Portugal is **not** an untreated control for the gas cap.
 
 **What it does not fix.** The data side is unchanged: E-REDES has monthly consumption by voltage level only from November 2020 and nothing hourly before 2023, so the 2018-21 pre-period for an hourly or industrial control is still missing. Whether REN's data hub or an E-REDES/ERSE request holds earlier voltage-level history is **not known**.
+
+## Request sent 2026-11-18
+
+The user sent the data request (`notes/draft-request-portuguese-load-history.md`) to `premio.opendata@e-redes.pt`, the open-data team's address on E-REDES's Open Data Academy Challenge page. Nothing received yet. Not yet asked: REN (data hub) and ERSE, which may hold voltage-level history before 2023. If E-REDES answers with a series, check the BT/MT/AT/MAT definition against the 2023 `consumo-total-nacional` before joining.

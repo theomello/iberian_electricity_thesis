@@ -1,0 +1,5 @@
+rule,pass,detail
+P1 power: planted D detected and recovered,False,"D 0.00252; est 0.00611 [-0.00031,0.01181], p 0.001"
+P2 wind is clean (W1 reduced form p above 0.05),True,"W1 0.00016 [-0.00496,0.00497], p 0.936"
+"P3 solar direct effect present (S1 detected, sign of D)",False,"S1 0.00359 [-0.00283,0.00929], p 0.021; sign of D +1"
+P4 context (no pass/fail),,"W1 reduced form on aggregate: 0.00043 [-0.00187,0.00277]; S1 reduced form on aggregate: 0.00322 [0.00049,0.00597]; D 0.00252"

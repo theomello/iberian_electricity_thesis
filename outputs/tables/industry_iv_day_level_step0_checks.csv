@@ -1,0 +1,4 @@
+rule,pass,detail
+A0 power: planted -0.05 detected and recovered,True,"est -0.0474 [-0.0754,-0.0166], p 0.001"
+A0b sharper than hourly (smallest detected pooled plant smaller than -0.03),False,"detected pooled plants: -0.05, -0.1"
+regime weights (no pass/fail),,half 2019-21H1: 0.30; half 2021H2-23: 0.72

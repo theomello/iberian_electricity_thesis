@@ -1,0 +1,9 @@
+rule,pass,detail
+"learner (the first of N1, N2, N3 whose planted gate passed)",,N2; N1 gate failed in the first step 0
+Q3 placebo outcome,True,"sigma 0.0016, p_t 0.815"
+Q4 sign and plausibility (0 < sigma <= 2),False,sigma -0.0164
+Q5 detection,False,"sigma -0.0164 [-0.0473,0.0054], p_t 0.013, F 20.5"
+Q7 regimes (no pass/fail),,"2019-21H1 0.0048 [-0.0253,0.0431]; 2021H2-23 -0.0325 [-0.1874,-0.0052]"
+Q9 calibration,True,leave-one-out share p<0.05 0.049; share |t|>1.96 0.000
+Q6 overidentification,False,"Hansen p 0.029; W1 -0.0164, S1 -0.0647, both -0.0346"
+Q10 context and exposed-share translation (no pass/fail),,"Boisvert et al. 0.10-0.18 (0.20-0.27 more exposed); Niagara Mohawk industrial 0.11; Patrick-Wolak 0-0.27; exposed share s 0.32-0.50; if only the exposed share responded the exposed-customer interval is [-0.095, 0.011] (s 0.50) to [-0.148, 0.017] (s 0.32)"

@@ -1,0 +1,5 @@
+rule,pass,detail
+HOUR B1 power: planted -0.3 detected and recovered,True,"est -0.3202 [-0.4271,-0.1673], p 0.001"
+HOUR planted -0.1 (no pass/fail),,"not detected: -0.1108 [-0.2267,0.0486]"
+DAY B1 power: planted -0.3 detected and recovered,True,"est -0.3147 [-0.4349,-0.1958], p 0.001"
+DAY planted -0.1 (no pass/fail),,"not detected: -0.1191 [-0.2356,0.0050]"

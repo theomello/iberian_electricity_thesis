@@ -1,0 +1,23 @@
+rule,pass,detail
+G1 reproduction,True,"corr 1.0000, median |diff| 0.0000 EUR/MWh on 8805 firm-hours"
+G0 coverage IBERDROLA,True,"X defined at p* 1.000, at p_cf 1.000 of 1761 hours"
+M1 IBERDROLA,True,"dX all -0.004, evening -0.318, night +0.423; 10% of sd = 0.437"
+M2 IBERDROLA,True,"|dX| at beta 1 0.004 (bar 0.50); at beta 0.01 -0.0000, at beta 0.25 -0.0009"
+D1 IBERDROLA June 2021,True,mean dX on net-seller hours +0.106 (219 hours); bar 0.510
+D1 IBERDROLA June-August 2021,True,mean dX on net-seller hours +0.019 (795 hours); bar 0.510
+G0 coverage ENDESA,True,"X defined at p* 1.000, at p_cf 1.000 of 1761 hours"
+M1 ENDESA,False,"dX all +0.155, evening -0.064, night +0.751; 10% of sd = 0.594"
+M2 ENDESA,True,"|dX| at beta 1 0.155 (bar 0.50); at beta 0.01 +0.0015, at beta 0.25 +0.0387"
+D1 ENDESA June 2021,,mean dX on net-seller hours +nan (0 hours); bar 0.126
+D1 ENDESA June-August 2021,,mean dX on net-seller hours +nan (0 hours); bar 0.126
+G0 coverage NATURGY,True,"X defined at p* 1.000, at p_cf 1.000 of 1761 hours"
+M1 NATURGY,False,"dX all +0.061, evening -0.089, night +0.436; 10% of sd = 0.414"
+M2 NATURGY,True,"|dX| at beta 1 0.061 (bar 0.50); at beta 0.01 +0.0006, at beta 0.25 +0.0152"
+G0 coverage EDP,True,"X defined at p* 1.000, at p_cf 1.000 of 1761 hours"
+M1 EDP,False,"dX all +0.143, evening -0.226, night +0.835; 10% of sd = 0.726"
+M2 EDP,True,"|dX| at beta 1 0.143 (bar 0.50); at beta 0.01 +0.0014, at beta 0.25 +0.0357"
+D1 EDP June 2021,True,mean dX on net-seller hours +0.044 (29 hours); bar 0.293
+D1 EDP June-August 2021,True,mean dX on net-seller hours +0.139 (99 hours); bar 0.293
+G0 coverage REPSOL,True,"X defined at p* 1.000, at p_cf 1.000 of 1761 hours"
+M1 REPSOL,True,"dX all -0.005, evening -0.010, night -0.010; 10% of sd = 0.097"
+M2 REPSOL,True,"|dX| at beta 1 0.005 (bar 0.50); at beta 0.01 -0.0001, at beta 0.25 -0.0013"

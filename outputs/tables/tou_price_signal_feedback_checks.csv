@@ -1,0 +1,6 @@
+rule,block,value,bar,verdict,dq
+P1,all,0.02087,0.1,pass,
+P1,evening,0.00012,0.1,pass,
+P1,night,0.05687,0.1,pass,
+B1,evening,0.03505,0.1,pass,244.85286
+B1,night,0.07318,0.1,pass,329.62895

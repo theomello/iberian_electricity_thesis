@@ -76,6 +76,14 @@ the Portuguese series belong to the same market object as the Spanish ones.
 | `ren_consumption_supply_daily.parquet` | 77,834 | 28 balance types |
 | `ren_installed_power_monthly.parquet` | 887 | capacity by technology |
 
+**Earlier history exists (probed 2026-11-18, not fetched):** `ElectricityProductionBreakdownDaily` returns the same
+15 series at 96 points a day for 2012-07-15, 2014-07-15, 2015-07-15 and 2017-07-15 (`Consumption` 112–146 GWh a day).
+`fetch_ren_portugal.py --start 2014-01-01 --end 2017-12-31` would extend it. For a pre-2018 LASSO also note:
+population temperature comes from Open-Meteo's ERA5 archive (2014 returns data); MERRA-2 (area panel only) starts
+1980; `fetch_holidays.py` has BOE ids only from 2018, and **Portugal suspended four national holidays in 2013–2015**
+(Corpo de Deus, 5 October, 1 November, 1 December; Lei 23/2012, restored from 2016 by Lei 8/2016), which the
+fixed list in `portugal()` does not handle.
+
 Points per day 92/96/100 — the 9 spring and 8 autumn DST days match Spain's
 counts exactly, which cross-validates both timezone implementations.
 
@@ -241,6 +249,15 @@ do not average).
   year and equals 1193 *Demanda en consumo* (within 1.5%). E0 is ~100 TWh a year (households, small business), E1–E6
   110–125 TWh (industry, services, large consumers). **This is the household/industrial proxy**: it splits by
   connection voltage, not by consumer type, and E0 includes shops and small offices.
+- **Before 2018 (probed 2026-11-18, monthly totals and one hourly day; not fetched):** 1201–1207, 1216–1218 exist
+  **hourly from 2014-01-01**, 1369 (6.1A) from 2015-01. In 2014 and 2017 E0–E6 sum to 10269 and to 1193 (within 0.1%;
+  July 2014 2.6%). **In 2015 and 2016 E1 and E2 are incomplete**: E1+E2 falls from about 5–6.9 TWh a month to 1.1–1.6,
+  and 10269 is 4–5.5 TWh a month below 1193; E0, E3/6.2, E4/6.3 and E6/6.4 look complete. 1369 (6.1A) is complete
+  in 2015–16 (July 2015 4.99 TWh; 0.72 of E1+E2 in 2017, matching the 72% mix share), so it can stand in for E1+E2
+  there. **Correction (2026-11-18, from the fetched files): E5 (1206) is not empty** — up to 228 MW, but with gaps
+  (650 days from spring 2014 to January 2016, and shorter ones), so an index-aligned sum of 1201–1207 is NaN in those
+  hours; treat absent E5 hours as zero when checking against 1193. **July 2014: E0–E6 is 2.6% above 1193** (all other
+  2014 months within 0.04%).
 - **By access tariff, 1209 (2.0TD), 1216–1218 (6.2–6.4), 1369 (6.1), 2531–2534 (3.0TD(VE), 6.1/6.2 TDVE) and
   "total" 10268: do not use as a split before 2024.** 10268 is not total demand: it is exactly the sum of the tariff
   series ESIOS publishes, 100–114 TWh in 2018–2023, because the low-voltage tariffs (2.0, 3.0) are empty until 2024

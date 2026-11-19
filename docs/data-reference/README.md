@@ -15,6 +15,7 @@ to touch **before** touching it; the traps are the cheapest way to avoid a silen
 | [`outages-renewables-other.md`](outages-renewables-other.md) | outages, wind/solar locations, holidays, PDVD, France, Italy, GB, GIE, `indisp`, interconnection |
 | [`goiener-household-smart-meters.md`](goiener-household-smart-meters.md) | GoiEner household smart-meter series, tariffs, 3.0TD pre-period gap |
 | [`barcelona-electricity-by-postal-code.md`](barcelona-electricity-by-postal-code.md) | Barcelona consumption by postal code, sector and six-hour band (unit kWh, not MWh) |
+| [`eredes-consumption-by-voltage.md`](eredes-consumption-by-voltage.md) | Portugal 15-minute load by voltage (2023+), monthly billed HV vs BT (2020-11+), retailer-control check |
 | [`traps.md`](traps.md) | every silent-failure trap, the whole-day dropouts, audit exceptions |
 
 Related: [`../unit-agent-mapping.md`](../unit-agent-mapping.md) (the agent mapping in full),

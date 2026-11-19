@@ -1,0 +1,6 @@
+item,outcome,planted,slope,lo,hi,p_t_rank,n
+"S1 reduced form, planted D",interruptible 2019,0.00252,0.006111,-0.000308,0.011808,0.000999,212
+W1 reduced form,interruptible 2019,,0.00016,-0.004961,0.004972,0.936064,212
+S1 reduced form,interruptible 2019,,0.003592,-0.002827,0.009288,0.020979,212
+W1 reduced form,aggregate E3-E6 2019,,0.000432,-0.001869,0.002769,0.4995,225
+S1 reduced form,aggregate E3-E6 2019,,0.003217,0.00049,0.005966,0.000999,225

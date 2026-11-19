@@ -194,6 +194,7 @@ def main() -> int:
     ok("production: 15 series", prod["series"].nunique() == 15,
        f"{prod['series'].nunique()}")
     cap = pd.read_parquet(DATA / "ren/ren_installed_power_monthly.parquet")
+    cap = cap[cap["year"].between(2018, 2026) & ~((cap["year"] == 2026) & (cap["month"] > 5))]  # window only (REN extended to 2014 on 2026-11-18)
     ok("capacity: 101 months", cap.groupby(["year", "month"]).ngroups == 101,
        f"{cap.groupby(['year','month']).ngroups}")
 

@@ -1,0 +1,9 @@
+rule,pass,detail
+A0b sharper than hourly (from step 0),False,"if False the result is a margin check, not a new bound"
+A1 placebo outcome,False,"elasticity -0.0203, p_t 0.088"
+"A2 detection (negative, p<=0.05, interval excludes zero)",False,"-0.0014 [-0.0268,0.0277], p_t 0.917, F 57.1"
+A3 agreement with hourly interval,True,"day-level -0.0014, hourly interval (-0.021, 0.028)"
+A4 regimes (no pass/fail),,"2019-21H1 0.0398 [-0.0314,0.1411]; 2021H2-23 -0.0147 [-0.0411,0.0054]"
+A6 calibration,True,leave-one-out share p<0.05 0.049; share |t|>1.96 0.006
+Hansen J (no pass/fail),,"J 0.32 p 0.573; d_pc only 0.0000 [-0.0196,0.0237]"
+"A5 cross-day: intertemporal substitution (next-day price coefficient positive, p<=0.05, interval excludes zero)",False,"conditional F 56.4/45.3/63.9; price d-1 0.0113 [-0.0131,0.0357] p 0.021; price d (own day) 0.0060 [-0.0306,0.0425] p 0.380; price d+1 (next day, public ~13:00 on d) -0.0151 [-0.0404,0.0102] p 0.005; sum of three 0.0021 [-0.0203,0.0246] p 0.553"

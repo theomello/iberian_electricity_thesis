@@ -1,0 +1,7 @@
+rule,pass,detail
+Q0 first stage W1 (F at least 10),True,F W1 14.7; S1 54.9; W1+S1 40.2
+Q1 idle test for S1 (first stage on ln(pE/pV) F below 10),True,F 0.0
+Q2 planted gate [N2]: sigma0 0.15 detected and recovered (instrument W1),True,"est 0.1716 [0.1323,0.2258], p 0.001"
+detectable sigma (no pass/fail),,smallest detected pooled plant: 0.05
+diagnostic: residual-scale plants (no pass/fail),,"0.05: 0.0716 [0.0323,0.1258]; 0.1: 0.1216 [0.0823,0.1758]; 0.15: 0.1716 [0.1323,0.2258]; 0.3: 0.3216 [0.2823,0.3758]"
+regime weights (no pass/fail),,half 2024: 0.81; half 2025: 0.33

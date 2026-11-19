@@ -1,0 +1,15 @@
+gate,scenario,se,seeds,power,passes,value
+G1,"current data, 10 seeds",0.0539258856235886,10,0.178435,False,
+G1,20 seeds,0.0539258856235886,20,0.13397,False,
+G1,50 seeds,0.0539258856235886,50,0.09089,False,
+G1,"to 2026-05 (89 months), 10 seeds",0.05144519199462242,10,0.20145,False,
+G1,"to 2026-05, 15-min months counted 4x (113), 10 seeds",0.04565628535695913,10,0.273585,False,
+G1,"current data, perfect correction (band = seeds' mean)",0.0539258856235886,10,0.457795,False,
+G1,data multiple needed for 0.80: 4.1x,0.026632096627979527,10,0.8,,
+G1,"observed: AR_hi - min(seeds), already read 2026-10-28",0.0539258856235886,10,,,0.16430163199974224
+G3,fresh 8 months | alt = point estimate,0.10233933972473451,10,0.102735,False,
+G3,extended 29 months (reuses read data) | alt = point estimate,0.053751254561896764,10,0.6004,,
+G3,fresh 8 months | alt = 2019-21H1 size 0.25,0.10233933972473451,10,0.232285,,
+G3,extended 29 months (reuses read data) | alt = 2019-21H1 size 0.25,0.053751254561896764,10,0.75675,,
+G3,fresh 8 months | null = price-takers,0.10233933972473451,10,0.002265,,
+G3,extended 29 months (reuses read data) | null = price-takers,0.053751254561896764,10,0.137915,,

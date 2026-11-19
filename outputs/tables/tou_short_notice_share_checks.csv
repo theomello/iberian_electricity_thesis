@@ -1,0 +1,7 @@
+rule,pass,detail
+G1 first stage F >= 20,True,F 97.5
+G2 placebo outcome p > 0.05,True,"elasticity -0.0063, p_t 0.471"
+L1 lambda_U < 1 at theta 0.32,True,"lambda_U 0.715, lambda_hat 0.012"
+L2 lambda_U < 1 at theta 0.49,True,lambda_U 0.467
+L3 sign eps_u <= 0.02,True,"eps_u -0.0006 [-0.0185, 0.0265]"
+s (step 0),,"all 0.8509, old regime 0.8219, new regime 0.8860"

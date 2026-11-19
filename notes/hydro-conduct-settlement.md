@@ -1,6 +1,6 @@
 # Hydro conduct: the four open points, settled for the descriptive chapter (2026-11-19)
 
-**No new estimate.** Items 1 and 3 by gates computed before any run
+**Accepted by the user as final, no runs (2026-11-19).** **No new estimate.** Items 1 and 3 by gates computed before any run
 (`docs/specs/2026-11-19-hydro-conduct-settlement-design.md`; both fail, so no run); items 2 and 4 from stored outputs
 (`fixed_step_band_reading.csv`, `price_taking_simulation_hydro_*_reading.csv`, `hmoments_*` step cache).
 

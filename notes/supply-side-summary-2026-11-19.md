@@ -63,3 +63,20 @@ Disk 88% full (12 GiB free). Largest: `data/omie` 9.4 G, `data/esios` 9.1 G, `ou
 the chapters are fixed: Italy (`data/gme`) and Great Britain (`data/elexon`) if they stay out of the main text;
 re-buildable caches (`outputs/cache`, `data/cache_tou`); parquet panels of stopped designs in `outputs/tables`.
 Never delete the three non-re-fetchable sets in CLAUDE.md (OMIE unit lists, SNIRH raw, investing CSVs).
+
+## 4. Decisions (user, 2026-11-19)
+
+**Principle:** the supply side is used for context; it is linked to the headline results only where the link is
+called for.
+
+- **In, as context (chapter 2):** the conduct conclusion: Nash rejected everywhere; price-taking accepted for thermal
+  (equivalence, δ = 0.1); hydro to be settled (session `hydro-settle`, started 2026-11-19). The hydro departure gets
+  one paragraph plus D1. The finding that integrated firms sell hydro mostly through bilateral contracts goes in as
+  context for exposure.
+- **Price-taker simulation:** in the appendix (the thermal result rests on it), cited in one sentence in the text.
+- **Out:** gas-cap welfare (no rerun at ρ 0.87); withholding (out of the main text, appendix lines at most); the
+  day-ahead minus intraday premium.
+- **Undecided:** leg C's lesson (footnote or a method-appendix paragraph); what the price effect, T2 and T3 add, and
+  where they go (under discussion).
+- **Next:** go through every supply-side note and spec rigorously, assigning each to context, appendix, a separate
+  gas-cap/conduct paper, or nothing.

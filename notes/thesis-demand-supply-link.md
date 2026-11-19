@@ -94,6 +94,8 @@ reform cannot have ended the hydro markup, and the clawback reading strengthens.
 σλθ·Δp/r̄; with λ from T1 it is computed and shown to be negligible. This also justifies reading the demand estimates
 as equilibrium ones: with λ near 0, the supply response cannot feed back into the measured load shift.
 
+**T3 spec (proposed 2026-11-19, not registered):** `docs/specs/2026-11-19-price-signal-feedback-design.md` (P1 surprise sensitivity κ, B1 worst-case feedback; shape ratio descriptive).
+
 **Order:** T1 first (it sets λ, which T3b needs); T2 independent and can run in parallel; T3a is arithmetic on
 existing outputs.
 

@@ -93,3 +93,50 @@ worst case is an upper bound on every input at once.
 ## Outputs
 `scripts/analysis/tou_price_signal_feedback.py`; `outputs/tables/tou_price_signal_feedback{,_checks}.csv`. Reads
 the price-effect and T2 hour files, OMIE prices and the ESIOS load series; writes nothing else.
+
+## Results (run 2026-11-19; `scripts/analysis/tou_price_signal_feedback.py`, committed in ee1bae7 before the run; outputs `outputs/tables/tou_price_signal_feedback{,_checks}.csv`)
+
+1,761 valid weekday hours (T2's hour file); no E0 or 6.2–6.4 load missing.
+
+**(a1) Shape, descriptive.** Observed evening-minus-night spread on the window's valid hours: **+€8.44/MWh**
+(all weekdays 1 June–14 September: 2019 +4.74, 2020 +6.23, 2021 +8.57; the nine 2019 placebo windows +3.80 to
++10.99). The reform's contrast is −2.39 (neutral), −2.05 (REN level), −1.69 (regulated-unit level): **20–28% of the
+observed spread**. Without the reform the spread would have been about €10–11, inside the placebo windows' range.
+The reform flattened the daily price shape by about a quarter; it did not remove or reverse it.
+
+**(a2) Response to a surprise.** κ (price move per GW) averages €2.98/MWh per GW (evening 2.15, night 4.02).
+
+| Block | κ | Δκ (neutral) | |Δκ| / κ | REN level | regulated-unit level |
+|---|---|---|---|---|---|
+| all | 2.98 | −0.06 | **2.1%** | 1.2% | 6.6% |
+| evening 18–21 | 2.15 | −0.0002 | **0.0%** | 1.2% | 4.0% |
+| night 0–7 | 4.02 | −0.23 | **5.7%** | 1.7% | 5.0% |
+
+By hour the largest relative change is hour 0 (−0.40, 12%); every other hour is under 9%.
+
+**(b) Feedback.** Block means, MW, neutral level; the reform's shift |ΔQ| is 245 MW (evening) and 330 MW (night).
+
+| Inputs | Block | Households | Industry | Feedback / |ΔQ| | Multiplier |
+|---|---|---|---|---|---|
+| worst case | evening | 2.4 | 6.1 | **3.5%** | 1.036 |
+| worst case | night | 4.8 | 19.3 | **7.3%** | 1.079 |
+| point | evening | 1.5 | 0.02 | 0.6% | 1.006 |
+| point | night | 3.0 | 0.05 | 0.9% | 1.009 |
+
+At the REN and regulated-unit levels the worst-case share is 3.0–7.1%, the point share under 1%.
+
+**Rules.** P1 pass (all 2.1%, evening 0.0%, night 5.7%; bar 10%). B1 pass (evening 3.5%, night 7.3%; bar 10%; both
+blocks above 50 MW).
+
+**Verdict, as registered.**
+- **Signal:** the reform shifted the price level by hour (a quarter of the evening-minus-night spread) but left the
+  price's response to a surprise unchanged within 6% in every block; the hourly signal is the same signal.
+- **Feedback:** with every input at its least favourable end, the price change would undo at most 7% of the night
+  shift and 4% of the evening one; at the point inputs under 1%. The measured load shift is the equilibrium one and
+  the price effect needs no second round.
+
+**Departure, stated.** The point case uses r̄ = p for households as well (no household toll table is read by this
+script), so the household point feedback is overstated; it is reported only.
+
+**Reading the worst case.** The night worst case is mostly industry (19 of 24 MW), driven by T1's upper bound
+λ 0.71 at σ's far end −0.544; at T1's point λ industry's feedback is nil.

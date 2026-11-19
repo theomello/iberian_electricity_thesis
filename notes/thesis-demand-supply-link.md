@@ -141,6 +141,12 @@ Your call; nothing is run without a yes.
   hour by hour the reform shifted it between night (up to +0.8 for the large net buyers) and evening/midday (−0.1 to
   −0.6). Statement for the thesis: market power was not changed on average; it was redistributed across the day by
   under a euro.
+- **T3, price signal and feedback: all rules pass** (`docs/specs/2026-11-19-price-signal-feedback-design.md`). The
+  reform's evening-minus-night effect is 20–28% of the observed spread (+€8.4; 2019 placebo windows +3.8 to +11.0):
+  it flattened the daily shape by about a quarter. The price's response to a 1 GW surprise (≈€3/MWh) moved by 2%
+  overall, 0% in the evening, 6% at night (P1, bar 10%). Feedback of the price change on demand, every input at its
+  worst end: 3.5% of the evening shift, 7.3% of the night shift (B1, bar 10%); at the point inputs under 1%.
 - **Headline, filled in:** consumers respond to prices they can plan around (households about −0.1, industry about
   −0.18), and to a day-ahead surprise with at most about half of that (point: almost none); through the market the
-  reform moved prices by a couple of euros between night and evening and left market power unchanged on average.
+  reform moved prices by a couple of euros between night and evening (a quarter of the daily spread), left the price's
+  response to surprises and market power unchanged on average, and the price change does not feed back into demand.

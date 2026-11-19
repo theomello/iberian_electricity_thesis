@@ -74,3 +74,36 @@ so **λ = ε_u / (σ θ s)**. σ comes from the reform (planned change), ε_u fr
 ## Outputs
 `scripts/analysis/tou_short_notice_share.py`; `outputs/tables/tou_short_notice_share{,_checks}.csv`. Reads existing
 caches; writes nothing else.
+
+## Results (run 2026-11-19; `scripts/analysis/tou_short_notice_share.py`, committed in bbd9bbd before the run; outputs `outputs/tables/tou_short_notice_share{,_checks}.csv`)
+
+**Step 0.** 6.2+6.3+6.4 (ESIOS 1216–1218) have no missing hour on the 19,388 sample rows; no row dropped after the
+outcome swap. s = p / (p + T + W), load-weighted: **0.851** (old regime 0.822, new regime 0.886).
+
+| Estimate (6.2–6.4, wind speed C1) | F | Impact elasticity ε_u | 95% randomization interval | p (t-rank) |
+|---|---|---|---|---|
+| **full 2019–23** | 97.5 | **−0.0006** | **[−0.0185, +0.0265]** | 0.94 |
+| 2019–21H1 | 64.6 | +0.038 | [−0.003, +0.104] | 0.007 |
+| 2021H2–23 | 86.5 | −0.015 | [−0.031, +0.004] | 0.063 |
+| placebo outcome (lag 7 days) | 97.5 | −0.006 | [−0.042, +0.020] | 0.47 |
+
+| θ | λ̂ | λ_U (95%, Bonferroni) |
+|---|---|---|
+| **0.32** | **0.01** | **0.71** |
+| 0.49 | 0.01 | 0.47 |
+| 1.0 | 0.004 | 0.23 |
+
+**Rules.** G1 pass (F 97.5). G2 pass (placebo p 0.47). **L1 pass** (λ_U 0.71 < 1). **L2 pass** (0.47). L3 pass (ε_u −0.0006).
+
+**Verdict, as registered.** A day-ahead price surprise gets less than the planned response: the point estimate is
+about 1% of it, and at 95% at most 71% (θ = 0.32) or 47% (θ = 0.49). Large industry responds to the period price it
+can plan around, not to the hourly market signal.
+
+**Reported, no rule.**
+- Bid-curve instrument (E3–E6, closed by the settlement): λ̂ 0.75, λ_U 3.1 at θ = 0.32. It does not bound λ and its
+  point estimate points the other way; it is the weaker instrument (F 17).
+- E3–E6 wind speed C1: λ̂ ≈ 0, λ_U 0.81 (θ = 0.32), the same reading.
+- Sub-periods: 2019–21H1 is positive (+0.038, p 0.007, AR set not computed here); 2021H2–23 −0.015 [−0.031, +0.004]
+  (λ̂ about 0.3 at θ = 0.32 with σ applied to the period it was estimated in). The pooled estimate averages a positive
+  pre-reform response and a small negative later one, as on E3–E6; not interpreted further.
+- The bound is driven by the interval end of σ nearest zero (−0.095); at the point σ (−0.177) the bound would be 0.38.

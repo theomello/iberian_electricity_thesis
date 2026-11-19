@@ -73,3 +73,56 @@ Firms: Iberdrola, Endesa, Naturgy, EDP, Repsol (all units), and the same five re
 ## Outputs
 `scripts/analysis/tou_reform_market_power.py`; `outputs/tables/tou_reform_market_power{,_hours,_checks}.csv`.
 Reads the step cache, the bid archive and the price-effect counterfactual; changes none of them.
+
+## Results (run 2026-11-19; `scripts/analysis/tou_reform_market_power.py`, committed in 0a5940e before the run; outputs `outputs/tables/tou_reform_market_power{,_hours,_checks}.csv`)
+
+**Implementation, stated.** Band h = 5 €/MWh, as the stored panel's default. "Actual" is evaluated at the published
+p* (the stored panel's price) and the counterfactual at p* − Δp_h, Δp_h the price-effect test's point effect (actual
+re-clear minus counterfactual re-clear), so the curve error cancels as registered. 1,761 hours; mean Δp +€0.22.
+X = Nash markup in €/MWh = 100 × stored `incentive_exp_h5`. D1 uses each firm's whole-firm X on the hours it is a net
+seller (the markup any of its units would add depends on the firm's whole position).
+
+**Gates.** G1 pass: corr 1.0000, median |difference| €0.0000 on 8,805 firm-hours. G0 pass for all five firms (X
+defined in 100% of hours at both prices).
+
+| Firm | Net seller (share of hours) | X mean | X sd | ΔX all hours | ΔX evening 18–21 | ΔX night 0–7 | ΔX, REN level | ΔX, regulated-unit level |
+|---|---|---|---|---|---|---|---|---|
+| Iberdrola | 53% | +0.12 | 4.37 | −0.004 | −0.32 | +0.42 | −0.37 | −0.94 |
+| Endesa | 0% | −8.80 | 5.94 | +0.16 | −0.06 | **+0.75** | −0.21 | −0.84 |
+| Naturgy | 1% | −5.17 | 4.14 | +0.06 | −0.09 | **+0.44** | −0.31 | −0.79 |
+| EDP | 8% | −6.82 | 7.27 | +0.14 | −0.23 | **+0.84** | −0.44 | −1.33 |
+| Repsol | 94% | +0.97 | 0.97 | −0.005 | −0.01 | −0.01 | −0.00 | −0.01 |
+
+(€/MWh; ΔX = X with the reform minus X without it. Bold: above the M1 bar.)
+
+**Rules.**
+- **M1 fails for Endesa, Naturgy and EDP** (night block: ΔX +0.75, +0.44, +0.84 against 10% of sd 0.59, 0.41, 0.73);
+  passes for Iberdrola (night +0.42 against 0.44, narrowly) and Repsol.
+- **M2 passes for all five** (largest |mean ΔX| at Nash 0.16 against 0.50). At the estimated conduct the markup
+  change is at most €0.04/MWh (β 0.25) or €0.002 (β 0.01).
+- **D1 passes.** Iberdrola's X on its net-seller hours moved +0.11 in June 2021 and +0.02 in June–August, against a bar
+  of 0.51 (a tenth of its 2019–21H1 seller-hour level, 5.1). EDP: +0.04 and +0.14 against 0.29. Endesa is never a net
+  seller in the window, so its D1 row is empty (not a failure).
+
+**Verdict, as registered.**
+- **The hydro stop (D1):** the reform moved Iberdrola's Nash markup on its selling hours by about 2% of its pre-June
+  level. It gave Iberdrola's hydro no incentive reason to stop marking up in June 2021. The stop is a change of conduct
+  with the reform's incentive held fixed; the clawback announcement of the same day remains the dated candidate (a
+  coincidence of dates, not a test of the clawback).
+- **Market power (M1, M2):** "unaffected" holds on average (M2, all firms) but **not hour by hour** (M1 fails for three
+  firms). The reform moved the incentive across the day: at night, where it added demand and raised the price, the
+  three large net buyers' (negative) Nash markups became less negative by €0.4–0.8/MWh; in the evening and at midday
+  they moved the other way by €0.1–0.6. Over the day these offset. The thesis states: the reform shifted the market-
+  power incentive between hours by under a euro, nets to about zero over the day, and at the estimated conduct
+  changes markups by a few cents.
+
+**Reported, no rule.**
+- Level of the shift: at the REN (F) and regulated-unit (M) levels ΔX is negative for every large firm (−0.2 to
+  −1.3 at M): the window-average sign depends on the unidentified level, as the price effect's evening value did;
+  the between-hours pattern (night up, evening down) does not.
+- Charging each firm its share of the added demand (its retailers buy household load): ΔX all hours Iberdrola −0.01,
+  Endesa +0.12, Naturgy +0.04, EDP +0.10, Repsol −0.01: the same reading.
+- By hour (neutral level): positive in hours 0–7 for every firm but Repsol (Endesa up to +1.4 at hour 0), negative in
+  hours 10–13 and 18–21; near zero 14–17 and 22–23.
+- The M1 bar (10% of the window's own sd) was set without knowing how X's sd compares with the reform's between-hour
+  swing; it turned out strict. This is stated, not used to rescue M1.

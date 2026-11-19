@@ -126,3 +126,19 @@ You said these can be finished. With supply as description only, they no longer 
 | Gas-cap hour-of-day counterfactual | gas-cap paper item | drop |
 
 Your call; nothing is run without a yes.
+
+## 7. Results of T1 and T2 (run 2026-11-19; details in the two specs)
+
+- **T1, short-notice share λ: all rules pass.** On tariffs 6.2–6.4 the wind-speed instrument gives an impact
+  elasticity of −0.0006 [−0.0185, +0.0265] (F 97.5, placebo clean). λ̂ ≈ 0.01; at 95% λ < 0.71 (θ 0.32) or < 0.47
+  (θ 0.49). A day-ahead price surprise gets at most about half to seven-tenths of the planned response, and most
+  likely almost none. The bid-curve instrument (closed, weaker) points to λ ≈ 0.75 without bounding it; reported.
+- **T2, market power: D1 passes; M2 passes; M1 fails for three firms.** The reform moved Iberdrola's Nash markup on its
+  selling hours by +0.11 €/MWh in June 2021 (2% of its pre-June level): no incentive reason for the hydro stop.
+  Averaged over the day every firm's Nash markup moved by under €0.16/MWh (a few cents at the estimated conduct), but
+  hour by hour the reform shifted it between night (up to +0.8 for the large net buyers) and evening/midday (−0.1 to
+  −0.6). Statement for the thesis: market power was not changed on average; it was redistributed across the day by
+  under a euro.
+- **Headline, filled in:** consumers respond to prices they can plan around (households about −0.1, industry about
+  −0.18), and to a day-ahead surprise with at most about half of that (point: almost none); through the market the
+  reform moved prices by a couple of euros between night and evening and left market power unchanged on average.

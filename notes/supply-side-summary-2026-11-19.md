@@ -76,7 +76,9 @@ called for.
 - **Price-taker simulation:** in the appendix (the thermal result rests on it), cited in one sentence in the text.
 - **Out:** gas-cap welfare (no rerun at ρ 0.87); withholding (out of the main text, appendix lines at most); the
   day-ahead minus intraday premium.
-- **Undecided:** leg C's lesson (footnote or a method-appendix paragraph); what the price effect, T2 and T3 add, and
-  where they go (under discussion).
+- **Decided later the same day:** the price effect, T2 and T3 are validity conditions for reading the demand
+  estimates as structural; they go in a short section at the end of the demand chapters, not a chapter. Hydro
+  settled (`hydro-conduct-settlement.md`). Leg C: still open (footnote proposed).
+- **Inventory:** `supply-side-inventory-2026-11-19.md` assigns every supply file.
 - **Next:** go through every supply-side note and spec rigorously, assigning each to context, appendix, a separate
   gas-cap/conduct paper, or nothing.

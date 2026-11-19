@@ -42,3 +42,5 @@ planned response; θ = exposure to the hourly price; σ = response to a planned 
 Write A1–A7 into the chapters; they cost nothing and A1–A3 close the main gaps in T1 and T3 (households' λ, θ by
 volume, the mechanism for λ ≈ 0). Of the doors, **B1 is the only one that strengthens the headline itself**:
 it re-identifies σ on many signed events and would tighten λ. Mark B3 superseded unless IND is to be quoted.
+
+**B1 spec drafted (2026-11-19, proposed, not registered):** `docs/specs/2026-11-19-season-boundary-design.md`.

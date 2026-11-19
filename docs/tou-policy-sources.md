@@ -47,7 +47,7 @@ Tariff segments in the charges orders are numbered 1–6 and are **not named** i
 
 ## Still open
 
-- The **1 April 2022 step** in 1876 (peak 100.8 → 74.4) is not in the 2022 charges order (single price for the year). The source is not identified; likely a toll update or another decree-law. Not to be cited as a policy until found.
+- ~~The 1 April 2022 step in 1876~~ **Found (2026-11-19):** Real Decreto-ley 6/2022 (BOE-A-2022-4972), disposición adicional primera, new charges from its entry into force on 31 March 2022 to 31 December 2022. The 2022 2.0TD toll (CNMC BOE-A-2021-21208, labels corrected by BOE-A-2021-21647) plus these charges gives 74.41 at peak (1876: 74.4); with the January order's charges, 100.76 (1876: 100.8). The 6.2–6.4 toll and charge tables 2021-06 → 2026 are in `outputs/tables/tou_tariff_tables_6x_2021_2026.csv` (read twice, `docs/specs/2026-11-19-season-boundary-design.md`, Z1).
 - The 2022 charges plus the summer-2021 tolls give 100.3 at peak against 100.8 in 1876, so the tolls probably changed slightly on 1 January 2022; the 2022–2026 toll resolutions were not read.
 - The calendar of the six periods (Circular 3/2020, art. 7) is not reproduced in the resolution; needed for any 3.0TD/6.xTD design.
 - Segment-to-tariff mapping for segments 2 and 3 is by period count only.

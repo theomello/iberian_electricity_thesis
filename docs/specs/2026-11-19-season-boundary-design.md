@@ -97,3 +97,25 @@ the six-summer σ; keeps the two estimates independent), the lockdown **2020-03-
 ## Outputs
 `scripts/analysis/tou_season_boundaries.py`; `outputs/tables/tou_season_boundaries{,_checks,_events}.csv`;
 Z1 tables in `docs/tou-policy-sources.md` and a csv beside `tou_tariff_prices_2021.csv`.
+
+## Z1 result (2026-11-19) and a conflict found before Z2
+
+**Z1 passes.** Fourteen BOE texts read for 6.2–6.4 (energy and power; tolls from the CNMC resolutions BOE-A-2021-4565,
+-2021-21208, -2022-21799, -2023-26251, -2024-26218, -2025-26348; charges from BOE-A-2021-6390, RDL 17/2021
+BOE-A-2021-14974, BOE-A-2021-21794, RDL 6/2022 BOE-A-2022-4972, BOE-A-2022-23737, BOE-A-2024-2774,
+BOE-A-2024-27289, BOE-A-2025-26705). Pass 1: XML parsed by code, with transport + distribution = combined checked on
+every toll row (all equal). Pass 2: an independent read of the HTML pages (72 rows) and, for the two decree-laws, a
+second parser on the HTML (12 rows): **84 of 84 rows equal**. Errata read: BOE-A-2021-21647 relabels the 2022 energy
+tables (values unchanged); BOE-A-2024-27271 touches only a self-consumption table. Independent check: the parsed 2022
+2.0TD toll plus charge gives €100.76 (Jan–30 Mar) and €74.41 (from 31 Mar) against ESIOS 1876's €100.8 and €74.4.
+The 2023 charges ran on until 14 February 2024 (extension) and the 15 February 2024 order repeats them for segments
+4–6. Old 6.x terms 2014-02 → 2021-05: as recorded in `docs/tou-policy-sources.md` (Orden ETU/1282/2017 statement
+and the 2.0A check; the 2019–2020 orders were not read). Values: `outputs/tables/tou_tariff_tables_6x_2021_2026.csv`.
+
+**Conflict, found after registration and before any outcome was computed.** The same idea was registered and run on
+2026-11-16 (`docs/specs/2026-11-17-calendar-boundary-design.md`, Barcelona services on 3.0TD): η −0.004
+[−0.080, +0.071], E1–E5 failed, and the design was closed with "no other window, sector aggregation or base year is
+tried". This design uses different series (national 6.2–6.4), the old calendar's boundaries and a cross-year
+comparison, but it tests the same idea after a closure. My review of 2026-11-19 missed the earlier design (the idea
+note still says "idea only"). Z2 and everything after it are not run until the user decides whether this is a new
+test or a closed door.

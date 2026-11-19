@@ -46,3 +46,4 @@ it re-identifies σ on many signed events and would tighten λ. Mark B3 supersed
 **B1 spec drafted (2026-11-19, proposed, not registered):** `docs/specs/2026-11-19-season-boundary-design.md`.
 
 **Correction (2026-11-19):** B1 is not an untried door. The Barcelona-services version was closed on 2026-11-16 with a bounded null; that bounded null is itself a link (A-type): business customers' month-scale response to the 3.0TD steps is no stronger than about −0.08. The 6.x national version registered today stops before Z2 pending the user's decision.
+**Closed (2026-11-19, user decision):** the 6.x national version is not run; B1 is closed. Use the Barcelona bounded null as a link in the descriptive chapter.

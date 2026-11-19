@@ -119,3 +119,7 @@ tried". This design uses different series (national 6.2–6.4), the old calendar
 comparison, but it tests the same idea after a closure. My review of 2026-11-19 missed the earlier design (the idea
 note still says "idea only"). Z2 and everything after it are not run until the user decides whether this is a new
 test or a closed door.
+
+## Closed (2026-11-19, user decision)
+The user closed the design after Z1 ("Close it"): Z2 and the estimation are not run. What stands is the earlier
+Barcelona-services bounded null (−0.004 [−0.080, +0.071]) and the Z1 tariff tables, kept for reuse.

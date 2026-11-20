@@ -2,7 +2,25 @@
 
 Branches `tou-policy-prices` (merged, PR #9) and `tou-replication-closure` (per-capita, weather, contrast placebo, industry). Every number below is in `docs/specs/2026-11-11-tou-hardening-design.md` with its script and csv in `outputs/tables/tou_*`.
 
-## Headline
+## Headline — decided 2026-11-20 (supersedes the household-only headline below)
+
+**One table, one estimator (six-summer prediction test, regulated per-period price as the dose):**
+- **Large industry (tariffs 6.2–6.4 pooled): −0.15 to −0.32.** Trend null (line through the six placebo summers)
+  −0.15, p 0.044; mean null (registered) −0.32, p 0.007. The price-free reduced form, −1.0 point of daily load share
+  per one-step dearer period (p 0.0001), does not depend on the null. Source:
+  `docs/specs/2026-11-18-industry-regulated-price-elasticity-design.md` (results + amendment A).
+- **Households and small business (E0): −0.11** [−0.21, −0.01], p 0.019, placebos centred on zero (mean −0.005), so
+  trend vs mean does not arise. Source: `docs/specs/2026-11-18-industry-six-summer-ri-design.md`.
+- **Industry's same-hour response to the wholesale price: a precise zero** (wind-speed IV).
+- **Replication beside it:** the paper's design (Portugal control) gives −0.06 to −0.09 for E0 (paper: −0.082 to −0.135).
+
+Sentence: *large industry responds one and a half to three times as strongly as households to the regulated period
+price, and not at all to the hourly market price: it responds to the price schedule it signs up for in advance.*
+Heterogeneity (6.2 −0.06, 6.3 −0.23, 6.4 −0.34; series alone are noisy) is reported as a finding, not a test.
+To prepare: why the replication range is smaller and narrower than E0's −0.11 [−0.21, −0.01]; an appendix table of
+every headline result against its placebos, failures (E3, E5) included.
+
+## Earlier headline (households only, 2026-11-12/16)
 
 **Spain's June 2021 time-of-use reform cut evening electricity demand by about 4–5% relative to night. On the method of Enrich, Li, Mizrahi and Reguant this is a within-day price elasticity of about −0.06 to −0.09 for aggregate low-voltage demand (evening-versus-night Wald ratios; decision 2026-11-12, reversing the earlier choice of column 4 to lead). The paper's column-4 regression gives −0.10 (se 0.012) and corroborates it; on the rebuilt regulated-area panel column 4 gives −0.085. It is a response to the reform as a whole, not a clean price slope: it does not scale with later charge changes.**
 

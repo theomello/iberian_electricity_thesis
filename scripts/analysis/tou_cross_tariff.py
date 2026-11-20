@@ -36,8 +36,19 @@ LOADS = {"E0": [1201], "E1+E2": [1202, 1203], "6.2": [1216], "6.3": [1217], "6.4
 MIX = {"E0": [("2.0", 0.69), ("3.0", 0.31)], "E1+E2": [("3.1->6.1", 0.20), ("6.1", 0.80)], "6.2": [("6.2", 1.0)], "6.3": [("6.3", 1.0)], "6.4": [("6.4", 1.0)]}
 
 
+ZERO_WHEN_ABSENT = {1206}  # E5 (145-220 kV) has no row in hours where it is zero; see notes/scope-2021-high-voltage-shift.md
+
+
 def esios_load(ids):
-    s = sum(pd.read_parquet(T.ROOT / f"data/esios/esios_{i}.parquet")[["utc_timestamp", "value"]].drop_duplicates("utc_timestamp").set_index("utc_timestamp").value for i in ids)
+    """Sum ESIOS series by UTC hour. An hour missing from E5 (1206) counts as zero; a missing hour in any other
+    component leaves the sum NaN. (Before 2026-11-20 a plain `sum` made the total NaN whenever E5 was absent:
+    60% of the 2021 window for IND.)"""
+    parts = {i: pd.read_parquet(T.ROOT / f"data/esios/esios_{i}.parquet")[["utc_timestamp", "value"]].drop_duplicates("utc_timestamp").set_index("utc_timestamp").value for i in ids}
+    df = pd.concat(parts, axis=1)
+    rest = [i for i in ids if i not in ZERO_WHEN_ABSENT]
+    if rest:
+        df = df[df[rest].notna().all(axis=1)]
+    s = df.fillna({i: 0.0 for i in ids if i in ZERO_WHEN_ABSENT}).sum(axis=1, min_count=len(ids))
     loc = s.index.tz_convert("Europe/Madrid")
     return pd.DataFrame({"date": pd.to_datetime(loc.date), "hour": loc.hour, "v": s.to_numpy()}).drop_duplicates(["date", "hour"])
 

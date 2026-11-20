@@ -61,3 +61,9 @@ Placebo windows overlap heavily (about 15 independent ones), so (a) overstates p
 | 6.4 | −0.533 | 0.018 / 0.037 | [−1.64, −0.09] | [−1.46, −0.66] |
 Reading: the household result is an identified elasticity. For IND, 6.3 and 6.4 the real estimate is more negative than every season-matched placebo, but (i) 0.037 is the smallest p that 26 windows allow and the 26 come from two summers (two clusters in practice), (ii) the placebo means are positive and the adjustment (η_RI = real minus mean) inflates the estimates to −0.37, −0.46 and −0.85, which are not believable magnitudes at doses of 0.04-0.07, and (iii) the earlier registered industry verdict (rules 3-7: placebo years disagree, reduced form, sensitivity) stands. They remain descriptive: the industrial series respond in the predicted direction in 2021 more than in any placebo summer, with a size that this design cannot pin down.
 Limits as registered: overlapping windows (about 15 independent), two summers in the season-matched set, Fisher intervals assume a constant additive effect.
+
+## Erratum (2026-11-20): the IND row rests on 40% of the 2021 hours
+The IND real estimate (−0.288) was built with the old `tou_cross_tariff.esios_load`, which made the sum NaN whenever
+E5 (ESIOS 1206) had no row: 1,548 of 2,568 hours of the 2021 window. **The IND row is not valid.** E0, E1+E2 and
+6.2–6.4 are unaffected, so the household result and the other rows stand. The loader is fixed (absent E5 = 0); the
+corrected IND estimate (−0.189, p 0.043) is in `2026-11-18-industry-six-summer-ri-design.md`. Not rerun here.

@@ -67,3 +67,11 @@ France as control gives the same signs and overlapping intervals for every serie
 **Reading, per the registered outcomes.** The E0 household check passes: the adjustment reproduces the household elasticity (-0.09) and corrects the 2019 placebo's pull. **For industry the pre-registered result is: E1+E2 passes the identification guard but the response is not detectable (interval -0.25 to +0.09); IND, the series with the tighter interval, fails the guard on the sign of the placebo years, so no point estimate is reported for it.** 6.2-6.4 are noise (their placebos are as large as, and opposite to, the real estimates). **No industrial point estimate is identified.** For the record: IND's adjusted -0.27 (and its interval excluding zero) is not reported as an estimate, and E0's sign failure of rule 3 is a technicality of a tiny positive placebo, which does not change its reading.
 
 **A pattern the table shows (descriptive, not registered):** the adjusted evening-versus-night effect is about the same for households (-4.4%), E1+E2 (-4.1%) and the pooled industry series (-3.1%), although the dose is 0.64, 0.16 and 0.12. The implied elasticity therefore rises as the dose falls, as in the earlier run: the evening-versus-night shift in industrial demand is not proportional to the reform's price change. Either industrial flexibility per unit of price is several times higher, or what moved industry in 2021 is not the price change alone.
+
+## Erratum (2026-11-20): the IND row rests on 40% of the 2021 hours
+E5 (ESIOS 1206) has no row in hours where it is zero, and `tou_cross_tariff.esios_load` summed components with index
+alignment, so IND was NaN in 1,548 of the 2,568 hours of the 2021 window (June 680 of 720) and 0 hours of 2018–19.
+**The IND row above (−0.288 raw, −0.265 adjusted) is therefore not valid.** E0, E1+E2 and 6.2–6.4 do not include E5 and
+are unaffected; the reading for industry (no detectable response from the E1+E2 row) stands. Found in
+`notes/scope-2021-high-voltage-shift.md`; the loader is fixed (absent E5 = 0); the corrected IND estimate is in
+`2026-11-18-industry-six-summer-ri-design.md` (corrected results). Not rerun here.

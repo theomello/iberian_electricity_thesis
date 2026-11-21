@@ -20,6 +20,23 @@ Heterogeneity (6.2 −0.06, 6.3 −0.23, 6.4 −0.34; series alone are noisy) is
 To prepare: why the replication range is smaller and narrower than E0's −0.11 [−0.21, −0.01]; an appendix table of
 every headline result against its placebos, failures (E3, E5) included.
 
+**Framing decided 2026-11-20 (user: "B towards C").** Question (B): *which prices move electricity demand, and for
+whom?* The abstract and introduction lead with the contrast: large industry responds to the regulated period price
+(−0.15 to −0.32), not to the hourly market price (zero), and more than households (−0.11). The body follows C's order:
+(1) households, the replication of Enrich et al. as proof the method works; (2) industry, the puzzle and the period
+calendar; (3) the contrast with the wholesale zero; (4) validity (supply side unchanged). The thesis is positioned as
+the extension of the paper, with the replication as its foundation. The "registered after looking" sentence goes in
+the industry chapter. Small business in E0 does not explain the replication gap: the paper's own population
+(regulated only) gives −0.064, and the rest of E0 shifted more (−5.7% vs −3.9%).
+
+**Open, for later (user 2026-11-20):**
+- *Replication gap.* Same control (Portugal) in both; candidates: training years (2014–20 leave-one-out vs 2018–20)
+  and Wald ratio vs Equation 4 η. Width: the replication's se is within one year (area × month clusters), the
+  six-summer interval is across summers (Conley–Taber); the latter is the honest one with one reform year.
+- *Cause of the placebo trend.* The six placebo values fall −0.038/yr (se 0.011, p 0.023, R² 0.76), so the trend
+  null is more than noise, but its cause is unnamed. Self-consumption solar ruled out as the main cause (22 MW 2014 →
+  459 MW 2019 nationally; trend already present 2014–16; ≥36 kV plants are GW-scale; dearer evening hours have no sun).
+
 ## Earlier headline (households only, 2026-11-12/16)
 
 **Spain's June 2021 time-of-use reform cut evening electricity demand by about 4–5% relative to night. On the method of Enrich, Li, Mizrahi and Reguant this is a within-day price elasticity of about −0.06 to −0.09 for aggregate low-voltage demand (evening-versus-night Wald ratios; decision 2026-11-12, reversing the earlier choice of column 4 to lead). The paper's column-4 regression gives −0.10 (se 0.012) and corroborates it; on the rebuilt regulated-area panel column 4 gives −0.085. It is a response to the reform as a whole, not a clean price slope: it does not scale with later charge changes.**

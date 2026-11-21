@@ -1,0 +1,10 @@
+rule,value,threshold,pass,note
+"C1 sd(z | region, month)",0.0553,0.03,True,
+"C1 sd(z | region, month, region trends)",0.0393,0.03,True,
+"C2 sd(ln combined-cycle capacity | region, month)",0.0,0.03,False,coal closures excluded by design
+"info: sd(ln dirty incl. coal | region, month) / sd(y | region, month)",1.0333,report,True,
+C3 first-stage F (region-clustered),2.9452,10.0,False,
+"C4a real F vs 95th pct of F, 2000 region permutations",2.9452,9.159,False,share of permutations with F >= real: 0.2095
+"C4b real F vs 95th pct of F, circular shifts of s",2.9452,3.801,False,45 shifts; share with F >= real: 0.2444
+C5 effective independent time points of s,0.3307,8.0,False,lag-1 autocorrelation 0.990
+"C6 detectable elasticity 2.8*max(SE_cluster, SE_perm)",0.4916,2.0,True,"SE_cluster 0.176, SE_perm 0.135"

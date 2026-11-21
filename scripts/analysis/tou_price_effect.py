@@ -45,8 +45,15 @@ def one_task(name, x, load, temp, hol, excl):
 
 
 def get_errors(x):
+    """Cached per-area-hour LASSO errors, attached to x by row. The cache stores x's date and hour; a cache whose rows do
+    not match x exactly stops the run (2026-11-21: a 13-Nov cache had drifted a day against the 18-Nov panel)."""
     if CACHE.exists() and "--refit" not in sys.argv:
         c = pd.read_parquet(CACHE)
+        if "date" not in c.columns or len(c) != len(x) or not (
+                (pd.to_datetime(c["date"]).to_numpy() == x.date.to_numpy()).all() and (c["hour"].to_numpy() == x.hour.to_numpy()).all()):
+            raise RuntimeError(f"{CACHE.name} does not match the panel ({len(c)} vs {len(x)} rows or different dates); rebuild with --refit")
+        c = c.drop(columns=["date", "hour"])
+        c.index = x.index
         return {tuple(k.split("|", 1)): c[k] for k in c.columns}
     tasks = []
     for ex in ((), (2018,), (2019,)):
@@ -55,8 +62,11 @@ def get_errors(x):
     res = Parallel(n_jobs=4, verbose=5)(delayed(one_task)(*t) for t in tasks)
     errs = {(n, str(ex)): e for n, ex, e in res}
     CACHE.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame({f"{k[0]}|{k[1]}": v for k, v in errs.items()}).to_parquet(CACHE)
-    return errs
+    df = pd.DataFrame({f"{k[0]}|{k[1]}": v for k, v in errs.items()}).reindex(x.index)
+    df.insert(0, "hour", x.hour.to_numpy())
+    df.insert(0, "date", x.date.to_numpy())
+    df.reset_index(drop=True).to_parquet(CACHE)
+    return {k: v.reindex(x.index) for k, v in errs.items()}
 
 
 def effects(x, eE, eP, mask, s0, s1):

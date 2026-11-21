@@ -140,3 +140,9 @@ script), so the household point feedback is overstated; it is reported only.
 
 **Reading the worst case.** The night worst case is mostly industry (19 of 24 MW), driven by T1's upper bound
 λ 0.71 at σ's far end −0.544; at T1's point λ industry's feedback is nil.
+
+## Erratum and rerun (2026-11-21): inputs from T2's misaligned run
+This design read `dp` and `dq_neutral` from T2's hour file, which rested on E0 prediction errors misaligned by about a
+day (see T2's erratum and `2026-11-21-validity-industrial-shift-design.md`). Rerun as registered on 2026-11-21 after
+T2's rerun: **P1 passes** (all 2.1%, evening 0.0%, night 5.8%; bar 10%), **B1 passes** (worst case evening 3.5%,
+night 7.4%; bar 10%); reform contrast / observed 2021 spread 0.28 (neutral), 0.24 (F), 0.20 (M). Verdict unchanged.

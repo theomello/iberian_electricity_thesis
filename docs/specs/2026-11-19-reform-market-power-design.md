@@ -126,3 +126,14 @@ defined in 100% of hours at both prices).
   hours 10–13 and 18–21; near zero 14–17 and 22–23.
 - The M1 bar (10% of the window's own sd) was set without knowing how X's sd compares with the reform's between-hour
   swing; it turned out strict. This is stated, not used to rescue M1.
+
+## Erratum and rerun (2026-11-21): the E0 prediction errors were misaligned by about a day
+The run above read `data/cache_tou/price_effect_e0_errors.parquet` (written 2026-11-13) against a panel that gained a
+day of rows with the 2026-11-18 data extension, so every error sat about one day from its own row (found in
+`2026-11-21-validity-industrial-shift-design.md`, which has the details). The price effect it used was therefore
+attenuated (contrast −2.07 instead of −2.39). The cache was rebuilt with a row-for-row guard and this design rerun as
+registered on 2026-11-21 (`outputs/tables/tou_reform_market_power*.csv` replaced). **Corrected results:** G0, G1
+pass; **M1 fails for Iberdrola** (night +0.50 against 0.44), **Endesa** (+0.76 against 0.59), **Naturgy** (+0.45 against
+0.41) and **EDP** (+0.99 against 0.73), passes for Repsol; **M2 passes for all five** (largest |mean ΔX| 0.17, EDP);
+**D1 passes** (Iberdrola +0.13 in June, +0.02 in June–August, bar 0.51; EDP +0.12 / +0.17, bar 0.29). The verdict
+stands with one change: four firms fail M1, not three.

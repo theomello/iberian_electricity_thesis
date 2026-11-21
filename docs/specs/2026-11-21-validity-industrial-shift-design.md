@@ -87,4 +87,68 @@ scripts' functions and passes the combined ΔQ, changing none of them. Outputs
 and combined verdict side by side.
 
 ## Results
-(to be filled after the run)
+
+### Run 1 (2026-11-21, commit 8f76467): not valid, stale prediction-error cache
+The run completed (`outputs/tables/tou_validity_industrial*.csv`), but its E0 baseline does not reproduce the
+registered price effect: with the industrial shift set to zero it gives evening −0.55, night +1.52, contrast **−2.07**
+against the registered −0.65, +1.74, **−2.39**, and E0's period-type effects come out −4.40 / −3.13 / +1.41 instead of
+−5.28 / −3.64 / +1.43.
+
+**Cause.** `tou_price_effect.get_errors` reads `data/cache_tou/price_effect_e0_errors.parquet` (written 2026-11-13,
+32,463 rows, a RangeIndex) and attaches it by index label to the panel `D.prep(T.build("e0", …))`. Since the data
+extension of 2026-11-18 (commit 54be556: holidays, temperature and REN back to 2014) that panel has **32,487 rows**:
+the first day, 2017-12-31, is now present (23 hours), plus one more row. Every error is therefore attached to a row
+about one day away from its own. Nothing checks the length, so the run gives no error. The 2026-11-13 price effect was
+run before the extension and is not affected.
+
+**What else this touches.** Every script that reads this cache and ran after 2026-11-18: T2
+(`2026-11-19-reform-market-power-design.md`; its `dp` mean evening −0.553, night +1.515 is the misaligned baseline) and
+T3 (`2026-11-19-price-signal-feedback-design.md`, which takes `dp` and `dq_neutral` from T2's hour file). Their results
+rest on misaligned E0 effects and need a rerun once the cache is rebuilt. Scripts that read the cache but ran before
+2026-11-18 (levy, forest, pooled placebo, industry-adjusted, dose search, cross-tariff, area panel) are unaffected as
+run; any rerun of them would be.
+
+**What run 1 still shows (descriptive, not a result):** on the same (misaligned) baseline, adding the industrial shift
+changes the contrast by −0.22 (main), −0.25 (S-cell), −0.56 (S-wide) €/MWh; the industrial shift is 23% (evening) and
+14% (night) of E0's in MW (main), 31–54% in the sensitivities; every rule keeps the verdict it had in the first T2/T3
+runs (M1 fails for Endesa, Naturgy and EDP; all else passes; S-wide adds a narrow M1 failure for Iberdrola).
+
+**Not done, waiting for the user:** rebuilding the cache (`--refit`, the registered LASSO, unchanged), a guard that
+stops any run when the cache and the panel differ in length or dates, then rerunning this design, and T2 and T3 as
+registered.
+
+### Fix and rerun (2026-11-21, approved by the user: "Yes, rebuild and rerun")
+`get_errors` now stores each row's date and hour in the cache and stops the run if the cache does not match the panel
+row for row. The stale cache is kept as `price_effect_e0_errors.stale-2026-11-13.parquet`; the new one is the same
+registered LASSO refitted on the current panel. **Check:** E0 period-type effects −5.23 / −3.62 / +1.46 (registered
+−5.28 / −3.64 / +1.43; the difference is the added day of data), E0-only contrast **−2.39** (registered −2.39). T2 and
+T3 were then rerun as registered (their errata are in their own files), and this design after them.
+
+### Run 2 results (the valid run)
+**V0 size.** The industrial shift (main) is 19% of E0's in the evening (52 MW against 289 MW removed) and 12% at night
+(20 MW against 374 MW added); 45% and 28% in S-cell and S-wide.
+
+| | E0 only (rerun) | main (E0 + 6.2–6.4) | S-cell | S-wide (E0 + E1–E6) |
+|---|---|---|---|---|
+| price contrast, evening − night (€/MWh) | −2.39 | **−2.62** [−2.84, −2.41] | −2.61 | −2.93 |
+| evening / night | −0.65 / +1.74 | −0.78 / +1.84 | −0.92 / +1.69 | −0.93 / +2.01 |
+| R1–R4 | pass | **pass** (rank 1 of 10; placebo sd 0.14; R4 −1.86 … −2.70) | pass | pass |
+| M2 (all five firms, |ΔX| at Nash < €0.50) | pass (max 0.17) | **pass** (max 0.22, EDP) | pass | pass |
+| M1 | fails Iberdrola, Endesa, Naturgy, EDP | **fails the same four** | same | same |
+| D1 (Iberdrola June / June–Aug; EDP) | pass (+0.13 / +0.02; bar 0.51) | **pass** (+0.04 / −0.01) | pass | pass |
+| T3 P1 (all / evening / night) | 2.1% / 0.0% / 5.8% | **2.7% / 0.6% / 7.3%** | pass | pass |
+| T3 B1 worst case (evening / night) | 3.5% / 7.4% | **3.6% / 7.3%** | 3.5% / 7.2% | 3.5% / 7.3% |
+
+**Verdict, as registered: every rule keeps its verdict.** Adding industry's shift makes the reform's evening-minus-
+night price effect about a tenth larger (−2.62 against −2.39; −2.93 at the S-wide upper bound) and changes nothing
+else that is judged: market power unchanged on average (M2), the hydro stop not explained by the reform (D1), the price
+signal unchanged (P1), feedback under a tenth (B1). M1 fails for four firms with and without industry; the incentive
+moves between hours (night up by €0.5–1.2, evening down by €0.1–0.4 at Nash) and nets to about zero.
+
+**Change against the first T2 run (from the cache fix, not from industry):** Iberdrola's M1 now fails (night +0.50
+against a bar of 0.44; it passed narrowly at +0.42 on the misaligned baseline). The thesis wording ("shifted the
+market-power incentive between hours by under a euro, nets to about zero over the day") is unchanged; the list of firms
+is four, not three.
+
+**Quotable for the validity section:** price contrast −2.39 (households) and −2.62 (households and large industry),
+range −1.9 to −2.9 across levels and sensitivities.

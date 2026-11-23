@@ -72,7 +72,7 @@ the Portuguese series belong to the same market object as the Spanish ones.
 | file | rows | content |
 |---|---|---|
 | `ren_production_15min.parquet` | 3,801,736 | 15 series, **15-min**, all 3,073 days |
-| `ren_market_prices.parquet` | 147,502 | hourly ES and PT |
+| `ren_market_prices.parquet` | 147,502 | hourly ES and PT from 2018. **2014–2017: each day's 24 hourly prices are sent twice on a 30-minute grid (46/48/50 rows a day, both halves identical, verified 2026-11-23), so `utc_timestamp` is not the hour there**: rebuild from each `local_date`'s first half in order (as in `mf_period_calendar_estimate.price_share`). Reading it by `utc_timestamp` scrambles the hours (local h gets the price of hour 2h mod 24) without changing daily means. |
 | `ren_consumption_supply_daily.parquet` | 77,834 | 28 balance types |
 | `ren_installed_power_monthly.parquet` | 887 | capacity by technology |
 

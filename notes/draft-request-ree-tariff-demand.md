@@ -83,6 +83,13 @@ en forma agregada, y se citará la fuente. Solicito recibirla en formato electr�
 ---
 
 ## Notes for sending
+- **CNMC form (verified 2026-11-23 from the CNMC's own pages):** procedure page
+  https://sede.cnmc.gob.es/tramites/general/transparencia. Online form with Cl@ve:
+  https://tramitesclave.cnmc.gob.es/formulario/21?asunto=Transparencia&destino=EA0042966. With a digital certificate:
+  https://tramites.cnmc.gob.es/formulario/21?asunto=Transparencia&destino=EA0042966. Put "Solicitud de acceso a la
+  información pública" in ASUNTO and attach the filled request template:
+  https://sede.cnmc.gob.es/sites/default/files/2016-09/Solicitud%20en%20formato.docx (or the .pdf).
+- **REE:** no public web form found. The address this repo used before for ESIOS is consultasios@ree.es.
 - The CNMC form requires identification. Electronic filing needs a digital certificate or Cl@ve; otherwise file at
   a general registry. The REE request is informal.
 - To lower the risk of a refusal for "reelaboración" (art. 18.1.c), the CNMC text asks for data as held in SINCRO,

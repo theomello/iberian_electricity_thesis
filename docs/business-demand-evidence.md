@@ -78,3 +78,12 @@ Every number is in the spec or output named. Elasticities are of load to the day
 3. **Sustained price level, sector-level design dropped (2026-11-18).** Scoping on INE data (`scripts/analysis/industry_sector_intensity_scoping.py`, 20 sector groups, 2017-22): electricity and gas intensity per euro of value added rank almost identically (Spearman 0.87-0.92), so a sector-level design cannot separate the electricity price from gas. Not run as an estimate. Margins this thread does not cover: the sustained price level (von Graevenitz and Rottner -0.4 to -0.6; Gerster and Lamp implied -0.09 to -0.20), purchases against consumption outside 2019, and plants' own generation.
 4. **Literature by margin:** `notes/literature-industrial-demand-elasticities.md` (Patrick and Wolak, Boisvert et al., Labandeira et al. -0.015 to -0.024 for large consumers, Moral-Carcedo and Pérez-García, Ciarreta and Espinosa).
 
+
+## Update 2026-11-23: small business (3.0TD) and medium firms (6.1TD), registered designs
+| # | Design | Estimate | Verdict | Source |
+|---|---|---|---|---|
+| 22 | Small business, season mirror inside E0 (old 3.0A peak switched with the clock), weekends | not computed | **closed at step zero**: detectable elasticity 0.415 against the 0.15 bar (households dilute E0; placebo sd 0.89 points per step) | `2026-11-23-small-business-season-mirror-design.md` |
+| 23 | Medium firms, hour share on the 6.1 period step (hour effects), four placebo summers | −0.175 points per step, p 0.023, rank 1/5; elasticity equivalent −0.016 [−0.031, −0.001] | E1, E2, E4–E8 pass; **E3 trend null fails (p 0.103)** → reported as a shift that rests on the null model, not an estimate; carried by August | `2026-11-23-medium-firms-period-calendar-design.md` |
+
+Small business stays unidentified; the remaining route is tariff-level history from REE. Medium firms show a small
+calendar response, about a third of large industry's per period step, carried by August.

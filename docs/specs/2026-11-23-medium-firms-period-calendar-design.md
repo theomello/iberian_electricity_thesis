@@ -216,3 +216,52 @@ Deterministic; no random draws. `scripts/qa/audit_data.py` runs after the fetch.
 **Step zero passes with S = 4.** E1+E2's month-by-hour pattern is very stable across normal summers, so a
 medium-firm elasticity of about 0.02 to the regulated period price would be detectable. Per the spec, the estimation
 (E1–E8 on summer 2021) waits for the user's yes.
+
+## Results of the estimation (run 2026-11-23; `scripts/analysis/mf_period_calendar_estimate.py`, committed in 0fec50a before the single run; outputs `outputs/tables/mf_period_calendar_estimate{,_summary}.csv`)
+
+The pre-run review found a data trap, fixed before the run and recorded in `docs/data-reference/ree-ren-esios-miteco.md`.
+REN's Spanish price for 2014–2017 comes as each day's 24 hourly prices sent twice on a 30-minute grid, so reading it by
+timestamp scrambles the hours. It affected only E8's placebo controls.
+
+Placebo summers 2014, 2017, 2018, 2019 (S = 4). b by year (points of the daily mean per period step, hour effects):
+0.228, 0.293, 0.177, 0.233; **2021: 0.058**.
+
+| statistic | effect b_R − m | one-sided p | 95% interval | rank | trend-null effect, p |
+|---|---|---|---|---|---|
+| **main (hour effects)** | **−0.175** | **0.023** | [−0.343, −0.007] | 1/5 | −0.164, p 0.103 |
+| E6 without August | −0.016 | 0.45 | [−0.41, +0.38] | | |
+| E6b without late June | −0.357 | 0.001 | [−0.45, −0.26] | | |
+| E6c without July | −0.164 | 0.027 | [−0.33, +0.01] | | |
+| E7 wrong hours 1–4 | +0.317 | (0.97) | [−0.00, +0.64] | | |
+| E8 price-share control | −0.104 | 0.15 | [−0.37, +0.16] | | |
+| industry form (no hour effects) | −0.348 | 0.005 | [−0.54, −0.16] | | −0.283, p 0.031 |
+| September split at the 16th | −0.186 | 0.019 | [−0.35, −0.02] | | |
+
+**Rules.**
+- E1 detection **passes** (p 0.023).
+- E2 rank **passes** (below all four summers, the floor 1/5).
+- **E3 trend null fails**: effect −0.164 with p 0.103, against the bar of 0.10. The trend through four summers is
+  nearly flat (−0.003 a year), so it fails on power: with S − 2 = 2 degrees of freedom the extrapolated prediction is
+  wide. This was stated in advance as possible.
+- E4 leave-one-out **passes** (p 0.059, 0.025, 0.022, 0.060).
+- E5 (same sample as E1) **passes**.
+- E6, E6b and E6c keep the sign: **pass**.
+- E7 **passes** (the wrong-hours effect is positive).
+- E8 **passes** (−0.104 keeps the sign and lies inside [−0.343, −0.007]).
+- No significant wrong sign.
+
+**Verdict, as registered.** E1 and E2 pass but E3 fails, so the registered outcome is "it rests on a drift; reported
+as such, not as an estimate". Medium firms' summer-2021 month-by-hour load moved with the new period calendar,
+beyond all four normal summers (mean null). It is not reported as an elasticity, because it does not clear the
+trend null.
+
+**Descriptive, not rules.**
+- **Size.** −0.175 points of the daily mean per period step. The elasticity equivalent is **−0.016**
+  (interval −0.031 to −0.001). In the industry form, −0.35 points per step against large industry's −1.0, an
+  elasticity equivalent of −0.03. Medium firms moved about a third as much per period step as large plants, and very
+  little per unit of regulated price.
+- **It comes from August.** Without August the effect is −0.016 (p 0.45); without late June it is larger (−0.36). E6
+  asked only for the sign, so it passes, but the response is an August response: the month the old calendar made
+  all-off-peak, and also the holiday month.
+- **Price shape.** With the wholesale price-share control, the effect shrinks to −0.10 (p 0.15). Part of the 2021
+  pattern lines up with the hourly price shape.

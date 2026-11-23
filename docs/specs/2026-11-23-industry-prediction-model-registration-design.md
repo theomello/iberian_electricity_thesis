@@ -103,6 +103,22 @@ table is seen. If the adopted model's 2021 run raises a bug, the fix is recorded
 - The 2021 point estimates under M0 are known; the selection cannot see them, but the person choosing the candidate
   list could. The list above was written before any candidate was fitted.
 
+## Amendment B (2026-11-23, before any fit; user: "lets do the combined model afterwards")
+**Step 3, the combined model on its own.** After steps 1–2, M3 (calendar + weather memory, the LASSO choosing) is
+also judged as the single model fixed in advance, against M0 only, with no best-of-six selection. It is adopted on
+its own if it passes the same three rules: (a) `s_e` at least 20% below M0's, (b) `s` at most 10% above, (c) the
+leave-one-summer-out guard. Its placebo numbers come from step 1's table (no new fit). If it passes, its 2021 run
+is done as in step 2, after the user says yes; if it fails, no 2021 number is computed for it.
+**Which result leads.** Step 1's rule governs the headline. Step 3 is secondary and is reported beside it. If
+step 1 adopts nothing and M3 passes on its own, M3's 2021 result is reported as secondary; the headline stays on
+M0. If step 1 adopts M3, steps 2 and 3 are the same run.
+**Two details fixed before the code runs.** (1) M4's errors on training rows use the forest's out-of-bag
+predictions (an in-sample forest fits the training years almost exactly, so those errors would be too small next
+to the left-out summer's). (2) `s_e` is the residual standard deviation of the six placebo values around their
+least-squares line in year, with S − 2 degrees of freedom (as in amendment A); in rule (c), with five summers,
+S − 2 = 3. The placebo dose keeps the registered E (the 2021 post-window mean OMIE price, €100.81); it is a price,
+not a demand number, and it is the same in every placebo summer.
+
 ## Code and outputs
 `scripts/analysis/tou_prediction_models.py` (features M1–M2, forest, scaling; reuses `tou_lasso_paper.fit_one_se`,
 `tou_industry_six_summer.build/aligned`, `tou_industry_regulated_price.pooled_eta`). `--select` runs step 1 only and

@@ -258,6 +258,9 @@ do not average).
   (650 days from spring 2014 to January 2016, and shorter ones), so an index-aligned sum of 1201–1207 is NaN in those
   hours; treat absent E5 hours as zero when checking against 1193. **July 2014: E0–E6 is 2.6% above 1193** (all other
   2014 months within 0.04%).
+- **Nothing before 2014 (probed 2026-11-23, monthly totals 2009-01 → 2014-01 and one hourly day, 2013-07-16; not
+  fetched):** 1193, 10269, 1201, 1202 and 1216–1218 return January 2014 only, and no hourly points in July 2013.
+  Placebo summers from these series cannot start before 2014.
 - **By access tariff, 1209 (2.0TD), 1216–1218 (6.2–6.4), 1369 (6.1), 2531–2534 (3.0TD(VE), 6.1/6.2 TDVE) and
   "total" 10268: do not use as a split before 2024.** 10268 is not total demand: it is exactly the sum of the tariff
   series ESIOS publishes, 100–114 TWh in 2018–2023, because the low-voltage tariffs (2.0, 3.0) are empty until 2024

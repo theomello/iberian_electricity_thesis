@@ -276,3 +276,33 @@ These were made after the review, and no statistic had been computed:
 - Second review: the known summer-2021 weekend blocks declared (a headwind for the midday block); the dose per step
   defined on the season difference; prices from REN (OMIE starts in 2018); the gate stated as detection-only;
   hour 12 made a rule (E9); a solar control added as description; the solar wording corrected.
+
+## Results of step zero (run 2026-11-23; `scripts/analysis/sb_season_mirror_step0.py`, committed in 416fb0d before the run; outputs `outputs/tables/sb_season_mirror_step0{,_years}.csv`, `tou_power_term_30.csv`)
+
+- **S0 passes:** E0 has every hour of the used months in 2014–2019, and 1209 and 2532 are complete for
+  2024-06 → 2026-04. **S1:** E0 was cut at 2020-02-29 right after loading (asserted); no later E0 row was read.
+- **Z1 passes.** Old 3.0A power terms 40.728885 / 24.437330 / 16.291555 €/kW-year (BOE-A-2014-1052). New 3.0TD
+  transport and distribution terms 10.646876 / 9.302956 / 3.751315 / 2.852114 / 1.145308 / 1.145308
+  (BOE-A-2021-4565 annex I 1.a; transport + distribution reproduce them exactly). Charges, segment 2: 8.950109 /
+  4.478963 / 3.254069 / 3.254069 / 3.254069 / 1.491685 (BOE-A-2021-6390 art. 2.a). Each row was found as one run in
+  both the XML and the PDF text. Dose per step on non-working days, d̄ = |ln p_old(P1) − ln p_old(P2)| = 0.215
+  (energy only: 0.053).
+- **Placebo b_Y, non-working leg** (E0 points per rank step): 2014 −4.14, 2015 −6.71, 2016 −6.15, 2017 −5.90,
+  2018 −6.18, 2019 −5.41. Mean −5.75, sd 0.89, trend −0.13 per year.
+
+| leg | sd of b_Y | MDE (E0 points) | w̄ | s̄_B | d̄ | η_MDE | trend-null η_MDE |
+|---|---|---|---|---|---|---|---|
+| **non-working (gate)** | 0.89 | 2.83 | 0.283 | 112.4 | 0.215 | **0.415** | 0.660 |
+| working, midday (no evening) | 3.06 | 9.69 | 0.330 | 129.7 | 0.485 | 0.467 | 0.587 |
+| working, all hours | 1.73 | 5.49 | 0.330 | 117.7 | 0.273 | 0.518 | 0.663 |
+
+**S2 fails: η_MDE = 0.415 against the bar of 0.15.** By the registered rule **the design is closed**. The
+treated year is never computed, and no other leg, month set, weight or dose is tried.
+
+**What it means.** E0's season contrast moves by about 0.9 points per rank step from one normal year to the next.
+Small business is only 28% of E0 on non-working days, so a 3.0 response would have to be an elasticity of about −0.4
+to be detected. The small-business gap stays open. The remaining route is the request to REE (Red Eléctrica) for
+hourly demand by access tariff before 2024 (route E of `notes/business-demand-options.md`).
+
+Fetch note: ESIOS 1161 (solar output) came back by province and only from 2018. It was meant for a description item
+of the estimation, which will not run.

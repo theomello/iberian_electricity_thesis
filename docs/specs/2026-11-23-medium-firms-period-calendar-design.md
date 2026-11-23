@@ -194,3 +194,25 @@ Fetch of 1369 for 2015–2017 (resumable fetcher, new range only); `scripts/anal
 (M0–M3); outputs `outputs/tables/mf_period_calendar_step0{,_years}.csv`. Estimation:
 `scripts/analysis/mf_period_calendar_estimate.py`, outputs `outputs/tables/mf_period_calendar_estimate{,_summary}.csv`.
 Deterministic; no random draws. `scripts/qa/audit_data.py` runs after the fetch.
+
+## Results of step zero (run 2026-11-23; `scripts/analysis/mf_period_calendar_step0.py`, committed in 416fb0d before the run; outputs `outputs/tables/mf_period_calendar_step0{,_years}.csv`)
+
+- **Identification split** (as registered): August 52.8%, late June 44.3%, the other parts 2.9%.
+- **M2:** E1+E2 and 1369 were cut at 2019-09-30 right after loading (asserted).
+- **M0 passes.** E1+E2 has every June–September hour in 2014 and 2017–2019. 1369 was fetched from 2015 (complete for
+  2015–2019). **2014 gate:** June–September energy over the 2017–19 mean is 0.919 / 0.931 / 0.907 / 0.965, inside
+  ±15%, **so 2014 stays**.
+- **M1 fails.** b(1369) − b(E1+E2) is +0.132, +0.147 and +0.122 in 2017, 2018 and 2019. Max 0.147 and mean 0.134,
+  against a bar of 0.024 (half the sd of E1+E2's b). The cell shares correlate at 0.997, but 1369 (6.1A only, without
+  old 3.1A and 6.1B) follows the step systematically more strongly. **So 2015 and 2016 leave, and S = 4** (2014,
+  2017, 2018, 2019), as the fallback fixed in advance. E5 (without the stand-in) is now the same as E1.
+- **Placebo b_Y** (points of the daily mean per period step, hour effects): 2014 0.228, 2017 0.293, 2018 0.177,
+  2019 0.233. Mean 0.233, sd 0.047, trend −0.003 per year. Industry form (no hour effects): 0.514, 0.511, 0.403,
+  0.456.
+- **M3 passes.** MDE 0.176 points per step (t quantiles, 3 degrees of freedom; normal 0.131). s̄ = 107.2,
+  d̄ = 0.105 log points per step, so **η_MDE = 0.016** against the bar of 0.15 (trend null 0.031). Industry form:
+  MDE 0.196, η_MDE 0.016.
+
+**Step zero passes with S = 4.** E1+E2's month-by-hour pattern is very stable across normal summers, so a
+medium-firm elasticity of about 0.02 to the regulated period price would be detectable. Per the spec, the estimation
+(E1–E8 on summer 2021) waits for the user's yes.

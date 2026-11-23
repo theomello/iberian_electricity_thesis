@@ -12,6 +12,25 @@ Old 3.0A (`tou_tariff_schedule.old_period_3`, every day of the week): **summer t
 
 **Worked example.** A shop's 19h hour in July: before 2021 it was P2 (mid-priced); after, it is P1 (top), so the price **rises**. The same shop's 19h hour in January was already P1 before, so nothing changes. The 12h hour goes the other way: in July it was already P1 (no change), and in January it moves from P2 to P1 (**rises**). A household's 19h and 12h hours rose the same way in July and in January. So if small businesses respond, E0 should show a **mirror pattern**: in summer the evening share falls relative to winter, and in winter the midday share falls relative to summer. A household response that is the same in every season cannot produce that pattern. On weekends the prediction is mirrored and reversed: old weekend P1 hours became P6, so the 11–15h hours of a summer weekend and the 18–22h hours of a winter weekend get cheaper for 3.0, and load there should rise.
 
+## Every customer group, what we have (added 2026-11-23 at the user's request; numbers from the specs named)
+Volumes: CNMC monthly by toll, 2021, rounded.
+
+| Group | Tariff / series | Size | Best estimate | Status | Source |
+|---|---|---|---|---|---|
+| Regulated households (PVPC, the paper's population) | 2.0TD ≤ 10 kW on the regulated price | 23–30% of E0 | −0.064 (paper design) | identified (replication) | `notes/tou-headline-outline.md` |
+| Households, metered micro data | GoiEner 2.0TD, 14,000 points | Basque cooperative | about −0.05 [−0.07, −0.03] (first-difference DiD; LASSO after placebo centring −0.053) | identified, not representative | `2026-11-17-goiener-*` |
+| **Households + small business** | E0 (< 1 kV) | ~100 TWh/yr | **−0.11 [−0.21, −0.01]**, p 0.019, six summers | identified (headline) | six-summer spec |
+| **Small business** | 3.0TD (> 15 kW, low voltage) | ~33 TWh/yr, 770k points, 26–36% of E0 | none. Hint only: the non-regulated part of E0 shifted −5.7% against −3.9% for regulated households | **not identified**: route A below | — |
+| Services, one city | Barcelona Serveis (2.0/3.0/6.1 mix) | ~3.5 TWh/yr | −0.004 [−0.080, +0.071] (calendar) | failed, bounded null | calendar-boundary spec |
+| **Medium firms** | 6.1TD (E1+E2, 1–36 kV) | ~67 TWh/yr | −0.08 [−0.25, +0.09] reform dose; −0.084 [−0.20, +0.06] regulated price (S = 3, p 0.077); +0.013 [−0.06, +0.08] calendar | **not identified** | evidence table rows 1, 11; regulated-price spec |
+| **Large industry** | 6.2–6.4TD (≥ 30 kV) | ~52 TWh/yr | **−0.15 (trend null) to −0.32 (mean null)**; reduced form −1.0 point per period step, p 0.0001. By tariff: 6.2 −0.06, 6.3 −0.23, 6.4 −0.34 | identified, caveats (drifted null, not proportional) | regulated-price spec |
+| Industry, hourly wholesale price | E3–E6, wind-speed IV | | +0.0001 [−0.021, +0.028] | precise zero | evidence row 13 |
+| Direct market consumers | ESIOS 353 (buy in the day-ahead market) | 12.7% of E3–E6 | wholesale −0.033 [−0.12, +0.02]; reform period shift seen in purchases (descriptive) | wholesale null | evidence row 15; regulated-price spec |
+| Process-industry and refinery units | OMIE purchase units | 0.5–2 TWh/yr | −0.007 / −0.069 (wholesale) | not detected | evidence row 16 |
+| Interruptibility participants | metered, 2019 | | uninformative (consumption floor in the contract) | — | evidence row 19 |
+
+So the gaps are **small business (3.0TD)** and **medium firms (6.1TD)**: they sit between two identified ends.
+
 ## Routes
 
 | # | Route | What it identifies | Data | Detectable effect (MDE = 2.8 × SE) | Verdict |
@@ -30,4 +49,16 @@ Old 3.0A (`tou_tariff_schedule.old_period_3`, every day of the week): **summer t
 ## Recommendation
 **Route A**, pre-registered in two stages like the earlier designs: **step zero** (placebo years 2014–2019 only: noise of the mirror slope, MDE, and the GoiEner household mirror on pre-reform years), with the gate set in advance at **elasticity MDE ≤ 0.15** (the bar used for the calendar designs). Then the estimation rules (detection against six placebo years, rank, null centred, leave-one-year-out, summer and winter legs both with the predicted sign, weekend leg reversed, GoiEner households show no mirror) only if step zero passes. Send the REE request (E) in parallel.
 
-What is not blind: E0's summer-2021 evening-versus-night response (−3.9%) is known; its winter months and the season contrast have not been computed.
+What is not blind: E0's summer-2021 evening-versus-night shift is known (E0 −5.7%; regulated households −3.9%). `tou_extended_months.csv` also has E0's monthly evening path through winter 2021–22, so the working-day evening half of the mirror is known.
+
+## Decisions (2026-11-23)
+- **The user chose route A.** The spec is `docs/specs/2026-11-23-small-business-season-mirror-design.md`. After review,
+  the confirmatory leg is **non-working days**: households' weekend price is flat before and after, and the
+  RDL 17/2021 charge cut does not reach weekends. Working-day midday is a secondary rule, and working-day evening
+  (already seen) is description only. Months are June–September and January–February. The gate stays at an
+  elasticity MDE ≤ 0.15, as above.
+- **The user added medium firms (6.1TD, E1+E2).** They have no clock-season mirror: their old 6.1A calendar changed by
+  month, with August all off-peak and June split on the 16th. The design is large industry's reduced form
+  (hour share on the period step), with hour fixed effects and six placebo summers. 2014 enters under its own gate,
+  and 2015–16 come from the 6.1A series 1369 as a stand-in, gated on the overlap years (the user's choice). Spec:
+  `docs/specs/2026-11-23-medium-firms-period-calendar-design.md`.

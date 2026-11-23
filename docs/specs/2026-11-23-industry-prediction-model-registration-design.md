@@ -124,3 +124,31 @@ not a demand number, and it is the same in every placebo summer.
 `tou_industry_six_summer.build/aligned`, `tou_industry_regulated_price.pooled_eta`). `--select` runs step 1 only and
 writes `outputs/tables/tou_prediction_model_selection.csv`; `--final <model>` runs step 2. Error caches per model
 under `data/cache_tou/`. Deterministic. Committed before each run.
+
+## Results of step 1 (run 2026-11-23; script committed in 9f6896f before the run; output `outputs/tables/tou_prediction_model_selection.csv`; 150 fits, about 1 h 40 min)
+**Sealing.** Rows used: 2014-01-01 → 2020-12-31; no all-years model was fitted, so no 2021 error, dose or estimate
+exists. **G0 passes:** M0's errors equal the registered cache (max difference 2e-15); its pooled and E0 placebo
+values match the registered csv within its 3-decimal rounding (mean and sd within 5e-6). The LASSO printed
+convergence warnings, as in earlier runs; not acted on.
+
+| model | pooled 6.2–6.4: s | s_e (vs M0) | slope/yr | placebo η 2014 … 2019 | E0: s | E0: s_e |
+|---|---|---|---|---|---|---|
+| M0 paper LASSO | 0.081 | 0.044 | −0.038 | +0.232 +0.216 +0.183 +0.102 +0.024 +0.100 | 0.037 | 0.040 |
+| M1 calendar | 0.080 | 0.041 (−8%) | −0.038 | +0.225 +0.204 +0.168 +0.121 +0.012 +0.084 | 0.037 | 0.040 |
+| M2 weather memory | 0.076 | 0.043 (−3%) | −0.035 | +0.211 +0.212 +0.164 +0.096 +0.020 +0.095 | 0.035 | 0.038 |
+| M3 combined | 0.076 | 0.042 (−6%) | −0.035 | +0.206 +0.196 +0.157 +0.117 +0.007 +0.082 | 0.035 | 0.038 |
+| M4 random forest | 0.097 | 0.061 (+38%) | −0.043 | +0.197 +0.184 +0.170 +0.088 −0.055 +0.058 | 0.037 | 0.041 |
+| M5 scaled control | 0.071 | 0.044 (−2%) | −0.032 | +0.201 +0.188 +0.156 +0.117 +0.008 +0.093 | 0.033 | 0.036 |
+
+M5's fitted Portugal weights b: 6.2 1.04–1.52, 6.3 0.22–0.36, 6.4 −0.12–0.12, E0 0.50–0.57.
+
+**Step 1 verdict.** Challenger M3 (M1 and M3 within 5% of the smallest s_e; M3 has the smaller s). Rule (a) fails
+(s_e −6%, needed −20%), (b) passes, (c) fails. **Not adopted. M0 stays; the headline is unchanged.**
+**Step 3 verdict (amendment B).** M3 on its own: the same three results. **Not adopted.** No 2021 number is
+computed for any new model (step 2 does not run), as registered.
+
+**Reading.** Better calendar and weather terms move every placebo summer by about the same amount (all down 0.01–0.03),
+so the spread barely changes: the scatter is not what a richer first step predicts. The forest is worse. Scaling
+the control lowers s by 12% (6.4 barely co-moves with Portugal, so b near 0 removes Portugal's noise there) but not
+s_e: it removes noise along the trend, not around it. The trend null therefore stays at −0.151, p 0.044, 95%
+interval [−0.337, +0.036]. **Stop here, as registered.**

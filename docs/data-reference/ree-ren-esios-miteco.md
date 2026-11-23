@@ -262,6 +262,16 @@ do not average).
   "total" 10268: do not use as a split before 2024.** 10268 is not total demand: it is exactly the sum of the tariff
   series ESIOS publishes, 100–114 TWh in 2018–2023, because the low-voltage tariffs (2.0, 3.0) are empty until 2024
   (1209 from 2024, 2532 from mid-2024 and **not** included in 10268). 1200 and 1208 return no data at all.
+- **No old-tariff (3.0A, 2.0A, 2.0DHA) measured-demand indicator exists in the ESIOS catalogue** (searched
+  `indicator_catalogue.parquet` 2026-11-23; only capacity-payment indicators 769–777 carry old tariff names). Before
+  mid-2024 there is no hourly 3.0 series.
+- **CNMC monthly energy by access toll (not ESIOS; checked 2026-11-23):** the addendum to the CNMC *Boletín de
+  indicadores eléctricos* (IS/DE/012/24, 30 April 2024; IS/DE/012/25, 10 April 2025; PDF, source SINCRO settlements)
+  gives national monthly GWh by toll (2.0TD, 3.0TD, 3.0TDVE, 6.1TD, 6.1TDVE, 6.2–6.4TD) from January 2021 (months before
+  June 2021 reported under the new tolls), the number of consumers by toll and contracted/billed power by period.
+  It excludes distributors with fewer than 100,000 customers. 3.0TD is 2,338–3,396 GWh a month, 765,000–793,000 points;
+  its share of 2.0TD + 3.0TD energy is 25.6% (Jan 2021) to 35.6% (Jul 2021). Monthly only; no hours or periods.
+  Older bulletins (2020 layout) reportedly list 3.0 and 3.1A separately; not read.
 - **Scheduled demand (PBF) by retailer type, 351 free-market retailers, 352 reference (regulated, PVPC) retailers,
   353 direct market consumers**: 2018-01-01 → present, no lag. 2018: 213 / 28 / 3 TWh; 2025: 208 / 19 / 7. **352 matches
   the PDBF schedules of our regulated-supplier purchase units** (`is_pass_through`, Spanish, purchase roles) at

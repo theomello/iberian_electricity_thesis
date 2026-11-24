@@ -90,3 +90,16 @@ calendar response, about a third of large industry's per period step, carried by
 | 24 | **Medium firms, persistence of the period-calendar shift, summers 2022–2025** (pooled against 2014, 2017–19) | **−0.283 points per step, p 0.002, [−0.39, −0.18]; trend null p 0.067; elasticity equivalent −0.025 [−0.035, −0.016]** | **all nine rules pass**: a lasting response in every year | `2026-11-23-firm-calendar-persistence-design.md` |
 | 25 | Medium firms, the same over all months (calendar years) | −0.261, p 0.0005 | R5 (price control) fails by 0.004; all else passes | same |
 | 26 | Large industry, persistence, summers 2022–2025 | −0.136, p 0.017 (2021: −1.00) | R5, R3 and R8 fail; the shift sits in 6.3 only | same |
+
+**Rows 23–24 by year (medium firms, summers, main statistic).** Each year's effect is its b minus the placebo mean. The elasticity equivalent is the effect / s̄ (107.2) / d̄ (0.1049), the same factor as row 24, so it scales linearly with the effect. The 2021 row is the estimate of row 23, which failed its trend check; the other years are from `outputs/tables/firm_persistence.csv`.
+
+| Year | Effect (points per step) | Elasticity equivalent |
+|---|---|---|
+| 2021 | −0.175 | −0.016 (row 23; trend check failed) |
+| 2022 | −0.155 | −0.014 |
+| 2023 | −0.343 | −0.031 |
+| 2024 | −0.211 | −0.019 |
+| 2025 | −0.423 | −0.038 |
+| 2022–25 pooled | −0.283 | −0.025 [−0.035, −0.016] |
+
+The shift begins small and grows; large industry (row 26) moves the other way (2021 −0.995; 2022–25 −0.188 / −0.065 / −0.208 / −0.085).

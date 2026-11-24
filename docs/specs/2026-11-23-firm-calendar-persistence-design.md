@@ -214,3 +214,50 @@ Part A and, where Z2 lets it go ahead, Part B). Each is committed before its sin
 - A severity order is set, and the outcome lines are completed.
 - The rules are renamed R1–R9.
 - The 6.2 break is noted.
+
+## Results of step zero (run 2026-11-24; `scripts/analysis/firm_persistence_step0.py`, committed in e72f124 before the run; outputs `outputs/tables/firm_persistence_step0{,_years,_gates}.csv`)
+
+**Seal:** every series was cut at 2019-12-31 right after loading (asserted). The post years (2022–2025) were counted
+from timestamps only: every series has all 2,928 June–September hours and a full calendar year in each. No load value
+after 2019 was read.
+
+**Gates.**
+- **Z0 passes.** Coverage is complete in every placebo year and month, for both groups. E1+E2 volume (month against
+  the 2017–19 mean) lies between 0.907 and 1.040 in every placebo year.
+- **Z1 passes.** Medium-firm summer b reproduce the registered 0.2277 / 0.2929 / 0.1773 / 0.2334 exactly. The
+  large-industry raw slopes, transformed leave-one-out, equal the E6 logic's placebo slopes to 1e-6 (+0.000788,
+  −0.001143, +0.000511, +0.000426, −0.001106, +0.000524 as fractions).
+- **Z2 (Part B decision, made before Part A is opened):**
+  - medium firms, s_B 0.0288 against s_A 0.0473, ratio 0.61 ≤ 0.8 → **Part B goes ahead for medium firms**;
+  - large industry, s_B 0.1758 against s_A 0.0733, ratio 2.40 → **Part B does not go ahead for large industry**.
+    The all-month intercept-only slope varies much more across normal years, and it drifts (+0.07 a year).
+
+**Placebo values and MDEs** (points of the daily mean per period step; K = 4 post years):
+
+| group / part / statistic | m | s | trend per year | MDE mean null | MDE conservative | MDE trend null |
+|---|---|---|---|---|---|---|
+| medium A main | 0.233 | 0.047 | −0.003 | **0.112** | 0.176 | 0.318 |
+| medium A solar-robust | 0.239 | 0.100 | +0.011 | 0.236 | 0.373 | 0.659 |
+| medium A no August | 0.168 | 0.110 | −0.018 | 0.259 | 0.410 | 0.700 |
+| medium A wrong hours | −0.497 | 0.090 | −0.019 | 0.212 | 0.335 | 0.539 |
+| medium B main | 0.208 | 0.029 | +0.001 | **0.068** | 0.107 | 0.194 |
+| medium B solar-robust | 0.418 | 0.083 | +0.018 | 0.196 | 0.310 | 0.496 |
+| medium B no August | 0.187 | 0.050 | −0.008 | 0.117 | 0.185 | 0.317 |
+| medium B wrong hours | −0.461 | 0.047 | −0.008 | 0.112 | 0.177 | 0.297 |
+| large A main | 0.475 | 0.073 | −0.003 | **0.139** | 0.232 | 0.362 |
+| large A solar-robust | −0.553 | 0.277 | +0.134 | 0.524 | 0.877 | 0.578 |
+| large A no August | 2.342 | 0.532 | −0.251 | 1.008 | 1.686 | 1.249 |
+| large A wrong hours | −1.834 | 0.198 | +0.069 | 0.375 | 0.628 | 0.741 |
+| large A series × hour effects | 0.956 | 0.117 | −0.050 | 0.222 | 0.372 | 0.356 |
+
+Large-industry dose per step (summer cells, one intercept, full 2021 dose): **0.0575** log points.
+
+**Reading (description).**
+- The main statistics can see shifts well below the 2021 sizes: medium −0.175, large −1.00.
+- Medium firms' trend-null MDE (0.32) is about twice their 2021 effect, so R8 is likely to fail on power, as declared.
+- For large industry, the solar-robust and no-August statistics drift strongly across placebo years (+0.13 and −0.25
+  a year), which makes R3 and R6 hard to judge. Both were registered with this possibility in view (R6 requires both
+  nulls).
+
+**Next (registered):** `firm_persistence.py` opens 2022–2025 once, after the user's yes. Part A runs for both groups,
+Part B for medium firms only.

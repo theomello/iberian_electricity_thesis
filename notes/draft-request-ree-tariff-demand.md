@@ -1,6 +1,6 @@
 # Draft: request for hourly measured demand by access tariff, 2014–2024 (REE and CNMC)
 
-**Status: draft written 2026-11-23, not sent.** Send it yourself from your own address, and fill in the bracketed
+**Status: CNMC request FILED 2026-11-24 10:03:57 (CNMC electronic registry, entry no. 20260300000100402424, routed to the Asesoría Jurídica; the filled request was attached as a PDF; the receipt is kept by the user). Answer due about 2026-12-24 (one month, extendable by one more to about 2027-01-24). If there is no answer, a complaint (reclamación) to the Consejo de Transparencia y Buen Gobierno cites this number. REE email: a Gmail draft exists (to consultasios@ree.es), not yet sent.** Original status: draft written 2026-11-23. Send it yourself from your own address, and fill in the bracketed
 fields. No contact address has been verified. For REE, use the ESIOS contact or query form (esios.ree.es, "Contacto").
 For the CNMC, use the public-information access route of its transparency portal (Ley 19/2013, de transparencia,
 acceso a la información pública y buen gobierno). The CNMC is a public body; REE is a listed company, so the

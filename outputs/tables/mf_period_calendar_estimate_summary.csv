@@ -1,0 +1,11 @@
+rule,passed
+"E1 detection (p<=0.05, effect<0)",True
+E2 rank (below all placebo),True
+"E3 trend null (p<=0.10, effect<0)",False
+E4 leave-one-out (all p<=0.10),True
+E5 without stand-in (= E1 sample; p<=0.10),True
+E6 without August keeps sign,True
+E6b without late June keeps sign,True
+E6c without July keeps sign,True
+E7 wrong hours not below lower 95% bound,True
+"E8 price control: same sign, inside main interval",True

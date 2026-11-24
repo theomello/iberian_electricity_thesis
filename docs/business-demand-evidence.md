@@ -78,3 +78,41 @@ Every number is in the spec or output named. Elasticities are of load to the day
 3. **Sustained price level, sector-level design dropped (2026-11-18).** Scoping on INE data (`scripts/analysis/industry_sector_intensity_scoping.py`, 20 sector groups, 2017-22): electricity and gas intensity per euro of value added rank almost identically (Spearman 0.87-0.92), so a sector-level design cannot separate the electricity price from gas. Not run as an estimate. Margins this thread does not cover: the sustained price level (von Graevenitz and Rottner -0.4 to -0.6; Gerster and Lamp implied -0.09 to -0.20), purchases against consumption outside 2019, and plants' own generation.
 4. **Literature by margin:** `notes/literature-industrial-demand-elasticities.md` (Patrick and Wolak, Boisvert et al., Labandeira et al. -0.015 to -0.024 for large consumers, Moral-Carcedo and Pérez-García, Ciarreta and Espinosa).
 
+
+## Update 2026-11-23: small business (3.0TD) and medium firms (6.1TD), registered designs
+| # | Design | Estimate | Verdict | Source |
+|---|---|---|---|---|
+| 22 | Small business, season mirror inside E0 (old 3.0A peak switched with the clock), weekends | not computed | **closed at step zero**: detectable elasticity 0.415 against the 0.15 bar (households dilute E0; placebo sd 0.89 points per step) | `2026-11-23-small-business-season-mirror-design.md` |
+| 23 | Medium firms, hour share on the 6.1 period step (hour effects), four placebo summers | −0.175 points per step, p 0.023, rank 1/5; elasticity equivalent −0.016 [−0.031, −0.001] | E1, E2, E4–E8 pass; **E3 trend null fails (p 0.103)** → reported as a shift that rests on the null model, not an estimate; carried by August | `2026-11-23-medium-firms-period-calendar-design.md` |
+
+Small business stays unidentified; the remaining route is tariff-level history from REE. Medium firms show a small
+calendar response, about a third of large industry's per period step, carried by August.
+| 24 | **Medium firms, persistence of the period-calendar shift, summers 2022–2025** (pooled against 2014, 2017–19) | **−0.283 points per step, p 0.002, [−0.39, −0.18]; trend null p 0.067; elasticity equivalent −0.025 [−0.035, −0.016]** | **all nine rules pass**: a lasting response in every year | `2026-11-23-firm-calendar-persistence-design.md` |
+| 25 | Medium firms, the same over all months (calendar years) | −0.261, p 0.0005 | R5 (price control) fails by 0.004; all else passes | same |
+| 26 | Large industry, persistence, summers 2022–2025 | −0.136, p 0.017 (2021: −1.00) | R5, R3 and R8 fail; the shift sits in 6.3 only | same |
+
+**Rows 23–24 by year (medium firms, summers, main statistic).** Each year's effect is its b minus the placebo mean. The elasticity equivalent is the effect / s̄ (107.2) / d̄ (0.1049), the same factor as row 24, so it scales linearly with the effect. The 2021 row is the estimate of row 23, which failed its trend check; the other years are from `outputs/tables/firm_persistence.csv`.
+
+| Year | Effect (points per step) | Elasticity equivalent |
+|---|---|---|
+| 2021 | −0.175 | −0.016 (row 23; trend check failed) |
+| 2022 | −0.155 | −0.014 |
+| 2023 | −0.343 | −0.031 |
+| 2024 | −0.211 | −0.019 |
+| 2025 | −0.423 | −0.038 |
+| 2022–25 pooled | −0.283 | −0.025 [−0.035, −0.016] |
+
+The shift begins small and grows; large industry (row 26) moves the other way.
+
+**Row 26 by year (large industry 6.2+6.3+6.4, summers, main statistic, intercept form, placebo 2014–2019).** Same construction: effect / s̄ (97.9) / d̄ (0.0575). The 2021 row is this script's own 2021 value, against the same placebo summers. It is a share-shift conversion and **not** the headline industrial elasticity to the regulated period price (−0.15 to −0.32, `industry-six-summer` result), which uses a different price scale; compare years within this table only.
+
+| Year | Effect (points per step) | Elasticity equivalent |
+|---|---|---|
+| 2021 | −0.995 | −0.177 |
+| 2022 | −0.188 | −0.033 |
+| 2023 | −0.065 | −0.012 |
+| 2024 | −0.208 | −0.037 |
+| 2025 | −0.085 | −0.015 |
+| 2022–25 pooled | −0.136 | −0.024 [−0.046, −0.003] (R5, R3, R8 fail) |
+
+After 2021 the large-industry shift drops to about a seventh of its first-year size, and its share-shift elasticity becomes the same size as medium firms' (−0.024 against −0.025).

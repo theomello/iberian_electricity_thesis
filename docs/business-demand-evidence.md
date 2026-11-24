@@ -102,4 +102,17 @@ calendar response, about a third of large industry's per period step, carried by
 | 2025 | −0.423 | −0.038 |
 | 2022–25 pooled | −0.283 | −0.025 [−0.035, −0.016] |
 
-The shift begins small and grows; large industry (row 26) moves the other way (2021 −0.995; 2022–25 −0.188 / −0.065 / −0.208 / −0.085).
+The shift begins small and grows; large industry (row 26) moves the other way.
+
+**Row 26 by year (large industry 6.2+6.3+6.4, summers, main statistic, intercept form, placebo 2014–2019).** Same construction: effect / s̄ (97.9) / d̄ (0.0575). The 2021 row is this script's own 2021 value, against the same placebo summers. It is a share-shift conversion and **not** the headline industrial elasticity to the regulated period price (−0.15 to −0.32, `industry-six-summer` result), which uses a different price scale; compare years within this table only.
+
+| Year | Effect (points per step) | Elasticity equivalent |
+|---|---|---|
+| 2021 | −0.995 | −0.177 |
+| 2022 | −0.188 | −0.033 |
+| 2023 | −0.065 | −0.012 |
+| 2024 | −0.208 | −0.037 |
+| 2025 | −0.085 | −0.015 |
+| 2022–25 pooled | −0.136 | −0.024 [−0.046, −0.003] (R5, R3, R8 fail) |
+
+After 2021 the large-industry shift drops to about a seventh of its first-year size, and its share-shift elasticity becomes the same size as medium firms' (−0.024 against −0.025).

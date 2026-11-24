@@ -261,3 +261,48 @@ Large-industry dose per step (summer cells, one intercept, full 2021 dose): **0.
 
 **Next (registered):** `firm_persistence.py` opens 2022–2025 once, after the user's yes. Part A runs for both groups,
 Part B for medium firms only.
+
+## Results of the estimation (run 2026-11-24; `scripts/analysis/firm_persistence.py`, committed in 28227b0 before the single run; outputs `outputs/tables/firm_persistence{,_summary}.csv`)
+
+Effects are b̄ − m in points of the daily mean per period step, pooled over 2022–2025.
+
+| | **Medium firms, summers (A)** | **Medium firms, all months (B)** | **Large industry, summers (A)** |
+|---|---|---|---|
+| R1 pooled effect, p, 95% interval | **−0.283, p 0.002, [−0.390, −0.177]** | −0.261, p 0.0005, [−0.326, −0.196] | −0.136, p 0.017, [−0.258, −0.015] |
+| per year 2022 / 23 / 24 / 25 | −0.16 / −0.34 / −0.21 / −0.42 | −0.09 / −0.43 / −0.22 / −0.31 | −0.19 / −0.06 / −0.21 / −0.08 |
+| (2021, already tested) | −0.175 | — | −0.995 |
+| R2 conservative p | 0.006 pass | 0.002 pass | 0.073 pass |
+| R3 solar-robust | −0.171, p 0.047 pass | −0.181, p 0.027 pass | **+1.060, fail** (its placebo values drift +0.13 a year) |
+| R4 wrong hours | +0.58, pass | +0.41, pass | +1.38, pass |
+| R5 price control | −0.208, inside [−0.390, −0.177], pass | **−0.192, just outside [−0.326, −0.196], fail** | **−0.603, outside [−0.258, −0.015] (larger), fail** |
+| R6 no August | −0.160, p 0.066, trend −0.05, pass | −0.125, p 0.019, trend −0.07, pass | −2.011, p 0.001, trend −0.26, pass |
+| R7 drop one year (max p) | 0.004 pass | 0.001 pass | 0.041 pass |
+| R8 trend null | **−0.265, p 0.067, pass** | −0.268, p 0.028, pass | −0.115, p 0.239, **fail** |
+| R9 every year | pass | pass | pass |
+| **verdict (registered order)** | **all pass** | **R5 fails** | **R5 fails** (R3, R8 fail too) |
+| elasticity equivalent | −0.025 [−0.035, −0.016] | −0.023 [−0.029, −0.017] | −0.024 [−0.046, −0.003] |
+
+**Verdicts, as registered.**
+- **Medium firms, summers (Part A, primary): every rule passes.** The calendar shift comes back in each of
+  2022–2025 and is larger than in 2021: −0.28 points per period step against −0.175. It passes the trend null
+  (p 0.067), the solar-robust hours, the wrong-hours check, the price control, and the no-August and drop-one-year
+  checks. This is a lasting response of medium firms to the period calendar. Elasticity equivalent −0.025
+  (interval −0.035 to −0.016). The 2021 verdict stays recorded as it was.
+- **Medium firms, all months (Part B): R5 fails, by a hair.** With the price-share control the effect is −0.192,
+  0.004 outside the interval's upper end (−0.196). By the registered reading, the all-month result "follows the
+  wholesale price shape". Every other rule passes, including the trend null (p 0.028). Part B was registered as
+  beside Part A, and Part A's verdict stands.
+- **Large industry, summers: R5 fails** (the highest-ranked failure), and R3 and R8 fail too.
+  - The pooled shift is detected (−0.14, p 0.017) but is far smaller than 2021's −1.00.
+  - With the price control it grows to −0.60, outside the interval on the other side. R5 was written to catch an
+    effect that follows the price shape; here the control strengthens it. The rule still fails as written.
+  - The solar-robust statistic has the wrong sign, and its placebo values drift strongly.
+  - The shift sits in 6.3 (−0.62, p 0.001); 6.2 (+0.07) and 6.4 (+0.14) show none.
+  - **The large-industry summer-2021 response does not persist in this form.** That is recorded beside the 2021
+    result, which stands.
+
+**Descriptive.**
+- The medium-firm result does not rest on August (R6 passes; the effect without August is −0.16).
+- The other form (no hour effects) is weaker for medium summers (−0.07, p 0.08).
+- Large industry with series × hour effects gives −0.72 (p 0.0001; trend null −0.37, p 0.03), which differs from
+  the registered intercept-only form.

@@ -87,3 +87,6 @@ Every number is in the spec or output named. Elasticities are of load to the day
 
 Small business stays unidentified; the remaining route is tariff-level history from REE. Medium firms show a small
 calendar response, about a third of large industry's per period step, carried by August.
+| 24 | **Medium firms, persistence of the period-calendar shift, summers 2022–2025** (pooled against 2014, 2017–19) | **−0.283 points per step, p 0.002, [−0.39, −0.18]; trend null p 0.067; elasticity equivalent −0.025 [−0.035, −0.016]** | **all nine rules pass**: a lasting response in every year | `2026-11-23-firm-calendar-persistence-design.md` |
+| 25 | Medium firms, the same over all months (calendar years) | −0.261, p 0.0005 | R5 (price control) fails by 0.004; all else passes | same |
+| 26 | Large industry, persistence, summers 2022–2025 | −0.136, p 0.017 (2021: −1.00) | R5, R3 and R8 fail; the shift sits in 6.3 only | same |

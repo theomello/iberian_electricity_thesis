@@ -15,7 +15,12 @@ import tou_cross_tariff as CT  # noqa: E402
 import tou_industry_six_summer as S6  # noqa: E402
 
 OUT = S6.OUT
-eh = CT.omie_hourly()
+# OMIE price files on disk start in 2018; REN's ES market price (the same day-ahead price) covers 2014 onwards
+import tou_industry_regulated_price as RP  # noqa: E402
+ren = pd.read_parquet(RP.T_ROOT / "data/ren/ren_market_prices.parquet")
+ren = ren[ren.series == "ES"]
+loc = ren.utc_timestamp.dt.tz_convert("Europe/Madrid")
+eh = ren.assign(date=pd.to_datetime(loc.dt.date.to_numpy()), hour=loc.dt.hour.to_numpy()).groupby(["date", "hour"]).value.mean()
 d = eh.index.get_level_values(0)
 h = eh.index.get_level_values(1)
 spread = {}

@@ -121,3 +121,20 @@ interval is similar but not tighter. But the trend null is fragile: dropping the
 +0.038) steepens the line and θ becomes +0.086, a sign change; dropping 2018 gives −0.092. One summer decides whether the
 extrapolated no-reform value sits at −0.21 or lower. J3 failed as registered and is not rescued. For 6.3, the data support
 neither null over the other; the thesis should report 6.3 as unresolved between −0.43 and about zero, and rely on 6.2 and 6.4.
+
+## Step 2 results (run 2026-11-26, tariff 6.3, `scripts/analysis/tou_tariff_drift_step2.py`; `outputs/tables/tou_tariff_drift_step2.csv`)
+**Deviation from the registration, disclosed.** The spec said the price spread comes "from the OMIE files already on disk";
+those start in 2018, so four of the six placebo summers had no value. The same day-ahead price is in REN's Spanish market
+price file (from 2013-12-31), which the regulated-price dose already uses; the candidate is unchanged, only the file.
+
+Evening-minus-night spread (hours 18-21 minus 0-7, aligned windows, EUR/MWh) against the 6.3 placebo beta:
+2014 +2.73 / +0.418; 2015 +3.48 / +0.339; 2016 +1.67 / +0.304; 2017 +2.09 / +0.114; 2018 +4.96 / −0.028; 2019 +3.96 / +0.038
+(reform summer 2021: +5.89).
+
+| rule | result | verdict |
+|---|---|---|
+| K1 R² of the six betas on the spread >= 0.70 | correlation −0.587, R² 0.345 | **fail** |
+| K2 rolling-origin RMSE below the trend's | covariate 0.326 (errors −0.226, −0.504, −0.120) against trend 0.121 | **fail** |
+
+**Reading.** The price spread does not explain the 6.3 drift (R² 0.35) and predicts worse out of sample than a straight
+line. As registered, Step 2 is dropped. No other candidate is tried. The 6.3 drift is described, not explained.

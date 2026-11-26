@@ -118,51 +118,51 @@ def main():
         dose = to_x(CT.series_dose(n, tab_e if n == "E0" else tab_t, ebar))
         yA = np.log(x[f"load_{n}"].to_numpy())
         yB = yA - np.log(x.load_pt.to_numpy())
+        # dose nuisance m(W) once per target (it does not depend on the outcome)
+        Dm = {}
+        for T in PLAC + [2021]:
+            a, b = (S6.R0, S6.R1) if T == 2021 else S6.aligned(T)
+            sample = S_21 if T == 2021 else S_pre
+            w = ((x.date >= a) & (x.date <= b)).to_numpy()
+            D = np.where(w, dose, 0.0)
+            sm = sample & np.isfinite(yA)
+            m = np.full(len(yA), np.nan)
+            for f in sorted(set(year[sm])):
+                pred = sm & (year == f)
+                m[pred] = predict(FA, D, sm & (year != f), pred, "lasso")[pred] if (D[sm & (year != f)] != 0).any() else 0.0
+            Dm[T] = (D, m, sm)
+            print(f"{n}: dose nuisance for target {T} done", flush=True)
+        D, _, sm = Dm[2021]
+        m_r = np.full(len(yA), np.nan)
+        for f in sorted(set(year[sm])):
+            pred = sm & (year == f)
+            m_r[pred] = predict(FA, D, sm & (year != f), pred, "ridge")[pred] if (D[sm & (year != f)] != 0).any() else 0.0
         res = {}
         for oc, (F, y) in {"A": (FA, yA), "B": (FB, yB)}.items():
-            print(f"{n} outcome {oc}: nuisance l(W) cross-fits ...", flush=True)
+            print(f"{n} outcome {oc}: outcome nuisance l(W) cross-fits ...", flush=True)
             l_pre = crossfit(F, y, S_pre & np.isfinite(y), year, "lasso")
             l_21 = crossfit(F, y, S_21 & np.isfinite(y), year, "lasso")
             targets = {}
             for T in PLAC + [2021]:
-                if T == 2021:
-                    a, b = S6.R0, S6.R1
-                    sample, l = S_21, l_21
-                else:
-                    a, b = S6.aligned(T)
-                    sample, l = S_pre, l_pre
-                w = ((x.date >= a) & (x.date <= b)).to_numpy()
-                D = np.where(w, dose, 0.0)
-                sm = sample & np.isfinite(y)
-                m = np.full(len(y), np.nan)
-                for f in sorted(set(year[sm])):
-                    pred = sm & (year == f)
-                    m[pred] = predict(F, D, sm & (year != f), pred, "lasso")[pred] if (D[sm & (year != f)] != 0).any() else 0.0
+                D, m, sm = Dm[T]
+                l = l_21 if T == 2021 else l_pre
                 Dt, Yt = (D - m)[sm], (y - l)[sm]
                 ok = np.isfinite(Dt) & np.isfinite(Yt)
                 targets[T] = float((Dt[ok] * Yt[ok]).sum() / (Dt[ok] ** 2).sum())
                 print(f"   {n} {oc} target {T}: theta {targets[T]:+.4f}", flush=True)
             res[oc] = targets
-            pd.DataFrame([dict(series=n, outcome=o, target=t, theta=v) for o, d in res.items() for t, v in d.items()]
-                         + [r for r in rows]).to_csv(OUT / "tou_dml_pooled.csv", index=False)
-        # ridge learner, outcome A, 2021 target only
-        l_r = crossfit(FA, yA, S_21 & np.isfinite(yA), year, "ridge")
-        D = np.where(win21, dose, 0.0)
-        sm = S_21 & np.isfinite(yA)
-        m = np.full(len(yA), np.nan)
-        for f in sorted(set(year[sm])):
-            pred = sm & (year == f)
-            m[pred] = predict(FA, D, sm & (year != f), pred, "ridge")[pred] if (D[sm & (year != f)] != 0).any() else 0.0
-        Dt, Yt = (D - m)[sm], (yA - l_r)[sm]
-        ok = np.isfinite(Dt) & np.isfinite(Yt)
-        theta_ridge = float((Dt[ok] * Yt[ok]).sum() / (Dt[ok] ** 2).sum())
+            if oc == "A":
+                l_r = crossfit(FA, yA, S_21 & np.isfinite(yA), year, "ridge")
+                D, _, sm = Dm[2021]
+                Dt, Yt = (D - m_r)[sm], (yA - l_r)[sm]
+                ok = np.isfinite(Dt) & np.isfinite(Yt)
+                theta_ridge = float((Dt[ok] * Yt[ok]).sum() / (Dt[ok] ** 2).sum())
         for oc in ("A", "B"):
             pl = np.array([res[oc][t] for t in PLAC])
             th = res[oc][2021]
             mean, trend, slope, sse, mm, sd = TD.nulls(th, dict(zip(PLAC, pl)))
             rows.append(dict(series=n, outcome=oc, target="summary", theta=th, placebo_mean=mm, placebo_sd=sd, p_mean=mean["p"], effect_mean=mean["eff"],
                              effect_trend=trend["eff"], p_trend=trend["p"], theta_ridge=theta_ridge if oc == "A" else np.nan))
-        # rules
         e, bsd = BASE[n]
         print(f"\n=== {n} ===")
         for oc in ("A", "B"):
@@ -174,7 +174,7 @@ def main():
             print(f"   O1 agreement |diff| {abs(r['theta'] - e):.4f} <= {bsd:.4f}: {o1} | O3 spread ratio {r['placebo_sd'] / bsd:.2f} <= 1.5: {o3}")
         rA = [q for q in rows if q["series"] == n and q["outcome"] == "A" and q["target"] == "summary"][0]
         print(f"O4 ridge theta_2021 {theta_ridge:+.4f} vs LASSO {rA['theta']:+.4f}: |diff| {abs(theta_ridge - rA['theta']):.4f} <= 0.02: {abs(theta_ridge - rA['theta']) <= 0.02}")
-        pd.DataFrame([dict(series=n, outcome=o, target=t, theta=v) for o, d in res.items() for t, v in d.items()] + rows).to_csv(OUT / "tou_dml_pooled.csv", index=False)
+        pd.DataFrame([dict(series=n, outcome=o, target=t, theta=v) for o, d in res.items() for t, v in d.items()] + rows).to_csv(OUT / f"tou_dml_pooled_{n}.csv", index=False)
     print("\nO0 (gate) is the cached baseline, reproduced in tou_drift_location.py and tou_tariff_drift.py (committed).")
 
 

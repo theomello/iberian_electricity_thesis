@@ -72,3 +72,47 @@ including the 2021 estimate's se.
 Cached errors, committed tariff and period tables; no new data. New scripts `scripts/analysis/tou_calendar_randomization.py` (Part 1;
 about 15 calendars × 7 summers × 3 tariffs ≈ 300 fits, expected run time 30-50 minutes) and `scripts/analysis/tou_local_level.py`
 (Part 2, seconds). Outputs `outputs/tables/tou_calendar_randomization_*.csv`, `tou_local_level.csv`.
+
+## Results (run 2026-11-26; `scripts/analysis/tou_calendar_randomization.py`, `..._rules.py`, `tou_local_level.py`; `outputs/tables/tou_calendar_randomization_*.csv`, `tou_local_level.csv`)
+Calendars passing the 0.5 screen: 14 (6.2), 13 (6.3), 14 (6.4); 6, 3 and 6 pass the 0.3 sensitivity. The script was committed after
+the betas were launched (it only computes betas; the rules were in this file).
+
+### Part 1 (screen |corr| ≤ 0.5; the 0.3 sensitivity gives the same verdicts)
+| rule | 6.2 | 6.3 | 6.4 |
+|---|---|---|---|
+| C0 reproduction | pass | pass | pass |
+| C1 at least 6 calendars | pass | pass | pass |
+| C2 counterfactual mean in 2021 within placebo range (t, bound 2.57) | −0.037 vs +0.016: t −1.89 pass | −0.089 vs +0.080: t −1.24 pass | −0.022 vs +0.094: t −1.67 pass |
+| C3 Δ placebo sd ≤ 0.8 × real beta's, slope not established | sd ratio 1.80, slope +0.011 (1.9 se): **fail** | ratio 0.31 pass, slope −0.028 (5.3 se): **fail** | ratio 0.68, slope −0.003 (0.2 se): **pass** |
+| C4 Δ(2021) detected (one-sided p ≤ 0.05) | −0.027, p 0.20: **not detected** | −0.144, p 0.004: detected | −0.315, p < 0.001: detected |
+| C5 leave-one-calendar-out stable | pass | pass | pass |
+
+**Post hoc (not registered): the contrast-based effect.** Δ(2021) minus the mean of the six placebo Δ, with the prediction interval of the six-summer test:
+6.2 **−0.030** [−0.115, +0.054]; 6.3 **−0.262** [−0.420, −0.104] (trend null on Δ: −0.134 [−0.230, −0.039]);
+6.4 **−0.547** [−0.703, −0.391] (trend null on Δ: −0.533). Against the earlier ranges (6.2 −0.08; 6.3 −0.43 to −0.02; 6.4 −0.57 to −0.66).
+
+**Reading.**
+- **6.4 is supported.** The generic part of the offset did not move outside the placebo range in 2021 (C2), the contrast has no
+  drift (C3 pass, flat) and gives −0.55 (interval [−0.70, −0.39]), inside the earlier range. The real calendar's offset (+0.33) is
+  **calendar-specific**, not generic (shifted calendars give about +0.09), so "the offset is generic" is not the right description;
+  the stable thing is the contrast.
+- **6.3 narrows but is not settled.** The contrast cuts the placebo spread to a third (0.057 against 0.181), but Δ still falls
+  (0.175 → 0.063; C3 fails on the slope). The contrast effect is −0.26 (mean null) to −0.13 (trend null), detected under both
+  (p 0.004 and 0.009), a narrower and detected range than −0.43 to −0.02.
+- **6.2 loses detection.** In 2021 the shifted calendars also give negative betas (mean −0.037); the real beta (−0.064) is not
+  distinguishable from them (Δ p 0.20). C3 fails too (2019 is +0.064). The earlier detection of 6.2 rests on the mean-null placebo
+  spread (sd 0.017) and does not survive a within-year contrast.
+- **Leakage threat, visible.** Shifted calendars share up to half of the real pattern, so reform effects leak into their betas.
+  In 6.4 the calendar closest to the real one (+3 h) gives −0.128 and the others between −0.07 and +0.03. The contrast is therefore
+  a conservative (smaller in magnitude) reading of the reform effect, not an unbiased one.
+
+### Part 2 (local-level model, descriptive; 2021 estimate's se included as registered)
+| tariff | q̂ | predicted no-reform 2021 | effect at q̂ (95%) | q = 0 (mean null) | contains both nulls | excludes zero |
+|---|---|---|---|---|---|---|
+| 6.2 | 0 | +0.020 | −0.083 [−0.229, +0.063] | same | yes | **no** |
+| 6.3 | 10 (boundary) | +0.033 | −0.266 [−0.714, +0.182] | −0.430 [−0.954, +0.093] | yes | **no** |
+| 6.4 | 0.3 | +0.312 | −0.649 [−1.054, −0.244] | −0.662 [−1.047, −0.277] | yes | **yes** |
+The profile is flat for 6.2 and 6.4 (q barely identified); for 6.3 it rises to the boundary (a random-walk reading). **Limitation:** the
+predictive variance already contains the noise of a single beta, and the registration adds the 2021 estimate's own se on top, so the
+intervals are conservative (counted twice); the clustered se for 6.2 (0.054) is large against its placebo sd (0.017).
+Reading by L2: 6.2 and 6.3 "unresolved" under this model; 6.4 detected.

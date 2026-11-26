@@ -87,3 +87,32 @@ Cached errors for Parts A (a refit is needed only for the orthogonal-score nuisa
 about 7 × 5 LASSO sets, expected 20-40 minutes in parallel) and B (seconds); Part C needs five refit sets (about 5 minutes each). New scripts
 `scripts/analysis/tou_dml_pooled.py` (A), `tou_drift_sensitivity.py` (B), `tou_placebo_2020.py` (C); outputs
 `outputs/tables/tou_dml_pooled*.csv`, `tou_drift_sensitivity*.csv`, `tou_placebo_2020*.csv`.
+
+## Results of Parts B and C (run 2026-11-26; `tou_drift_sensitivity.py`, `tou_placebo_2020.py`; `outputs/tables/tou_drift_sensitivity_{base,with2020}.csv`, `tou_placebo_2020.csv`)
+Scripts committed before their runs, except that the Part B script was committed together with its first (base) result.
+
+**Part C (2020 placebo).** Window 2 June → 16 September 2020 (78 of 106 days after the COVID exclusion); C1 passes for E0, 6.2, 6.3, 6.4
+(100% of hours present). 2020 betas against the line through 2014-2019 (flag: further than the largest year-to-year change):
+E0 baseline −0.028 (line −0.018); 6.2 baseline +0.090 (line +0.016, **flag**), joint +0.131 (+0.046); 6.3 baseline −0.116 (−0.122), joint −0.101
+(+0.010, **flag**); 6.4 baseline +0.144 (+0.256), joint +0.168 (+0.273). Not added to any registered placebo set. C2: the 2020 points for 6.2
+(baseline) and 6.3 (joint) are flagged; Part B is therefore reported with and without the anchor.
+
+**Part B (sensitivity band).** Breakdown values (m* second-difference, M̄* relative-magnitude; robust = band excludes zero at m = 1 and M̄ = 1):
+
+| series | without 2020: m*, M̄*, class | with the 2020 anchor: m*, M̄*, class |
+|---|---|---|
+| E0 baseline | 0.12, 0.41, fragile | 0.53, 0.81, fragile |
+| 6.2 baseline | 0.73, 1.10, fragile | 2.42, 2.80, robust (anchor flagged) |
+| 6.2 joint | 0.78, 0.50, fragile | 1.70, 1.60, robust |
+| 6.3 baseline | 0.65, 0.71, fragile | 0.18, 0.61, fragile |
+| 6.3 joint | 1.14, 1.17, **robust** | 1.30, 0.38, fragile (anchor flagged) |
+| 6.4 baseline | 1.63, 2.08, **robust** | 1.17, 2.10, **robust** |
+| 6.4 joint | 1.29, 2.07, **robust** | 1.55, 3.15, **robust** |
+
+B3 (baseline 6.x, with the anchor): the trend-null effect lies inside both bands for 6.3 (−0.02) and inside the relative-magnitude band for 6.4; the mean-null
+effects lie outside the second-difference bands for all three (the 2020 points are far from the placebo means).
+**Reading.** **6.4 is robust to drift under every anchor choice and specification.** E0 is fragile in both. 6.2 and 6.3 change class with the 2020
+anchor (6.2 becomes robust and more negative, 6.3 becomes fragile): one COVID-affected point moves them, so their classification is unstable and
+is reported as such. My expectations before the run were wrong for E0 (expected robust; its placebo path has a large 2014→2015 jump that sets the
+allowed erratic-ness) and for 6.3 (expected fragile; the joint specification is robust without the anchor). The 2020 point for 6.3 (−0.12) lies on the
+downward line, which favours the trend null for 6.3 over the mean null, with the COVID caveat.

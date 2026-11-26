@@ -1,0 +1,71 @@
+series,spec,restriction,level,lo,hi,M_obs,anchor_2020
+E0,baseline,second difference,1.0,-0.25134,0.07795,0.16465,-0.02833
+E0,baseline,second difference,1.5,-0.33367,0.16028,0.16465,-0.02833
+E0,baseline,second difference,2.0,-0.41599,0.2426,0.16465,-0.02833
+E0,baseline,second difference,3.0,-0.58064,0.40725,0.16465,-0.02833
+E0,baseline,relative magnitude,0.5,-0.1415,-0.03329,0.10821,-0.02833
+E0,baseline,relative magnitude,1.0,-0.1956,0.02081,0.10821,-0.02833
+E0,baseline,relative magnitude,1.5,-0.2497,0.07492,0.10821,-0.02833
+E0,baseline,relative magnitude,2.0,-0.3038,0.12902,0.10821,-0.02833
+E0,baseline,breakdown second difference (m*),0.52655,,,0.16465,-0.02833
+E0,baseline,breakdown relative magnitude (Mbar*),0.80765,,,0.10821,-0.02833
+6.2,baseline,second difference,1.0,-0.29411,-0.12211,0.086,0.08971
+6.2,baseline,second difference,1.5,-0.33711,-0.07911,0.086,0.08971
+6.2,baseline,second difference,2.0,-0.38011,-0.03611,0.086,0.08971
+6.2,baseline,second difference,3.0,-0.46611,0.04989,0.086,0.08971
+6.2,baseline,relative magnitude,0.5,-0.18076,-0.12605,0.05471,0.08971
+6.2,baseline,relative magnitude,1.0,-0.20811,-0.09869,0.05471,0.08971
+6.2,baseline,relative magnitude,1.5,-0.23547,-0.07134,0.05471,0.08971
+6.2,baseline,relative magnitude,2.0,-0.26282,-0.04398,0.05471,0.08971
+6.2,baseline,breakdown second difference (m*),2.4199,,,0.086,0.08971
+6.2,baseline,breakdown relative magnitude (Mbar*),2.80391,,,0.05471,0.08971
+6.2,joint,second difference,1.0,-0.32608,-0.08452,0.12078,0.1306
+6.2,joint,second difference,1.5,-0.38647,-0.02413,0.12078,0.1306
+6.2,joint,second difference,2.0,-0.44686,0.03626,0.12078,0.1306
+6.2,joint,second difference,3.0,-0.56763,0.15703,0.12078,0.1306
+6.2,joint,relative magnitude,0.5,-0.19672,-0.10293,0.09379,0.1306
+6.2,joint,relative magnitude,1.0,-0.24362,-0.05604,0.09379,0.1306
+6.2,joint,relative magnitude,1.5,-0.29051,-0.00914,0.09379,0.1306
+6.2,joint,relative magnitude,2.0,-0.3374,0.03775,0.09379,0.1306
+6.2,joint,breakdown second difference (m*),1.69981,,,0.12078,0.1306
+6.2,joint,breakdown relative magnitude (Mbar*),1.5975,,,0.09379,0.1306
+6.3,baseline,second difference,1.0,-0.17073,0.24527,0.208,-0.11609
+6.3,baseline,second difference,1.5,-0.27473,0.34927,0.208,-0.11609
+6.3,baseline,second difference,2.0,-0.37873,0.45327,0.208,-0.11609
+6.3,baseline,second difference,3.0,-0.58673,0.66127,0.208,-0.11609
+6.3,baseline,relative magnitude,0.5,-0.21182,-0.02182,0.19,-0.11609
+6.3,baseline,relative magnitude,1.0,-0.30682,0.07318,0.19,-0.11609
+6.3,baseline,relative magnitude,1.5,-0.40182,0.16818,0.19,-0.11609
+6.3,baseline,relative magnitude,2.0,-0.49682,0.26318,0.19,-0.11609
+6.3,baseline,breakdown second difference (m*),0.1792,,,0.208,-0.11609
+6.3,baseline,breakdown relative magnitude (Mbar*),0.61482,,,0.19,-0.11609
+6.3,joint,second difference,1.0,0.02624,0.20334,0.08855,-0.10118
+6.3,joint,second difference,1.5,-0.01803,0.24761,0.08855,-0.10118
+6.3,joint,second difference,2.0,-0.0623,0.29189,0.08855,-0.10118
+6.3,joint,second difference,3.0,-0.15085,0.38043,0.08855,-0.10118
+6.3,joint,relative magnitude,0.5,-0.16255,0.02234,0.18489,-0.10118
+6.3,joint,relative magnitude,1.0,-0.255,0.11479,0.18489,-0.10118
+6.3,joint,relative magnitude,1.5,-0.34744,0.20724,0.18489,-0.10118
+6.3,joint,relative magnitude,2.0,-0.43989,0.29969,0.18489,-0.10118
+6.3,joint,breakdown second difference (m*),1.29639,,,0.08855,-0.10118
+6.3,joint,breakdown relative magnitude (Mbar*),0.37915,,,0.18489,-0.10118
+6.4,baseline,second difference,1.0,-0.46704,-0.03704,0.215,0.14364
+6.4,baseline,second difference,1.5,-0.57454,0.07046,0.215,0.14364
+6.4,baseline,second difference,2.0,-0.68204,0.17796,0.215,0.14364
+6.4,baseline,second difference,3.0,-0.89704,0.39296,0.215,0.14364
+6.4,baseline,relative magnitude,0.5,-0.59458,-0.36622,0.22836,0.14364
+6.4,baseline,relative magnitude,1.0,-0.70876,-0.25204,0.22836,0.14364
+6.4,baseline,relative magnitude,1.5,-0.82294,-0.13786,0.22836,0.14364
+6.4,baseline,relative magnitude,2.0,-0.93712,-0.02368,0.22836,0.14364
+6.4,baseline,breakdown second difference (m*),1.17229,,,0.215,0.14364
+6.4,baseline,breakdown relative magnitude (Mbar*),2.10371,,,0.22836,0.14364
+6.4,joint,second difference,1.0,-0.57496,-0.12462,0.22517,0.16777
+6.4,joint,second difference,1.5,-0.68754,-0.01204,0.22517,0.16777
+6.4,joint,second difference,2.0,-0.80013,0.10054,0.22517,0.16777
+6.4,joint,second difference,3.0,-1.0253,0.32571,0.22517,0.16777
+6.4,joint,relative magnitude,0.5,-0.58985,-0.42819,0.16166,0.16777
+6.4,joint,relative magnitude,1.0,-0.67067,-0.34736,0.16166,0.16777
+6.4,joint,relative magnitude,1.5,-0.7515,-0.26653,0.16166,0.16777
+6.4,joint,relative magnitude,2.0,-0.83233,-0.1857,0.16166,0.16777
+6.4,joint,breakdown second difference (m*),1.55347,,,0.22517,0.16777
+6.4,joint,breakdown relative magnitude (Mbar*),3.14873,,,0.16166,0.16777

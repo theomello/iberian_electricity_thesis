@@ -78,3 +78,28 @@ degrees of freedom and can only fail or weakly succeed.
 ## Data and code
 Cached errors, committed dose tables; no new data. New script `scripts/analysis/tou_tariff_drift.py` (Step 3 first; Steps 1 and
 2 in the same file behind flags, not run until their gates and go-ahead), outputs `outputs/tables/tou_tariff_drift_*.csv`.
+
+## Step 3 results (run 2026-11-26, `scripts/analysis/tou_tariff_drift.py`; `outputs/tables/tou_tariff_drift_step3.csv`)
+**T1 passes** for 6.2, 6.3 and 6.4 (η_2021, placebo mean and sd equal the committed rows to five decimals). Sanity: the pool's
+trend null reproduces Amendment A (ŷ −0.027, effect −0.150, p 0.045, [−0.338, +0.037]; committed −0.026, −0.151, 0.044).
+
+| tariff | η 2021 | placebo mean (sd) | slope per year (se) | mean null: effect, p, 95% interval | trend null: ŷ 2021, effect, p, 95% interval |
+|---|---|---|---|---|---|
+| 6.2 | −0.064 | +0.020 (0.017) | −0.0009 (0.0045) | −0.083, 0.003, [−0.130, −0.037] | +0.016, −0.079, 0.025, [−0.159, +0.000] |
+| 6.3 | −0.233 | +0.198 (0.181) | −0.0912 (0.0159) | −0.430, 0.039, [−0.932, +0.072] | −0.213, −0.020, 0.427, [−0.302, +0.262] |
+| 6.4 | −0.337 | +0.326 (0.083) | −0.0201 (0.0198) | −0.662, 0.0004, [−0.893, −0.432] | +0.235, −0.572, 0.005, [−0.922, −0.222] |
+| pool | −0.177 | +0.143 (0.081) | −0.0377 (0.0106) | −0.320, 0.007, [−0.544, −0.096] | −0.027, −0.150, 0.045, [−0.338, +0.037] |
+
+**Rules.**
+- **T2:** established trend only for **6.3** (slope −0.091, 5.7 se). 6.2 (0.2 se) and 6.4 (1.0 se) have none.
+- **T3:** 6.2 settled (gap 0.004) and 6.4 settled (gap 0.090, no established trend, so the mean null stands); **6.3 not settled**
+  (mean-null effect −0.430, trend-null effect −0.020, gap 0.41).
+- **T4:** detected under both nulls for 6.2 (p 0.003, 0.025) and 6.4 (p 0.0004, 0.005); 6.3 detected only under the mean
+  null (p 0.039; trend null p 0.43, interval spans zero).
+- **T5:** the tariffs are reported separately; the pooled −0.15 to −0.32 is the unsettled aggregate and **the whole width of
+  the range comes from 6.3**.
+
+**Reading.** The industry effect is not one number: 6.2 −0.08 (both nulls), 6.3 between −0.43 and −0.02 depending on the
+null, 6.4 about −0.57 to −0.66. It rises steeply with voltage, which the pooled figure hides (the earlier E5 rule, that series
+estimates scale with the new dose, already failed). 6.3's placebo falls from +0.42 to +0.04 in six summers while the other
+two do not trend, so 6.3 is the tariff whose drift needs a model. Step 1 runs on 6.3 only (the only tariff passing T2).

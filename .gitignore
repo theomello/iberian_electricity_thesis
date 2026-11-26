@@ -36,3 +36,6 @@ slides/*.log
 outputs/cache/
 outputs/tables/*/*/*.parquet
 ML/
+
+# Personal admin files (LMU templates); kept locally, not tracked
+Organizational/

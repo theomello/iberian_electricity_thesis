@@ -1,0 +1,8 @@
+series,spec,beta,extrapolated_2020,covid_flag
+E0,baseline,-0.02833,-0.01824,False
+6.2,baseline,0.08971,0.0162,True
+6.2,joint,0.1306,0.0464,False
+6.3,baseline,-0.11609,-0.1216,False
+6.3,joint,-0.10118,0.00994,True
+6.4,baseline,0.14364,0.25587,False
+6.4,joint,0.16777,0.27289,False

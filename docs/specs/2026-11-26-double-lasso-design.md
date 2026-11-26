@@ -105,3 +105,22 @@ consistent with a shape-only estimate that discards the level part. The controls
 which matches the learner swap (six learners, estimate -0.104 to -0.116, placebo sd 0.034-0.037). Portugal's loading
 adds almost nothing here (placebo sd 0.0404 against 0.0411). Chapter 5 should cite the cross-fitting and placebo logic,
 not an orthogonality claim.
+
+## Learner swap (exploratory, run 2026-11-26; not registered, no rules)
+E0 six-summer test (`tou_industry_six_summer` pipeline: leave-one-year-out fits per hour, subtract Portugal, 2014-2019
+placebo summers), changing only the per-hour learner. Script: `scripts/analysis/tou_learner_swap_scratch.py` (copied from the
+scratch folder; it patches the learner inside worker processes and needs the cached six-summer errors for the baseline).
+The first runs crashed on bugs in this script (an `ElasticNetCV` argument, the gate code, a recursion in post-LASSO) and
+were rerun; the baseline row reproduces the committed `tou_industry_six_summer_summary.csv` exactly (-0.11572, sd 0.03686).
+
+| Learner | beta 2021 | placebo mean | placebo sd | prediction t |
+|---|---|---|---|---|
+| LASSO, one-SE (baseline) | -0.1157 | -0.0049 | 0.0369 | -2.78 |
+| Ridge | -0.1039 | -0.0013 | 0.0344 | -2.76 |
+| LASSO, CV minimum | -0.1097 | -0.0014 | 0.0354 | -2.84 |
+| Post-LASSO | -0.1123 | -0.0018 | 0.0358 | -2.86 |
+| Elastic net | -0.1102 | -0.0014 | 0.0354 | -2.85 |
+| Boosting (depth 3) | -0.1052 | +0.0003 | 0.0359 | -2.72 |
+
+**Reading.** The learner moves the 2021 estimate by at most 0.011 and the placebo spread by at most 7%. Prediction quality
+is not the limit; the year-specific shifts are. Single run, no robustness checks.

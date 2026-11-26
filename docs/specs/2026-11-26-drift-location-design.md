@@ -71,3 +71,45 @@ rungs drop the differencing that the headline relies on, so they locate sources 
 ## Data and code
 Cached errors only; no new data. New script `scripts/analysis/tou_drift_location.py` (reuses `Fit`, `fe3`, `pooled_eta`);
 outputs `outputs/tables/tou_drift_location_*.csv`. Expected run time minutes.
+
+## Results (run 2026-11-26, `scripts/analysis/tou_drift_location.py`; `outputs/tables/tou_drift_location_*.csv`)
+**R0 passes** (pool −0.1771 / +0.1429 / 0.0808; E0 −0.1157 / −0.0049 / 0.0369). Cached errors only. The log line "E0-E6 /
+1193 in 2014: FAIL" is the existing data gate of the six-summer script (unchanged: 2014 stays clean for E0 and the 6.x series).
+
+| set | rung | η 2021 | placebo mean | placebo sd | slope per year (se) |
+|---|---|---|---|---|---|
+| pool 6.2-6.4 | baseline | −0.1771 | +0.1429 | 0.0808 | −0.0377 (0.0106) |
+| | ES (Spain's error) | −0.1747 | +0.1048 | 0.0626 | −0.0271 (0.0098) |
+| | PT (Portugal's error, same dose) | +0.0417 | −0.0293 | 0.0299 | +0.0092 (0.0065) |
+| | L1 coarse level | −0.3032 | +0.0922 | 0.0938 | −0.0424 (0.0134) |
+| | L2 Spain only | +0.0391 | +0.2866 | 0.1192 | −0.0437 (0.0232) |
+| | L3 L1 and L2 | +0.0391 | +0.2900 | 0.1271 | −0.0457 (0.0252) |
+| E0 | baseline | −0.1157 | −0.0049 | 0.0369 | −0.0038 (0.0097) |
+| | ES | −0.1196 | −0.0005 | 0.0370 | −0.0057 (0.0095) |
+| | PT | −0.0016 | +0.0012 | 0.0027 | −0.0001 (0.0007) |
+| | L1 | −0.1149 | −0.0037 | 0.0369 | −0.0065 (0.0093) |
+| | L2 | +0.2252 | −0.0272 | 0.0165 | +0.0039 (0.0040) |
+| | L3 | +0.2654 | −0.0219 | 0.0088 | +0.0003 (0.0023) |
+
+**Rules.**
+- **A1:** baseline slope −0.0377 (3.6 se), established. s_ES = 0.72, s_PT = 0.24. Spain misses the 0.75 line by 0.03, so the
+  registered label is **shared**. Spain's own slope is established (2.8 se); Portugal's (+0.0092, 1.4 se) is not.
+  The slopes add up: ES − PT = −0.0271 − 0.0092 = −0.0363, against the baseline −0.0377.
+- **B1:** L1 slope −0.0424, +13% against the baseline: **shape drift** (within ±25%). Coarsening the level absorption does not
+  change the trend, so it is not a month-level drift.
+- **B2 (E0):** L1 changes η_2021 by +0.0008, not moving. L2 and L3 move it by +0.34 and +0.38, in the wrong direction and
+  far from the double LASSO (−0.0816). **No rung moves the estimate toward −0.082, so none of the three registered design
+  choices explains the gap.**
+
+**Reading.** The industry drift sits mostly in Spain's own evening-versus-night profile (about three quarters), and is a
+shape drift. Portugal's share is small and not established. By the registered mapping "shared" means this route cannot
+narrow the range; the weight of the evidence nonetheless leans to a real Spanish drift, which favours the trend null as
+the baseline without proving it. L2 and L3 drop the differencing the headline relies on and put the hour-by-month cells of
+Spain alone against the dose; the +0.23 to +0.27 for E0 is not an estimate of anything and is not read. It does show that
+for E0 in 2021, Portugal's differencing removes a large common component.
+
+**Post hoc, not registered.** Effect against the null at each rung (η_2021 minus the placebo mean, or minus the trend
+extrapolated to 2021): baseline −0.32 (mean) / −0.15 (trend); ES −0.28 / −0.16; L1 −0.40 / −0.21; L2 −0.25 / −0.05;
+L3 −0.25 / −0.05 (trend value = mean + slope x 4.5 years). The mean-null effects span −0.25 to −0.40 and the trend-null
+effects −0.05 to −0.21 (−0.15 to −0.21 without the two Spain-only rungs, which drop the differencing), so the design choice
+moves the range by about as much as the trend question itself.

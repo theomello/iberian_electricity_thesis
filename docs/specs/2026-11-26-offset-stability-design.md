@@ -37,3 +37,23 @@ not informative; no claim either way.
 ## Threats
 One window per year and one year of interest; the spring is a different season with a different load shape, so passing O1 shows
 no year-specific shift in the estimator, not that summer 2021 is free of one; 2021 spring had pandemic restrictions.
+
+## Results (run 2026-11-26, `scripts/analysis/tou_offset_stability.py`; `outputs/tables/tou_offset_stability.csv`)
+**R0 passes** (summer 6.4: η_2021 −0.33676, placebo mean +0.32562, sd 0.08300).
+
+Spring-window betas for 6.4: 2014 −0.054, 2015 −0.038, 2016 −0.085, 2017 −0.019, 2018 −0.196, 2019 −0.321; **2021 +0.029**.
+Spring placebo mean −0.119 (sd 0.117).
+
+| rule | result | verdict |
+|---|---|---|
+| O1 stable in 2021 | t = +1.16 (bound 2.57) | pass |
+| O2 proxy valid (spring mean positive, at least +0.16) | −0.119, **negative** | **fail** |
+
+**Reading, as registered.** O2 fails, so the check is not informative about the summer offset and **no claim is made in either
+direction**: the 2021 spring beta sits inside the earlier springs (O1), but the spring offset has the opposite sign to the
+summer offset (+0.33), so the spring is not a stand-in for the summer. What it shows: the 6.4 offset is a property of
+the season (positive in the summer windows, negative in spring), i.e. of how this tariff's load profile lines up with the
+dose pattern at that time of year, not a constant. That raises the weight on the summer window alignment and means the
+stability of the summer offset in 2021 cannot be tested with another season. The 6.4 effect (−0.57 to −0.66) stays a
+placebo-based estimate whose key assumption (the summer offset in 2021 equals the earlier summers') is untested.
+Spring betas also fall in 2018-19 (−0.196, −0.321), again a shape drift, now visible in a second season.

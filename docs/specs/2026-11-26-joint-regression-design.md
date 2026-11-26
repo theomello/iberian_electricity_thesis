@@ -55,3 +55,36 @@ real calendar's structure (same hour blocks, months, prices).
 Cached errors; the shifted doses are rebuilt as in `tou_calendar_randomization.py` (about 15 doses × 7 summers × 3 tariffs; residualisation
 dominates, expected 15-20 minutes per tariff in parallel). New script `scripts/analysis/tou_joint_regression.py`; outputs
 `outputs/tables/tou_joint_regression_*.csv`.
+
+## Results (run 2026-11-26; `scripts/analysis/tou_joint_regression.py`, `..._rules.py`; `outputs/tables/tou_joint_regression_*.csv`)
+Screened calendars: 14 (6.2), 13 (6.3), 14 (6.4). J = 3 principal components (90-91% of the variance) in every summer and tariff.
+Registration and script were committed before the run (dffb3b1, 6650cf4).
+
+| rule | 6.2 | 6.3 | 6.4 |
+|---|---|---|---|
+| J0 reproduction (no controls = baseline) | pass | pass | pass |
+| J1 real-dose variance left (min over summers) | 0.88 pass | 0.85 pass | 0.88 pass |
+| J2 placebo slope not established | +0.0115 (se 0.0074), 1.55 se: **fail** (marginal) | −0.0423 (se 0.0082): **fail** | −0.0076 (se 0.0168): **pass** |
+| J3 placebo sd ≤ baseline | 0.0349 vs 0.0168: **fail** | 0.0849 vs 0.1808: pass | 0.0645 vs 0.0830: pass |
+| J4 detection, mean null (effect, p) | −0.026, p 0.26: no | −0.329, p 0.008: yes | −0.641, p 0.0001: yes |
+| J4 trend null (effect, p), where J2 fails | −0.077, p 0.088: no | −0.139, p 0.029: yes | −0.607, p 0.002: yes |
+| J5 stable (leave-one-placebo-out; J−1, J+1) | pass, pass | pass, pass | pass, pass |
+| **J6 tariff works (J1, J2, J4)** | **no** | **no** (J2 fails) | **yes** |
+
+Main betas: 6.4 2021 −0.341, placebos +0.285, +0.331, +0.394, +0.233, +0.226, +0.327; 6.3 2021 −0.171, placebos +0.253, +0.234, +0.213,
++0.104, +0.059, +0.084; 6.2 2021 −0.019, placebos −0.009, −0.005, −0.013, +0.008, −0.019, +0.075.
+Effects with 95% prediction intervals: **6.4 −0.641 [−0.820, −0.462]** (trend null −0.607 [−0.904, −0.309]);
+**6.3 −0.329 [−0.565, −0.094]** (mean null) and **−0.139 [−0.285, +0.007]** (trend null); **6.2 −0.026 [−0.122, +0.071]**, one-sided 95% lower bound −0.102.
+Variants: S1 (mean of shifted doses) effects 6.2 −0.044, 6.3 −0.335, 6.4 −0.649; S2 (all shifted doses, dose variance left 0.47-0.60)
+6.2 −0.015, 6.3 −0.294, 6.4 −0.577.
+
+**Reading.**
+- **6.4 works.** The shape drift is absorbed (flat placebo slope), the placebo spread falls from 0.083 to 0.065, and the effect −0.64
+  matches the baseline mean null (−0.66) and the earlier trend null (−0.57); the contrast Δ (−0.55) understated it, as the leakage
+  argument predicted. It is the tariff's headline.
+- **6.3 is narrower, not settled.** Controls halve the placebo spread (0.085 against 0.181) and both nulls now detect (−0.33 and −0.14,
+  the latter's interval just reaching zero), but the drift remains (slope −0.042 per year, 5 se). Registered reading: the joint estimate is
+  reported beside the earlier ranges; the range −0.14 to −0.33 replaces −0.43 to −0.02.
+- **6.2 is not detected.** The joint estimate is −0.03 with an interval spanning zero and a noisier placebo set than the baseline (2019 is
+  +0.075 again). Reported as a bound: no effect more negative than −0.10. No other specification is tried.
+- **J1 is comfortable (85-89%), so the shifted patterns do not span the real dose**; S2 (all shifted doses) leaves 47-60%, as expected.

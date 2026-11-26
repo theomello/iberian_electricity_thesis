@@ -39,7 +39,7 @@ on the placebo calendar (`old_new_tables`, `series_dose`), so hours, day types a
 
 **2. Serial correlation and few clusters: the summer is the unit of inference.** Hours, days and overlapping windows
 within one summer are dependent, so they are not counted as independent draws. Inference compares the one treated
-summer (2021) with S placebo summers, in the spirit of Conley and Taber (`papers/md`, `t0312`): the control summers'
+summer (2021) with S placebo summers, in the spirit of Conley and Taber (`literature/md`, `t0312`): the control summers'
 estimates give the distribution of the estimator under no effect. A wild cluster bootstrap is not used: with a single
 treated cluster it is known to fail (MacKinnon and Webb, `qed-wp-1314`).
 - **Rank test:** p_rank = (1 + #{placebo summers with η_Y ≤ η_2021}) / (1 + S). Its floor is 1/(S+1): 0.2 for S = 4.

@@ -1,6 +1,6 @@
 # Replication on the paper's unit of observation: regulated retailers' demand by area
 
-**Status: pre-registered 2026-11-12, before any estimation on the panel.** Branch `tou-policy-prices`. Panel: `scripts/build/build_regulated_area_panel.py` (`d261245`, `docs/tou-policy-sources.md`, last section). Paper: Enrich, Li, Mizrahi and Reguant (JEEM 2024), `papers/md/4-time-of-use-impacts-enrich-li-mizrahi-reguant.md`.
+**Status: pre-registered 2026-11-12, before any estimation on the panel.** Branch `tou-policy-prices`. Panel: `scripts/build/build_regulated_area_panel.py` (`d261245`, `docs/tou-policy-sources.md`, last section). Paper: Enrich, Li, Mizrahi and Reguant (JEEM 2024), `literature/md/4-time-of-use-impacts-enrich-li-mizrahi-reguant.md`.
 
 **In one example.** The paper does not study one national series. It studies the hourly demand of each distribution group's regulated retailer (Endesa, Iberdrola, Naturgy, EDP, Repsol) against Portugal's regulated supplier, one LASSO per area and hour, errors compared before and after 1 June 2021. We now hold those units, so the same design can run on the same kind of object, with five treated units instead of one.
 

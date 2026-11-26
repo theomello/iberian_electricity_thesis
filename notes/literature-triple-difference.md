@@ -1,6 +1,6 @@
 # Triple-difference papers, read against design K (2026-11-08)
 
-Five papers the user added on 2026-11-08 (`papers/`, converted to `papers/md/`). Design K: Iberian gas plants,
+Five papers the user added on 2026-11-08 (`literature/`, converted to `literature/md/`). Design K: Iberian gas plants,
 plant × week, a continuous dose g_iw, week fixed effects; Italy as the third difference (`rq-crisis-quantity.md` §K).
 
 | paper | what it says | what it means for design K |
@@ -18,7 +18,7 @@ plant × week, a continuous dose g_iw, week fixed effects; Italy as the third di
 4. Inference with 10 clusters (Olden & Møen §7): add a wild cluster bootstrap or randomisation inference beside the
    firm block bootstrap.
 
-## Papers worth adding (not in `papers/` yet)
+## Papers worth adding (not in `literature/` yet)
 - Ortiz-Villavicencio & Sant'Anna (2025), *Better Understanding Triple Differences Estimators* (arXiv 2505.09942): the
   reference treatment of DDD with covariates and staggering; `triplediff` package.
 - Callaway, Goodman-Bacon & Sant'Anna (2024/2026), *Difference-in-Differences with a Continuous Treatment*: our

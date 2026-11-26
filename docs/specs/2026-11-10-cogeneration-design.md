@@ -42,7 +42,7 @@ complete.
 ## 1. What was found on 2026-11-10
 
 **The law (three groups).** Real Decreto-ley 10/2022, article 2.1.c (consolidated text in
-`papers/md/boe-rdl-10-2022-consolidado.md`): gas cogeneration with **no regulated payment** is
+`literature/md/boe-rdl-10-2022-consolidado.md`): gas cogeneration with **no regulated payment** is
 inside the mechanism from the start, 15 June 2022. Cogeneration inside the regulated scheme
 (*régimen retributivo específico*, the payment scheme for renewables, cogeneration and waste under
 Real Decreto 413/2014) is outside. Real Decreto-ley 17/2022 (20 September 2022, in force 22
@@ -227,7 +227,7 @@ results go to the running note.
 
 ---
 
-## 8. Literature (index in `papers/README.md`, fourth pass)
+## 8. Literature (index in `literature/README.md`, fourth pass)
 
 - **The cost in §2** follows Fox-Penner (1990b), cited in Bonilla (2006, footnote 13): a
   cogeneration plant either sells to the grid or displaces its own purchases, and the sign of the

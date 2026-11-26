@@ -40,7 +40,7 @@ surge to France, congestion rents, and the direction of the rent transfer.
 ## explicitly closes off the novelty question
 
 The table row above described the method; having now read the paper
-(`papers/md/energies-17-03102.md`) in full, here are the point estimates for
+(`literature/md/energies-17-03102.md`) in full, here are the point estimates for
 their headline window (15 June – 30 Sept 2022), which sharpen "settled, do
 not re-do" from qualitative to quotable: mean subsidy 173.35 €/MWh
 (72.73–346.16), 48.1 TWh subsidised, total cost €8,350M (~2.1% of Spanish
@@ -74,7 +74,7 @@ thin the Spanish-side hydro-response sample exactly when the cap first
 bound.
 
 **Tangerås & Wolak (2021), "The Competitive Effects of Linking Electricity
-Markets Across Space" (`papers/md/the-competitive-effects-of-linking-electricity-markets-across-space-april-2021.md`),
+Markets Across Space" (`literature/md/the-competitive-effects-of-linking-electricity-markets-across-space-april-2021.md`),
 checked for fit and set aside for now.** Theory paper on US-style nodal
 markets: linking local markets through a *regional forward contract* is
 pro-competitive (producers internalize only 1/M of their own price-

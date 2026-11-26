@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Convert the PDFs in papers/ to Markdown for reading and search.
+"""Convert the PDFs in literature/ to Markdown for reading and search.
 
     .venv/bin/python scripts/build/convert_papers.py
 
-Writes papers/md/<slug>.md, one file per PDF. The PDFs are opened read-only and
+Writes literature/md/<slug>.md, one file per PDF. The PDFs are opened read-only and
 are never modified -- same rule as raw data: re-run the conversion rather than
 editing the output.
 
@@ -34,7 +34,7 @@ from pathlib import Path
 import pymupdf
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-PAPERS = ROOT / "papers"
+PAPERS = ROOT / "literature"
 OUT = PAPERS / "md"
 
 LIGATURES = {"ﬀ": "ff", "ﬁ": "fi", "ﬂ": "fl", "ﬃ": "ffi",
@@ -155,7 +155,7 @@ def convert(pdf_path: Path) -> Path:
         "",
         f"# {title}",
         "",
-        "> Converted from PDF for reading and search. The PDF in `papers/` is",
+        "> Converted from PDF for reading and search. The PDF in `literature/` is",
         "> authoritative; equations, tables and footnote placement are lossy here.",
         "> Page anchors give the paper's own printed page numbers.",
         "",
@@ -175,11 +175,11 @@ def convert(pdf_path: Path) -> Path:
 
 def main() -> int:
     if not PAPERS.is_dir():
-        print(f"no papers/ directory at {PAPERS}", file=sys.stderr)
+        print(f"no literature/ directory at {PAPERS}", file=sys.stderr)
         return 1
     pdfs = sorted(PAPERS.glob("*.pdf"))
     if not pdfs:
-        print("no PDFs found in papers/", file=sys.stderr)
+        print("no PDFs found in literature/", file=sys.stderr)
         return 1
     OUT.mkdir(exist_ok=True)
     for pdf in pdfs:

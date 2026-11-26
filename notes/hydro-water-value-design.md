@@ -254,7 +254,7 @@ exactly the job the joint estimation is for.
 
 Arzhintar, Leslie, Neill & Wyrwoll, "Inferring the Value of Stored Water in
 Hydroelectric Schemes" (working paper, 11 Nov 2025, SSRN 5736763,
-`papers/md/ssrn-5736763.md`) — the paper this note has cited by name since
+`literature/md/ssrn-5736763.md`) — the paper this note has cited by name since
 2026-08-13 without anyone having actually read it. Full findings on request;
 this is what changes for the design.
 

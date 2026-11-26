@@ -2,11 +2,11 @@
 
 2026-10-28. One place for every fact the gas-cap design (`docs/specs/2026-10-28-gas-cap-conduct-design.md`)
 rests on: which source states it, where, and whether our own files agree. Primary sources first;
-secondary sources only where no primary one states the fact. PDFs are in `papers/` (gitignored).
+secondary sources only where no primary one states the fact. PDFs are in `literature/` (gitignored).
 
 ## 1. The legal sources
 
-| document | file in `papers/` | what it settles |
+| document | file in `literature/` | what it settles |
 |---|---|---|
 | Real Decreto-ley 10/2022, 13 May 2022, consolidated text (BOE-A-2022-7843, incl. RDL 3/2023) | `BOE_RDL_10_2022_consolidado.pdf` | eligible plants (art. 2.1), bilateral energy excluded (art. 2.2), Y per MWh produced and the PRGN path (art. 3), Y = 0 when PGN < PRGN (art. 3), MIBGAS supplies PGN (art. 3) |
 | Orden TED/517/2022, 8 June 2022 (BOE-A-2022-9435) | `BOE_Orden_TED_517_2022.pdf` | start: agents internalise Y from the day-ahead auction of **14 June 2022**, i.e. delivery from 15 June |

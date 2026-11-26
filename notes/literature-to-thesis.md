@@ -2,7 +2,7 @@
 
 Notes on Hortaçsu & Perrigne (2021) ch. 11 and Kellogg & Reguant (2021) ch. 17,
 written against the data inventory in `CLAUDE.md`. Page numbers are the
-printed ones, matching the anchors in `papers/md/`.
+printed ones, matching the anchors in `literature/md/`.
 
 Still **no research question** — this is a map of what the literature makes
 possible with what is already on disk, and what is missing.
@@ -73,7 +73,7 @@ it is read as a mistake.
 supply curve crosses its marginal cost curve, the markup term is zero, so at
 that quantity `θ_it` equals the offered quantity (H&P p. 146 fn. 24; K&R
 p. 697). Costs → contract positions, without contract data. We now hold this
-paper directly (RAND JoE 39(1), printed pp. 86–114, `papers/md/the-rand-j...`)
+paper directly (RAND JoE 39(1), printed pp. 86–114, `literature/md/the-rand-j...`)
 rather than only through the Handbook chapter's summary — worth reading in
 full for the ERCOT institutional detail, since it is also the paper that
 finds *small* firms bid "excessively steep" relative to the profit-maximising
@@ -165,7 +165,7 @@ shrinks the effective market and steepens residual demand (K&R pp. 701–702).
 MIBEL gives a clean binary version of that with two well-defined zones.
 
 **F. Regime-stable supply curves without bids.** Sánchez Canales et al. (2026,
-*Energy Economics*, `papers/md/main.md`) estimate supply curves from price/
+*Energy Economics*, `literature/md/main.md`) estimate supply curves from price/
 quantity equilibria alone by detecting windows where fundamentals (fuel
 prices, plant availability) are stable, so short-run demand shocks trace out
 the supply curve — a PELT changepoint segmentation over daily drivers. We
@@ -180,7 +180,7 @@ gets chosen for the levy/gas-cap work already underway on this branch.
 
 **G. Day-ahead / intraday arbitrage and who has power over the gap.**
 Borenstein, Bushnell, Knittel & Wolfram (2008, *JIE*,
-`papers/md/jie08arbitrage.md`) is the reference case for candidate D: before
+`literature/md/jie08arbitrage.md`) is the reference case for candidate D: before
 treating a day-ahead/intraday premium as a pure risk-aversion or forecast-error
 story, check whether specific agents have enough scale to hold a persistent
 gap open rather than arbitrage it away. Their finding — a dominant buyer
@@ -236,9 +236,9 @@ Skip on a first pass: all of K&R §2 (oil and gas), §3 (vehicles), §5
 
 ## 9. Second literature pass (2026-08-18): 14 more papers
 
-Five agents read the rest of `papers/` — everything not already covered
+Five agents read the rest of `literature/` — everything not already covered
 above. Full per-paper detail (citation, method, what it's worth) is now in
-`papers/README.md`'s table; the two most load-bearing findings went straight
+`literature/README.md`'s table; the two most load-bearing findings went straight
 into the design notes they bear on (`hydro-water-value-design.md`,
 `rq-gas-cap-conduct.md`, `literature-iberian-exception.md` — see those for
 detail, not repeated here). What's below is what belongs at the toolkit
@@ -249,7 +249,7 @@ level: general identification tricks, not tied to one design.
 **A directly implementable residual-demand-slope recipe for step-function
 bids**, from McRae & Wolak, "How do firms exercise unilateral market power?
 Empirical evidence from a bid-based wholesale electricity market" (book
-chapter, New Zealand; `papers/mrae_wolak_how_do_firms_exercise_market_power.pdf`
+chapter, New Zealand; `literature/mrae_wolak_how_do_firms_exercise_market_power.pdf`
 — scanned, no text layer, rendered to page images to read). Their eq. 3.6
 (printed p.399): take a ±10% price window around the clearing price, find
 the nearest residual-demand step outside it on each side, `DR'(P*) =
@@ -275,7 +275,7 @@ than the aggregate elasticity already computed, since it's firm-specific.
 **A structural explanation, and a reduced-form fallback, for the "small
 firms bid excessively steep" finding already flagged in §3.** Hortaçsu,
 Luco, Puller & Zhu (2019, *AER* 109(12): 4302–4342,
-`papers/md/hortasu-strategicabilityaffect-2019.md`) model this as a
+`literature/md/hortasu-strategicabilityaffect-2019.md`) model this as a
 cognitive-hierarchy (CH) type distribution — level-0 bidders bid their
 contract position, level-k best-respond assuming rivals are Poisson-
 distributed over levels 0..k−1 — identified by matching observed ERCOT bids
@@ -297,7 +297,7 @@ information and no new cost data.
 
 Jha & Leslie (SSRN 3603627) is already extensively summarised in CLAUDE.md's
 `implied_marginal_cost` section; a second, closer read
-(`papers/md/ssrn-3603627.md`) surfaced the operational equations CLAUDE.md
+(`literature/md/ssrn-3603627.md`) surfaced the operational equations CLAUDE.md
 didn't have (production function eq.1–2 p.-44; cost function p.-43/-42;
 dynamic dispatch problem eq.3–8 p.-38/-36; competitive-pricing rule with
 dynamic + static rationality constraints eq.9–11 p.-34/-33; the solar-lag

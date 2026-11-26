@@ -6,7 +6,7 @@ verified. "Secondary" means a law-firm or regulator summary found by web search,
 ## Who is inside the mechanism
 
 **Real Decreto-ley 10/2022, article 2.1.c** (BOE-A-2022-7843, consolidated text held in
-`papers/md/boe-rdl-10-2022-consolidado.md`, read directly). Inside from the start: plants of group a.1 of Real
+`literature/md/boe-rdl-10-2022-consolidado.md`, read directly). Inside from the start: plants of group a.1 of Real
 Decreto 413/2014 (cogeneration) "provided they have no remuneration framework among those regulated in article 14 of
 Law 24/2013", and Portuguese gas cogeneration under the general remuneration regime. So gas cogeneration **without**
 a regulated payment is eligible from 15 June 2022; cogeneration inside the regulated scheme (*régimen retributivo

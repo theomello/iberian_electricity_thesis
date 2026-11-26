@@ -116,3 +116,28 @@ anchor (6.2 becomes robust and more negative, 6.3 becomes fragile): one COVID-af
 is reported as such. My expectations before the run were wrong for E0 (expected robust; its placebo path has a large 2014→2015 jump that sets the
 allowed erratic-ness) and for 6.3 (expected fragile; the joint specification is robust without the anchor). The 2020 point for 6.3 (−0.12) lies on the
 downward line, which favours the trend null for 6.3 over the mean null, with the COVID caveat.
+
+## Results of Part A (run 2026-11-26, as registered: 10-fold one-SE LASSO, no change to the learner; `scripts/analysis/tou_dml_pooled.py`, committed before its run, relaunched once after speed-ups that did not change the estimator; outputs `outputs/tables/tou_dml_pooled_<series>.csv`)
+θ_2021 and placebo spread of the orthogonal-score estimator, outcome A (Spain log load, Portugal among the features) and outcome B (Spain minus Portugal):
+
+| series | baseline η_2021 (placebo sd; mean-null p) | θ_2021 A / B | placebo sd A / B | mean-null effect, p (A) | O1 | O2 | O3 | O4 (ridge) |
+|---|---|---|---|---|---|---|---|---|
+| E0 | −0.116 (0.0369; 0.019) | −0.104 / −0.105 | 0.0525 / 0.0531 (1.42×, 1.44×) | −0.107, p 0.059 | pass | **fail** (p 0.059 / 0.058) | pass | pass (−0.094) |
+| 6.2 | −0.064 (0.0168; 0.003) | **+0.231 / +0.227** | 0.311 / 0.305 (18×) | +0.319, p 0.81 | **fail** | **fail** | **fail** | **fail** (+0.179) |
+| 6.3 | −0.233 (0.1808; 0.039) | −0.219 / −0.243 | 0.178 / 0.215 (0.98×, 1.19×) | −0.312, p 0.083 | pass | **fail** (p 0.083 / 0.093) | pass | pass (−0.201) |
+| 6.4 | −0.337 (0.0830; 0.0004) | **−0.508 / −0.531** | 0.104 / 0.101 (1.25×, 1.21×) | −0.758, p 0.001 | **fail** | pass | pass | **fail** (−0.472) |
+
+Placebo thetas (outcome A): E0 −0.072, +0.085, +0.033, −0.002, −0.005, −0.020; 6.2 −0.274, −0.134, −0.127, −0.202, −0.319, +0.527;
+6.3 +0.141, +0.239, +0.144, +0.282, −0.156, −0.093; 6.4 +0.123, +0.166, +0.334, +0.342, +0.351, +0.184.
+
+**Reading, as registered ("report both and say which assumption differs").**
+- **The orthogonal-score version is not equivalent to the baseline in every series.** It agrees within one placebo sd for E0 and 6.3 (O1) and its learner
+  hardly matters there (O4); its verdicts differ at the margin (p 0.058-0.093 against 0.019-0.039), because its placebo spread is 1.0-1.4 times larger.
+- **6.4: same sign and detection, larger size** (−0.51 against −0.34; mean-null effect −0.76 against −0.66): strengthens the finding, not weakens it.
+- **6.2: unusable.** The estimator is unstable for the smallest series (placebo thetas −0.32 to +0.53; the wrong sign in 2021); no reading.
+- **Which assumption differs.** The orthogonal version drops the baseline's second-stage fixed effects (weekend × area × month and hour × month cells), which absorb
+  monthly level shifts; it relies on the first-stage learner alone to remove level and calendar structure, and uses all other years' rows (including treated-window rows) in the nuisance fits,
+  so the dose nuisance m̂ is not zero in other folds. That makes it more exposed to the level drift, which is what the larger placebo spreads show.
+- **Consequence for chapter 5.** Orthogonality is not a free improvement here: the registered orthogonal estimator is noisier and agrees only for E0 and 6.3. The baseline stays the
+  main estimator; the orthogonal version is reported in the appendix as an equivalence check that holds for E0 and 6.3, moves 6.4 further from zero, and fails for 6.2.
+  Together with the learner swap, the double LASSO and the sensitivity bands, the thesis position is: first-step estimation error is not the limit; the drift is.

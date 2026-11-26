@@ -63,3 +63,37 @@ steps are patterns, not an independent treatment, so the coefficient is "beyond 
 New script `scripts/analysis/firm_persistence_joint.py` (reuses `firm_persistence_step0` cells and d tables and `firm_persistence.run`/`stats_of`/`trend`,
 with the controls added through the regression's extra columns); committed before its single run. Outputs
 `outputs/tables/firm_persistence_joint{,_summary}.csv`. No new data and no refits; expected run time minutes.
+
+## Results (run 2026-11-26; `scripts/analysis/firm_persistence_joint.py`, committed before the run; outputs `outputs/tables/firm_persistence_joint{,_summary}.csv`)
+**P0 passes** for both groups: with no controls the code reproduces the registered main statistic (medium −0.2832, p 0.0017, s 0.0473;
+large −0.1362, p 0.0173, s 0.0733). Screened calendars: 12 (medium), 14 (large); J = 3 components (93% and 91% of their variance).
+
+| | Medium firms, summers | Large industry, summers |
+|---|---|---|
+| registered effect, p, 95% interval | −0.283, 0.002, [−0.390, −0.177] | −0.136, 0.017, [−0.258, −0.015] |
+| **with controls: effect, p, interval** | **−0.391, 0.113, [−1.210, +0.427]** | **+0.848, 0.998, [+0.428, +1.268]** |
+| placebo mean m, sd s (registered s) | −0.146, 0.364 (0.047) | −0.543, 0.253 (0.073) |
+| post years 2022 / 23 / 24 / 25 | +0.03 / −0.39 / −0.14 / −1.06 | +0.54 / +1.11 / +0.88 / +0.87 |
+| 2021 (already tested) | −0.419 | −0.843 |
+| P1 d variance left (≥ 0.20) | **0.11: fail** | 0.87 pass |
+| P2 placebo slope not established | slope +0.141 (se 0.065): fail | slope +0.125 (se 0.027): fail |
+| P3 placebo sd ≤ registered | fail (7.7×) | fail (3.5×) |
+| P4 detection (R1, R2) | fail | fail (wrong sign) |
+| P5 trend, drop-one, every year | fail | fail |
+| P6 inside the registered interval | fail | fail |
+| **robust to the drift (P1, P2, P4, P5, P6)** | **no** | **no** |
+
+Reported, no verdict (with controls): medium solar-robust −0.293 (p 0.18), no-August −0.514 (p 0.07), wrong hours +0.585, price control −0.164 (p 0.25);
+large series 6.2 +0.48, 6.3 +0.22, 6.4 +1.84 (all positive).
+
+**Reading, as registered and with its limits.**
+- **Medium firms: the check is uninformative, not a refutation.** The cell design has 120 cells and the shifted calendars span 89% of the real step
+  (P1 fails), so the real step keeps almost no independent variation. The estimate is eight times noisier (placebo sd 0.364 against 0.047) and its interval
+  [−1.21, +0.43] contains the registered effect and zero. The registered Part A result stands; this robustness row says "cannot be shown to survive; the
+  check lacks power", and the thesis says so.
+- **Large industry: the weak persistence is explained by dose-like patterns.** P1 passes (87% left) yet with the controls the 2022-25 step is positive
+  against the placebo years (+0.85) and the placebo coefficients are themselves large and negative (mean −0.54). The registered −0.136 does not survive.
+  This agrees with the registered verdict (R5, R3 and R8 already fail) and with the decision that the 2021 response does not persist in the registered
+  form; it is not a new result for the thesis beyond saying the faint persistence is not specific to the calendar.
+- **Caution:** the controls are principal components of shifted calendars fitted at cell level; the placebo spreads rise 3.5× and 7.7×, so these
+  specifications are far less precise than the registered ones. No other control set or cell definition is tried after a failure.

@@ -1,11 +1,11 @@
-# papers/
+# literature/
 
 Reference literature. The PDFs are the authoritative copies and are never
 edited; `md/` holds machine-generated Markdown for reading, grepping and
 quoting into notes.
 
 ```
-papers/
+literature/
   *.pdf     originals, untouched
   md/       generated -- regenerate, do not hand-edit
 ```

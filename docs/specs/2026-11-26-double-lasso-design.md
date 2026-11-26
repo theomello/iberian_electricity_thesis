@@ -76,3 +76,32 @@ D1-D5 pass and D3 holds: double LASSO is a bias-robust way to select the drift c
 distribution; it supports the method chapter's cross-fitting argument and is reported beside the baseline. D3 fails:
 the controls were never the issue (consistent with the learner swap), and the section says so. D5 fails: the shape-only
 estimate differs from the level estimate; report both and do not mix them.
+
+## Step 1 results (run 2026-11-26, `scripts/analysis/tou_double_lasso.py`; `outputs/tables/tou_double_lasso_*.csv`)
+**D3 fails; the baseline estimator stands.** Nothing else was tried.
+
+| | beta 2021 | placebo mean | placebo sd | prediction t | p_t | rank p |
+|---|---|---|---|---|---|---|
+| Baseline (per-hour LASSO, subtract Portugal) | -0.1157 | -0.0049 | 0.0369 | -2.78 | 0.019 | 0.143 |
+| Double LASSO, Portugal terms in (main) | -0.0816 | +0.0138 | 0.0404 | -2.19 | 0.040 | 0.143 |
+| Double LASSO, Portugal terms out (P0) | -0.0879 | +0.0154 | 0.0411 | -2.33 | 0.034 | 0.143 |
+
+Placebo betas (main): 2014 -0.046, 2015 +0.076, 2016 +0.034, 2017 +0.014, 2018 +0.009, 2019 -0.005.
+
+| Rule | Main | P0 |
+|---|---|---|
+| D1 dose variance left (min ratio) | 0.961 pass | 0.962 pass |
+| D2 placebos centred | 0.0138 <= 0.0272 pass | 0.0154 <= 0.0293 pass |
+| D3 placebo sd <= 0.0295 | 0.0404 **fail** | 0.0411 **fail** |
+| D4 beta < 0, p_t <= 0.05 | pass | pass |
+| D5 within one baseline sd | 0.034 pass | 0.028 pass |
+| D6 Portugal terms | 0.0404 < 0.0411: kept, difference negligible | -- |
+
+**Reading.** Double LASSO selects ~620-650 of ~750 controls for the load and almost none for the dose (0-48), so the
+dose is nearly orthogonal to the controls by construction and the partialling out changes little. The year effects
+remove the level, which leaves the shape across hours; the placebo summers then drift positive (2015 +0.076, 2016
++0.034) and the spread is no smaller than the baseline's. The 2021 estimate is smaller (-0.08 to -0.09 against -0.116),
+consistent with a shape-only estimate that discards the level part. The controls were never the binding constraint,
+which matches the learner swap (six learners, estimate -0.104 to -0.116, placebo sd 0.034-0.037). Portugal's loading
+adds almost nothing here (placebo sd 0.0404 against 0.0411). Chapter 5 should cite the cross-fitting and placebo logic,
+not an orthogonality claim.

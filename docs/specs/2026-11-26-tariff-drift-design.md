@@ -103,3 +103,21 @@ trend null reproduces Amendment A (ŷ −0.027, effect −0.150, p 0.045, [−0.
 null, 6.4 about −0.57 to −0.66. It rises steeply with voltage, which the pooled figure hides (the earlier E5 rule, that series
 estimates scale with the new dose, already failed). 6.3's placebo falls from +0.42 to +0.04 in six summers while the other
 two do not trend, so 6.3 is the tariff whose drift needs a model. Step 1 runs on 6.3 only (the only tariff passing T2).
+
+## Step 1 results (run 2026-11-26, tariff 6.3 only, `scripts/analysis/tou_tariff_drift_step1.py`; `outputs/tables/tou_tariff_drift_step1.csv`)
+Restricted regression on the stacked cross-fitted errors (330 week clusters). α (no-reform drift value at 2021) −0.187
+(se 0.065); γ (trend per year) −0.090 (se 0.014); **θ (reform effect against the trend null) −0.024 (se 0.071, one-sided
+p 0.37, 95% [−0.163, +0.114])**. With γ fixed at 0, θ = −0.431.
+
+| rule | result | verdict |
+|---|---|---|
+| J1 reduction (γ = 0 equals the Step 3 mean null, within 0.01) | −0.4306 against −0.4304 | pass |
+| J2 agreement (θ within 0.03 of the Step 3 trend null) | −0.0242 against −0.0198 | pass |
+| J3 not one summer (leave-one-summer-out keeps sign, within 0.10 of θ) | dropping 2014…2019: −0.016, −0.025, −0.021, −0.038, −0.092, **+0.086** | **fail** |
+
+**Reading.** The joint regression confirms the second-stage line: against the trend null the 6.3 effect is about −0.02 and not
+distinguishable from zero, and against the mean null it is −0.43. It adds the sampling error of the 2021 estimate, so its
+interval is similar but not tighter. But the trend null is fragile: dropping the 2019 summer (the rebound from −0.028 to
++0.038) steepens the line and θ becomes +0.086, a sign change; dropping 2018 gives −0.092. One summer decides whether the
+extrapolated no-reform value sits at −0.21 or lower. J3 failed as registered and is not rescued. For 6.3, the data support
+neither null over the other; the thesis should report 6.3 as unresolved between −0.43 and about zero, and rely on 6.2 and 6.4.

@@ -1,0 +1,33 @@
+% Headline numbers as macros. Each line names its source; change the number only
+% when the source changes. To be replaced by a generated file
+% (scripts/build/paper_numbers.py) once the figure scripts exist.
+% Use in text as \EzeroElas{} etc.
+
+% Low-voltage consumers (E0), six-summer test — docs/specs/2026-11-18-industry-six-summer-ri-design.md
+\newcommand{\EzeroElas}{\ensuremath{-0.11}}
+\newcommand{\EzeroElasPrecise}{\ensuremath{-0.116}}
+% Households alone (GoiEner 2.0TD, G2) — memory/tou-thread-state, GoiEner design 2026-11-17
+\newcommand{\HHElas}{\ensuremath{-0.05}}
+% Large industry 6.2–6.4, regulated per-period price — 2026-11-18-industry-regulated-price-elasticity-design.md (amendment A)
+\newcommand{\IndElasLow}{\ensuremath{-0.15}}   % trend null, p 0.044
+\newcommand{\IndElasHigh}{\ensuremath{-0.32}}  % mean null, p 0.007
+\newcommand{\IndReducedForm}{\ensuremath{-1.0}} % points of daily share per dearer period step, p 0.0001
+% Medium firms 6.1TD, persistence 2022–25 — docs/specs/2026-11-23-firm-calendar-persistence-design.md
+\newcommand{\MFElas}{\ensuremath{-0.025}}
+\newcommand{\MFStep}{\ensuremath{-0.283}}
+% Large industry, persistence 2022–25 (rules fail) — same spec
+\newcommand{\IndPersistStep}{\ensuremath{-0.136}}
+% Replication (Enrich et al. design): Wald range and column 4 — notes/tou-headline-outline.md
+\newcommand{\ReplWaldLow}{\ensuremath{-0.06}}
+\newcommand{\ReplWaldHigh}{\ensuremath{-0.09}}
+\newcommand{\ReplColFour}{\ensuremath{-0.100}}
+% Short-notice share (T1) — docs/specs/2026-11-19-short-notice-share-design.md
+\newcommand{\WindIVElas}{\ensuremath{-0.0006}}
+\newcommand{\LambdaUpperLow}{\ensuremath{0.47}}
+\newcommand{\LambdaUpperHigh}{\ensuremath{0.71}}
+% Price effect of the load shift, rerun 2026-11-21 — docs/specs/2026-11-21-validity-industrial-shift-design.md
+\newcommand{\PriceContrast}{\ensuremath{-2.62}}
+% Who sets the price — notes/rq-descriptive-price-formation.md
+\newcommand{\SetterCost}{44\%}
+\newcommand{\SetterFrance}{16\%}
+\newcommand{\SetterBuy}{23\%}

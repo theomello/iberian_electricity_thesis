@@ -1,0 +1,77 @@
+% Master's thesis — main file. Build: `make` (latexmk + biber), output in build/.
+% Final copy goes to Overleaf (upload this folder as a zip); latexmkrc is read there too.
+\documentclass[12pt,a4paper,oneside]{report}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[english]{babel}
+\usepackage{microtype}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{setspace}\onehalfspacing
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs,tabularx,threeparttable}
+\usepackage{caption,subcaption}
+\usepackage{xcolor}
+\usepackage[style=authoryear,backend=biber,maxcitenames=2,uniquelist=false]{biblatex}
+\addbibresource{references.bib}
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+
+\graphicspath{{figures/}}
+
+% ---- Drafting aids ------------------------------------------------------
+% \plan{...}: the outline's notes for a section (grey box). Set \showplansfalse
+% for the submission build; scripts/qa/paper_charcount.py ignores plan boxes.
+\newif\ifshowplans \showplanstrue
+\newcommand{\plan}[1]{\ifshowplans\par\noindent\fcolorbox{gray!60}{gray!8}{%
+  \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\small\sffamily\color{gray!70!black}#1}}\par\medskip\fi}
+% \fig{file}{caption}{label}: includes figures/<file> if it exists, else a framed placeholder.
+\newcommand{\fig}[3]{\begin{figure}[htbp]\centering
+  \IfFileExists{figures/#1}{\includegraphics[width=\linewidth]{#1}}%
+    {\fbox{\parbox[c][5cm][c]{0.9\linewidth}{\centering\sffamily\color{gray}figure to build: \texttt{\detokenize{#1}}}}}
+  \caption{#2}\label{#3}\end{figure}}
+
+\input{numbers}   % headline numbers as macros, each with its source
+
+\title{Which Prices Move Electricity Demand?\\[0.5em]
+  \large Evidence from Spain's 2021 Time-of-Use Reform}
+\author{[Author]}
+\date{[Submission date]}
+
+\begin{document}
+\pagenumbering{roman}
+\maketitle
+\begin{abstract}
+\plan{Abstract (not counted; about 1{,}500 characters). Lead with the contrast: large industry responds to the
+regulated period price (\IndElasLow{} to \IndElasHigh{}), not to the same-hour market price (zero), and more than
+low-voltage consumers (\EzeroElas{}; households alone \HHElas{}).}
+\end{abstract}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+
+\input{chapters/01-introduction}
+\input{chapters/02-setting}
+\input{chapters/03-market}
+\input{chapters/04-framework}
+\input{chapters/05-data-method}
+\input{chapters/06-households}
+\input{chapters/07-firms}
+\input{chapters/08-planned-vs-hourly}
+\input{chapters/09-validity}
+\input{chapters/10-conclusion}
+
+\printbibliography[heading=bibintoc]
+
+\appendix
+\input{appendix/A-placebos}
+\input{appendix/B-price-taker-benchmark}
+\input{appendix/C-hydro}
+\input{appendix/D-stopped-designs}
+\input{appendix/E-area-panel}
+\input{appendix/F-ces}
+\input{appendix/G-data-traps}
+
+\end{document}

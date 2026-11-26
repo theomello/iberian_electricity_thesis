@@ -4,8 +4,11 @@
 an appendix and what is left out. Part 1 sorts every research thread. Part 2 is the outline that follows from it.
 Part 3 lists what is still owed before writing.
 
-**Constraints.** Master's thesis, deadline **9 February 2027** (about ten and a half weeks from today). Target length
-**40–50 pages** (limit 50; check whether appendices and references count).
+**Constraints.** Master's thesis, deadline **9 February 2027, 12 noon** (about ten and a half weeks from today).
+Length **60,000–120,000 characters** including spaces, excluding the table of contents, sources, footnotes and
+appendices; target about 100,000 (budget per chapter below, checked by `make count`). Submitted as PDF through the ISC
+web form, named `Matrikelnummer_First-Last_Masterarbeit_Abgabeversion_DD-MM-YYYY` (no umlauts or special characters),
+contact the ISC if over 11 MB (`make submission` does the naming and the size check).
 
 **Fixed by earlier decisions (not re-opened here).**
 - The headline is on the demand side (19 Nov). The supply side is context only, linked to the demand story where it is
@@ -105,9 +108,10 @@ Verdicts: **Main** = main text · **Context** = descriptive chapter · **App** =
 
 ---
 
-## Part 2. Thesis outline (about 45 pages of main text)
+## Part 2. Thesis outline (about 99,000 characters of main text)
 
-Page numbers are a budget, not a forecast. Figures and tables marked ✓ exist on disk; ○ have to be made.
+Page counts are a rough guide; the binding budget is in characters: ch. 1 9k, ch. 2 11k, ch. 3 11k, ch. 4 8k,
+ch. 5 11k, ch. 6 13k, ch. 7 15k, ch. 8 9k, ch. 9 7k, ch. 10 5k (in `scripts/qa/paper_charcount.py`). Figures and tables marked ✓ exist on disk; ○ have to be made.
 
 **1. Introduction** — 4 pp.
 The contrast first: large industry responds to the regulated period price (−0.15 to −0.32) and not at all to the
@@ -166,7 +170,7 @@ consumer responses, not equilibrium artefacts.
 Policy reading: regulated period prices move firm demand, real-time price exposure alone does not. Limits: one reform
 year, bundled reform, aggregate series, Portugal as the only weather control.
 
-**Appendices** (outside the 40–50 if allowed):
+**Appendices** (not counted):
 A. Placebo table of every headline result, failures included (E3, E5, rules 7/8). B. Price-taker simulation and step
 estimator. C. Hydro firm table and the June 2021 stop. D. Stopped designs, one line each with the reason. E. Area
 panel and control dependence. F. CES and nested CES. G. Data traps that matter for replication.
@@ -184,8 +188,9 @@ panel and control dependence. F. CES and nested CES. G. Data traps that matter f
    low-voltage figure and 3–6× households alone.
 3. ~~**Merge the business-demand branch.**~~ **Done 26 Nov:** PR #17 was already in `main`; this branch was
    fast-forwarded to `main`, which also brought PR #16 (prediction-model selection).
-4. **Page rules.** Check whether appendices and references count toward the 50 pages, and the required format
-   (university template, citation style).
+4. ~~**Page rules.**~~ **Settled 26 Nov:** 60,000–120,000 characters of main text; appendices, footnotes, sources and
+   table of contents do not count. No template required; the skeleton uses the standard `report` class, author–year
+   citations.
 
 **Writing tasks (no estimation):**
 
@@ -204,7 +209,7 @@ panel and control dependence. F. CES and nested CES. G. Data traps that matter f
 10. Portuguese control (E-REDES/REN/ERSE): open, unlikely before February.
 
 **Timeline sketch (10.5 weeks):**
-- by 6 Dec: decisions 1–4 made and the outline frozen; LaTeX skeleton built; figure scripts written;
+- by 6 Dec: outline frozen; LaTeX skeleton built (done 26 Nov); figure scripts written;
 - 7 Dec – 10 Jan: chapters 2–9 drafted (about one a week, holidays included);
 - 11 – 24 Jan: introduction, conclusion, appendices;
 - 25 Jan – 9 Feb: supervisor read, revisions, final Overleaf build.

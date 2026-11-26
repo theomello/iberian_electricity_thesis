@@ -5,6 +5,10 @@
 - `numbers.tex` — headline numbers as macros, each with its source spec. Change a number only when its source changes.
 - `figures/` — figures used by the text. `\fig{file}{caption}{label}` shows a placeholder until the file exists.
 - `references.bib` — biblatex/biber, author–year.
+- `metadata.tex` — cover-page fields (name, Matrikelnummer, examiner, supervisor, date, faculty).
+- `frontmatter/` — LMU cover page and declaration, typeset from the templates in `../Organizational/`, and the
+  required "Overview of tools used" (every generative model, how, how much, what for — to be completed by the author).
+  A signed scan saved as `frontmatter/declaration-signed.pdf` (git-ignored) replaces the typeset declaration.
 
 ```bash
 make            # build/main.pdf, with the grey plan boxes

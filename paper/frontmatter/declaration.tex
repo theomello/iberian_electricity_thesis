@@ -1,0 +1,33 @@
+% Declaration after LMU's "Muster für die einer Haus-, Bachelor- bzw. Masterarbeit beizufügende Versicherung"
+% (Organizational/eidesstattliche-erklaerung-fuer-seminar-abschlussarbeiten.pdf), German and English as in the form.
+% If a signed scan exists at frontmatter/declaration-signed.pdf (git-ignored), it is included instead.
+\IfFileExists{frontmatter/declaration-signed.pdf}{%
+  \includepdf[pages=-,addtotoc={1,chapter,0,Declaration,ch:declaration}]{frontmatter/declaration-signed.pdf}%
+}{%
+\chapter*{Versicherung / Declaration}\label{ch:declaration}
+\addcontentsline{toc}{chapter}{Declaration}
+\begin{otherlanguage}{ngerman}
+Hiermit versichere ich, dass ich die vorliegende Arbeit selbständig und ohne Benutzung anderer als der angegebenen
+Hilfsmittel angefertigt, noch nicht einer anderen Prüfungsbehörde vorgelegt und noch nicht veröffentlicht habe.
+
+Im Falle der Nutzung von generativen Modellen zur Erstellung von Texten, Abbildungen, Berechnungen und anderen
+Leistungen verantworte ich die Auswahl, Übernahme und sämtliche Ergebnisse des von mir verwendeten generierten Outputs
+vollumfänglich selbst. Im Verzeichnis \glqq Übersicht verwendeter Hilfsmittel\grqq{} habe ich alle verwendeten generativen Modelle
+mit ihrem Produktnamen benannt und angegeben, wie, in welchem Umfang und zu welchem Zweck diese benutzt wurden.
+\end{otherlanguage}
+
+\vspace{2.5cm}
+\noindent\begin{tabular}{@{}p{6cm}p{1.5cm}p{6cm}@{}}
+\hrulefill && \hrulefill\\
+(Datum / Date) && (Unterschrift / Signature)
+\end{tabular}
+
+\vspace{2cm}
+I hereby declare that I have prepared this thesis independently and without the use of aids other than those
+specified, that I have not yet submitted it to another examination authority and that it has not yet been published.
+
+In the case of the use of generative models for the creation of texts, illustrations, calculations and other
+services, I am fully responsible for the selection, adoption and all results of the generated output used by me. In
+the list ``Overview of tools used'' I have named all generative models used with their product name and indicated
+how, to what extent and for what purpose they were used.
+}

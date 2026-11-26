@@ -165,7 +165,7 @@ top journal. It is the citation that establishes basin-level hydrological
 variation as a legitimate instrument, and it should anchor any write-up of the
 hydro designs here. Worth acquiring in full — the NBER version is w19977.
 
-### 4.2 Hydro-dominated markets and conduct — already in `papers/`
+### 4.2 Hydro-dominated markets and conduct — already in `literature/`
 
 `mcrae_and_wolak_columbia_0.pdf` (McRae & Wolak, Colombia) and
 `w32616.pdf` (McRae & Wolak, NBER WP 32616) are the hydro market-power
@@ -202,9 +202,9 @@ estimates of $80–130bn are widely quoted. There is a companion literature on
 Winter Storm Elliott (2022) and the 2023 Texas heatwave.
 
 **Wolak**'s low-VRE-output-duration method (`wolak_eepe_final.pdf`, already in
-`papers/`, covering California August 2020 and Texas February 2021) is the piece
+`literature/`, covering California August 2020 and Texas February 2021) is the piece
 of this that transfers: it is a measurement recipe runnable on REE 5-minute
-realtime data, noted in `papers/README.md` as reusable.
+realtime data, noted in `literature/README.md` as reusable.
 
 The European analogue is the **Dunkelflaute** literature — prolonged
 simultaneous wind and solar shortfalls. It is real and quantitatively serious

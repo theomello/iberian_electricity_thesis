@@ -120,7 +120,7 @@ produced from energy offered to the market:
 with 0.55 a fixed efficiency written into the decree, not the plant's own. Source in
 text: the Commission's approval, SA.102454/SA.102569, C(2022) 3942, 8 June 2022, recital
 (36) for the formula, (39) for "the same amount of compensation, regardless of their
-input fuel or production costs", (24) and (29) for coal (`papers/`; the BOE prints the
+input fuel or production costs", (24) and (29) for coal (`literature/`; the BOE prints the
 formula as an image). So a plant's cost under the mechanism is its own cost minus Y_d:
 `subsidy_eur_mwh` and `marginal_cost_subsidised_eur_mwh`, with `_bid` twins on the
 MIBGAS index known at 12:00 on D-1. They apply to coal too, which the capped columns

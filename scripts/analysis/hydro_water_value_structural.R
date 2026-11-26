@@ -11,7 +11,7 @@
 #
 # THE MODEL
 #
-# Arzhintar, Leslie, Neill & Wyrwoll's template (`papers/md/ssrn-5736763.md`,
+# Arzhintar, Leslie, Neill & Wyrwoll's template (`literature/md/ssrn-5736763.md`,
 # see `notes/hydro-water-value-design.md`), fit on Spain's storage-hydro
 # cascades. For periods where a hydro unit is the marginal price setter, the
 # profit-maximising FOC (Hortacsu & Puller 2008 eq. 2) rearranges to an

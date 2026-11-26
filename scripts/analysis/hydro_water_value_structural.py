@@ -3,7 +3,7 @@
 
     .venv/bin/python scripts/analysis/hydro_water_value_structural.py
 
-Follows Arzhintar, Leslie, Neill & Wyrwoll's template (`papers/md/ssrn-5736763.md`,
+Follows Arzhintar, Leslie, Neill & Wyrwoll's template (`literature/md/ssrn-5736763.md`,
 see `notes/hydro-water-value-design.md`'s 2026-08-18 section), scoped and adapted
 to what this repo holds. Scoping check (`hydro_marginal_hours.py`) found 12,470
 marginal-hydro periods, 2018-2026, concentrated in a handful of large cascades

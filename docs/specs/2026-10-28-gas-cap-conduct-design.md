@@ -100,7 +100,7 @@ the conduct reading.
   That switch-off is a second event: offers should move back up by Y when it stops.
 - **Portugal** is treated too (the mechanism is Iberian).
 
-## 4b. Sources on disk (`papers/`, gitignored)
+## 4b. Sources on disk (`literature/`, gitignored)
 
 `BOE_RDL_10_2022_consolidado.pdf` (the decree, consolidated), `BOE_Orden_TED_517_2022.pdf`
 (start date: internalised from the auction of 2022-06-14 for delivery on the 15th),

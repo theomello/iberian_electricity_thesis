@@ -106,7 +106,7 @@ non-boundary dates and at boundary dates in pre-reform years.
 
 ## References
 
-In `papers/md/`:
+In `literature/md/`:
 - Enrich, Li, Mizrahi and Reguant (2024): the method (per-hour LASSO, triple difference, Wald ratio).
 - Burlig, Knittel, Rapson, Reguant and Wolfram (`w23908`): the prediction-error method.
 - Triple-difference papers (`250216126v3`, `250219620v3`, `250509942v3`, `utac010`) and `240912353v2` (synthetic control on a

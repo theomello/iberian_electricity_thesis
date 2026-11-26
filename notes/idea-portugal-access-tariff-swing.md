@@ -78,7 +78,7 @@ Many dated steps in both directions suit the randomization inference already bui
 
 ## References
 
-In `papers/md/`: Enrich, Li, Mizrahi and Reguant (2024) for the method; Burlig et al. (`w23908`); the triple-difference papers
+In `literature/md/`: Enrich, Li, Mizrahi and Reguant (2024) for the method; Burlig et al. (`w23908`); the triple-difference papers
 (`250216126v3`, `250219620v3`, `250509942v3`); Conley and Taber (`t0312`); Callaway, Goodman-Bacon and Sant'Anna (`w32117`) for a
 continuous dose; von Graevenitz and co-authors (`ssrn-4251564`) for firms' response to network charges; Rambachan and Roth
 (`honestparalleltrends-main-july21`) for reporting under a level drift.

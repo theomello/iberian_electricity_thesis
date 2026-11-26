@@ -57,7 +57,7 @@ Lessons recorded: the planted-effect table contains the real-outcome component (
 
 ## Facts that explain the nulls
 
-- **Interruptibility service:** participants must keep a contractual consumption floor, so their metered load cannot respond; last auction December 2019; the series halves in January 2020 and ends July 2020 (`memory/interruptibility-and-exposure-facts.md`; BOE orders in `papers/`).
+- **Interruptibility service:** participants must keep a contractual consumption floor, so their metered load cannot respond; last auction December 2019; the series halves in January 2020 and ends July 2020 (`memory/interruptibility-and-exposure-facts.md`; BOE orders in `literature/`).
 - **Exposure to hourly prices (CNMC IS/DE/031/24, pp. 26-27):** about 49% of industrial contracts indexed, 32% hourly.
 - **Price limits:** offers capped at €0-180.30 until 2021-07-06, then -€500 to €3,000; day-ahead went 15-minute on 2025-10-01; the 2025-04-28 Iberian blackout is excluded in the extension.
 - **Midday prices (descriptive, our data):** never negative in 2019-23; share of midday hours (11-15) negative 8.9% in 2024, 12.6% in 2025, 40.4% in 2026; at or below zero 23.2%, 18.9%, 56.0%; lowest -€2 (2024), -€15 (2025); no floor ever binds.
@@ -72,7 +72,7 @@ Lessons recorded: the planted-effect table contains the real-outcome component (
 
 ## Literature
 
-Table by margin with where we sit: `notes/literature-industrial-demand-elasticities.md`. Full texts in `papers/` (gitignored) with markdown in `papers/md/`: Patrick and Wolak (NBER 8213); Boisvert, Cappers, Neenan and Scott (2004); Ambrosio (Niagara Mohawk case); Hirth, Khanna and Ruhnau (2024); Jessoe and Rapson (2015); Blonz (2022); von Graevenitz and Rottner (2024); Gerster and Lamp (2024); Labandeira, Labeaga and López-Otero (FEDEA DT 2009-18); Moral-Carcedo and Pérez-García (Applied Energy 2015; Energy 2019); Ciarreta and Espinosa (three papers); Ganapati et al. (output-price pass-through, not onsite generation); Torriti, Hassan and Leach (2010, Energy 35(4)); Enrich, Li, Mizrahi and Reguant (2024), the replication target.
+Table by margin with where we sit: `notes/literature-industrial-demand-elasticities.md`. Full texts in `literature/` (gitignored) with markdown in `literature/md/`: Patrick and Wolak (NBER 8213); Boisvert, Cappers, Neenan and Scott (2004); Ambrosio (Niagara Mohawk case); Hirth, Khanna and Ruhnau (2024); Jessoe and Rapson (2015); Blonz (2022); von Graevenitz and Rottner (2024); Gerster and Lamp (2024); Labandeira, Labeaga and López-Otero (FEDEA DT 2009-18); Moral-Carcedo and Pérez-García (Applied Energy 2015; Energy 2019); Ciarreta and Espinosa (three papers); Ganapati et al. (output-price pass-through, not onsite generation); Torriti, Hassan and Leach (2010, Energy 35(4)); Enrich, Li, Mizrahi and Reguant (2024), the replication target.
 
 Reference points by margin: within-day, Patrick-Wolak 0 to 0.27; substitution, Boisvert et al. 0.10-0.18 and 0.20-0.27, Niagara Mohawk industrial 0.11; sustained level, von Graevenitz-Rottner -0.4 to -0.6, Gerster-Lamp implied -0.09 to -0.20; Spain, Labandeira et al. households -0.247, companies -0.024, large consumers -0.015.
 
@@ -88,7 +88,7 @@ Reference points by margin: within-day, Patrick-Wolak 0 to 0.27; substitution, B
 
 1. **Portugal control data:** waiting on E-REDES; REN (data hub) and ERSE not yet asked for 2018-22 voltage-level history. Choose any control by the 2018-19 placebo spread only, criteria pre-registered.
 2. **I90 full-panel download** waits on the user freeing disk space.
-3. **Herter "18% of customers give 75% of the response"** source still unidentified; Ciarreta and Espinosa (2006) working paper not in `papers/`.
+3. **Herter "18% of customers give 75% of the response"** source still unidentified; Ciarreta and Espinosa (2006) working paper not in `literature/`.
 4. **Meta-analysis table** once a reliable estimate exists.
 5. **Not covered anywhere:** the sustained price level (needs plant-level or procurement data), purchases against consumption outside 2019, and plants' own generation.
 6. **Undecided file:** the calendar-boundary note.

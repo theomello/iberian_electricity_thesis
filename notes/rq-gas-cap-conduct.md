@@ -210,7 +210,7 @@ among several.
 ## pass-through prior, and a cheap complementary test for question 2
 
 **Novelty check closed.** González-de Miguel, van Wunnik & Sumper (2024,
-*Energies* 17:3102, `papers/md/energies-17-03102.md`) — the closest existing
+*Energies* 17:3102, `literature/md/energies-17-03102.md`) — the closest existing
 paper, already flagged in `literature-iberian-exception.md` as using real
 bids for an aggregate counterfactual — turns out to *assume* full CCGT
 pass-through by construction ("CCGTs are obliged to pass through the
@@ -224,7 +224,7 @@ document Spanish hydro was essentially absent from the market June–Sept
 Spanish-side hydro-response sample may be thin exactly when the cap first
 bound, though Portuguese hydro bids into the same MIBEL stack.
 
-**Fabra & Reguant (2014, AER 104(9), `papers/md/fabra-passthroughemissionscosts-2014.md`)
+**Fabra & Reguant (2014, AER 104(9), `literature/md/fabra-passthroughemissionscosts-2014.md`)
 is the direct precedent for the whole design**, applied to the 2004–2006
 EU ETS Phase 1 start rather than the gas cap. Their structural decomposition
 (p2884–2885) is essentially the equation already sketched above:
@@ -261,7 +261,7 @@ is otherwise absent. So 86% is a reasonable *null* prior ("no markup, same
 mechanism as EUA") but not a mechanical prediction — a materially lower
 pass-through would be consistent with, not contrary to, this precedent's own
 logic. Fabra, Rapson, Reguant & Wang (2021, AER P&P, real-time pricing
-elasticity, `papers/md/fabra-et-al-2021-...md`) is a useful supporting fact
+elasticity, `literature/md/fabra-et-al-2021-...md`) is a useful supporting fact
 here too, from the same setting: Spanish *retail* demand elasticity to
 real-time price is essentially zero (point estimates 0 to −0.02, no
 detectable RTP-vs-non-RTP difference) — background support for treating
@@ -270,8 +270,8 @@ above.
 
 **A cheap complementary test for question 2 that needs no cost benchmark at
 all.** McRae & Wolak's residual-demand market-power design — both the 2017
-Colombia draft (`papers/md/mcrae-and-wolak-columbia-0.md`) and the fuller
-Handbook chapter (`papers/mrae_wolak_how_do_firms_exercise_market_power.pdf`,
+Colombia draft (`literature/md/mcrae-and-wolak-columbia-0.md`) and the fuller
+Handbook chapter (`literature/mrae_wolak_how_do_firms_exercise_market_power.pdf`,
 scanned, no text layer) — never estimates opportunity cost at all. It
 constructs, per firm per hour, the residual demand curve from rivals'
 *observed* offers plus system demand (`DR_j(p) = Q_D − Σ_{k≠j} S_k(p)`, ours
@@ -299,7 +299,7 @@ cap" question directly rather than through the opportunity-cost detour that
 supervisor as a first cut at question 2, ahead of (not instead of) the
 structural water-value route.
 
-Peña (2024, *Utilities Policy* 87, `papers/md/pena.md`) is the closest
+Peña (2024, *Utilities Policy* 87, `literature/md/pena.md`) is the closest
 existing Spain-specific paper making a version of the question-2 claim
 already (hydro priced 3–12% above a CCGT-lag opportunity-cost proxy in
 2021–Q1 2022) but it: (a) stops before the gas cap (window ends 31 March
@@ -336,7 +336,7 @@ tell them apart.
 
 ### The fix: difference against the firm's own ex-post optimal bid
 
-Hortaçsu & Puller (2008, `papers/md/the-rand-j-of-economics-2008-...md`,
+Hortaçsu & Puller (2008, `literature/md/the-rand-j-of-economics-2008-...md`,
 their eq. 2 and Proposition 3, printed p.86ff) construct exactly the object
 that nets this out: given a firm's realized residual demand `RD_i(p)` that
 hour (computed from rivals' *actual* submitted offers — mechanically observed,

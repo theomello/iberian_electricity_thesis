@@ -1,7 +1,7 @@
 # Replicating the time-of-use response in Spain (Enrich, Li, Mizrahi and Reguant, JEEM 2024)
 
 **Status: proposed 2026-11-11. Nothing here is built or estimated.** To be built on a fresh branch from `main`
-after PR #8 merges. Paper: `papers/md/4-time-of-use-impacts-enrich-li-mizrahi-reguant.md`.
+after PR #8 merges. Paper: `literature/md/4-time-of-use-impacts-enrich-li-mizrahi-reguant.md`.
 
 **In one example.** Before June 2021 a household on the regulated tariff paid the same network charge at every hour.
 From 1 June 2021 the charge is three-part: peak (10–14h and 18–22h on working days) about 200% dearer, off-peak

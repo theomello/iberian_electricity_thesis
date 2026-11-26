@@ -949,7 +949,7 @@ residual demand, wind and solar forecasts), fitted before the cap and extrapolat
 
 ## I. Open questions closed or narrowed (2026-11-03)
 
-### I1. Did exports pay the charge? (decree text, `papers/BOE_RDL_10_2022_consolidado.pdf`; indicators 10406–10408)
+### I1. Did exports pay the charge? (decree text, `literature/BOE_RDL_10_2022_consolidado.pdf`; indicators 10406–10408)
 - Art. 7.4: the market operator's settlement is distributed "entre todas las unidades de adquisición de los agentes del mercado ibérico", pro rata to the
   energy scheduled after the continuous market. Art. 7.7 excludes storage and pumping units, ancillary-service units and hedged energy (art. 8); **no article
   mentions exports**. The decree's own rule on offer units (the OMIE rules it amends) defines import and export units as *"unidades externas al sistema ibérico"*, one

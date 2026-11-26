@@ -2,7 +2,7 @@
 
 **Status: proposed 2026-11-12, nothing run.** Branch `tax-gascap-demand`. Follows `2026-11-12-tax-gascap-demand-design.md` §6–7
 (gas-cap Step 2: placebo sd of the night − midday contrast is 4.1% for 352 against Portugal, minimum detectable effect 11.4%
-against an implied 2.9%). Papers are in `papers/`; page-level reading is in `papers/md/`.
+against an implied 2.9%). Papers are in `literature/`; page-level reading is in `literature/md/`.
 
 **In one example.** The placebo test says: pick a date when nothing happened, run the design, and see how big a "effect" appears
 by chance. For 352 against Portugal's total load the chance effect is about ±4% on the contrast we care about, so a true
@@ -11,7 +11,7 @@ lowers the noise, and which only describes it honestly.
 
 ## 1. What Enrich, Li, Mizrahi and Reguant did that we did not
 
-Read from `papers/md/4-time-of-use-impacts-...md` (data section, lines ~572–800):
+Read from `literature/md/4-time-of-use-impacts-...md` (data section, lines ~572–800):
 1. **Regulated demand, by distribution area.** Their outcome is the hourly demand of the *regulated* programming units from REE,
    for **five Spanish distribution areas**, against **Portugal's regulated** (domestic) consumption from OMIE; 142,000 hourly
    observations; observations weighted by customers, outcome per capita; standard errors clustered by area-month. We use one
@@ -133,7 +133,7 @@ F1 passes (pre-slope Nov–Dec 2023: 1.14). Placebo breaks: 54, sd of Δ 0.05, 9
 why (the energy term 1001 may carry other hour-varying parts, or the forward weights may enter differently from the preamble's
 description); an unexplained wrong-sign move is not a treatment to build a demand design on.
 
-## 8. Wider pass over `papers/md/` and a search for new events (2026-11-12, user's go-ahead; nothing run)
+## 8. Wider pass over `literature/md/` and a search for new events (2026-11-12, user's go-ahead; nothing run)
 
 **Papers not read closely before, and what each adds.**
 - **`240912353v2` (synthetic control + triple difference).** Collapse the triple difference into a DiD by taking, per unit and day, the

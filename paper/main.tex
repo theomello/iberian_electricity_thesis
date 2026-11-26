@@ -5,12 +5,13 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern}
-\usepackage[english]{babel}
+\usepackage[ngerman,english]{babel}  % English main; German for cover and declaration
 \usepackage{microtype}
 \usepackage[a4paper,margin=2.5cm]{geometry}
 \usepackage{setspace}\onehalfspacing
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
+\usepackage{pdfpages}
 \usepackage{booktabs,tabularx,threeparttable}
 \usepackage{caption,subcaption}
 \usepackage{xcolor}
@@ -35,14 +36,11 @@
 
 \input{numbers}   % headline numbers as macros, each with its source
 
-\title{Which Prices Move Electricity Demand?\\[0.5em]
-  \large Evidence from Spain's 2021 Time-of-Use Reform}
-\author{[Author]}
-\date{[Submission date]}
+\input{metadata}  % cover-page fields (LMU template)
 
 \begin{document}
+\begin{otherlanguage}{ngerman}\input{frontmatter/titlepage}\end{otherlanguage}
 \pagenumbering{roman}
-\maketitle
 \begin{abstract}
 \plan{Abstract (not counted; about 1{,}500 characters). Lead with the contrast: large industry responds to the
 regulated period price (\IndElasLow{} to \IndElasHigh{}), not to the same-hour market price (zero), and more than
@@ -73,5 +71,9 @@ low-voltage consumers (\EzeroElas{}; households alone \HHElas{}).}
 \input{appendix/E-area-panel}
 \input{appendix/F-ces}
 \input{appendix/G-data-traps}
+
+% Required by the LMU declaration form; not counted toward the character limit.
+\input{frontmatter/tools-used}
+\input{frontmatter/declaration}
 
 \end{document}

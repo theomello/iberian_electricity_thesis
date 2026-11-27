@@ -51,3 +51,37 @@ Estimators rerun:
 The large-industry persistence runs (2022–2025, `2026-11-23-firm-calendar-persistence-design.md`,
 `2026-11-26-persistence-joint-design.md`) also use 1216 with placebo summers 2014–2019; they are not rerun here. If C2
 changes the 6.2 picture materially, they are the next candidate, on a separate go-ahead.
+
+## Results (run 2026-11-27, `scripts/analysis/tou_six_two_e3.py`, committed before the run as 503d1fa; outputs in `outputs/tables/six_two_e3/`)
+
+**M0 passes:** with the source at 1216 the script reproduces the committed 6.2 baseline exactly (η −0.06369, placebo mean
++0.01955, sd 0.01684), and 6.3, 6.4 and the pooled trend null (−0.150, p 0.045). **Z0 passes:** E3 is complete in every
+year 2014–2020.
+
+| | on 1216 | on E3 |
+|---|---|---|
+| 6.2 baseline η_2021 | −0.064 | −0.057 |
+| placebo mean (sd) | +0.020 (0.017) | +0.029 (0.026) |
+| effect, mean null (p) | −0.083 (0.003) | −0.086 (0.014) |
+| effect, trend null (p) | −0.079 (0.025) | −0.079 (0.073) |
+| 6.2 joint regression, mean / trend null | −0.03 / −0.08 | −0.08 [−0.17, 0.01] (p 0.032) / −0.11 [−0.25, 0.02] (p 0.040) |
+| 6.2 orthogonal score θ_2021 (A / B) | +0.231 / +0.227 | **−0.157 / −0.153** |
+| orthogonal-score placebo thetas (A), 2014…2019 | −0.27, −0.13, −0.13, −0.20, −0.32, **+0.53** | −0.12, +0.01, +0.07, +0.09, −0.01, +0.05 |
+| orthogonal-score placebo sd (A) | 0.311 | 0.076 |
+| pool 6.2–6.4, mean null | −0.320 (p 0.007) | −0.321 (p 0.006) |
+| pool 6.2–6.4, trend null | −0.151 (p 0.045) [−0.34, +0.04] | −0.151 (p 0.027) [−0.31, +0.005] |
+| pool placebo slope per year | −0.0377 (0.0106) | −0.0379 (0.0088) |
+
+**C1: fails on the registered bar.** The 2019 orthogonal-score theta (+0.048) now lies inside the 2014–2018 range
+(−0.115 to +0.093), so the first condition holds; the placebo sd (0.076) is 4.5 times the baseline's, above the 3× bar
+(0.05). As registered, the orthogonal-score failure is not attributed to the break. Stated beside it: the break removes
+the 2019 jump and the wrong sign (θ_2021 +0.23 → −0.16, ridge −0.15, O4 passes), and the spread falls fourfold; what
+remains is a noisier estimator, as for E0 (1.4×) and 6.4 (1.25×), only more so.
+
+**C2 (decided before the run): E3 is the 6.2 series in the thesis.** The pooled headline is unchanged to two decimals
+(−0.15 to −0.32; trend-null p 0.045 → 0.027). The per-tariff table (`paper/tables/tariff_effects.tex`, generated) now
+takes 6.2 from the E3 run: 6.2 moves from "not detected, a bound" to negative under both nulls in the joint
+regression (one-sided p 0.03–0.04, intervals reaching just above zero). The registered joint-regression rules were not
+re-applied to 6.2.
+
+**C3: the drift is not the break.** The pooled placebo slope is −0.0379 on E3 against −0.0377: unchanged.

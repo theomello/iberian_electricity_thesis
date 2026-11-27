@@ -17,6 +17,7 @@ sys.path.insert(0, str(ROOT / "scripts" / "analysis"))
 import tou_tariff_drift as TD  # noqa: E402
 
 T = ROOT / "outputs" / "tables"
+E3 = T / "six_two_e3"
 TARIFFS = ["6.2", "6.3", "6.4"]
 f = lambda v: f"${v:+.2f}$".replace("+", "").replace("-", "-") if v < 0 else f"${v:.2f}$"
 f3 = lambda v: f"${v:.3f}$"
@@ -25,14 +26,17 @@ ci = lambda lo, hi: f"[{f(lo)}, {f(hi)}]"
 
 
 def main():
-    s3 = pd.read_csv(T / "tou_tariff_drift_step3.csv").set_index("series")
+    # 6.2 is measured on E3 (ESIOS 1204, one population 2014-2026), not on 1216, which adds the 30-36 kV customers from
+    # October 2018 (docs/specs/2026-11-27-six-two-constant-population-design.md, rule C2). The E3 run's Step 3 file holds
+    # 6.3 and 6.4 unchanged and the pool on E3.
+    s3 = pd.read_csv(E3 / "step3" / "tou_tariff_drift_step3.csv").set_index("series")
     rows_a, rows_b, mac = [], [], []
     names = {"6.2": "SixTwo", "6.3": "SixThree", "6.4": "SixFour"}
     for t in TARIFFS:
         r = s3.loc[t]
         rows_a.append((t, r.eta_2021, r.placebo_mean, r.placebo_sd, r.slope, r.slope_se,
                        (r.mean_effect, r.mean_lo, r.mean_hi, r.mean_p), (r.trend_effect, r.trend_lo, r.trend_hi, r.trend_p)))
-        J = pd.read_csv(T / f"tou_joint_regression_{t}.csv")
+        J = pd.read_csv((E3 / "joint" if t == "6.2" else T) / f"tou_joint_regression_{t}.csv")
         b = J[J.variant == "main"].set_index("summer").beta
         pl = b.drop(2021)
         mean, trend, slope, slope_se, m, sd = TD.nulls(float(b[2021]), pl.to_dict())
@@ -64,8 +68,8 @@ def main():
             "\\par\\smallskip\\parbox{\\textwidth}{\\footnotesize",
             "Effect = $\\eta_{2021}$ minus the no-reform value predicted from the six placebo summers 2014--2019 (their mean, or a straight line in year);",
             "brackets are 95\\% prediction intervals, $p$ one-sided. The pooled 6.2--6.4 figure hides the gradient with voltage. Only 6.4 passes all registered",
-            "rules in Panel B (placebo slope not established, detected under both nulls); 6.3 narrows but its drift persists; 6.2 is not detected and is reported as a bound.",
-            "Source: \\texttt{docs/specs/2026-11-26-joint-regression-design.md}.",
+            "rules in Panel B (placebo slope not established, detected under both nulls); 6.3 narrows but its drift persists; 6.2 is negative under both nulls (one-sided $p$ 0.03--0.04) with intervals reaching just above zero, and the registered Panel B rules were not re-applied to it.",
+            "6.2 is measured on the 36--72.5\\,kV series (E3), which covers the same customers in every year. Sources: \\texttt{docs/specs/2026-11-26-joint-regression-design.md}, \\texttt{docs/specs/2026-11-27-six-two-constant-population-design.md}.",
             "}\\end{threeparttable}\\end{table}"]
     (ROOT / "paper" / "tables").mkdir(exist_ok=True)
     (ROOT / "paper" / "tables" / "tariff_effects.tex").write_text("\n".join(tex) + "\n")

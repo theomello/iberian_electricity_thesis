@@ -3,3 +3,4 @@ $pdf_mode = 1;          # pdflatex
 $bibtex_use = 2;        # run biber, clean .bbl
 $out_dir = 'build';
 $pdflatex = 'pdflatex -interaction=nonstopmode -file-line-error %O %S';
+@default_files = ('main.tex');

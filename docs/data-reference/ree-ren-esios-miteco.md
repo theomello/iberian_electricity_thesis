@@ -265,6 +265,15 @@ do not average).
   "total" 10268: do not use as a split before 2024.** 10268 is not total demand: it is exactly the sum of the tariff
   series ESIOS publishes, 100–114 TWh in 2018–2023, because the low-voltage tariffs (2.0, 3.0) are empty until 2024
   (1209 from 2024, 2532 from mid-2024 and **not** included in 10268). 1200 and 1208 return no data at all.
+- **The 6.2–6.4 tariff series are the voltage series, except for one break in 6.2 (checked 2026-11-27, monthly
+  and daily sums 2014–2026).** 1217 = E4 (1205) and 1218 = E5 + E6 (1206 + 1207) to the MWh in every month. 1216 (6.2)
+  = E3 (1204, 36–72.5 kV) exactly **until September 2018**; from **October 2018** it adds about 365–475 GWh a month
+  (E3/1216 falls to about 0.77 and stays there through 2026): the 30–36 kV customers (old 6.1B, which also sit in E2)
+  enter the series then, not at the June 2021 reform. The added part is weekday-heavy (E3/1216 about 0.75 on
+  working days, 0.82 on weekends). So **1216 is not one population over a 2014–2026 sample**: summers 2014–2018 are
+  36–72.5 kV only, 2019 onward include 30–36 kV. **E3 (1204) is the constant-population series for 6.2**. In the
+  orthogonal-score run of 2026-11-26 the 6.2 placebo thetas are negative for 2014–2018 (−0.13 to −0.32) and +0.53 in
+  2019, the first summer after the break.
 - **No old-tariff (3.0A, 2.0A, 2.0DHA) measured-demand indicator exists in the ESIOS catalogue** (searched
   `indicator_catalogue.parquet` 2026-11-23; only capacity-payment indicators 769–777 carry old tariff names). Before
   mid-2024 there is no hourly 3.0 series.

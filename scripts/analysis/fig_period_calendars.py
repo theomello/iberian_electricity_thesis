@@ -19,10 +19,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
-from matplotlib.colors import ListedColormap  # noqa: E402
+from matplotlib.colors import LinearSegmentedColormap, ListedColormap  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import fig_style as S  # noqa: E402
+import tou_cross_tariff as CT  # noqa: E402
 import tou_tariff_schedule as TS  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -71,7 +72,7 @@ def colour_index(grid, n):
     return grid
 
 
-def main():
+def detailed():
     S.apply()
     g = grids()
     cmap = ListedColormap([S.FLAT] + S.RAMP6)
@@ -134,8 +135,74 @@ def main():
         bb = t.get_window_extent().transformed(ax.transAxes.inverted())
         ax.text(bb.x1 + 0.03, 1.03, desc, transform=ax.transAxes, color=S.INK2, va="bottom")
     FIG.mkdir(parents=True, exist_ok=True)
+    fig.savefig(FIG / "period_calendars_detailed.pdf")
+    fig.savefig(FIG / "period_calendars_detailed.png", dpi=170)
+    plt.close(fig)
+
+
+MONTHS12 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
+def simple():
+    """Two rows (households 2.0TD, industry 6.1TD), month x hour, coloured by the regulated price itself (EUR/MWh)."""
+    S.apply()
+    hol = TS.holidays()
+    days = []
+    for m in range(1, 13):
+        d = pd.Timestamp(f"2021-{m:02d}-{23 if m == 6 else 15}")
+        while d.dayofweek >= 5 or d in hol:
+            d += pd.Timedelta(days=1)
+        days.append(d)
+    tabs = CT.old_new_tables(days)
+    cmap = LinearSegmentedColormap.from_list("ramp", ["#f4f8fd"] + S.RAMP6[::-1])
+    rows = [("2.0", "Households", "2.0TD: below 1 kV, up to 15 kW"),
+            ("6.1", "Industry", "6.1TD: 1–30 kV (6.2–6.4TD, 30 kV and above: same calendar, lower prices)")]
+    hdr = []
+    fig, axes = plt.subplots(2, 2, figsize=(6.3, 5.6), sharex=True, gridspec_kw={"hspace": 0.32, "wspace": 0.06})
+    for i, (tar, name, desc) in enumerate(rows):
+        t = tabs[tar]
+        grid = {c: np.array([t.loc[d].sort_index()[c].to_numpy() for d in days]) for c in ("old_price", "new_price")}
+        vmax = max(g.max() for g in grid.values())
+        for j, col in enumerate(("old_price", "new_price")):
+            ax = axes[i, j]
+            im = ax.imshow(grid[col], cmap=cmap, vmin=0, vmax=vmax, aspect="auto", interpolation="nearest",
+                           extent=(0, 24, 12, 0))
+            for y in range(1, 12):
+                ax.axhline(y, color="white", lw=0.8)
+            ax.set_xticks(range(0, 25, 6))
+            ax.set_xticklabels(["0", "6", "12", "18", "24"])
+            ax.set_yticks(np.arange(12) + 0.5)
+            ax.set_yticklabels(MONTHS12 if j == 0 else [], fontsize=7)
+            ax.tick_params(axis="y", length=0)
+            for sp in ax.spines.values():
+                sp.set_visible(False)
+            if i == 0:
+                ax.text(0.5, 1.16, "Before (to 31 May 2021)" if j == 0 else "After (from 1 June 2021)",
+                        transform=ax.transAxes, ha="center", va="bottom", fontsize=9.5, fontweight="bold",
+                        color=S.INK)
+            if j == 0:
+                hdr.append((ax, ax.text(0, 1.03, name, transform=ax.transAxes, fontweight="bold", color=S.INK,
+                                        va="bottom"), desc))
+        cb = fig.colorbar(im, ax=axes[i, :], fraction=0.025, pad=0.02)
+        cb.outline.set_visible(False)
+        cb.ax.tick_params(labelsize=6.5, length=2)
+        cb.set_label("€/MWh", fontsize=7, color=S.INK2)
+    fig.text(0.45, 0.035, "Hour of the day, working day", ha="center", color=S.INK2)
+    fig.text(0.45, -0.005, "Tolls + charges, excluding the wholesale price. Weekends and holidays: cheapest rate all day.",
+             ha="center", color=S.INK3, fontsize=6.5)
+    fig.canvas.draw()
+    for ax, t, desc in hdr:
+        bb = t.get_window_extent().transformed(ax.transAxes.inverted())
+        ax.text(bb.x1 + 0.03, 1.03, desc, transform=ax.transAxes, color=S.INK2, va="bottom")
+    FIG.mkdir(parents=True, exist_ok=True)
     fig.savefig(FIG / "period_calendars.pdf")
     fig.savefig(FIG / "period_calendars.png", dpi=170)
+    plt.close(fig)
+
+
+def main():
+    detailed()
+    simple()
 
 
 if __name__ == "__main__":

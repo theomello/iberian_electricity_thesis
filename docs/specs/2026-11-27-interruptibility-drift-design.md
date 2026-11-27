@@ -55,3 +55,40 @@ split, the bound.
 ## Not covered
 Per-tariff attribution (P is published by sector, not by tariff or voltage), on-site cogeneration (REE data from 2021
 only), plant closures. No estimate is changed by this design; any re-estimation it suggests needs its own go-ahead.
+
+## Results (run 2026-11-27, `scripts/analysis/interruptibility_drift.py`, committed before the run as f5288c5; `outputs/tables/interruptibility_drift.csv`)
+
+**S1 passes on E3–E6:** P ≤ T in every one of 9,015 window hours, hourly correlation 0.75. The participants are inside
+the 36-kV-and-above series and are **about half of it**: share 0.57 (2015), 0.52, 0.54, 0.49, 0.47 (2019), 0.01 (2021).
+
+| summer | T (MW) | P (MW) | share P | shape T | shape R (non-participants) | shape P (participants) |
+|---|---|---|---|---|---|---|
+| 2015 | 5,973 | 3,395 | 0.568 | −0.053 | +0.045 | −0.124 |
+| 2016 | 6,024 | 3,132 | 0.520 | −0.044 | +0.059 | −0.134 |
+| 2017 | 6,252 | 3,366 | 0.538 | −0.049 | +0.053 | −0.133 |
+| 2018 | 6,137 | 2,984 | 0.486 | −0.033 | +0.065 | −0.133 |
+| 2019 | 5,851 | 2,761 | 0.472 | −0.035 | +0.061 | −0.137 |
+| 2021 | 5,722 | 50 | 0.009 | −0.068 | −0.068 | — |
+
+**S2.** Slopes per year: shape T +0.0046 (se 0.0017), shape R +0.0037 (se 0.0018), shape P −0.0025 (se 0.0010), share
+P −0.023 (se 0.006). Shift-share 2015→2019: total +0.018 = composition +0.016 + within −0.001 + interaction +0.003.
+**D1: NO.** Composition is 90% of the endpoint change (first condition met), but the non-participants' own shape also
+drifts up at 0.80 of the aggregate slope (second condition fails). The "within" part is near zero only because the two
+groups move in opposite directions (R toward the evening, P toward the night).
+
+**S3. V1: major threat.** B = +0.096 (participants take the non-participants' shape at the 2019 share) against a raw 2021
+shift of shape T of −0.025 from the 2015–2019 mean: |B| is 3.8 times the shift.
+
+**Reading, as registered.**
+- The drift is **not explained** by the scheme under D1: half of high-voltage load shrank as a share and was night-heavy,
+  which by itself would move the aggregate the way it moved, but the rest of the load drifted the same way on its own.
+  Both forces are present; neither is shown to be the cause.
+- The scheme's end is a **major threat to the 2021 industry comparison** and goes into chapter 7 beside the industry
+  effect. Its **sign is known**: the period-6 rule was a floor on night consumption, and removing a binding floor at
+  unchanged prices can only move load out of the night, never into it. So the no-reform 2021 shape lies between the
+  placebo-based one and +0.096 above it, and the industry reform effect **is biased toward zero, not away from it**.
+  The registered size of B is an upper bound (participants becoming exactly like non-participants), not an estimate.
+
+**Post hoc, not registered.** In 2021, with the scheme gone, the whole 36-kV-and-above aggregate has shape −0.068, below
+both groups' 2015–2019 mix (−0.035 to −0.053) and far below the non-participants alone (+0.05 to +0.065): the 2021 fall
+happened despite a change that, if anything, pushes the other way.
